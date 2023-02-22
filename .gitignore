@@ -1,0 +1,7 @@
+debug/
+pkg/
+target/
+
+**/*.rs.bk
+
+*.pdb
