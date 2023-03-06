@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::{
     ops::{Add, AddAssign, Deref, Sub, SubAssign},
     slice::Iter,
@@ -5,7 +6,7 @@ use std::{
 
 use crate::Position;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub enum Team {
     Red,
     Blue,
@@ -20,6 +21,7 @@ impl Team {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Mana {
     value: u8,
     pub max: u8,
@@ -80,6 +82,7 @@ impl Deref for Mana {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Spell {
     // cost: u8,
     pattern: Vec<Position>,
@@ -167,6 +170,7 @@ impl Spell {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Mage {
     pub index: usize,
     pub position: Position,
@@ -219,6 +223,7 @@ impl Mage {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Board {
     pub width: usize,
     pub height: usize,
@@ -235,6 +240,7 @@ impl Board {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Game {
     board: Board,
     mages: Vec<Mage>,
@@ -344,7 +350,7 @@ impl Game {
         None
     }
 
-    fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
+    pub fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
         for mage in self.mages.iter_mut().filter(|mage| mage.is_alive()) {
             if mage.position == *position {
                 return Some(mage);
@@ -409,29 +415,16 @@ impl Game {
         self.active_mage = None;
     }
 
-    pub fn attack(&mut self) -> usize {
-        let mut hits = 0;
+    pub fn attack(&mut self) -> Vec<Position> {
+        let mut hits = Vec::new();
 
         if let Some(active_mage) = self.get_active_mage() {
-            let targets = self.targets(active_mage, active_mage.position, 0);
+            let targets = self.targets(active_mage, active_mage.position);
 
             for (is_enemy, tile) in targets {
                 if is_enemy {
-                    hits += 1;
                     self.live_occupant_mut(&tile).unwrap().mana -= 1;
-
-                    // for _ in 0..20 {
-                    //     let d = js_sys::Math::random() * std::f64::consts::TAU;
-                    //     let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                    //     self.particles.push(Particle(
-                    //         tile.0 as f64,
-                    //         tile.1 as f64,
-                    //         d.cos() * v,
-                    //         d.sin() * v,
-                    //         (js_sys::Math::random() * 50.0) as u64,
-                    //         ParticleSort::Missile,
-                    //     ));
-                    // }
+                    hits.push(tile);
                 }
             }
         }
@@ -439,12 +432,7 @@ impl Game {
         hits
     }
 
-    pub fn targets(
-        &self,
-        mage: &Mage,
-        tile: Position,
-        spell_index: usize,
-    ) -> Vec<(bool, Position)> {
+    pub fn targets(&self, mage: &Mage, tile: Position) -> Vec<(bool, Position)> {
         let mut moves = Vec::with_capacity(mage.spell.pattern.len());
 
         for dir in &mage.spell.pattern {

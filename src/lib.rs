@@ -4,8 +4,8 @@ mod draw;
 mod net;
 
 use draw::*;
-use net::fetch_with_callback;
-use shared::{Game, Team};
+use net::{fetch, send_message};
+use shared::{Game, OutMessage, Position, Team};
 use shared::{Mage, Message};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -288,7 +288,7 @@ impl App {
                             .is_some()
                         {
                             for (enemy_occupied, position) in
-                                &self.game.targets(mage, selected_tile, 0)
+                                &self.game.targets(mage, selected_tile)
                             {
                                 if *enemy_occupied {
                                     draw_crosshair(
@@ -402,11 +402,33 @@ impl App {
 }
 
 trait Updatable {
-    fn update(&mut self, pointer: &Pointer, messages: &Vec<Message>);
+    fn update(&mut self, pointer: &Pointer, messages: &Vec<Message>) -> Option<Vec<Position>>;
 }
 
 impl Updatable for Game {
-    fn update(&mut self, pointer: &Pointer, messages: &Vec<Message>) {
+    fn update(&mut self, pointer: &Pointer, messages: &Vec<Message>) -> Option<Vec<Position>> {
+        for message in messages {
+            match message {
+                Message::Move(from, to) => {
+                    if let Some(active_mage) = self.live_occupant(from) {
+                        // web_sys::console::log_1(&format!("{:?}", active_mage).into());
+                        let available_moves = active_mage.available_moves(self);
+                        let potential_move =
+                            available_moves.iter().find(|(position, _)| position == to);
+
+                        if let Some((position, _)) = potential_move {
+                            self.live_occupant_mut(from).unwrap().position = *position;
+                            let tiles = self.attack();
+                            self.end_turn();
+
+                            return Some(tiles);
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
+
         if pointer.clicked() {
             if let Some(selected_tile) =
                 self.location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
@@ -418,9 +440,13 @@ impl Updatable for Game {
                         .find(|(position, _)| *position == selected_tile);
 
                     if let Some((position, _)) = potential_move {
+                        send_message(OutMessage::Move(active_mage.position, *position));
+
                         self.get_active_mage_mut().unwrap().position = *position;
-                        self.attack();
+                        let tiles = self.attack();
                         self.end_turn();
+
+                        return Some(tiles);
                     } else {
                         self.select_mage_at(&selected_tile);
                     }
@@ -428,11 +454,8 @@ impl Updatable for Game {
                     self.select_mage_at(&selected_tile);
                 }
             }
-        } else if pointer.alt_clicked() {
-            // if self.attack() > 0 {
-            //     self.end_turn();
-            // }
         }
+        None
     }
 }
 
@@ -488,8 +511,8 @@ fn start() -> Result<(), JsValue> {
             web_sys::console::log_1(&value);
 
             let mut message_pool = message_pool.borrow_mut();
-            let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
-            message_pool.messages.push(message);
+            let mut message: Vec<Message> = serde_wasm_bindgen::from_value(value).unwrap();
+            message_pool.messages.append(&mut message);
         })
     };
 
@@ -511,7 +534,26 @@ fn start() -> Result<(), JsValue> {
                 let pointer = pointer.borrow();
                 let message_pool = message_pool.borrow();
 
-                app.game.update(&pointer, &message_pool.messages);
+                let target_positions = app.game.update(&pointer, &message_pool.messages);
+
+                if let Some(target_positions) = target_positions {
+                    for tile in target_positions {
+                        web_sys::console::log_1(&format!("{:?}", tile).into());
+                        for _ in 0..20 {
+                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                            app.particles.push(Particle(
+                                tile.0 as f64,
+                                tile.1 as f64,
+                                d.cos() * v,
+                                d.sin() * v,
+                                (js_sys::Math::random() * 50.0) as u64,
+                                ParticleSort::Missile,
+                            ));
+                        }
+                    }
+                }
+
                 app.draw(&context, &atlas, &pointer).unwrap();
             }
 
@@ -524,7 +566,7 @@ fn start() -> Result<(), JsValue> {
             }
 
             if message_pool.borrow().available(app.frame) {
-                let _ = fetch_with_callback(&request, &message_closure);
+                let _ = fetch(&request).then(&message_closure);
                 // // promise.catch(&Closure::<dyn FnMut(_)>::new(|value: JsValue| {
                 // //     web_sys::console::log_1(&value);
                 // // }));
