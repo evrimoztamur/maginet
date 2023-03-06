@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["server"]
+members = ["server", "shared"]
 
 [lib]
 crate-type = ["cdylib"]
@@ -16,6 +16,7 @@ wasm-bindgen-futures = "0.4.24"
 futures = "0.3.26"
 serde = { version = "1.0.152", features = ["derive"] }
 serde-wasm-bindgen = "0.4"
+shared = { path = "shared" }
 
 [dependencies.web-sys]
 version = "0.3.4"
