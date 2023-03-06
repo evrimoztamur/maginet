@@ -1,7 +1,8 @@
 use axum::{routing::get, Json, Router};
-use serde::Serialize;
 use std::net::SocketAddr;
 use tower_http::services::{ServeDir, ServeFile};
+
+use shared::{Message, Position};
 
 #[tokio::main]
 async fn main() {
@@ -9,7 +10,7 @@ async fn main() {
         .nest_service("/", ServeFile::new("index.html"))
         .nest_service("/pkg", ServeDir::new("pkg"))
         .nest_service("/img", ServeDir::new("img"))
-        .route("/test", get(get_user));
+        .route("/test", get(get_test));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
 
@@ -19,13 +20,6 @@ async fn main() {
         .unwrap();
 }
 
-#[derive(Serialize)]
-struct Message {
-    value: String,
-}
-
-async fn get_user() -> Json<Message> {
-    Json(Message {
-        value: "Hello".to_string(),
-    })
+async fn get_test() -> Json<Message> {
+    Json(Message::Move(Position(0, 0)))
 }

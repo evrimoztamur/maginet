@@ -1,21 +1,23 @@
 #![feature(drain_filter)]
 
+mod draw;
+mod net;
+
 use draw::*;
-use futures::TryFutureExt;
+use net::fetch_with_callback;
 use shared::{Game, Team};
 use shared::{Mage, Message};
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::{future_to_promise, JsFuture};
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement, Request, RequestInit, Response};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement, Request, RequestInit};
 
 const BOARD_OFFSET: (i32, i32) = (8, 8);
 const BOARD_OFFSET_F64: (f64, f64) = (BOARD_OFFSET.0 as f64, BOARD_OFFSET.1 as f64);
 const BOARD_SCALE: (i32, i32) = (30, 30);
 const BOARD_SCALE_F64: (f64, f64) = (BOARD_SCALE.0 as f64, BOARD_SCALE.1 as f64);
-mod draw;
+
 enum ParticleSort {
     Missile,
     Overdrive,
@@ -483,11 +485,11 @@ fn start() -> Result<(), JsValue> {
         let message_pool = message_pool.clone();
 
         Closure::<dyn FnMut(JsValue)>::new(move |value| {
+            web_sys::console::log_1(&value);
+
             let mut message_pool = message_pool.borrow_mut();
             let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
             message_pool.messages.push(message);
-
-            message_pool.polling = false;
         })
     };
 
@@ -500,9 +502,9 @@ fn start() -> Result<(), JsValue> {
     {
         let pointer = pointer.clone();
         let app = app.clone();
+        let message_pool = message_pool.clone();
 
         *g.borrow_mut() = Some(Closure::new(move || {
-            let message_pool = message_pool.clone();
             let mut app = app.borrow_mut();
 
             {
@@ -521,22 +523,13 @@ fn start() -> Result<(), JsValue> {
                 pointer.previous = Some(Box::new(pointer.clone()));
             }
 
-            if !message_pool.borrow().polling {
-            //     let resp_value =
-            //         JsFuture::from(web_sys::window().unwrap().fetch_with_request(&request))
-            //             .and_then(|v| {
-            //                 assert!(v.is_instance_of::<Response>());
-            //                 let resp: Response = v.dyn_into().unwrap();
-            //                 JsFuture::from(resp.json().unwrap())
-            //             });
+            if message_pool.borrow().available(app.frame) {
+                let _ = fetch_with_callback(&request, &message_closure);
+                // // promise.catch(&Closure::<dyn FnMut(_)>::new(|value: JsValue| {
+                // //     web_sys::console::log_1(&value);
+                // // }));
 
-            //     let promise = future_to_promise(resp_value);
-            //     promise.then(&message_closure);
-            //     // promise.catch(&Closure::<dyn FnMut(_)>::new(|value: JsValue| {
-            //     //     web_sys::console::log_1(&value);
-            //     // }));
-
-                message_pool.borrow_mut().polling = true;
+                message_pool.borrow_mut().block(app.frame);
             }
 
             request_animation_frame(f.borrow().as_ref().unwrap());
@@ -704,14 +697,24 @@ fn start() -> Result<(), JsValue> {
 
 struct MessagePool {
     messages: Vec<Message>,
-    polling: bool,
+    block_frame: u64,
 }
 
 impl MessagePool {
+    const BLOCK_FRAMES: u64 = 60;
+
     fn new() -> MessagePool {
         MessagePool {
             messages: Vec::new(),
-            polling: false,
+            block_frame: 0,
         }
+    }
+
+    fn available(&self, frame: u64) -> bool {
+        frame >= self.block_frame
+    }
+
+    fn block(&mut self, frame: u64) {
+        self.block_frame = frame + Self::BLOCK_FRAMES;
     }
 }
