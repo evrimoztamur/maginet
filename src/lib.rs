@@ -4,8 +4,8 @@ mod draw;
 mod net;
 
 use draw::*;
-use net::{fetch, send_message};
-use shared::{Game, OutMessage, Position, Team};
+use net::{fetch, request_turns_since, send_message};
+use shared::{Game, OutMessage, Position, Team, Turn};
 use shared::{Mage, Message};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -174,6 +174,7 @@ struct App {
     game: Game,
     particles: Vec<Particle>,
     frame: u64,
+    active_mage: Option<usize>,
 }
 
 impl App {
@@ -182,6 +183,36 @@ impl App {
             game: Game::new(8, 8, 4).unwrap(),
             particles: Vec::new(),
             frame: 0,
+            active_mage: None,
+        }
+    }
+
+    fn is_mage_active(&self, mage: &Mage) -> bool {
+        match self.active_mage {
+            Some(active_mage) => active_mage == mage.index,
+            None => false,
+        }
+    }
+
+    fn get_active_mage(&self) -> Option<&Mage> {
+        if let Some(index) = self.active_mage {
+            if let Some(mage) = self.game.get_mage(index) {
+                return Some(mage);
+            }
+        }
+
+        None
+    }
+
+    pub fn select_mage_at(&mut self, selected_tile: &Position) {
+        if let Some(occupant) = self.game.live_occupant(selected_tile) {
+            if occupant.team == self.game.turn_for() {
+                self.active_mage = Some(occupant.index);
+            } else {
+                self.active_mage = None;
+            }
+        } else {
+            self.active_mage = None;
         }
     }
 
@@ -227,7 +258,7 @@ impl App {
 
                     mage.draw(context, atlas, mage.index, self.frame, self.game.turn_for())?;
 
-                    if mage.mana.is_overdriven() && mage.is_alive() {
+                    if mage.is_overdriven() && mage.is_alive() {
                         for _ in 0..(self.frame / 2 % 2) {
                             let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
                             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
@@ -242,7 +273,7 @@ impl App {
                         }
                     }
 
-                    if self.game.is_mage_active(mage) {
+                    if self.is_mage_active(mage) {
                         draw_sprite(
                             context,
                             atlas,
@@ -263,8 +294,8 @@ impl App {
                 // DRAW markers
                 context.save();
 
-                if let Some(mage) = self.game.get_active_mage() {
-                    let available_moves = mage.available_moves(&self.game);
+                if let Some(mage) = self.get_active_mage() {
+                    let available_moves = self.game.available_moves(mage);
                     for (position, overdrive) in &available_moves {
                         draw_sprite(
                             context,
@@ -328,9 +359,9 @@ impl App {
             context.translate(0.0, 248.0)?;
             {
                 // DRAW active mage
-                if let Some(active_mage) = self.game.get_active_mage() {
-                    for i in 0..active_mage.mana.max {
-                        if i < *active_mage.mana {
+                if let Some(mage) = self.get_active_mage() {
+                    for i in 0..mage.mana.max {
+                        if i < *mage.mana {
                             draw_sprite(context, atlas, 80.0, 0.0, 8.0, 8.0, i as f64 * 10.0, 0.0)?;
                         } else {
                             draw_sprite(context, atlas, 88.0, 0.0, 8.0, 8.0, i as f64 * 10.0, 0.0)?;
@@ -405,29 +436,35 @@ impl App {
 
         for message in messages {
             match message {
-                Message::Move(from, to) => {
-                    if let Some(active_mage) = self.game.live_occupant(from) {
-                        // web_sys::console::log_1(&format!("{:?}", active_mage).into());
-                        let available_moves = active_mage.available_moves(&self.game);
-                        let potential_move =
-                            available_moves.iter().find(|(position, _)| position == to);
-
-                        if let Some((position, _)) = potential_move {
-                            self.game.live_occupant_mut(from).unwrap().position = *position;
-                            let mut tiles = self.game.attack();
-                            self.game.end_turn();
-
-                            target_positions.append(&mut tiles);
-                        }
+                Message::Move(Turn(from, to)) => {
+                    if let Some(mut move_targets) = self.game.take_move(*from, *to) {
+                        target_positions.append(&mut move_targets);
                     }
                 }
                 _ => (),
             }
         }
 
-        let mut game_target_positions = self.game.update(&pointer);
+        if pointer.clicked() {
+            if let Some(selected_tile) =
+                self.game
+                    .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
+            {
+                if let Some(active_mage) = self.get_active_mage() {
+                    let from = active_mage.position;
 
-        target_positions.append(&mut game_target_positions);
+                    if let Some(mut move_targets) = self.game.take_move(from, selected_tile) {
+                        send_message(OutMessage::Move(Turn(from, selected_tile)));
+                        target_positions.append(&mut move_targets);
+                        self.active_mage = None;
+                    } else {
+                        self.select_mage_at(&selected_tile);
+                    }
+                } else {
+                    self.select_mage_at(&selected_tile);
+                }
+            }
+        }
 
         for tile in target_positions {
             web_sys::console::log_1(&format!("{:?}", tile).into());
@@ -444,42 +481,6 @@ impl App {
                 ));
             }
         }
-    }
-}
-
-trait Updatable {
-    fn update(&mut self, pointer: &Pointer) -> Vec<Position>;
-}
-
-impl Updatable for Game {
-    fn update(&mut self, pointer: &Pointer) -> Vec<Position> {
-        if pointer.clicked() {
-            if let Some(selected_tile) =
-                self.location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
-            {
-                if let Some(active_mage) = self.get_active_mage() {
-                    let available_moves = active_mage.available_moves(self);
-                    let potential_move = available_moves
-                        .iter()
-                        .find(|(position, _)| *position == selected_tile);
-
-                    if let Some((position, _)) = potential_move {
-                        send_message(OutMessage::Move(active_mage.position, *position));
-
-                        self.get_active_mage_mut().unwrap().position = *position;
-                        let tiles = self.attack();
-                        self.end_turn();
-
-                        return tiles;
-                    } else {
-                        self.select_mage_at(&selected_tile);
-                    }
-                } else {
-                    self.select_mage_at(&selected_tile);
-                }
-            }
-        }
-        Vec::new()
     }
 }
 
@@ -516,15 +517,6 @@ fn start() -> Result<(), JsValue> {
         lmb: false,
         rmb: false,
     }));
-
-    let request = {
-        let mut opts = RequestInit::new();
-        opts.method("GET");
-
-        let url = format!("test");
-
-        Request::new_with_str_and_init(&url, &opts).unwrap()
-    };
 
     let message_pool: Rc<RefCell<MessagePool>> = Rc::new(RefCell::new(MessagePool::new()));
 
@@ -571,7 +563,7 @@ fn start() -> Result<(), JsValue> {
             }
 
             if message_pool.borrow().available(app.frame) {
-                if let Some(promise) = fetch(&request) {
+                if let Some(promise) = fetch(&request_turns_since(app.game.turns())) {
                     promise.then(&message_closure);
                 }
 

@@ -1,8 +1,8 @@
-use std::sync::{Mutex};
+use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::{Game, Position};
+use crate::{Game, Turn};
 
 pub struct MutexWrapper<T: ?Sized>(pub Mutex<T>);
 
@@ -20,12 +20,12 @@ impl<T: ?Sized + Serialize> Serialize for MutexWrapper<T> {
 
 #[derive(Serialize)]
 pub enum OutMessage<'a> {
-    Move(Position, Position),
+    Move(Turn),
     Game(&'a MutexWrapper<Game>),
 }
 
 #[derive(Debug, Deserialize)]
 pub enum Message {
-    Move(Position, Position),
+    Move(Turn),
     Game(Game),
 }

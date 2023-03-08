@@ -19,6 +19,15 @@ pub fn fetch(request: &Request) -> Option<Promise> {
     // None
 }
 
+pub fn request_turns_since(since: usize) -> Request {
+    let mut opts = RequestInit::new();
+    opts.method("GET");
+
+    let url = format!("turns/{}", since);
+
+    Request::new_with_str_and_init(&url, &opts).unwrap()
+}
+
 pub fn send_message(message: OutMessage) -> Option<Promise> {
     if let Some(json) = serde_json::to_string(&message).ok() {
         let mut opts = RequestInit::new();

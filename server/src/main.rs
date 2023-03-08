@@ -1,5 +1,5 @@
 use axum::{
-    extract,
+    extract::{self, Path},
     http::{header, HeaderValue},
     response::IntoResponse,
     routing::get,
@@ -9,7 +9,7 @@ use axum::{
 use std::net::SocketAddr;
 use tower_http::services::{ServeDir, ServeFile};
 
-use shared::{Game, Message, MutexWrapper, OutMessage, Position};
+use shared::{Game, Message, MutexWrapper, OutMessage, Position, Turn};
 
 use axum::extract::State;
 use std::sync::{Arc, Mutex};
@@ -29,7 +29,7 @@ async fn main() {
         .nest_service("/", ServeFile::new("index.html"))
         .nest_service("/pkg", ServeDir::new("pkg"))
         .nest_service("/img", ServeDir::new("img"))
-        .route("/test", get(get_test))
+        .route("/turns/:since", get(get_turns_since))
         .route("/test", post(process_inbound))
         .route("/state", get(get_state))
         .with_state(state);
@@ -42,13 +42,23 @@ async fn main() {
         .unwrap();
 }
 
-async fn get_test(State(_): State<AppState>) -> impl IntoResponse {
+async fn get_turns_since(
+    State(state): State<AppState>,
+    Path(since): Path<usize>,
+) -> impl IntoResponse {
+    let game = state.game.0.lock().unwrap();
+    let turns_since: Vec<OutMessage> = game
+        .turns_since(since)
+        .iter()
+        .map(|turn| OutMessage::Move(**turn))
+        .collect();
+
     (
         [(
             header::CONTENT_TYPE,
             HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
         )],
-        serde_json::to_string(&vec![&OutMessage::Move(Position(2, 3), Position(2, 4))]).unwrap(),
+        serde_json::to_string(&turns_since).unwrap(),
     )
         .into_response()
 }
@@ -70,7 +80,7 @@ async fn process_inbound(
 ) {
     let mut game = state.game.0.lock().unwrap();
     match message {
-        Message::Move(from, to) => {
+        Message::Move(Turn(from, to)) => {
             game.take_move(from, to);
         }
         _ => (),

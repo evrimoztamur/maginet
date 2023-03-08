@@ -34,10 +34,6 @@ impl Mana {
             max: max_mana,
         }
     }
-
-    pub fn is_overdriven(&self) -> bool {
-        self.value <= 2
-    }
 }
 
 impl Add<u8> for Mana {
@@ -194,32 +190,8 @@ impl Mage {
         self.mana.value > 0
     }
 
-    pub fn available_moves(&self, game: &Game) -> Vec<(Position, bool)> {
-        const DIRS: [(Position, bool); 8] = [
-            (Position(0, -1), false),
-            (Position(-1, 0), false),
-            (Position(1, 0), false),
-            (Position(0, 1), false),
-            (Position(-1, -1), true),
-            (Position(-1, 1), true),
-            (Position(1, -1), true),
-            (Position(1, 1), true),
-        ];
-
-        let mut moves = Vec::with_capacity(DIRS.len());
-
-        for (dir, overdrive) in DIRS {
-            let position = &self.position + &dir;
-
-            if position.within_bounds(0, game.board.width as i8, 0, game.board.height as i8)
-                && !game.occupied(&position)
-                && !(overdrive && !self.mana.is_overdriven())
-            {
-                moves.push((position, overdrive));
-            }
-        }
-
-        return moves;
+    pub fn is_overdriven(&self) -> bool {
+        self.mana.value <= 2
     }
 }
 
@@ -240,12 +212,14 @@ impl Board {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+pub struct Turn(pub Position, pub Position);
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Game {
     board: Board,
     mages: Vec<Mage>,
-    active_mage: Option<usize>,
-    turn: usize,
+    turns: Vec<Turn>,
 }
 
 impl Game {
@@ -282,48 +256,30 @@ impl Game {
                 ));
             }
 
-            let active_mage = None;
-            let turn = 0;
-            // let particles = Vec::new();
+            let turns = Vec::new();
 
             Ok(Game {
                 board,
                 mages,
-                // particles,
-                active_mage,
-                turn,
+                turns,
             })
         }
+    }
+
+    pub fn turns_since(&self, since: usize) -> Vec<&Turn> {
+        self.turns.iter().skip(since).collect()
     }
 
     pub fn iter_mages(&self) -> Iter<Mage> {
         self.mages.iter()
     }
 
-    pub fn get_active_mage(&self) -> Option<&Mage> {
-        // Index guaranteed to be within bounds
-        if let Some(active_mage) = self.active_mage {
-            self.mages.get(active_mage)
-        } else {
-            None
-        }
+    pub fn get_mage(&self, index: usize) -> Option<&Mage> {
+        self.mages.get(index)
     }
 
-    pub fn is_mage_active(&self, mage: &Mage) -> bool {
-        if let Some(active_mage) = self.get_active_mage() {
-            active_mage.index == mage.index
-        } else {
-            false
-        }
-    }
-
-    pub fn get_active_mage_mut(&mut self) -> Option<&mut Mage> {
-        // Index guaranteed to be within bounds
-        if let Some(active_mage) = self.active_mage {
-            self.mages.get_mut(active_mage)
-        } else {
-            None
-        }
+    pub fn get_mage_mut(&mut self, index: usize) -> Option<&mut Mage> {
+        self.mages.get_mut(index)
     }
 
     fn occupant(&self, position: &Position) -> Option<&Mage> {
@@ -368,8 +324,12 @@ impl Game {
         }
     }
 
+    pub fn turns(&self) -> usize {
+        self.turns.len()
+    }
+
     pub fn turn_for(&self) -> Team {
-        if self.turn % 2 == 0 {
+        if self.turns() % 2 == 0 {
             Team::Red
         } else {
             Team::Blue
@@ -398,47 +358,58 @@ impl Game {
         }
     }
 
-    pub fn select_mage_at(&mut self, selected_tile: &Position) {
-        if let Some(occupant) = self.live_occupant(selected_tile) {
-            if occupant.team == self.turn_for() {
-                self.active_mage = Some(occupant.index);
-            } else {
-                self.active_mage = None;
-            }
-        } else {
-            self.active_mage = None;
-        }
-    }
+    pub fn available_moves(&self, mage: &Mage) -> Vec<(Position, bool)> {
+        const DIRS: [(Position, bool); 8] = [
+            (Position(0, -1), false),
+            (Position(-1, 0), false),
+            (Position(1, 0), false),
+            (Position(0, 1), false),
+            (Position(-1, -1), true),
+            (Position(-1, 1), true),
+            (Position(1, -1), true),
+            (Position(1, 1), true),
+        ];
 
-    pub fn end_turn(&mut self) {
-        self.turn += 1;
-        self.active_mage = None;
+        let mut moves = Vec::with_capacity(DIRS.len());
+
+        for (dir, overdrive) in DIRS {
+            let position = &mage.position + &dir;
+
+            if position.within_bounds(0, self.board.width as i8, 0, self.board.height as i8)
+                && !self.occupied(&position)
+                && !(overdrive && !mage.is_overdriven())
+            {
+                moves.push((position, overdrive));
+            }
+        }
+
+        return moves;
     }
 
     pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
-        self.select_mage_at(&from);
+        if let Some(mage) = self.live_occupant(&from) {
+            if mage.team == self.turn_for() {
+                let available_moves = self.available_moves(mage);
+                let potential_move = available_moves.iter().find(|(position, _)| *position == to);
 
-        if let Some(active_mage) = self.get_active_mage() {
-            let available_moves = active_mage.available_moves(self);
-            let potential_move = available_moves.iter().find(|(position, _)| *position == to);
+                let mage = self.live_occupant_mut(&from).unwrap();
 
-            if let Some((position, _)) = potential_move {
-                self.get_active_mage_mut().unwrap().position = *position;
-                let tiles = self.attack();
-                self.end_turn();
-
-                return Some(tiles);
+                if let Some((to, _)) = potential_move {
+                    mage.position = *to;
+                    self.turns.push(Turn(from, *to));
+                    return Some(self.attack(*to));
+                }
             }
         }
 
         None
     }
 
-    pub fn attack(&mut self) -> Vec<Position> {
+    pub fn attack(&mut self, at: Position) -> Vec<Position> {
         let mut hits = Vec::new();
 
-        if let Some(active_mage) = self.get_active_mage() {
-            let targets = self.targets(active_mage, active_mage.position);
+        if let Some(active_mage) = self.live_occupant(&at) {
+            let targets = self.targets(active_mage, at);
 
             for (is_enemy, tile) in targets {
                 if is_enemy {
@@ -451,11 +422,11 @@ impl Game {
         hits
     }
 
-    pub fn targets(&self, mage: &Mage, tile: Position) -> Vec<(bool, Position)> {
+    pub fn targets(&self, mage: &Mage, at: Position) -> Vec<(bool, Position)> {
         let mut moves = Vec::with_capacity(mage.spell.pattern.len());
 
         for dir in &mage.spell.pattern {
-            let position = &tile + dir;
+            let position = &at + dir;
 
             if position.within_bounds(0, self.board.width as i8, 0, self.board.height as i8) {
                 moves.push((
