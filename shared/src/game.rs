@@ -415,6 +415,25 @@ impl Game {
         self.active_mage = None;
     }
 
+    pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
+        self.select_mage_at(&from);
+
+        if let Some(active_mage) = self.get_active_mage() {
+            let available_moves = active_mage.available_moves(self);
+            let potential_move = available_moves.iter().find(|(position, _)| *position == to);
+
+            if let Some((position, _)) = potential_move {
+                self.get_active_mage_mut().unwrap().position = *position;
+                let tiles = self.attack();
+                self.end_turn();
+
+                return Some(tiles);
+            }
+        }
+
+        None
+    }
+
     pub fn attack(&mut self) -> Vec<Position> {
         let mut hits = Vec::new();
 

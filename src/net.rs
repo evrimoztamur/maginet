@@ -11,11 +11,12 @@ fn wrap_response_into_json(value: JsValue) -> JsFuture {
     JsFuture::from(resp.json().unwrap())
 }
 
-pub fn fetch(request: &Request) -> Promise {
+pub fn fetch(request: &Request) -> Option<Promise> {
     let resp_value = JsFuture::from(web_sys::window().unwrap().fetch_with_request(request))
         .and_then(wrap_response_into_json);
 
-    future_to_promise(resp_value)
+    Some(future_to_promise(resp_value))
+    // None
 }
 
 pub fn send_message(message: OutMessage) -> Option<Promise> {
@@ -33,7 +34,7 @@ pub fn send_message(message: OutMessage) -> Option<Promise> {
             .set("Content-Type", "application/json")
             .unwrap();
 
-        Some(fetch(request))
+        fetch(request)
     } else {
         None
     }

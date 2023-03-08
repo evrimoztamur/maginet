@@ -1,16 +1,15 @@
 use axum::{
     extract,
-    http::{header, HeaderValue, Response},
+    http::{header, HeaderValue},
     response::IntoResponse,
     routing::get,
     routing::post,
-    Json, Router,
+    Router,
 };
-use serde::{Serialize, Serializer};
 use std::net::SocketAddr;
 use tower_http::services::{ServeDir, ServeFile};
 
-use shared::{Game, MutexWrapper, OutMessage, Position, Message};
+use shared::{Game, Message, MutexWrapper, OutMessage, Position};
 
 use axum::extract::State;
 use std::sync::{Arc, Mutex};
@@ -65,24 +64,15 @@ async fn get_state(State(state): State<AppState>) -> impl IntoResponse {
         .into_response()
 }
 
-async fn process_inbound(State(state): State<AppState>, extract::Json(message): extract::Json<Message>) {
+async fn process_inbound(
+    State(state): State<AppState>,
+    extract::Json(message): extract::Json<Message>,
+) {
     let mut game = state.game.0.lock().unwrap();
     match message {
         Message::Move(from, to) => {
-            if let Some(active_mage) = game.live_occupant(&from) {
-                // web_sys::console::log_1(&format!("{:?}", active_mage).into());
-                let available_moves = active_mage.available_moves(&game);
-                let potential_move =
-                    available_moves.iter().find(|(position, _)| position == &to);
-
-                if let Some((position, _)) = potential_move {
-                    game.live_occupant_mut(&from).unwrap().position = *position;
-                    game.attack();
-                    game.end_turn();
-                }
-            }
-        },
-        // Message::Game(_) => todo!(),
-        _ => ()
+            game.take_move(from, to);
+        }
+        _ => (),
     }
 }
