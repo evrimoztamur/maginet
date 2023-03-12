@@ -143,22 +143,14 @@ impl Drawable for Mage {
 struct Pointer {
     previous: Option<Box<Pointer>>,
     location: (i32, i32),
-    lmb: bool,
-    rmb: bool,
+    button: bool,
 }
 
 impl Pointer {
     fn clicked(&self) -> bool {
         match &self.previous {
-            Some(pointer) => self.lmb && !pointer.lmb,
-            None => self.lmb,
-        }
-    }
-
-    fn alt_clicked(&self) -> bool {
-        match &self.previous {
-            Some(pointer) => self.rmb && !pointer.rmb,
-            None => self.rmb,
+            Some(pointer) => self.button && !pointer.button,
+            None => self.button,
         }
     }
 }
@@ -516,8 +508,7 @@ fn start() -> Result<(), JsValue> {
     let pointer = Rc::new(RefCell::new(Pointer {
         previous: None,
         location: (0, 0),
-        lmb: false,
-        rmb: false,
+        button: false,
     }));
 
     let message_pool: Rc<RefCell<MessagePool>> = Rc::new(RefCell::new(MessagePool::new()));
@@ -614,8 +605,7 @@ fn start() -> Result<(), JsValue> {
             let mut pointer = pointer.borrow_mut();
 
             match event.button() {
-                0 => pointer.lmb = true,
-                2 => pointer.rmb = true,
+                0 | 2 => pointer.button = true,
                 _ => (),
             }
         });
@@ -629,8 +619,7 @@ fn start() -> Result<(), JsValue> {
             let mut pointer = pointer.borrow_mut();
 
             match event.button() {
-                0 => pointer.lmb = false,
-                2 => pointer.rmb = false,
+                0 | 2 => pointer.button = true,
                 _ => (),
             }
         });
@@ -725,13 +714,13 @@ fn start() -> Result<(), JsValue> {
                     if (pointer_location.0 - pointer.location.0).abs() < 16
                         && (pointer_location.1 - pointer.location.1).abs() < 16
                     {
-                        pointer.lmb = true;
+                        pointer.button = true;
                     } else if let Some(selected_tile) =
                         app.game
                             .location_as_position(pointer_location, BOARD_OFFSET, BOARD_SCALE)
                     {
                         if let Some(_) = app.game.live_occupant(&selected_tile) {
-                            pointer.lmb = true;
+                            pointer.button = true;
                         }
                     }
 
@@ -750,7 +739,7 @@ fn start() -> Result<(), JsValue> {
         let closure = Closure::<dyn FnMut(_)>::new(move |event: web_sys::TouchEvent| {
             let mut pointer = pointer.borrow_mut();
 
-            pointer.lmb = false;
+            pointer.button = false;
             event.prevent_default();
         });
         document.add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;
