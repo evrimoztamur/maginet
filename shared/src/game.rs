@@ -1,8 +1,9 @@
-use serde::{Deserialize, Serialize};
 use std::{
     ops::{Add, AddAssign, Deref, Sub, SubAssign},
     slice::Iter,
 };
+
+use serde::{Deserialize, Serialize};
 
 use crate::Position;
 

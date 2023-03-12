@@ -18,9 +18,7 @@ struct Player {
 
 impl Player {
     fn new(index: usize) -> Player {
-        Player {
-            index,
-        }
+        Player { index }
     }
 }
 

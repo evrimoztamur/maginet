@@ -3,12 +3,13 @@
 mod draw;
 mod net;
 
-use draw::*;
-use net::{fetch, request_turns_since, send_message};
-use shared::{Game, Lobby, OutMessage, Position, Team, Turn};
-use shared::{Mage, Message};
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use draw::*;
+use net::{fetch, request_turns_since, send_message};
+use shared::{Lobby, OutMessage, Position, Team, Turn};
+use shared::{Mage, Message};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement, Request, RequestInit};
@@ -88,7 +89,7 @@ trait Drawable {
         index: usize,
         frame: u64,
         team: Team,
-        game_started: bool
+        game_started: bool,
     ) -> Result<(), JsValue>;
 }
 
@@ -100,7 +101,7 @@ impl Drawable for Mage {
         index: usize,
         frame: u64,
         team: Team,
-        game_started: bool
+        game_started: bool,
     ) -> Result<(), JsValue> {
         let bounce = (if self.team == team && self.is_alive() && game_started {
             2 - ((frame as i64 / 6 + index as i64 / 2) % 4 - 2).abs()
@@ -108,7 +109,11 @@ impl Drawable for Mage {
             0
         }) as f64;
 
-        let sleeping_offset = if self.is_alive() && game_started { 0.0 } else { 64.0 };
+        let sleeping_offset = if self.is_alive() && game_started {
+            0.0
+        } else {
+            64.0
+        };
 
         match self.team {
             Team::Red => context
@@ -270,7 +275,7 @@ impl App {
                         mage.index,
                         self.frame,
                         self.lobby.game.turn_for(),
-                        self.lobby.all_ready()
+                        self.lobby.all_ready(),
                     )?;
 
                     if mage.is_overdriven() && mage.is_alive() {

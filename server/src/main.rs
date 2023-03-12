@@ -1,3 +1,7 @@
+use std::sync::{Arc, Mutex};
+use std::{collections::HashMap, net::SocketAddr};
+
+use axum::extract::State;
 use axum::{
     extract::{self, FromRef, Path},
     http::{header, HeaderValue},
@@ -12,13 +16,8 @@ use axum_extra::extract::{
 };
 use rand::Rng;
 use serde::Serialize;
-use std::{collections::HashMap, net::SocketAddr};
-use tower_http::services::{ServeDir, ServeFile};
-
 use shared::{Lobby, LobbyError, Message, OutMessage};
-
-use axum::extract::State;
-use std::sync::{Arc, Mutex};
+use tower_http::services::{ServeDir, ServeFile};
 
 #[derive(Clone)]
 struct AppState {
@@ -144,9 +143,7 @@ async fn post_ready(
     let mut lobbies = state.lobbies.lock().unwrap();
 
     match lobbies.get_mut(&id) {
-        Some(lobby) => {
-            lobby.join_player(session_id)
-        }
+        Some(lobby) => lobby.join_player(session_id),
         None => Err(LobbyError("lobby does not exist".to_string())),
     };
 
@@ -175,7 +172,9 @@ fn identify_user(jar: SignedCookieJar) -> (SignedCookieJar, bool, String) {
         (jar, false, session_id.value().to_string())
     } else {
         let session_id = generate_id();
-        let cookie = Cookie::build("session_id", session_id.clone()).path("/").finish();
+        let cookie = Cookie::build("session_id", session_id.clone())
+            .path("/")
+            .finish();
 
         (jar.add(cookie), true, session_id)
     }
