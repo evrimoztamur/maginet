@@ -147,7 +147,7 @@ impl Drawable for Mage {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct Pointer {
     previous: Option<Box<Pointer>>,
     location: (i32, i32),
@@ -155,6 +155,12 @@ struct Pointer {
 }
 
 impl Pointer {
+    fn new() -> Pointer {
+        Pointer {
+            ..Default::default()
+        }
+    }
+
     fn clicked(&self) -> bool {
         match &self.previous {
             Some(pointer) => self.button && !pointer.button,
@@ -539,31 +545,10 @@ fn start() -> Result<(), JsValue> {
     let app = App::new(get_session_id());
     let app = Rc::new(RefCell::new(app));
 
-    let pointer = Rc::new(RefCell::new(Pointer {
-        previous: None,
-        location: (0, 0),
-        button: false,
-    }));
+    let pointer = Rc::new(RefCell::new(Pointer::new()));
 
-    let state_request = {
-        let pathname = web_sys::window().unwrap().location().pathname().unwrap();
-        let mut opts = RequestInit::new();
-        opts.method("GET");
-
-        let url = format!("{pathname}/state");
-
-        Request::new_with_str_and_init(&url, &opts).unwrap()
-    };
-
-    let ready_request = {
-        let pathname = web_sys::window().unwrap().location().pathname().unwrap();
-        let mut opts = RequestInit::new();
-        opts.method("POST");
-
-        let url = format!("{pathname}/ready");
-
-        Request::new_with_str_and_init(&url, &opts).unwrap()
-    };
+    let state_request = request_state();
+    let ready_request = request_ready();
 
     let state_closure = {
         let app = app.clone();
