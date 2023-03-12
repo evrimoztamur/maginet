@@ -467,7 +467,6 @@ impl App {
         }
 
         for tile in target_positions {
-            web_sys::console::log_1(&format!("{:?}", tile).into());
             for _ in 0..20 {
                 let d = js_sys::Math::random() * std::f64::consts::TAU;
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
@@ -492,7 +491,10 @@ fn start() -> Result<(), JsValue> {
         .create_element("canvas")?
         .dyn_into::<web_sys::HtmlCanvasElement>()?;
 
-    document.body().unwrap().append_child(&canvas)?;
+    let container_element = document.query_selector(&"main").unwrap().unwrap();
+    let nav_element = document.query_selector(&"nav").unwrap().unwrap();
+    container_element.insert_before(&canvas, Some(&nav_element))?;
+
     canvas.set_width(512);
     canvas.set_height(544);
 
@@ -509,7 +511,7 @@ fn start() -> Result<(), JsValue> {
         .dyn_into::<web_sys::HtmlImageElement>()
         .unwrap();
 
-    atlas.set_src(&"img/atlas.png");
+    atlas.set_src(&"/img/atlas.png");
 
     let pointer = Rc::new(RefCell::new(Pointer {
         previous: None,
@@ -524,8 +526,6 @@ fn start() -> Result<(), JsValue> {
         let message_pool = message_pool.clone();
 
         Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            web_sys::console::log_1(&value);
-
             let mut message_pool = message_pool.borrow_mut();
             let mut message: Vec<Message> = serde_wasm_bindgen::from_value(value).unwrap();
             message_pool.messages.append(&mut message);
@@ -575,10 +575,11 @@ fn start() -> Result<(), JsValue> {
     }
 
     let state_request = {
+        let pathname = web_sys::window().unwrap().location().pathname().unwrap();
         let mut opts = RequestInit::new();
         opts.method("GET");
 
-        let url = format!("state");
+        let url = format!("{pathname}/state");
 
         Request::new_with_str_and_init(&url, &opts).unwrap()
     };
@@ -587,13 +588,13 @@ fn start() -> Result<(), JsValue> {
         let app = app.clone();
 
         Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            web_sys::console::log_1(&value);
-
             let mut app = app.borrow_mut();
             let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
 
             match message {
-                Message::Game(game) => app.game = game,
+                Message::Lobby(lobby) => {
+                    app.game = lobby.game;
+                }
                 _ => (),
             }
 
@@ -694,6 +695,7 @@ fn start() -> Result<(), JsValue> {
                     pointer.location = (x as i32 / 2, y as i32 / 2);
                 }
             }
+            event.prevent_default();
         });
         document.add_event_listener_with_callback("touchmove", closure.as_ref().unchecked_ref())?;
         closure.forget();
@@ -736,6 +738,7 @@ fn start() -> Result<(), JsValue> {
                     pointer.location = (x as i32 / 2, y as i32 / 2);
                 }
             }
+            event.prevent_default();
         });
         document
             .add_event_listener_with_callback("touchstart", closure.as_ref().unchecked_ref())?;
@@ -744,10 +747,11 @@ fn start() -> Result<(), JsValue> {
 
     {
         let pointer = pointer.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |_: web_sys::TouchEvent| {
+        let closure = Closure::<dyn FnMut(_)>::new(move |event: web_sys::TouchEvent| {
             let mut pointer = pointer.borrow_mut();
 
             pointer.lmb = false;
+            event.prevent_default();
         });
         document.add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;
         closure.forget();

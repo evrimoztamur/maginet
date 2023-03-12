@@ -328,8 +328,12 @@ impl Game {
         self.turns.len()
     }
 
+    pub fn turn_index(&self) -> usize {
+        self.turns() % 2
+    }
+
     pub fn turn_for(&self) -> Team {
-        if self.turns() % 2 == 0 {
+        if self.turn_index() == 0 {
             Team::Red
         } else {
             Team::Blue
@@ -348,7 +352,7 @@ impl Game {
         );
 
         if (location.0 - offset.0) >= 0
-            && position.1 < self.board.width as i8
+            && position.0 < self.board.width as i8
             && (location.1 - offset.1) >= 0
             && position.1 < self.board.height as i8
         {

@@ -20,21 +20,23 @@ pub fn fetch(request: &Request) -> Option<Promise> {
 }
 
 pub fn request_turns_since(since: usize) -> Request {
+    let pathname = web_sys::window().unwrap().location().pathname().unwrap();
     let mut opts = RequestInit::new();
     opts.method("GET");
 
-    let url = format!("turns/{}", since);
+    let url = format!("{pathname}/turns/{since}");
 
     Request::new_with_str_and_init(&url, &opts).unwrap()
 }
 
 pub fn send_message(message: OutMessage) -> Option<Promise> {
     if let Some(json) = serde_json::to_string(&message).ok() {
+        let pathname = web_sys::window().unwrap().location().pathname().unwrap();
         let mut opts = RequestInit::new();
         opts.method("POST");
         opts.body(Some(&json.into()));
 
-        let url = format!("test");
+        let url = format!("{pathname}/act");
 
         let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
 
