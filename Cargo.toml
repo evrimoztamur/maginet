@@ -28,6 +28,7 @@ features = [
     'Document',
     'DomRect',
     'Element',
+    'HtmlDocument',
     'HtmlElement',
     'HtmlCanvasElement',
     'HtmlImageElement',

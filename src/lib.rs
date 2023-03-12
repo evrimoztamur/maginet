@@ -5,7 +5,7 @@ mod net;
 
 use draw::*;
 use net::{fetch, request_turns_since, send_message};
-use shared::{Game, OutMessage, Position, Team, Turn};
+use shared::{Game, Lobby, OutMessage, Position, Team, Turn};
 use shared::{Mage, Message};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -155,27 +155,38 @@ impl Pointer {
     }
 }
 
+fn window() -> web_sys::Window {
+    web_sys::window().expect("no global `window` exists")
+}
+
 fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-    web_sys::window()
-        .expect("no global `window` exists")
+    window()
         .request_animation_frame(f.as_ref().unchecked_ref())
         .expect("should register `requestAnimationFrame` OK");
 }
 
+fn document() -> web_sys::Document {
+    window()
+        .document()
+        .expect("should have a document on window")
+}
+
 struct App {
-    game: Game,
+    lobby: Lobby,
     particles: Vec<Particle>,
     frame: u64,
     active_mage: Option<usize>,
+    session_id: Option<String>,
 }
 
 impl App {
-    fn new() -> App {
+    fn new(session_id: Option<String>) -> App {
         App {
-            game: Game::new(8, 8, 4).unwrap(),
+            lobby: Lobby::new(),
             particles: Vec::new(),
             frame: 0,
             active_mage: None,
+            session_id,
         }
     }
 
@@ -188,7 +199,7 @@ impl App {
 
     fn get_active_mage(&self) -> Option<&Mage> {
         if let Some(index) = self.active_mage {
-            if let Some(mage) = self.game.get_mage(index) {
+            if let Some(mage) = self.lobby.game.get_mage(index) {
                 return Some(mage);
             }
         }
@@ -197,14 +208,17 @@ impl App {
     }
 
     pub fn select_mage_at(&mut self, selected_tile: &Position) {
-        if let Some(occupant) = self.game.live_occupant(selected_tile) {
-            if occupant.team == self.game.turn_for() {
-                self.active_mage = Some(occupant.index);
+        if self.lobby.is_active_player(self.session_id.as_ref()) {
+            self.active_mage = if let Some(occupant) = self.lobby.game.live_occupant(selected_tile)
+            {
+                if occupant.team == self.lobby.game.turn_for() {
+                    Some(occupant.index)
+                } else {
+                    None
+                }
             } else {
-                self.active_mage = None;
+                None
             }
-        } else {
-            self.active_mage = None;
         }
     }
 
@@ -240,7 +254,7 @@ impl App {
 
             {
                 // DRAW mages
-                for mage in self.game.iter_mages() {
+                for mage in self.lobby.game.iter_mages() {
                     context.save();
 
                     context.translate(
@@ -248,7 +262,13 @@ impl App {
                         -1.0 + mage.position.1 as f64 * BOARD_SCALE_F64.1,
                     )?;
 
-                    mage.draw(context, atlas, mage.index, self.frame, self.game.turn_for())?;
+                    mage.draw(
+                        context,
+                        atlas,
+                        mage.index,
+                        self.frame,
+                        self.lobby.game.turn_for(),
+                    )?;
 
                     if mage.is_overdriven() && mage.is_alive() {
                         for _ in 0..(self.frame / 2 % 2) {
@@ -287,7 +307,7 @@ impl App {
                 context.save();
 
                 if let Some(mage) = self.get_active_mage() {
-                    let available_moves = self.game.available_moves(mage);
+                    let available_moves = self.lobby.game.available_moves(mage);
                     for (position, overdrive) in &available_moves {
                         draw_sprite(
                             context,
@@ -301,17 +321,18 @@ impl App {
                         )?;
                     }
 
-                    if let Some(selected_tile) =
-                        self.game
-                            .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
-                    {
+                    if let Some(selected_tile) = self.lobby.game.location_as_position(
+                        pointer.location,
+                        BOARD_OFFSET,
+                        BOARD_SCALE,
+                    ) {
                         if available_moves
                             .iter()
                             .find(|(position, _)| position == &selected_tile)
                             .is_some()
                         {
                             for (enemy_occupied, position) in
-                                &self.game.targets(mage, selected_tile)
+                                &self.lobby.game.targets(mage, selected_tile)
                             {
                                 if *enemy_occupied {
                                     draw_crosshair(
@@ -331,10 +352,11 @@ impl App {
 
                 context.restore();
 
-                if let Some(selected_tile) =
-                    self.game
-                        .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
-                {
+                if let Some(selected_tile) = self.lobby.game.location_as_position(
+                    pointer.location,
+                    BOARD_OFFSET,
+                    BOARD_SCALE,
+                ) {
                     draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), self.frame)?;
                 }
             }
@@ -378,10 +400,11 @@ impl App {
         )?;
 
         if let Some(selected_tile) =
-            self.game
+            self.lobby
+                .game
                 .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
         {
-            if let Some(occupant) = self.game.live_occupant(&selected_tile) {
+            if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
                 draw_tooltip(
                     context,
                     atlas,
@@ -429,7 +452,7 @@ impl App {
         for message in messages {
             match message {
                 Message::Move(Turn(from, to)) => {
-                    if let Some(mut move_targets) = self.game.take_move(*from, *to) {
+                    if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
                         target_positions.append(&mut move_targets);
                     }
                 }
@@ -439,13 +462,14 @@ impl App {
 
         if pointer.clicked() {
             if let Some(selected_tile) =
-                self.game
+                self.lobby
+                    .game
                     .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
             {
                 if let Some(active_mage) = self.get_active_mage() {
                     let from = active_mage.position;
 
-                    if let Some(mut move_targets) = self.game.take_move(from, selected_tile) {
+                    if let Some(mut move_targets) = self.lobby.game.take_move(from, selected_tile) {
                         send_message(OutMessage::Move(Turn(from, selected_tile)));
                         target_positions.append(&mut move_targets);
                         self.active_mage = None;
@@ -477,14 +501,12 @@ impl App {
 
 #[wasm_bindgen(start)]
 fn start() -> Result<(), JsValue> {
-    let document = web_sys::window().unwrap().document().unwrap();
-
-    let canvas = document
+    let canvas = document()
         .create_element("canvas")?
         .dyn_into::<web_sys::HtmlCanvasElement>()?;
 
-    let container_element = document.query_selector(&"main").unwrap().unwrap();
-    let nav_element = document.query_selector(&"nav").unwrap().unwrap();
+    let container_element = document().query_selector(&"main").unwrap().unwrap();
+    let nav_element = document().query_selector(&"nav").unwrap().unwrap();
     container_element.insert_before(&canvas, Some(&nav_element))?;
 
     canvas.set_width(512);
@@ -497,7 +519,7 @@ fn start() -> Result<(), JsValue> {
 
     context.set_image_smoothing_enabled(false);
 
-    let atlas = document
+    let atlas = document()
         .create_element("img")
         .unwrap()
         .dyn_into::<web_sys::HtmlImageElement>()
@@ -523,7 +545,25 @@ fn start() -> Result<(), JsValue> {
         })
     };
 
-    let app = App::new();
+    let session_id = {
+        match document()
+            .dyn_into::<web_sys::HtmlDocument>()
+            .unwrap()
+            .cookie()
+        {
+            Ok(cookie) => cookie
+                .split("; ")
+                .find(|cookie| cookie.starts_with("session_id="))
+                .and_then(|cookie| cookie.strip_prefix("session_id="))
+                .and_then(|cookie| cookie.split("%3D").last())
+                .and_then(|cookie| Some(cookie.to_string())),
+            Err(_) => None,
+        }
+    };
+
+    web_sys::console::log_1(&format!("{:?}", session_id).into());
+
+    let app = App::new(session_id);
     let app = Rc::new(RefCell::new(app));
 
     let f = Rc::new(RefCell::new(None));
@@ -554,7 +594,7 @@ fn start() -> Result<(), JsValue> {
             }
 
             if message_pool.borrow().available(app.frame) {
-                if let Some(promise) = fetch(&request_turns_since(app.game.turns())) {
+                if let Some(promise) = fetch(&request_turns_since(app.lobby.game.turns())) {
                     promise.then(&message_closure);
                 }
 
@@ -594,7 +634,7 @@ fn start() -> Result<(), JsValue> {
 
             match message {
                 Message::Lobby(lobby) => {
-                    app.game = lobby.game;
+                    app.lobby = lobby;
                 }
                 _ => (),
             }
@@ -625,7 +665,8 @@ fn start() -> Result<(), JsValue> {
                 _ => (),
             }
         });
-        document.add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
+        document()
+            .add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 
@@ -635,11 +676,11 @@ fn start() -> Result<(), JsValue> {
             let mut pointer = pointer.borrow_mut();
 
             match event.button() {
-                0 | 2 => pointer.button = true,
+                0 | 2 => pointer.button = false,
                 _ => (),
             }
         });
-        document.add_event_listener_with_callback("mouseup", closure.as_ref().unchecked_ref())?;
+        document().add_event_listener_with_callback("mouseup", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 
@@ -653,9 +694,7 @@ fn start() -> Result<(), JsValue> {
         let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
             bound.replace(Some(canvas.get_bounding_client_rect()));
         });
-        web_sys::window()
-            .unwrap()
-            .add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())?;
+        window().add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 
@@ -678,7 +717,8 @@ fn start() -> Result<(), JsValue> {
 
             event.prevent_default();
         });
-        document.add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
+        document()
+            .add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 
@@ -702,7 +742,8 @@ fn start() -> Result<(), JsValue> {
             }
             event.prevent_default();
         });
-        document.add_event_listener_with_callback("touchmove", closure.as_ref().unchecked_ref())?;
+        document()
+            .add_event_listener_with_callback("touchmove", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 
@@ -731,11 +772,12 @@ fn start() -> Result<(), JsValue> {
                         && (pointer_location.1 - pointer.location.1).abs() < 16
                     {
                         pointer.button = true;
-                    } else if let Some(selected_tile) =
-                        app.game
-                            .location_as_position(pointer_location, BOARD_OFFSET, BOARD_SCALE)
-                    {
-                        if let Some(_) = app.game.live_occupant(&selected_tile) {
+                    } else if let Some(selected_tile) = app.lobby.game.location_as_position(
+                        pointer_location,
+                        BOARD_OFFSET,
+                        BOARD_SCALE,
+                    ) {
+                        if let Some(_) = app.lobby.game.live_occupant(&selected_tile) {
                             pointer.button = true;
                         }
                     }
@@ -745,7 +787,7 @@ fn start() -> Result<(), JsValue> {
             }
             event.prevent_default();
         });
-        document
+        document()
             .add_event_listener_with_callback("touchstart", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
@@ -758,14 +800,15 @@ fn start() -> Result<(), JsValue> {
             pointer.button = false;
             event.prevent_default();
         });
-        document.add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;
+        document()
+            .add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
     {
         let closure = Closure::<dyn FnMut(_)>::new(move |event: web_sys::MouseEvent| {
             event.prevent_default();
         });
-        document
+        document()
             .add_event_listener_with_callback("contextmenu", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }

@@ -15,7 +15,6 @@ pub struct LobbyError(pub String);
 enum LobbyState {
     Pending,
     Started,
-    Finished,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -107,24 +106,24 @@ impl Lobby {
         }
     }
 
-    pub fn leave_player(&mut self, session_id: String) -> Result<String, LobbyError> {
-        if self.state == LobbyState::Finished {
-            Err(LobbyError("cannot leave a finished game".to_string()))
-        } else {
-            match self.players.remove(&session_id) {
-                Some(player) => {
-                    self.player_slots.push_back(player.index);
+    // pub fn leave_player(&mut self, session_id: String) -> Result<String, LobbyError> {
+    //     if self.state == LobbyState::Finished {
+    //         Err(LobbyError("cannot leave a finished game".to_string()))
+    //     } else {
+    //         match self.players.remove(&session_id) {
+    //             Some(player) => {
+    //                 self.player_slots.push_back(player.index);
 
-                    self.players.remove(&session_id);
+    //                 self.players.remove(&session_id);
 
-                    self.tick();
+    //                 self.tick();
 
-                    Ok(session_id)
-                }
-                None => Err(LobbyError("player not in lobby".to_string())),
-            }
-        }
-    }
+    //                 Ok(session_id)
+    //             }
+    //             None => Err(LobbyError("player not in lobby".to_string())),
+    //         }
+    //     }
+    // }
 
     pub fn act_player(&mut self, session_id: String, message: Message) -> Result<(), LobbyError> {
         if self.state != LobbyState::Started {
@@ -146,6 +145,20 @@ impl Lobby {
                     }
                 }
                 None => Err(LobbyError("player not in lobby".to_string())),
+            }
+        }
+    }
+
+    pub fn is_active_player(&self, session_id: Option<&String>) -> bool {
+        if self.state != LobbyState::Started {
+            false
+        } else {
+            match session_id {
+                Some(session_id) => match self.players.get(session_id) {
+                    Some(player) => self.game.turn_index() == player.index,
+                    None => false,
+                },
+                None => false,
             }
         }
     }
