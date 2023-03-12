@@ -5,9 +5,10 @@ mod net;
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::slice::Iter;
 
 use draw::*;
-use net::{fetch, request_turns_since, send_message};
+use net::{fetch, request_turns_since, send_message, MessagePool};
 use shared::{Lobby, OutMessage, Position, Team, Turn};
 use shared::{Mage, Message};
 use wasm_bindgen::prelude::*;
@@ -535,83 +536,14 @@ fn start() -> Result<(), JsValue> {
 
     atlas.set_src(&"/img/atlas.png");
 
+    let app = App::new(get_session_id());
+    let app = Rc::new(RefCell::new(app));
+
     let pointer = Rc::new(RefCell::new(Pointer {
         previous: None,
         location: (0, 0),
         button: false,
     }));
-
-    let message_pool: Rc<RefCell<MessagePool>> = Rc::new(RefCell::new(MessagePool::new()));
-
-    let message_closure = {
-        let message_pool = message_pool.clone();
-
-        Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            let mut message_pool = message_pool.borrow_mut();
-            let mut message: Vec<Message> = serde_wasm_bindgen::from_value(value).unwrap();
-            message_pool.messages.append(&mut message);
-        })
-    };
-
-    let session_id = {
-        match document()
-            .dyn_into::<web_sys::HtmlDocument>()
-            .unwrap()
-            .cookie()
-        {
-            Ok(cookie) => cookie
-                .split("; ")
-                .find(|cookie| cookie.starts_with("session_id="))
-                .and_then(|cookie| cookie.strip_prefix("session_id="))
-                .and_then(|cookie| cookie.split("%3D").last())
-                .and_then(|cookie| Some(cookie.to_string())),
-            Err(_) => None,
-        }
-    };
-
-    web_sys::console::log_1(&format!("{:?}", session_id).into());
-
-    let app = App::new(session_id);
-    let app = Rc::new(RefCell::new(app));
-
-    let f = Rc::new(RefCell::new(None));
-    let g = f.clone();
-
-    {
-        let pointer = pointer.clone();
-        let app = app.clone();
-        let message_pool = message_pool.clone();
-
-        *g.borrow_mut() = Some(Closure::new(move || {
-            let mut app = app.borrow_mut();
-
-            {
-                let pointer = pointer.borrow();
-                let message_pool = message_pool.borrow();
-
-                app.update(&pointer, &message_pool.messages);
-                app.draw(&context, &atlas, &pointer).unwrap();
-            }
-
-            message_pool.borrow_mut().messages.clear();
-
-            {
-                let mut pointer = pointer.borrow_mut();
-                pointer.previous.take();
-                pointer.previous = Some(Box::new(pointer.clone()));
-            }
-
-            if message_pool.borrow().available(app.frame) {
-                if let Some(promise) = fetch(&request_turns_since(app.lobby.game.turns())) {
-                    promise.then(&message_closure);
-                }
-
-                message_pool.borrow_mut().block(app.frame);
-            }
-
-            request_animation_frame(f.borrow().as_ref().unwrap());
-        }));
-    }
 
     let state_request = {
         let pathname = web_sys::window().unwrap().location().pathname().unwrap();
@@ -647,21 +579,67 @@ fn start() -> Result<(), JsValue> {
                 _ => (),
             }
 
-            if let Some(promise) = fetch(&ready_request) {
-                promise.then(&Closure::<dyn FnMut(JsValue)>::new(|value| {
-                    web_sys::console::log_1(&"Ready".into())
-                }));
+            if !app.lobby.has_session_id(app.session_id.as_ref()) {
+                fetch(&ready_request);
             }
-
-            request_animation_frame(g.borrow().as_ref().unwrap());
         })
     };
 
-    if let Some(promise) = fetch(&state_request) {
-        promise.then(&state_closure);
-    }
+    let message_pool: Rc<RefCell<MessagePool>> = Rc::new(RefCell::new(MessagePool::new()));
 
-    state_closure.forget();
+    let message_closure = {
+        let message_pool = message_pool.clone();
+
+        Closure::<dyn FnMut(JsValue)>::new(move |value| {
+            let mut message_pool = message_pool.borrow_mut();
+            let messages: Vec<Message> = serde_wasm_bindgen::from_value(value).unwrap();
+            message_pool.append(messages);
+        })
+    };
+
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
+
+    {
+        let pointer = pointer.clone();
+        let app = app.clone();
+        let message_pool = message_pool.clone();
+
+        *g.borrow_mut() = Some(Closure::new(move || {
+            let mut app = app.borrow_mut();
+
+            {
+                let pointer = pointer.borrow();
+                let message_pool = message_pool.borrow();
+
+                app.update(&pointer, &message_pool.messages);
+                app.draw(&context, &atlas, &pointer).unwrap();
+            }
+
+            {
+                let mut pointer = pointer.borrow_mut();
+                pointer.previous.take();
+                pointer.previous = Some(Box::new(pointer.clone()));
+            }
+
+            if message_pool.borrow().available(app.frame) {
+                let mut message_pool = message_pool.borrow_mut();
+
+                if app.lobby.all_ready() {
+                    fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
+                } else {
+                    fetch(&state_request).then(&state_closure);
+                }
+
+                message_pool.clear();
+                message_pool.block(app.frame);
+            }
+
+            request_animation_frame(f.borrow().as_ref().unwrap());
+        }));
+
+        request_animation_frame(g.borrow().as_ref().unwrap());
+    }
 
     {
         let pointer = pointer.clone();
@@ -824,26 +802,18 @@ fn start() -> Result<(), JsValue> {
     Ok(())
 }
 
-struct MessagePool {
-    messages: Vec<Message>,
-    block_frame: u64,
-}
-
-impl MessagePool {
-    const BLOCK_FRAMES: u64 = 60;
-
-    fn new() -> MessagePool {
-        MessagePool {
-            messages: Vec::new(),
-            block_frame: 0,
-        }
-    }
-
-    fn available(&self, frame: u64) -> bool {
-        frame >= self.block_frame
-    }
-
-    fn block(&mut self, frame: u64) {
-        self.block_frame = frame + Self::BLOCK_FRAMES;
+fn get_session_id() -> Option<String> {
+    match document()
+        .dyn_into::<web_sys::HtmlDocument>()
+        .unwrap()
+        .cookie()
+    {
+        Ok(cookie) => cookie
+            .split("; ")
+            .find(|cookie| cookie.starts_with("session_id="))
+            .and_then(|cookie| cookie.strip_prefix("session_id="))
+            .and_then(|cookie| cookie.split("%3D").last())
+            .and_then(|cookie| Some(cookie.to_string())),
+        Err(_) => None,
     }
 }

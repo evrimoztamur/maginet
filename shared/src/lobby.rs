@@ -127,4 +127,11 @@ impl Lobby {
             }
         }
     }
+
+    pub fn has_session_id(&self, session_id: Option<&String>) -> bool {
+        match session_id {
+            Some(session_id) => self.players.contains_key(session_id),
+            None => false,
+        }
+    }
 }
