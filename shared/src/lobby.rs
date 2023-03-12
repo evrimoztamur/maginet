@@ -11,12 +11,6 @@ const DEFAULT_PLAYER_COUNT: usize = 2;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LobbyError(pub String);
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-enum LobbyState {
-    Pending,
-    Started,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 struct Player {
     index: usize,
@@ -34,7 +28,6 @@ impl Player {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Lobby {
-    state: LobbyState,
     pub game: Game,
     players: HashMap<String, Player>,
     player_slots: VecDeque<usize>,
@@ -44,7 +37,6 @@ pub struct Lobby {
 impl Lobby {
     pub fn new() -> Lobby {
         Lobby {
-            state: LobbyState::Pending,
             game: Game::new(
                 DEFAULT_BOARD_SIZE.0,
                 DEFAULT_BOARD_SIZE.1,
@@ -66,7 +58,7 @@ impl Lobby {
     }
 
     pub fn join_player(&mut self, session_id: String) -> Result<String, LobbyError> {
-        if self.state != LobbyState::Pending {
+        if self.all_ready() {
             Err(LobbyError("cannot join an active game".to_string()))
         } else if self.players.contains_key(&session_id) {
             Err(LobbyError("already in lobby".to_string()))
@@ -84,16 +76,12 @@ impl Lobby {
     }
 
     pub fn ready_player(&mut self, session_id: String) -> Result<String, LobbyError> {
-        if self.state != LobbyState::Pending {
+        if self.all_ready() {
             Err(LobbyError("cannot ready for an active game".to_string()))
         } else {
             match self.players.get_mut(&session_id) {
                 Some(player) => {
                     player.ready = true;
-
-                    if self.all_ready() {
-                        self.state = LobbyState::Started;
-                    }
 
                     self.tick();
 
@@ -126,7 +114,7 @@ impl Lobby {
     // }
 
     pub fn act_player(&mut self, session_id: String, message: Message) -> Result<(), LobbyError> {
-        if self.state != LobbyState::Started {
+        if !self.all_ready() {
             Err(LobbyError("game not yet started".to_string()))
         } else {
             match self.players.get(&session_id) {
@@ -150,7 +138,7 @@ impl Lobby {
     }
 
     pub fn is_active_player(&self, session_id: Option<&String>) -> bool {
-        if self.state != LobbyState::Started {
+        if !self.all_ready() {
             false
         } else {
             match session_id {

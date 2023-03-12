@@ -56,7 +56,8 @@
       max-width: 100vw;
     }
 
-    img, canvas {
+    img,
+    canvas {
       image-rendering: crisp-edges;
     }
 
@@ -84,6 +85,11 @@
       align-items: center;
       margin-left: auto;
     }
+
+    div.logo a {
+      display: flex;
+    }
+
     div.logo img {
       height: 24px;
     }
@@ -93,11 +99,11 @@
 <body>
   <main>
     <nav>
-      <form action="reset" method="post">
+      <!-- <form action="reset" method="post">
         <button type="submit"><img src="/img/button.png"></button>
-      </form>
+      </form> -->
       <div class="logo">
-        <img src="/img/logo.png">
+        <a href="/"><img src="/img/logo.png"></a>
       </div>
     </nav>
   </main>

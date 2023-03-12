@@ -88,6 +88,7 @@ trait Drawable {
         index: usize,
         frame: u64,
         team: Team,
+        game_started: bool
     ) -> Result<(), JsValue>;
 }
 
@@ -99,14 +100,15 @@ impl Drawable for Mage {
         index: usize,
         frame: u64,
         team: Team,
+        game_started: bool
     ) -> Result<(), JsValue> {
-        let bounce = (if self.team == team && self.is_alive() {
+        let bounce = (if self.team == team && self.is_alive() && game_started {
             2 - ((frame as i64 / 6 + index as i64 / 2) % 4 - 2).abs()
         } else {
             0
         }) as f64;
 
-        let sleeping_offset = if self.is_alive() { 0.0 } else { 64.0 };
+        let sleeping_offset = if self.is_alive() && game_started { 0.0 } else { 64.0 };
 
         match self.team {
             Team::Red => context
@@ -268,6 +270,7 @@ impl App {
                         mage.index,
                         self.frame,
                         self.lobby.game.turn_for(),
+                        self.lobby.all_ready()
                     )?;
 
                     if mage.is_overdriven() && mage.is_alive() {
