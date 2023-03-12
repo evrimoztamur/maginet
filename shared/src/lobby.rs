@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use serde::{Deserialize, Serialize};
 
@@ -38,7 +38,7 @@ pub struct Lobby {
     state: LobbyState,
     pub game: Game,
     players: HashMap<String, Player>,
-    player_slots: Vec<usize>,
+    player_slots: VecDeque<usize>,
     ticks: usize,
 }
 
@@ -72,7 +72,7 @@ impl Lobby {
         } else if self.players.contains_key(&session_id) {
             Err(LobbyError("already in lobby".to_string()))
         } else {
-            if let Some(index) = self.player_slots.pop() {
+            if let Some(index) = self.player_slots.pop_front() {
                 self.players.insert(session_id.clone(), Player::new(index));
 
                 self.tick();
@@ -113,7 +113,7 @@ impl Lobby {
         } else {
             match self.players.remove(&session_id) {
                 Some(player) => {
-                    self.player_slots.push(player.index);
+                    self.player_slots.push_back(player.index);
 
                     self.players.remove(&session_id);
 

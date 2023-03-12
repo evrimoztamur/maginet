@@ -575,6 +575,16 @@ fn start() -> Result<(), JsValue> {
         Request::new_with_str_and_init(&url, &opts).unwrap()
     };
 
+    let ready_request = {
+        let pathname = web_sys::window().unwrap().location().pathname().unwrap();
+        let mut opts = RequestInit::new();
+        opts.method("POST");
+
+        let url = format!("{pathname}/ready");
+
+        Request::new_with_str_and_init(&url, &opts).unwrap()
+    };
+
     let state_closure = {
         let app = app.clone();
 
@@ -587,6 +597,12 @@ fn start() -> Result<(), JsValue> {
                     app.game = lobby.game;
                 }
                 _ => (),
+            }
+
+            if let Some(promise) = fetch(&ready_request) {
+                promise.then(&Closure::<dyn FnMut(JsValue)>::new(|value| {
+                    web_sys::console::log_1(&"Ready".into())
+                }));
             }
 
             request_animation_frame(g.borrow().as_ref().unwrap());

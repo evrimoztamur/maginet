@@ -42,12 +42,12 @@ async fn main() {
     let app = Router::new()
         .nest_service("/pkg", ServeDir::new("pkg"))
         .nest_service("/img", ServeDir::new("img"))
-        .route("/me", get(get_me))
         .nest_service("/", ServeFile::new("html/index.html"))
         .route("/lobby/create", post(create_lobby))
         .nest_service("/lobby/:id", ServeFile::new("html/game.html"))
         .route("/lobby/:id/turns/:since", get(get_turns_since))
         .route("/lobby/:id/act", post(process_inbound))
+        .route("/lobby/:id/ready", post(post_ready))
         .route("/lobby/:id/state", get(get_state))
         // .route("/reset", post(reset_game))
         .with_state(state);
@@ -70,35 +70,51 @@ async fn create_lobby(State(state): State<AppState>) -> impl IntoResponse {
 }
 
 async fn get_turns_since(
-    // jar: SignedCookieJar,
+    jar: SignedCookieJar,
     State(state): State<AppState>,
     Path((id, since)): Path<(String, usize)>,
 ) -> impl IntoResponse {
-    // let (jar, is_new_user, session_id) = identify_user(jar);
+    let (jar, is_new_user, session_id) = identify_user(jar);
 
     let lobbies = state.lobbies.lock().unwrap();
 
-    match lobbies.get(&id) {
-        Some(lobby) => {
-            let turns_since: Vec<OutMessage> = lobby
-                .game
-                .turns_since(since)
-                .iter()
-                .map(|turn| OutMessage::Move(**turn))
-                .collect();
-            serialized_response(&turns_since)
-        }
-        None => serialized_response(&OutMessage::LobbyError(LobbyError("lobby does not exist".to_string()))),
-    }
+    (
+        jar,
+        match lobbies.get(&id) {
+            Some(lobby) => {
+                let turns_since: Vec<OutMessage> = lobby
+                    .game
+                    .turns_since(since)
+                    .iter()
+                    .map(|turn| OutMessage::Move(**turn))
+                    .collect();
+                serialized_response(&turns_since)
+            }
+            None => serialized_response(&OutMessage::LobbyError(LobbyError(
+                "lobby does not exist".to_string(),
+            ))),
+        },
+    )
 }
 
-async fn get_state(Path(id): Path<String>, State(state): State<AppState>) -> impl IntoResponse {
+async fn get_state(
+    jar: SignedCookieJar,
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let (jar, is_new_user, session_id) = identify_user(jar);
+
     let lobbies = state.lobbies.lock().unwrap();
 
-    match lobbies.get(&id) {
-        Some(lobby) => serialized_response(&OutMessage::Lobby(lobby)),
-        None => serialized_response(&OutMessage::LobbyError(LobbyError("lobby does not exist".to_string()))),
-    }
+    (
+        jar,
+        match lobbies.get(&id) {
+            Some(lobby) => serialized_response(&OutMessage::Lobby(lobby)),
+            None => serialized_response(&OutMessage::LobbyError(LobbyError(
+                "lobby does not exist".to_string(),
+            ))),
+        },
+    )
 }
 
 async fn process_inbound(
@@ -106,8 +122,8 @@ async fn process_inbound(
     State(state): State<AppState>,
     Path(id): Path<String>,
     extract::Json(message): extract::Json<Message>,
-) {
-    let (_, _, session_id) = identify_user(jar);
+) -> impl IntoResponse {
+    let (jar, is_new_user, session_id) = identify_user(jar);
 
     let mut lobbies = state.lobbies.lock().unwrap();
 
@@ -115,15 +131,27 @@ async fn process_inbound(
         Some(lobby) => lobby.act_player(session_id, message),
         None => Err(LobbyError("lobby does not exist".to_string())),
     };
-}
 
-async fn get_me(jar: SignedCookieJar) -> impl IntoResponse {
+    jar
+}
+async fn post_ready(
+    jar: SignedCookieJar,
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
     let (jar, is_new_user, session_id) = identify_user(jar);
 
-    (
-        jar,
-        format!("Hello {} {}", &session_id, &is_new_user).to_string(),
-    )
+    let mut lobbies = state.lobbies.lock().unwrap();
+
+    match lobbies.get_mut(&id) {
+        Some(lobby) => {
+            lobby.join_player(session_id.clone());
+            lobby.ready_player(session_id)
+        }
+        None => Err(LobbyError("lobby does not exist".to_string())),
+    };
+
+    jar
 }
 
 fn serialized_response<T: Sized + Serialize>(value: &T) -> Response {
@@ -148,12 +176,9 @@ fn identify_user(jar: SignedCookieJar) -> (SignedCookieJar, bool, String) {
         (jar, false, session_id.value().to_string())
     } else {
         let session_id = generate_id();
+        let cookie = Cookie::build("session_id", session_id.clone()).path("/").finish();
 
-        (
-            jar.add(Cookie::new("session_id", session_id.clone())),
-            true,
-            session_id,
-        )
+        (jar.add(cookie), true, session_id)
     }
 }
 
