@@ -14,14 +14,12 @@ pub struct LobbyError(pub String);
 #[derive(Debug, Serialize, Deserialize)]
 struct Player {
     index: usize,
-    ready: bool,
 }
 
 impl Player {
     fn new(index: usize) -> Player {
         Player {
             index,
-            ready: false,
         }
     }
 }
@@ -54,7 +52,7 @@ impl Lobby {
     }
 
     pub fn all_ready(&self) -> bool {
-        self.player_slots.is_empty() && self.players.iter().all(|(_, player)| player.ready)
+        self.player_slots.is_empty()
     }
 
     pub fn join_player(&mut self, session_id: String) -> Result<String, LobbyError> {
@@ -71,25 +69,6 @@ impl Lobby {
                 Ok(session_id)
             } else {
                 Err(LobbyError("no available slots in lobby".to_string()))
-            }
-        }
-    }
-
-    pub fn ready_player(&mut self, session_id: String) -> Result<String, LobbyError> {
-        if self.all_ready() {
-            Err(LobbyError("cannot ready for an active game".to_string()))
-        } else {
-            match self.players.get_mut(&session_id) {
-                Some(player) => {
-                    player.ready = true;
-
-                    self.tick();
-
-                    Ok(session_id)
-                }
-                None => Err(LobbyError(
-                    "cannot ready a player who is not in lobby".to_string(),
-                )),
             }
         }
     }

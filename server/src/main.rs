@@ -145,8 +145,7 @@ async fn post_ready(
 
     match lobbies.get_mut(&id) {
         Some(lobby) => {
-            lobby.join_player(session_id.clone());
-            lobby.ready_player(session_id)
+            lobby.join_player(session_id)
         }
         None => Err(LobbyError("lobby does not exist".to_string())),
     };
