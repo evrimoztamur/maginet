@@ -1,15 +1,15 @@
-use std::sync::{Arc, Mutex};
-use std::{collections::HashMap, net::SocketAddr};
+use std::{
+    collections::HashMap,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+};
 
-use axum::body::Body;
-use axum::extract::State;
-use axum::http::Request;
 use axum::{
-    extract::{self, FromRef, Path},
-    http::{header, HeaderValue},
+    body::Body,
+    extract::{self, FromRef, Path, State},
+    http::{header, HeaderValue, Request},
     response::{IntoResponse, Redirect, Response},
-    routing::get,
-    routing::post,
+    routing::{get, post},
     Router,
 };
 use axum_extra::extract::{

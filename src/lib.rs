@@ -3,17 +3,13 @@
 mod draw;
 mod net;
 
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::slice::Iter;
+use std::{cell::RefCell, rc::Rc};
 
 use draw::*;
-use net::{fetch, request_turns_since, send_message, MessagePool};
-use shared::{Lobby, OutMessage, Position, Team, Turn};
-use shared::{Mage, Message};
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement, Request, RequestInit};
+use net::{fetch, request_ready, request_state, request_turns_since, send_message, MessagePool};
+use shared::{Lobby, Mage, Message, OutMessage, Position, Team, Turn};
+use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 const BOARD_OFFSET: (i32, i32) = (8, 8);
 const BOARD_OFFSET_F64: (f64, f64) = (BOARD_OFFSET.0 as f64, BOARD_OFFSET.1 as f64);
