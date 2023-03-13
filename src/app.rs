@@ -5,7 +5,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 use crate::{
     document,
     draw::{draw_crosshair, draw_digits, draw_mage, draw_sprite, draw_sprite_scaled, draw_tooltip},
-    net::send_message,
+    net::{send_message, pathname},
 };
 
 pub const BOARD_OFFSET: (i32, i32) = (8, 8);
@@ -115,8 +115,11 @@ pub struct App {
 
 impl App {
     pub fn new() -> App {
+        let pathname = pathname();
+        let local = pathname == "/local";
+        
         App {
-            lobby: Lobby::new(),
+            lobby: Lobby::new(local),
             particles: Vec::new(),
             frame: 0,
             active_mage: None,
@@ -206,7 +209,7 @@ impl App {
                         mage,
                         self.frame,
                         self.lobby.game.turn_for(),
-                        self.lobby.all_ready(),
+                        self.lobby.all_ready() | self.lobby.local,
                     )?;
 
                     if mage.is_overdriven() && mage.is_alive() {

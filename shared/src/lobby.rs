@@ -28,10 +28,11 @@ pub struct Lobby {
     players: HashMap<String, Player>,
     player_slots: VecDeque<usize>,
     ticks: usize,
+    pub local: bool,
 }
 
 impl Lobby {
-    pub fn new() -> Lobby {
+    pub fn new(local: bool) -> Lobby {
         Lobby {
             game: Game::new(
                 DEFAULT_BOARD_SIZE.0,
@@ -42,6 +43,7 @@ impl Lobby {
             players: HashMap::new(),
             player_slots: (0..DEFAULT_PLAYER_COUNT).collect(),
             ticks: 0,
+            local,
         }
     }
 
@@ -115,7 +117,9 @@ impl Lobby {
     }
 
     pub fn is_active_player(&self, session_id: Option<&String>) -> bool {
-        if !self.all_ready() {
+        if self.local {
+            true
+        } else if !self.all_ready() {
             false
         } else {
             match session_id {

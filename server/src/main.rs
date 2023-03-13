@@ -45,6 +45,7 @@ async fn main() {
         .nest_service("/pkg", ServeDir::new("pkg"))
         .nest_service("/img", ServeDir::new("img"))
         .route_service("/", ServeFile::new("html/index.html"))
+        .route_service("/local", ServeFile::new("html/game.html"))
         .route("/lobby/create", post(create_lobby))
         .route("/lobby/:id", get(get_lobby))
         .route("/lobby/:id/turns/:since", get(get_turns_since))
@@ -75,7 +76,7 @@ async fn create_lobby(State(state): State<AppState>) -> impl IntoResponse {
     let lobby_id = generate_id();
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    lobbies.insert(lobby_id.clone(), Lobby::new());
+    lobbies.insert(lobby_id.clone(), Lobby::new(false));
 
     Redirect::to(&format!("/lobby/{lobby_id}"))
 }

@@ -58,23 +58,23 @@ fn request_url(method: &str, url: &str) -> Request {
 }
 
 pub fn request_turns_since(since: usize) -> Request {
-    let pathname = web_sys::window().unwrap().location().pathname().unwrap();
+    let pathname = pathname();
     request_url("GET", &format!("{pathname}/turns/{since}"))
 }
 
 pub fn request_ready() -> Request {
-    let pathname = web_sys::window().unwrap().location().pathname().unwrap();
+    let pathname = pathname();
     request_url("POST", &format!("{pathname}/ready"))
 }
 
 pub fn request_state() -> Request {
-    let pathname = web_sys::window().unwrap().location().pathname().unwrap();
+    let pathname = pathname();
     request_url("GET", &format!("{pathname}/state"))
 }
 
 pub fn send_message(message: OutMessage) -> Option<Promise> {
     if let Ok(json) = serde_json::to_string(&message) {
-        let pathname = web_sys::window().unwrap().location().pathname().unwrap();
+        let pathname = pathname();
         let mut opts = RequestInit::new();
         opts.method("POST");
         opts.body(Some(&json.into()));
@@ -92,4 +92,8 @@ pub fn send_message(message: OutMessage) -> Option<Promise> {
     } else {
         None
     }
+}
+
+pub fn pathname() -> String {
+    web_sys::window().unwrap().location().pathname().unwrap()
 }
