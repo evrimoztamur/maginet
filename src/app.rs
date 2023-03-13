@@ -33,18 +33,19 @@ impl Particle {
             ((self.1 + 0.5) * BOARD_SCALE_F64.1).floor(),
         )?;
 
-        let cycle = frame + (self.0 * 16.0) as u64 + (self.1 * 16.0) as u64;
+        let spin = self.4;
+        let cycle = frame + (self.0 * 16.0) as u64 + (self.1 * 16.0) as u64 + spin;
 
-        context.rotate((cycle / 10) as f64 * std::f64::consts::PI / 2.0)?;
+        context.rotate((spin / 5) as f64 * std::f64::consts::PI / 2.0)?;
         // context.rotate(frame as f64 * 0.1)?;
         draw_sprite(
             context,
             atlas,
             64.0 + {
-                let t = cycle % 20;
-                if t > 15 {
+                let t = cycle % 24;
+                if t > 16 {
                     16.0
-                } else if t > 10 {
+                } else if t > 8 {
                     8.0
                 } else {
                     0.0
@@ -217,7 +218,7 @@ impl App {
                                 mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
                                 d.cos() * v,
                                 d.sin() * v,
-                                (js_sys::Math::random() * 50.0) as u64,
+                                (js_sys::Math::random() * 30.0) as u64,
                                 ParticleSort::Overdrive,
                             ));
                         }
@@ -421,7 +422,7 @@ impl App {
         }
 
         for tile in target_positions {
-            for _ in 0..20 {
+            for _ in 0..40 {
                 let d = js_sys::Math::random() * std::f64::consts::TAU;
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
                 self.particles.push(Particle(
