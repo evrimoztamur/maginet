@@ -8,141 +8,35 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@600&display=swap" rel="stylesheet">
-  <link rel="icon" href="/img/favicon.png">
+  <link rel="icon" href="/static/png/favicon.png">
+  <link rel="stylesheet" href="/static/css/maginet.css">
   <title>Maginet</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      margin: 0;
-      /* overflow: hidden; */
-    }
-
-    html {
-      font-family: 'Source Sans Pro', sans-serif;
-      font-size: 16px;
-      background-color: #002a2a;
-      color: #fff;
-      height: 100vh;
-    }
-
-    body {
-      display: flex;
-
-      width: 320px;
-      margin: auto;
-      height: 100%;
-
-      padding: 8px 0;
-
-      align-items: center;
-    }
-
-    main {
-      max-width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: auto;
-    }
-
-    @supports (-webkit-touch-callout: none) {
-
-      html,
-      body {
-        height: -webkit-fill-available;
-      }
-    }
-
-    canvas {
-      display: block;
-      background-color: #002a2a;
-      cursor: none;
-      max-width: 100vw;
-    }
-
-    img,
-    canvas {
-      image-rendering: crisp-edges;
-    }
-
-    nav {
-      display: flex;
-      padding: 0 16px;
-      justify-content: center;
-    }
-
-    button {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      appearance: none;
-      border: none;
-      background-color: #008080;
-      color: inherit;
-      font: inherit;
-      padding: 6px 12px;
-      border-radius: 2px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #006080;
-    }
-
-    div.logo {
-      display: flex;
-      justify-content: center;
-      margin-left: auto;
-    }
-
-    div.logo img {
-      height: 48px;
-      margin: 32px 0;
-    }
-
-    article {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 256px;
-      margin: 32px 0;
-      max-width: 100%;
-    }
-
-    article img {
-      flex: 0;
-      border-radius: 2px;
-    }
-  </style>
 </head>
 
 <body>
   <main>
     <nav style="flex-wrap: wrap;">
       <div class="logo" style="flex: 1 1 100%;">
-        <a href="/"><img src="/img/logo.png"></a>
+        <a href="/"><img src="/static/png/logo.png"></a>
       </div>
       <form action="local">
-        <button type="submit" style="margin-right: 16px;"><img src="/img/local.png">Local</button>
+        <button type="submit" style="margin-right: 16px;"><img src="/static/png/local.png">Local</button>
       </form>
       <form action="lobby/create" method="post">
-        <button type="submit"><img src="/img/online.png">Online</button>
+        <button type="submit"><img src="/static/png/online.png">Online</button>
       </form>
     </nav>
     <article>
       <p>Maginet is a turn-based strategy game where two guilds of mages battle each other.</p>
-      <img src="/img/guide_teams.png">
+      <img src="/static/png/guide_teams.png">
       <p>Mages can move to any of the adjacent tiles they are standing on.</p>
-      <img src="/img/guide_attack.png">
+      <img src="/static/png/guide_attack.png">
       <p>After moving, they cast a spell with their individual pattern, damaging the enemies in its path.</p>
-      <img src="/img/guide_attack.png">
+      <img src="/static/png/guide_attack.png">
       <p>Once low on health, mages charge up, allowing them to travel to the adjacent diagonals too!</p>
-      <img src="/img/guide_charge.png">
+      <img src="/static/png/guide_charge.png">
       <p>Mages have limited mana, once drained, they will go to sleep. You cannot move over a sleeping mage.</p>
-      <img src="/img/guide_mana.png">
+      <img src="/static/png/guide_mana.png">
     </article>
   </main>
 </body>

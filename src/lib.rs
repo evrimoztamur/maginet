@@ -62,7 +62,7 @@ fn start() -> Result<(), JsValue> {
         .dyn_into::<HtmlImageElement>()
         .unwrap();
 
-    atlas.set_src(&"/img/atlas.png");
+    atlas.set_src(&"/static/png/atlas.png");
 
     let app = App::new();
     let app = Rc::new(RefCell::new(app));

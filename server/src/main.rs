@@ -43,7 +43,7 @@ async fn main() {
 
     let app = Router::new()
         .nest_service("/pkg", ServeDir::new("pkg"))
-        .nest_service("/img", ServeDir::new("img"))
+        .nest_service("/static", ServeDir::new("static"))
         .route_service("/", ServeFile::new("html/index.html"))
         .route_service("/local", ServeFile::new("html/game.html"))
         .route("/lobby/create", post(create_lobby))

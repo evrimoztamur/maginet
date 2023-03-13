@@ -5,7 +5,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 use crate::{
     document,
     draw::{draw_crosshair, draw_digits, draw_mage, draw_sprite, draw_sprite_scaled, draw_tooltip},
-    net::{send_message, pathname},
+    net::{pathname, send_message},
 };
 
 pub const BOARD_OFFSET: (i32, i32) = (8, 8);
@@ -117,7 +117,7 @@ impl App {
     pub fn new() -> App {
         let pathname = pathname();
         let local = pathname == "/local";
-        
+
         App {
             lobby: Lobby::new(local),
             particles: Vec::new(),
@@ -310,17 +310,32 @@ impl App {
         {
             context.save();
 
-            context.translate(8.0, 8.0)?;
-
-            context.translate(0.0, 248.0)?;
             {
                 // DRAW active mage
                 if let Some(mage) = self.get_active_mage() {
                     for i in 0..mage.mana.max {
                         if i < *mage.mana {
-                            draw_sprite(context, atlas, 80.0, 0.0, 8.0, 8.0, i as f64 * 10.0, 0.0)?;
+                            draw_sprite(
+                                context,
+                                atlas,
+                                80.0,
+                                0.0,
+                                8.0,
+                                8.0,
+                                129.0 - (mage.mana.max * 5) as f64 + i as f64 * 10.0,
+                                256.0,
+                            )?;
                         } else {
-                            draw_sprite(context, atlas, 88.0, 0.0, 8.0, 8.0, i as f64 * 10.0, 0.0)?;
+                            draw_sprite(
+                                context,
+                                atlas,
+                                88.0,
+                                0.0,
+                                8.0,
+                                8.0,
+                                129.0 - (mage.mana.max * 5) as f64 + i as f64 * 10.0,
+                                256.0,
+                            )?;
                         }
                     }
                 }
