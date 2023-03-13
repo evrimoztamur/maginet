@@ -1,8 +1,8 @@
-use shared::Position;
+use shared::{Mage, Position, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::BOARD_SCALE_F64;
+use crate::app::BOARD_SCALE_F64;
 
 pub fn draw_sprite(
     context: &CanvasRenderingContext2d,
@@ -160,6 +160,56 @@ pub fn draw_tooltip(
         width as f64,
         12.0,
     )?;
+
+    Ok(())
+}
+
+pub fn draw_mage(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlImageElement,
+    mage: &Mage,
+    frame: u64,
+    team: Team,
+    game_started: bool,
+) -> Result<(), JsValue> {
+    let bounce = (if mage.team == team && mage.is_alive() && game_started {
+        2 - ((frame as i64 / 6 + mage.index as i64 / 2) % 4 - 2).abs()
+    } else {
+        0
+    }) as f64;
+
+    let sleeping_offset = if mage.is_alive() && game_started {
+        0.0
+    } else {
+        64.0
+    };
+
+    match mage.team {
+        Team::Red => context
+            .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+                atlas,
+                32.0 * (mage.index / 2) as f64,
+                64.0 + sleeping_offset,
+                32.0,
+                32.0,
+                0.0,
+                0.0 + bounce,
+                32.0,
+                32.0,
+            )?,
+        Team::Blue => context
+            .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+                atlas,
+                32.0 * (mage.index / 2) as f64,
+                96.0 + sleeping_offset,
+                32.0,
+                32.0,
+                0.0,
+                0.0 + bounce,
+                32.0,
+                32.0,
+            )?,
+    }
 
     Ok(())
 }
