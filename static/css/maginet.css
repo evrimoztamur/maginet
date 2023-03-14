@@ -23,13 +23,14 @@ body {
     width: 100%;
     height: 100%;
 
-    padding: 8px 0;
-
     align-items: center;
 }
 
 body.page {
     width: 320px;
+    padding: 8px;
+    height: 100vh;
+    overflow-y: scroll;
 }
 
 main {
@@ -62,8 +63,10 @@ canvas {
 
 nav {
     display: flex;
+    flex-wrap: wrap;
     padding: 0 16px;
     justify-content: center;
+    align-items: center;
 }
 
 button {
@@ -99,6 +102,13 @@ body.page div.logo img {
     margin: 32px 0;
 }
 
+body.page div.logo img,
+body.itch div.logo img {
+    height: 48px;
+    margin: 32px 0;
+}
+
+
 article {
     display: flex;
     flex-direction: column;
@@ -111,4 +121,19 @@ article {
 article img {
     flex: 0;
     border-radius: 2px;
+}
+
+.lobby-id {
+    padding: 8px;
+    border-radius: 4px;
+    flex-direction: row;
+    margin-left: 16px;
+}
+
+.lobby-id.activated {
+    background-color: #008080;
+}
+
+.icon.icon-tabler {
+    margin-right: 8px;
 }

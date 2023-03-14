@@ -45,7 +45,8 @@ async fn main() {
         .nest_service("/pkg", ServeDir::new("pkg"))
         .nest_service("/static", ServeDir::new("static"))
         .route_service("/", ServeFile::new("html/index.html"))
-        .route_service("/local", ServeFile::new("html/game.html"))
+        .route_service("/itch", ServeFile::new("html/itch.html"))
+        .route_service("/local", ServeFile::new("html/game/local.html"))
         .route("/lobby/create", post(create_lobby))
         .route("/lobby/:id", get(get_lobby))
         .route("/lobby/:id/turns/:since", get(get_turns_since))
@@ -63,7 +64,7 @@ async fn main() {
 }
 
 async fn get_lobby(jar: SignedCookieJar, request: Request<Body>) -> impl IntoResponse {
-    let response = ServeFile::new("html/game.html").oneshot(request).await;
+    let response = ServeFile::new("html/game/online.html").oneshot(request).await;
 
     if identify_user(&jar).is_none() {
         (jar.add(generate_session_id_cookie()), response)
@@ -136,7 +137,7 @@ async fn process_inbound(
     jar: SignedCookieJar,
     Path(id): Path<String>,
     extract::Json(message): extract::Json<Message>,
-) {
+) -> impl IntoResponse {
     if let Some(session_id) = identify_user(&jar) {
         let mut lobbies = state.lobbies.lock().unwrap();
 
@@ -145,9 +146,15 @@ async fn process_inbound(
             None => Err(LobbyError("lobby does not exist".to_string())),
         };
     }
+
+    serialized_response(&None::<u8>)
 }
 
-async fn post_ready(State(state): State<AppState>, jar: SignedCookieJar, Path(id): Path<String>) {
+async fn post_ready(
+    State(state): State<AppState>,
+    jar: SignedCookieJar,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
     if let Some(session_id) = identify_user(&jar) {
         let mut lobbies = state.lobbies.lock().unwrap();
 
@@ -156,6 +163,8 @@ async fn post_ready(State(state): State<AppState>, jar: SignedCookieJar, Path(id
             None => Err(LobbyError("lobby does not exist".to_string())),
         };
     }
+
+    serialized_response(&None::<u8>)
 }
 
 fn serialized_response<T: Sized + Serialize>(value: &T) -> Response {

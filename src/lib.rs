@@ -12,11 +12,11 @@ use callbacks::{
     on_message_response, on_mouse_down, on_mouse_move, on_mouse_up, on_resize, on_state_response,
     on_touch_end, on_touch_move, on_touch_start,
 };
-use net::{fetch, request_state, request_turns_since, MessagePool};
+use net::{fetch, request_state, request_turns_since, MessagePool, pathname};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
     CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement, MouseEvent,
-    TouchEvent, Window,
+    TouchEvent, Window, console,
 };
 
 fn window() -> Window {
