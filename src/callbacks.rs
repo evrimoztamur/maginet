@@ -95,7 +95,7 @@ pub fn on_touch_end(app: &Rc<RefCell<App>>, event: TouchEvent) {
     let mut app = app.borrow_mut();
 
     app.pointer.button = false;
-    event.prevent_default();
+    // event.prevent_default();
 }
 
 pub fn on_touch_move(

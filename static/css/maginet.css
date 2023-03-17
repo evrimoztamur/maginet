@@ -4,7 +4,6 @@
 
 html {
     margin: 0;
-    /* overflow: hidden; */
 }
 
 html {
@@ -42,10 +41,15 @@ main {
 }
 
 @supports (-webkit-touch-callout: none) {
-
     html,
     body {
         height: -webkit-fill-available;
+    }
+}
+
+@media (max-width: 576px) {
+    html {
+        overflow: hidden;
     }
 }
 
