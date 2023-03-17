@@ -205,8 +205,8 @@ impl App {
                     context.save();
 
                     context.translate(
-                        -1.0 + mage.position.0 as f64 * BOARD_SCALE_F64.0,
-                        -1.0 + mage.position.1 as f64 * BOARD_SCALE_F64.1,
+                        15.0 + mage.position.0 as f64 * BOARD_SCALE_F64.0,
+                        15.0 + mage.position.1 as f64 * BOARD_SCALE_F64.1,
                     )?;
 
                     draw_mage(
@@ -216,6 +216,7 @@ impl App {
                         self.frame,
                         self.lobby.game.turn_for(),
                         self.lobby.all_ready() | self.lobby.is_local(),
+                        self.lobby.finished(),
                     )?;
 
                     if mage.is_overdriven() && mage.is_alive() {
@@ -413,7 +414,7 @@ impl App {
         if self.lobby.has_ai()
             && self.lobby.game.turn_for() == Team::Blue
             && self.frame - self.last_move_frame > 60
-            && !self.lobby.game.all_available_turns().is_empty()
+            && !self.lobby.finished()
         {
             let turn = self.lobby.game.best_turn();
             messages.append(&mut vec![Message::Move(turn.0)]);

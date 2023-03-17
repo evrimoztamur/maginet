@@ -131,6 +131,10 @@ impl Lobby {
         }
     }
 
+    pub fn finished(&self) -> bool {
+        self.game.all_available_turns(self.game.turn_for()).is_empty()
+    }
+
     pub fn has_ai(&self) -> bool {
         self.sort == LobbySort::LocalAI
     }

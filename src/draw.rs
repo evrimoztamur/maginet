@@ -171,8 +171,9 @@ pub fn draw_mage(
     frame: u64,
     team: Team,
     game_started: bool,
+    game_finished: bool,
 ) -> Result<(), JsValue> {
-    let bounce = (if mage.team == team && mage.is_alive() && game_started {
+    let bounce = (if mage.is_alive() && (mage.team == team && game_started || game_finished) {
         2 - ((frame as i64 / 6 + mage.index as i64 / 2) % 4 - 2).abs()
     } else {
         0
@@ -184,6 +185,17 @@ pub fn draw_mage(
         64.0
     };
 
+    context.save();
+
+    if game_finished && mage.is_alive() {
+        context.translate(
+            0.0,
+            ((frame as i64 % 80 - 40).max(0) - 20).abs() as f64 - 20.0,
+        )?;
+        context
+            .rotate(((frame as i64 % 80 - 35).max(0) / 5) as f64 * std::f64::consts::PI / 2.0)?;
+    }
+
     match mage.team {
         Team::Red => context
             .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
@@ -192,8 +204,8 @@ pub fn draw_mage(
                 64.0 + sleeping_offset,
                 32.0,
                 32.0,
-                0.0,
-                0.0 + bounce,
+                -16.0,
+                -16.0 + bounce,
                 32.0,
                 32.0,
             )?,
@@ -204,12 +216,14 @@ pub fn draw_mage(
                 96.0 + sleeping_offset,
                 32.0,
                 32.0,
-                0.0,
-                0.0 + bounce,
+                -16.0,
+                -16.0 + bounce,
                 32.0,
                 32.0,
             )?,
     }
+
+    context.restore();
 
     Ok(())
 }
