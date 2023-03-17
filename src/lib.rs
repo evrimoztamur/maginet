@@ -12,8 +12,8 @@ use callbacks::*;
 use net::{fetch, request_state, request_turns_since, MessagePool};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
-    CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement, MouseEvent,
-    TouchEvent, Window, KeyboardEvent,
+    CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
+    KeyboardEvent, MouseEvent, TouchEvent, Window,
 };
 
 fn window() -> Window {
@@ -93,11 +93,13 @@ fn start() -> Result<(), JsValue> {
             let mut app = app.borrow_mut();
 
             {
-                let message_pool = message_pool.borrow();
+                let mut message_pool = message_pool.borrow_mut();
 
                 app.update(&message_pool.messages);
                 app.draw(&context, &atlas).unwrap();
                 app.pointer.swap();
+
+                message_pool.clear();
             }
 
             if !app.lobby.is_local() && message_pool.borrow().available(app.frame) {
@@ -109,7 +111,6 @@ fn start() -> Result<(), JsValue> {
                     fetch(&request_state()).then(&state_closure);
                 }
 
-                message_pool.clear();
                 message_pool.block(app.frame);
             }
 
@@ -198,8 +199,9 @@ fn start() -> Result<(), JsValue> {
 
     {
         let app = app.clone();
+        let message_pool = message_pool.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            on_key_down(&app, event);
+            on_key_down(&app, &message_pool, event);
         });
         document().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
         closure.forget();

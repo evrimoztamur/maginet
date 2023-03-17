@@ -1,8 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use shared::{Game, Message, Team, Turn};
+use shared::Message;
 use wasm_bindgen::JsValue;
-use web_sys::{console, DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
+use web_sys::{DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
 
 use crate::{
     app::{App, BOARD_OFFSET, BOARD_SCALE},
@@ -143,84 +143,20 @@ pub fn on_message_response(message_pool: &Rc<RefCell<MessagePool>>, value: JsVal
     message_pool.append(messages);
 }
 
-pub fn on_key_down(app: &Rc<RefCell<App>>, event: KeyboardEvent) {
-    let mut app = app.borrow_mut();
+pub fn on_key_down(
+    app: &Rc<RefCell<App>>,
+    message_pool: &Rc<RefCell<MessagePool>>,
+    event: KeyboardEvent,
+) {
+    let app = app.borrow();
+    let mut message_pool = message_pool.borrow_mut();
 
     match event.code().as_str() {
         "KeyB" => {
-            let turn = best_turn(&app.lobby.game);
+            let turn = app.lobby.game.best_turn();
 
-            app.lobby.game.take_move(turn.0.0, turn.0.1);
-            console::log_1(&format!("{:?}", turn).into());
-            console::log_1(&format!("{:?}", app.lobby.game.evaluate()).into())
+            message_pool.append(vec![Message::Move(turn.0)]);
         }
         _ => (),
     };
-}
-
-pub fn best_turn(game: &Game) -> (Turn, isize) {
-    alphabeta(game, 3, isize::MIN, isize::MAX)
-}
-
-pub fn alphabeta(game: &Game, depth: isize, mut alpha: isize, mut beta: isize) -> (Turn, isize) {
-    // console::log_1(&format!("{} {} {}", depth, alpha, beta).into());
-
-    if depth == 0 {
-        (game.last_turn().unwrap_or(Turn::sentinel()), game.evaluate())
-    } else {
-        match game.turn_for() {
-            Team::Red => {
-                // Maximizing
-                let mut value = isize::MIN;
-                let mut best_turn = Turn::sentinel();
-
-                for turn in game.all_available_turns() {
-                    let mut next_game = game.clone();
-                    next_game.take_move(turn.0, turn.1);
-
-                    let (next_best_turn, next_value) =
-                        alphabeta(&next_game, depth - 1, alpha, beta);
-
-                    if next_value > value {
-                        value = value.max(next_value);
-                        alpha = alpha.max(value);
-
-                        best_turn = next_best_turn;
-                    }
-
-                    if value >= beta {
-                        break;
-                    }
-                }
-
-                (best_turn, value)
-            }
-            Team::Blue => {
-                // Minimizing
-                let mut value = isize::MAX;
-                let mut best_turn = Turn::sentinel();
-
-                for turn in game.all_available_turns() {
-                    let mut next_game = game.clone();
-                    next_game.take_move(turn.0, turn.1);
-
-                    let (next_best_turn, next_value) =
-                        alphabeta(&next_game, depth - 1, alpha, beta);
-
-                    if next_value < value {
-                        value = value.min(next_value);
-                        beta = beta.min(value);
-
-                        best_turn = next_best_turn;
-                    }
-
-                    if value <= alpha {
-                        break;
-                    }
-                }
-
-                (best_turn, value)
-            }
-        }
-    }
 }

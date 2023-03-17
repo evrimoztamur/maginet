@@ -1,4 +1,4 @@
-use shared::{Lobby, Mage, Message, OutMessage, Position, Turn, LobbySort};
+use shared::{Lobby, LobbySort, Mage, Message, OutMessage, Position, Turn};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -119,7 +119,7 @@ impl App {
         let lobby_sort = match pathname.as_str() {
             "/local" => LobbySort::Local,
             "/local/ai" => LobbySort::LocalAI,
-            _ => LobbySort::Online   
+            _ => LobbySort::Online,
         };
 
         App {
