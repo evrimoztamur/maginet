@@ -299,15 +299,28 @@ impl App {
                     }
                 }
 
-                context.restore();
-
                 if let Some(selected_tile) = self.lobby.game.location_as_position(
                     self.pointer.location,
                     BOARD_OFFSET,
                     BOARD_SCALE,
                 ) {
+                    if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
+                        if let Some(selected_tile) = self.lobby.game.location_as_position(
+                            self.pointer.location,
+                            BOARD_OFFSET,
+                            BOARD_SCALE,
+                        ) {
+                            for (enemy_occupied, position) in
+                                &self.lobby.game.targets(occupant, selected_tile)
+                            {
+                                draw_crosshair(context, atlas, position, (80.0, 32.0), 0)?;
+                            }
+                        }
+                    }
                     draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), self.frame)?;
                 }
+
+                context.restore();
             }
 
             context.restore();
