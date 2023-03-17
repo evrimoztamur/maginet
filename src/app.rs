@@ -1,4 +1,4 @@
-use shared::{Lobby, Mage, Message, OutMessage, Position, Turn};
+use shared::{Lobby, Mage, Message, OutMessage, Position, Turn, LobbySort};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -116,10 +116,14 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         let pathname = pathname();
-        let local = pathname == "/local";
+        let lobby_sort = match pathname.as_str() {
+            "/local" => LobbySort::Local,
+            "/local/ai" => LobbySort::LocalAI,
+            _ => LobbySort::Online   
+        };
 
         App {
-            lobby: Lobby::new(local),
+            lobby: Lobby::new(lobby_sort),
             particles: Vec::new(),
             frame: 0,
             active_mage: None,
@@ -209,7 +213,7 @@ impl App {
                         mage,
                         self.frame,
                         self.lobby.game.turn_for(),
-                        self.lobby.all_ready() | self.lobby.local,
+                        self.lobby.all_ready() | self.lobby.is_local(),
                     )?;
 
                     if mage.is_overdriven() && mage.is_alive() {

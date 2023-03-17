@@ -103,7 +103,7 @@ fn start() -> Result<(), JsValue> {
                 app.pointer.swap();
             }
 
-            if !app.lobby.local && message_pool.borrow().available(app.frame) {
+            if !app.lobby.is_local() && message_pool.borrow().available(app.frame) {
                 let mut message_pool = message_pool.borrow_mut();
 
                 if app.lobby.all_ready() {

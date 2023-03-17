@@ -64,7 +64,9 @@ async fn main() {
 }
 
 async fn get_lobby(jar: SignedCookieJar, request: Request<Body>) -> impl IntoResponse {
-    let response = ServeFile::new("html/game/online.html").oneshot(request).await;
+    let response = ServeFile::new("html/game/online.html")
+        .oneshot(request)
+        .await;
 
     if identify_user(&jar).is_none() {
         (jar.add(generate_session_id_cookie()), response)
@@ -77,7 +79,7 @@ async fn create_lobby(State(state): State<AppState>) -> impl IntoResponse {
     let lobby_id = generate_id();
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    lobbies.insert(lobby_id.clone(), Lobby::new(false));
+    lobbies.insert(lobby_id.clone(), Lobby::new(shared::LobbySort::Online));
 
     Redirect::to(&format!("/lobby/{lobby_id}"))
 }

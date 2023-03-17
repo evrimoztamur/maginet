@@ -23,16 +23,23 @@ impl Player {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub enum LobbySort {
+    Local,
+    LocalAI,
+    Online,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Lobby {
     pub game: Game,
     players: HashMap<String, Player>,
     player_slots: VecDeque<usize>,
     ticks: usize,
-    pub local: bool,
+    pub sort: LobbySort,
 }
 
 impl Lobby {
-    pub fn new(local: bool) -> Lobby {
+    pub fn new(sort: LobbySort) -> Lobby {
         Lobby {
             game: Game::new(
                 DEFAULT_BOARD_SIZE.0,
@@ -43,7 +50,7 @@ impl Lobby {
             players: HashMap::new(),
             player_slots: (0..DEFAULT_PLAYER_COUNT).collect(),
             ticks: 0,
-            local,
+            sort,
         }
     }
 
@@ -116,8 +123,16 @@ impl Lobby {
         }
     }
 
+    pub fn is_local(&self) -> bool {
+        match self.sort {
+            LobbySort::Local => true,
+            LobbySort::LocalAI => true,
+            LobbySort::Online => false,
+        }
+    }
+
     pub fn is_active_player(&self, session_id: Option<&String>) -> bool {
-        if self.local {
+        if self.is_local() {
             true
         } else if !self.all_ready() {
             false
