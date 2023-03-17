@@ -438,7 +438,7 @@ impl Game {
             })
             .sum();
 
-        mana_diff * 32 + pos_adv + self.turns() as isize
+        mana_diff * 48 + pos_adv + self.turns() as isize
     }
 
     pub fn best_turn(&self) -> (Turn, isize) {

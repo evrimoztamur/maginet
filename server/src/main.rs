@@ -47,6 +47,7 @@ async fn main() {
         .route_service("/", ServeFile::new("html/index.html"))
         .route_service("/itch", ServeFile::new("html/itch.html"))
         .route_service("/local", ServeFile::new("html/game/local.html"))
+        .route_service("/local/ai", ServeFile::new("html/game/local.html"))
         .route("/lobby/create", post(create_lobby))
         .route("/lobby/:id", get(get_lobby))
         .route("/lobby/:id/turns/:since", get(get_turns_since))

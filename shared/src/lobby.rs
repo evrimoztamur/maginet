@@ -22,7 +22,7 @@ impl Player {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
 pub enum LobbySort {
     Local,
     LocalAI,
@@ -129,6 +129,10 @@ impl Lobby {
             LobbySort::LocalAI => true,
             LobbySort::Online => false,
         }
+    }
+
+    pub fn has_ai(&self) -> bool {
+        self.sort == LobbySort::LocalAI
     }
 
     pub fn is_active_player(&self, session_id: Option<&String>) -> bool {

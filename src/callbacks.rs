@@ -148,15 +148,15 @@ pub fn on_key_down(
     message_pool: &Rc<RefCell<MessagePool>>,
     event: KeyboardEvent,
 ) {
-    let app = app.borrow();
-    let mut message_pool = message_pool.borrow_mut();
+    // let app = app.borrow();
+    // let mut message_pool = message_pool.borrow_mut();
 
-    match event.code().as_str() {
-        "KeyB" => {
-            let turn = app.lobby.game.best_turn();
+    // match event.code().as_str() {
+    //     "KeyB" => {
+    //         let turn = app.lobby.game.best_turn();
 
-            message_pool.append(vec![Message::Move(turn.0)]);
-        }
-        _ => (),
-    };
+    //         message_pool.append(vec![Message::Move(turn.0)]);
+    //     }
+    //     _ => (),
+    // };
 }

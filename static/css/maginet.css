@@ -87,6 +87,10 @@ button:hover {
     background-color: #006080;
 }
 
+button[type="submit"] {
+    margin: 8px;
+}
+
 div.logo {
     display: flex;
     justify-content: center;

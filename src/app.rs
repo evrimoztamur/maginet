@@ -1,4 +1,4 @@
-use shared::{Lobby, LobbySort, Mage, Message, OutMessage, Position, Turn};
+use shared::{Lobby, LobbySort, Mage, Message, OutMessage, Position, Team, Turn};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -108,6 +108,7 @@ pub struct App {
     pub lobby: Lobby,
     particles: Vec<Particle>,
     pub frame: u64,
+    last_move_frame: u64,
     active_mage: Option<usize>,
     session_id: Option<String>,
     pub pointer: Pointer,
@@ -126,6 +127,7 @@ impl App {
             lobby: Lobby::new(lobby_sort),
             particles: Vec::new(),
             frame: 0,
+            last_move_frame: 0,
             active_mage: None,
             session_id: get_session_id(),
             pointer: Pointer::new(),
@@ -407,6 +409,17 @@ impl App {
         Ok(())
     }
 
+    pub fn preprocess(&mut self, messages: &mut Vec<Message>) {
+        if self.lobby.has_ai()
+            && self.lobby.game.turn_for() == Team::Blue
+            && self.frame - self.last_move_frame > 60
+            && !self.lobby.game.all_available_turns().is_empty()
+        {
+            let turn = self.lobby.game.best_turn();
+            messages.append(&mut vec![Message::Move(turn.0)]);
+        }
+    }
+
     pub fn update(&mut self, messages: &Vec<Message>) {
         let mut target_positions = Vec::new();
 
@@ -415,6 +428,8 @@ impl App {
                 Message::Move(Turn(from, to)) => {
                     if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
                         target_positions.append(&mut move_targets);
+
+                        self.last_move_frame = self.frame;
                     }
                 }
                 _ => (),
@@ -432,8 +447,11 @@ impl App {
 
                     if let Some(mut move_targets) = self.lobby.game.take_move(from, selected_tile) {
                         send_message(OutMessage::Move(Turn(from, selected_tile)));
+
                         target_positions.append(&mut move_targets);
+
                         self.active_mage = None;
+                        self.last_move_frame = self.frame;
                     } else {
                         self.select_mage_at(&selected_tile);
                     }
