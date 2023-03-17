@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use shared::Message;
 use wasm_bindgen::JsValue;
-use web_sys::{DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
+use web_sys::{console, DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
 
 use crate::{
     app::{App, BOARD_OFFSET, BOARD_SCALE},
@@ -154,8 +154,12 @@ pub fn on_key_down(
     // match event.code().as_str() {
     //     "KeyB" => {
     //         let turn = app.lobby.game.best_turn();
+    //         console::log_1(&format!("{:?}", turn).into());
 
     //         message_pool.append(vec![Message::Move(turn.0)]);
+    //     }
+    //     "KeyN" => {
+    //         console::log_1(&format!("{:?}", app.lobby.game.all_available_turns(app.lobby.game.turn_for())).into());
     //     }
     //     _ => (),
     // };

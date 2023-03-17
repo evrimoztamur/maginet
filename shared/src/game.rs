@@ -401,9 +401,10 @@ impl Game {
         return moves;
     }
 
-    pub fn all_available_turns(&self) -> Vec<Turn> {
+    pub fn all_available_turns(&self, team: Team) -> Vec<Turn> {
         self.mages
             .iter()
+            .filter(|mage| mage.is_alive() && mage.team == team)
             .map(|mage| (mage, self.available_moves(mage)))
             .map(|(mage, moves)| {
                 moves
@@ -438,11 +439,11 @@ impl Game {
             })
             .sum();
 
-        mana_diff * 48 + pos_adv + self.turns() as isize
+        mana_diff * 36 + pos_adv + self.turns() as isize
     }
 
     pub fn best_turn(&self) -> (Turn, isize) {
-        self.alphabeta(3, isize::MIN, isize::MAX)
+        self.alphabeta(4, isize::MIN, isize::MAX)
     }
 
     pub fn alphabeta(&self, depth: isize, mut alpha: isize, mut beta: isize) -> (Turn, isize) {
@@ -458,18 +459,18 @@ impl Game {
                     let mut value = isize::MIN;
                     let mut best_turn = Turn::sentinel();
 
-                    for turn in self.all_available_turns() {
+                    for turn in self.all_available_turns(self.turn_for()) {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (next_best_turn, next_value) =
+                        let (_, next_value) =
                             next_game.alphabeta(depth - 1, alpha, beta);
 
                         if next_value > value {
                             value = value.max(next_value);
                             alpha = alpha.max(value);
 
-                            best_turn = next_best_turn;
+                            best_turn = turn;
                         }
 
                         if value >= beta {
@@ -484,18 +485,18 @@ impl Game {
                     let mut value = isize::MAX;
                     let mut best_turn = Turn::sentinel();
 
-                    for turn in self.all_available_turns() {
+                    for turn in self.all_available_turns(self.turn_for()) {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (next_best_turn, next_value) =
+                        let (_, next_value) =
                             next_game.alphabeta(depth - 1, alpha, beta);
 
                         if next_value < value {
                             value = value.min(next_value);
                             beta = beta.min(value);
 
-                            best_turn = next_best_turn;
+                            best_turn = turn;
                         }
 
                         if value <= alpha {
