@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::Position;
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum Team {
     Red,
     Blue,
@@ -22,7 +22,7 @@ impl Team {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mana {
     value: u8,
     pub max: u8,
@@ -79,7 +79,7 @@ impl Deref for Mana {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Spell {
     // cost: u8,
     pattern: Vec<Position>,
@@ -167,7 +167,7 @@ impl Spell {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mage {
     pub index: usize,
     pub position: Position,
@@ -196,7 +196,7 @@ impl Mage {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Board {
     pub width: usize,
     pub height: usize,
@@ -216,7 +216,13 @@ impl Board {
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct Turn(pub Position, pub Position);
 
-#[derive(Debug, Serialize, Deserialize)]
+impl Turn {
+    pub fn sentinel() -> Turn {
+        Turn(Position(0, 0), Position(0, 0))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
     board: Board,
     mages: Vec<Mage>,
@@ -389,6 +395,111 @@ impl Game {
         }
 
         return moves;
+    }
+
+    pub fn all_available_turns(&self) -> Vec<Turn> {
+        self.mages
+            .iter()
+            .map(|mage| (mage, self.available_moves(mage)))
+            .map(|(mage, moves)| {
+                moves
+                    .iter()
+                    .map(|(to, _)| Turn(mage.position, *to))
+                    .collect::<Vec<Turn>>()
+            })
+            .flatten()
+            .collect::<Vec<Turn>>()
+    }
+
+    pub fn evaluate(&self) -> isize {
+        self.mages
+            .iter()
+            .map(|mage| match mage.team {
+                Team::Red => mage.mana.value as isize,
+                Team::Blue => -(mage.mana.value as isize),
+            })
+            .sum()
+    }
+
+    // function alphabeta(node, depth, α, β, maximizingPlayer) is
+    // if depth = 0 or node is a terminal node then
+    //     return the heuristic value of node
+    // if maximizingPlayer then
+    //     value := −∞
+    //     for each child of node do
+    //         value := max(value, alphabeta(child, depth − 1, α, β, FALSE))
+    //         α := max(α, value)
+    //         if value ≥ β then
+    //             break (* β cutoff *)
+    //     return value
+    // else
+    //     value := +∞
+    //     for each child of node do
+    //         value := min(value, alphabeta(child, depth − 1, α, β, TRUE))
+    //         β := min(β, value)
+    //         if value ≤ α then
+    //             break (* α cutoff *)
+    //     return value
+
+    pub fn alphabeta(&self, depth: isize, mut alpha: isize, mut beta: isize) -> (Turn, isize) {
+        if depth == 0 {
+            (Turn::sentinel(), self.evaluate())
+        } else {
+            match self.turn_for() {
+                Team::Red => {
+                    // Maximizing
+                    let mut value = isize::MIN;
+                    let mut best_turn = Turn::sentinel();
+
+                    for turn in self.all_available_turns() {
+                        let mut next_game = self.clone();
+                        next_game.take_move(turn.0, turn.1);
+
+                        let (next_best_turn, next_value) =
+                            next_game.alphabeta(depth - 1, alpha, beta);
+
+                        if next_value > value {
+                            value = value.max(next_value);
+                            alpha = alpha.max(value);
+
+                            best_turn = next_best_turn;
+                        }
+
+                        if value >= beta {
+                            break;
+                        }
+                    }
+
+                    (best_turn, value)
+                }
+                Team::Blue => {
+                    // Minimizing
+                    let mut value = isize::MAX;
+                    let mut best_turn = Turn::sentinel();
+
+                    for turn in self.all_available_turns() {
+                        let mut next_game = self.clone();
+                        next_game.take_move(turn.0, turn.1);
+
+                        let (next_best_turn, next_value) =
+                            next_game.alphabeta(depth - 1, alpha, beta);
+
+                        if next_value < value {
+                            value = value.min(next_value);
+                            beta = beta.min(value);
+
+                            best_turn = next_best_turn;
+                        }
+
+                        if value <= beta {
+                            break;
+                        }
+                    }
+
+                    (best_turn, value)
+                }
+            }
+        }
     }
 
     pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
