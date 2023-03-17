@@ -277,6 +277,10 @@ impl Game {
         self.turns.iter().skip(since).collect()
     }
 
+    pub fn last_turn(&self) -> Option<Turn> {
+        self.turns.last().copied()
+    }
+
     pub fn iter_mages(&self) -> Iter<Mage> {
         self.mages.iter()
     }
@@ -412,13 +416,29 @@ impl Game {
     }
 
     pub fn evaluate(&self) -> isize {
-        self.mages
+        let mana_diff: isize = self
+            .mages
             .iter()
             .map(|mage| match mage.team {
                 Team::Red => mage.mana.value as isize,
                 Team::Blue => -(mage.mana.value as isize),
             })
-            .sum()
+            .sum();
+
+        let pos_adv: isize = self
+            .mages
+            .iter()
+            .map(|mage| {
+                let centre_dist = &Position(mage.position.0 * 2, mage.position.1 * 2)
+                    - &Position((self.board.width - 1) as i8, (self.board.height - 1) as i8);
+                match mage.team {
+                    Team::Red => -centre_dist.length() as isize,
+                    Team::Blue => centre_dist.length() as isize,
+                }
+            })
+            .sum();
+
+        mana_diff * 32 + pos_adv
     }
 
     // function alphabeta(node, depth, α, β, maximizingPlayer) is
@@ -440,67 +460,6 @@ impl Game {
     //         if value ≤ α then
     //             break (* α cutoff *)
     //     return value
-
-    pub fn alphabeta(&self, depth: isize, mut alpha: isize, mut beta: isize) -> (Turn, isize) {
-        if depth == 0 {
-            (Turn::sentinel(), self.evaluate())
-        } else {
-            match self.turn_for() {
-                Team::Red => {
-                    // Maximizing
-                    let mut value = isize::MIN;
-                    let mut best_turn = Turn::sentinel();
-
-                    for turn in self.all_available_turns() {
-                        let mut next_game = self.clone();
-                        next_game.take_move(turn.0, turn.1);
-
-                        let (next_best_turn, next_value) =
-                            next_game.alphabeta(depth - 1, alpha, beta);
-
-                        if next_value > value {
-                            value = value.max(next_value);
-                            alpha = alpha.max(value);
-
-                            best_turn = next_best_turn;
-                        }
-
-                        if value >= beta {
-                            break;
-                        }
-                    }
-
-                    (best_turn, value)
-                }
-                Team::Blue => {
-                    // Minimizing
-                    let mut value = isize::MAX;
-                    let mut best_turn = Turn::sentinel();
-
-                    for turn in self.all_available_turns() {
-                        let mut next_game = self.clone();
-                        next_game.take_move(turn.0, turn.1);
-
-                        let (next_best_turn, next_value) =
-                            next_game.alphabeta(depth - 1, alpha, beta);
-
-                        if next_value < value {
-                            value = value.min(next_value);
-                            beta = beta.min(value);
-
-                            best_turn = next_best_turn;
-                        }
-
-                        if value <= beta {
-                            break;
-                        }
-                    }
-
-                    (best_turn, value)
-                }
-            }
-        }
-    }
 
     pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
         if let Some(mage) = self.live_occupant(&from) {

@@ -8,15 +8,12 @@ mod net;
 use std::{cell::RefCell, rc::Rc};
 
 use app::App;
-use callbacks::{
-    on_message_response, on_mouse_down, on_mouse_move, on_mouse_up, on_resize, on_state_response,
-    on_touch_end, on_touch_move, on_touch_start,
-};
-use net::{fetch, request_state, request_turns_since, MessagePool, pathname};
+use callbacks::*;
+use net::{fetch, request_state, request_turns_since, MessagePool};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
     CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement, MouseEvent,
-    TouchEvent, Window, console,
+    TouchEvent, Window, KeyboardEvent,
 };
 
 fn window() -> Window {
@@ -196,6 +193,15 @@ fn start() -> Result<(), JsValue> {
         });
         document()
             .add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;
+        closure.forget();
+    }
+
+    {
+        let app = app.clone();
+        let closure = Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
+            on_key_down(&app, event);
+        });
+        document().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 
