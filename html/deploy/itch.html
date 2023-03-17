@@ -25,7 +25,12 @@
         @media (max-width: 576px) {
             iframe {
                 height: 100vh;
-                height: -webkit-fill-available;
+            }
+
+            @supports (-webkit-touch-callout: none) {
+                iframe {
+                    height: -webkit-fill-available;
+                }
             }
         }
     </style>
@@ -33,7 +38,7 @@
 
 <body>
     <iframe id="inlineFrameExample" title="Inline Frame Example" width="540" height="592" scrolling="auto"
-        src="https://tunnel.evrim.zone/itch">
+        src="https://maginet.evrim.zone/itch">
     </iframe>
 </body>
 
