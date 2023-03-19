@@ -463,8 +463,7 @@ impl Game {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (_, next_value) =
-                            next_game.alphabeta(depth - 1, alpha, beta);
+                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta);
 
                         if next_value > value {
                             value = value.max(next_value);
@@ -489,8 +488,7 @@ impl Game {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (_, next_value) =
-                            next_game.alphabeta(depth - 1, alpha, beta);
+                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta);
 
                         if next_value < value {
                             value = value.min(next_value);

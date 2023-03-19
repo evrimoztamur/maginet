@@ -17,7 +17,8 @@ pub fn on_mouse_down(app: &Rc<RefCell<App>>, event: MouseEvent) {
     let mut app = app.borrow_mut();
 
     match event.button() {
-        0 | 2 => app.pointer.button = true,
+        0 => app.pointer.button = true,
+        2 => app.pointer.alt_button = true,
         _ => (),
     }
 }
@@ -26,7 +27,8 @@ pub fn on_mouse_up(app: &Rc<RefCell<App>>, event: MouseEvent) {
     let mut app = app.borrow_mut();
 
     match event.button() {
-        0 | 2 => app.pointer.button = false,
+        0 => app.pointer.button = false,
+        2 => app.pointer.alt_button = false,
         _ => (),
     }
 }

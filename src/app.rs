@@ -82,6 +82,7 @@ pub struct Pointer {
     previous: Option<Box<Pointer>>,
     pub location: (i32, i32),
     pub button: bool,
+    pub alt_button: bool,
 }
 
 impl Pointer {
@@ -95,6 +96,13 @@ impl Pointer {
         match &self.previous {
             Some(pointer) => self.button && !pointer.button,
             None => self.button,
+        }
+    }
+
+    fn alt_clicked(&self) -> bool {
+        match &self.previous {
+            Some(pointer) => self.alt_button && !pointer.alt_button,
+            None => self.alt_button,
         }
     }
 
@@ -448,6 +456,10 @@ impl App {
                 }
                 _ => (),
             }
+        }
+
+        if self.pointer.alt_clicked() {
+            self.active_mage = None;
         }
 
         if self.pointer.clicked() {
