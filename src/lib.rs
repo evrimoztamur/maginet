@@ -9,7 +9,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use app::App;
 use callbacks::*;
-use net::{fetch, request_state, request_turns_since, MessagePool};
+use net::{fetch, request_session, request_state, request_turns_since, MessagePool};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
     CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
@@ -62,6 +62,7 @@ fn start() -> Result<(), JsValue> {
     atlas.set_src(&"/static/png/atlas.png?v=2");
 
     let app = App::new();
+
     let app = Rc::new(RefCell::new(app));
 
     let message_pool: Rc<RefCell<MessagePool>> = Rc::new(RefCell::new(MessagePool::new()));
@@ -82,12 +83,28 @@ fn start() -> Result<(), JsValue> {
         })
     };
 
+    let session_closure = {
+        let app = app.clone();
+
+        Closure::<dyn FnMut(JsValue)>::new(move |value| {
+            on_session_response(&app, value);
+        })
+    };
+
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
     {
         let app = app.clone();
         let message_pool = message_pool.clone();
+
+        {
+            let app = app.borrow();
+
+            if !app.lobby.is_local() && app.session_id.is_none() {
+                fetch(&request_session()).then(&session_closure);
+            }
+        }
 
         *g.borrow_mut() = Some(Closure::new(move || {
             let mut app = app.borrow_mut();
@@ -216,6 +233,8 @@ fn start() -> Result<(), JsValue> {
             .add_event_listener_with_callback("contextmenu", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
+
+    session_closure.forget();
 
     Ok(())
 }

@@ -15,3 +15,20 @@ pub enum Message {
     Lobby(Lobby),
     LobbyError(LobbyError),
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct SessionRequest {
+    pub session_id: String,
+}
+
+#[derive(Deserialize)]
+pub struct SessionMessage {
+    pub session_id: String,
+    pub message: Message,
+}
+
+#[derive(Serialize)]
+pub struct OutSessionMessage<'a> {
+    pub session_id: String,
+    pub message: OutMessage<'a>,
+}

@@ -1,11 +1,10 @@
 use shared::{Lobby, LobbySort, Mage, Message, OutMessage, Position, Team, Turn};
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
-    document,
     draw::{draw_crosshair, draw_digits, draw_mage, draw_sprite, draw_sprite_scaled, draw_tooltip},
-    net::{pathname, send_message},
+    net::{get_session_id, pathname, send_message},
 };
 
 pub const BOARD_OFFSET: (i32, i32) = (8, 8);
@@ -118,7 +117,7 @@ pub struct App {
     pub frame: u64,
     last_move_frame: u64,
     active_mage: Option<usize>,
-    session_id: Option<String>,
+    pub session_id: Option<String>,
     pub pointer: Pointer,
 }
 
@@ -318,9 +317,7 @@ impl App {
                             BOARD_OFFSET,
                             BOARD_SCALE,
                         ) {
-                            for (enemy_occupied, position) in
-                                &self.lobby.game.targets(occupant, selected_tile)
-                            {
+                            for (_, position) in &self.lobby.game.targets(occupant, selected_tile) {
                                 draw_crosshair(context, atlas, position, (80.0, 32.0), 0)?;
                             }
                         }
@@ -472,7 +469,12 @@ impl App {
                     let from = active_mage.position;
 
                     if let Some(mut move_targets) = self.lobby.game.take_move(from, selected_tile) {
-                        send_message(OutMessage::Move(Turn(from, selected_tile)));
+                        if !self.lobby.is_local() && self.session_id.is_some() {
+                            send_message(
+                                self.session_id.clone().unwrap(),
+                                OutMessage::Move(Turn(from, selected_tile)),
+                            );
+                        }
 
                         target_positions.append(&mut move_targets);
 
@@ -501,21 +503,5 @@ impl App {
                 ));
             }
         }
-    }
-}
-
-fn get_session_id() -> Option<String> {
-    match document()
-        .dyn_into::<web_sys::HtmlDocument>()
-        .unwrap()
-        .cookie()
-    {
-        Ok(cookie) => cookie
-            .split("; ")
-            .find(|cookie| cookie.starts_with("session_id="))
-            .and_then(|cookie| cookie.strip_prefix("session_id="))
-            .and_then(|cookie| cookie.split("%3D").last())
-            .and_then(|cookie| Some(cookie.to_string())),
-        Err(_) => None,
     }
 }

@@ -1,12 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
-use shared::Message;
+use shared::{Message, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{console, DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
 
 use crate::{
     app::{App, BOARD_OFFSET, BOARD_SCALE},
-    net::{fetch, request_ready, MessagePool},
+    net::{fetch, send_ready, MessagePool},
+    window,
 };
 
 pub fn on_resize(canvas: &Rc<HtmlCanvasElement>, bound: &Rc<RefCell<Option<DomRect>>>) {
@@ -93,7 +94,7 @@ pub fn on_touch_start(
     event.prevent_default();
 }
 
-pub fn on_touch_end(app: &Rc<RefCell<App>>, event: TouchEvent) {
+pub fn on_touch_end(app: &Rc<RefCell<App>>, _: TouchEvent) {
     let mut app = app.borrow_mut();
 
     app.pointer.button = false;
@@ -133,8 +134,8 @@ pub fn on_state_response(app: &Rc<RefCell<App>>, value: JsValue) {
         _ => (),
     }
 
-    if !app.in_lobby() {
-        fetch(&request_ready());
+    if !app.in_lobby() && app.session_id.is_some() {
+        send_ready(app.session_id.clone().unwrap());
     }
 }
 
@@ -145,10 +146,23 @@ pub fn on_message_response(message_pool: &Rc<RefCell<MessagePool>>, value: JsVal
     message_pool.append(messages);
 }
 
+pub fn on_session_response(app: &Rc<RefCell<App>>, value: JsValue) {
+    let mut app = app.borrow_mut();
+    let session_request: SessionRequest = serde_wasm_bindgen::from_value(value).unwrap();
+    let session_id = session_request.session_id;
+
+    app.session_id = Some(session_id.clone());
+
+    window()
+        .local_storage()
+        .unwrap_or_default()
+        .map(|storage| storage.set_item("session_id", session_id.as_str()));
+}
+
 pub fn on_key_down(
-    app: &Rc<RefCell<App>>,
-    message_pool: &Rc<RefCell<MessagePool>>,
-    event: KeyboardEvent,
+    _app: &Rc<RefCell<App>>,
+    _message_pool: &Rc<RefCell<MessagePool>>,
+    _event: KeyboardEvent,
 ) {
     // let app = app.borrow();
     // let mut message_pool = message_pool.borrow_mut();
