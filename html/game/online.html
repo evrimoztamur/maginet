@@ -31,25 +31,8 @@
       </button>
     </nav>
   </main>
-  <script type="module">
-    import init from '/pkg/maginet.js';
-
-    async function run() {
-      await init();
-    }
-
-    run();
-  </script>
-  <script>
-    let lobbyIdElement = document.getElementById("lobby-id");
-
-    lobbyIdElement.textContent = window.location.pathname;
-
-    lobbyIdElement.addEventListener("click", e => {
-      navigator.clipboard.writeText(window.location.href);
-      lobbyIdElement.classList.add("activated");
-    });
-  </script>
+  <script type="module" src="/static/js/load.js"></script>
+  <script src="/static/js/lobby.js"></script>
 </body>
 
 </html>
