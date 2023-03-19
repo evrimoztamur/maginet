@@ -189,6 +189,7 @@ fn identify_user(jar: &SignedCookieJar) -> Option<String> {
 fn generate_session_id_cookie<'c>() -> Cookie<'c> {
     Cookie::build("session_id", generate_id())
         .path("/")
+        .secure(true)
         .finish()
 }
 
