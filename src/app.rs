@@ -1,4 +1,4 @@
-use shared::{Lobby, LobbySort, Mage, Message, OutMessage, Position, Team, Turn};
+use shared::{Lobby, LobbySort, Mage, Message, Position, Team, Turn};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -444,6 +444,15 @@ impl App {
 
         for message in messages {
             match message {
+                Message::Moves(turns) => {
+                    for Turn(from, to) in turns {
+                        if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
+                            target_positions.append(&mut move_targets);
+
+                            self.last_move_frame = self.frame;
+                        }
+                    }
+                }
                 Message::Move(Turn(from, to)) => {
                     if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
                         target_positions.append(&mut move_targets);
@@ -472,7 +481,7 @@ impl App {
                         if !self.lobby.is_local() && self.session_id.is_some() {
                             send_message(
                                 self.session_id.clone().unwrap(),
-                                OutMessage::Move(Turn(from, selected_tile)),
+                                Message::Move(Turn(from, selected_tile)),
                             );
                         }
 

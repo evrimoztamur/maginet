@@ -11,7 +11,7 @@ const DEFAULT_PLAYER_COUNT: usize = 2;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LobbyError(pub String);
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct Player {
     index: usize,
 }
@@ -22,14 +22,14 @@ impl Player {
     }
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum LobbySort {
     Local,
     LocalAI,
     Online,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Lobby {
     pub game: Game,
     players: HashMap<String, Player>,

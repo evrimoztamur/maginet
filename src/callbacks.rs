@@ -2,11 +2,11 @@ use std::{cell::RefCell, rc::Rc};
 
 use shared::{Message, SessionRequest};
 use wasm_bindgen::JsValue;
-use web_sys::{console, DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
+use web_sys::{DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
 
 use crate::{
     app::{App, BOARD_OFFSET, BOARD_SCALE},
-    net::{fetch, send_ready, MessagePool},
+    net::{send_ready, MessagePool},
     window,
 };
 
@@ -141,9 +141,8 @@ pub fn on_state_response(app: &Rc<RefCell<App>>, value: JsValue) {
 
 pub fn on_message_response(message_pool: &Rc<RefCell<MessagePool>>, value: JsValue) {
     let mut message_pool = message_pool.borrow_mut();
-    let messages: Vec<Message> = serde_wasm_bindgen::from_value(value).unwrap();
 
-    message_pool.append(messages);
+    message_pool.push(serde_wasm_bindgen::from_value(value).unwrap());
 }
 
 pub fn on_session_response(app: &Rc<RefCell<App>>, value: JsValue) {

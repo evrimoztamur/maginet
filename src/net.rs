@@ -1,6 +1,6 @@
 use futures::TryFutureExt;
 use js_sys::Promise;
-use shared::{Message, OutMessage, OutSessionMessage, SessionRequest};
+use shared::{Message, SessionMessage, SessionRequest};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::{future_to_promise, JsFuture};
 use web_sys::{Request, RequestInit, Response};
@@ -30,8 +30,8 @@ impl MessagePool {
         self.block_frame = frame + Self::BLOCK_FRAMES;
     }
 
-    pub fn append(&mut self, mut messages: Vec<Message>) {
-        self.messages.append(&mut messages);
+    pub fn push(&mut self, message: Message) {
+        self.messages.push(message);
     }
 
     pub fn clear(&mut self) {
@@ -97,8 +97,8 @@ pub fn send_ready(session_id: String) -> Option<Promise> {
     }
 }
 
-pub fn send_message(session_id: String, message: OutMessage) -> Option<Promise> {
-    let session_message = OutSessionMessage {
+pub fn send_message(session_id: String, message: Message) -> Option<Promise> {
+    let session_message = SessionMessage {
         session_id,
         message,
     };

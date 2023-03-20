@@ -6,14 +6,12 @@ use std::{
 
 use axum::{
     extract::{Json, Path, State},
-    http::{header, HeaderValue},
-    response::{IntoResponse, Redirect, Response},
+    response::{IntoResponse, Redirect},
     routing::{get, post},
     Router,
 };
 use rand::Rng;
-use serde::Serialize;
-use shared::{Lobby, LobbyError, OutMessage, SessionMessage, SessionRequest};
+use shared::{Lobby, LobbyError, Message, SessionMessage, SessionRequest, Turn};
 use tower_http::services::{ServeDir, ServeFile};
 
 #[derive(Clone)]
@@ -51,7 +49,7 @@ async fn main() {
         .unwrap();
 }
 
-async fn create_lobby(State(state): State<AppState>) -> impl IntoResponse {
+async fn create_lobby(State(state): State<AppState>) -> Redirect {
     let lobby_id = generate_id();
     let mut lobbies = state.lobbies.lock().unwrap();
 
@@ -63,31 +61,25 @@ async fn create_lobby(State(state): State<AppState>) -> impl IntoResponse {
 async fn get_turns_since(
     State(state): State<AppState>,
     Path((id, since)): Path<(String, usize)>,
-) -> impl IntoResponse {
+) -> Json<Message> {
     let lobbies = state.lobbies.lock().unwrap();
 
-    match lobbies.get(&id) {
-        Some(lobby) => {
-            let turns_since: Vec<OutMessage> = lobby
-                .game
-                .turns_since(since)
-                .iter()
-                .map(|turn| OutMessage::Move(**turn))
-                .collect();
-            serialized_response(&turns_since)
-        }
-        None => serialized_response(&OutMessage::LobbyError(LobbyError(
+    if let Some(lobby) = lobbies.get(&id) {
+        let turns_since: Vec<Turn> = lobby.game.turns_since(since).into_iter().cloned().collect();
+        Json(Message::Moves(turns_since))
+    } else {
+        Json(Message::LobbyError(LobbyError(
             "lobby does not exist".to_string(),
-        ))),
+        )))
     }
 }
 
-async fn get_state(State(state): State<AppState>, Path(id): Path<String>) -> impl IntoResponse {
+async fn get_state(State(state): State<AppState>, Path(id): Path<String>) -> Json<Message> {
     let lobbies = state.lobbies.lock().unwrap();
 
     match lobbies.get(&id) {
-        Some(lobby) => serialized_response(&OutMessage::Lobby(lobby)),
-        None => serialized_response(&OutMessage::LobbyError(LobbyError(
+        Some(lobby) => Json(Message::Lobby(lobby.clone())),
+        None => Json(Message::LobbyError(LobbyError(
             "lobby does not exist".to_string(),
         ))),
     }
@@ -101,7 +93,10 @@ async fn process_inbound(
     let mut lobbies = state.lobbies.lock().unwrap();
 
     match lobbies.get_mut(&id) {
-        Some(lobby) => lobby.act_player(session_message.session_id, session_message.message),
+        Some(lobby) => {
+            lobby.act_player(session_message.session_id, session_message.message);
+            Ok(record_lobby(id, lobby))
+        }
         None => Err(LobbyError("lobby does not exist".to_string())),
     };
 }
@@ -119,8 +114,8 @@ async fn post_ready(
     };
 }
 
-async fn obtain_session() -> impl IntoResponse {
-    serialized_response(&SessionRequest {
+async fn obtain_session() -> Json<SessionRequest> {
+    Json(SessionRequest {
         session_id: generate_id(),
     })
 }
