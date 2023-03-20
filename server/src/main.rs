@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    fs::File,
     net::SocketAddr,
     sync::{Arc, Mutex},
 };
@@ -120,15 +121,9 @@ async fn obtain_session() -> Json<SessionRequest> {
     })
 }
 
-fn serialized_response<T: Sized + Serialize>(value: &T) -> Response {
-    (
-        [(
-            header::CONTENT_TYPE,
-            HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-        )],
-        serde_json::to_string(value).unwrap(),
-    )
-        .into_response()
+fn record_lobby(id: String, lobby: &Lobby) {
+    let file = File::create(format!("lobbies/{}.json", id)).unwrap();
+    serde_json::to_writer(&file, lobby).unwrap();
 }
 
 fn generate_id() -> String {
