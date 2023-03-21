@@ -203,7 +203,7 @@ impl Mage {
     }
 
     pub fn has_diagonals(&self) -> bool {
-        self.mana.value <= 1
+        self.mana.value <= 2
     }
 
     pub fn has_double_damage(&self) -> bool {
