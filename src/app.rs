@@ -8,6 +8,7 @@ use crate::{
         draw_tooltip,
     },
     net::{get_session_id, pathname, send_message},
+    window,
 };
 
 pub const BOARD_OFFSET: (i32, i32) = (8, 8);
@@ -485,11 +486,14 @@ impl App {
 
     pub fn preprocess(&mut self, messages: &mut Vec<Message>) {
         if self.lobby.has_ai()
-            // && self.lobby.game.turn_for() == Team::Blue
-            && self.frame - self.last_move_frame > 30
+            && self.lobby.game.turn_for() == Team::Blue
+            && self.frame - self.last_move_frame > 45
             && !self.lobby.finished()
         {
-            let turn = self.lobby.game.best_turn();
+            let turn = self
+                .lobby
+                .game
+                .best_turn(window().performance().unwrap().now().to_bits());
             messages.append(&mut vec![Message::Move(turn.0)]);
         }
     }

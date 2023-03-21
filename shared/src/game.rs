@@ -3,6 +3,10 @@ use std::{
     ops::{Add, AddAssign, Deref, Sub, SubAssign},
 };
 
+use rand_chacha::{
+    rand_core::{RngCore, SeedableRng},
+    ChaCha8Rng,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::Position;
@@ -493,13 +497,28 @@ impl Game {
         mana_diff * 36 + pos_adv + self.turns() as isize
     }
 
-    pub fn best_turn(&self) -> (Turn, isize) {
-        self.alphabeta(4, isize::MIN, isize::MAX)
+    pub fn best_turn(&self, seed: u64) -> (Turn, isize) {
+        let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
+        self.alphabeta(
+            4 + (1 - alive_mages / 5),
+            isize::MIN,
+            isize::MAX,
+            &mut ChaCha8Rng::seed_from_u64(seed),
+        )
     }
 
-    pub fn alphabeta(&self, depth: isize, mut alpha: isize, mut beta: isize) -> (Turn, isize) {
+    pub fn alphabeta(
+        &self,
+        depth: usize,
+        mut alpha: isize,
+        mut beta: isize,
+        rng: &mut ChaCha8Rng,
+    ) -> (Turn, isize) {
         if depth == 0 {
-            (Turn::sentinel(), self.evaluate())
+            (
+                Turn::sentinel(),
+                self.evaluate() + (rng.next_u64() & 0b11) as isize,
+            )
         } else {
             let mut best_turn = self
                 .all_available_turns(self.turn_for())
@@ -516,7 +535,7 @@ impl Game {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta);
+                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta, rng);
 
                         if next_value > value {
                             value = value.max(next_value);
@@ -540,7 +559,7 @@ impl Game {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta);
+                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta, rng);
 
                         if next_value < value {
                             value = value.min(next_value);

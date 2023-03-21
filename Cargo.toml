@@ -36,6 +36,7 @@ features = [
     'Location',
     'Node',
     'MouseEvent',
+    'Performance',
     'Touch',
     'TouchEvent',
     'TouchList',
