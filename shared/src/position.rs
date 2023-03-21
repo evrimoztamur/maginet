@@ -2,7 +2,7 @@ use std::ops::{Add, Sub};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize, Hash)]
 pub struct Position(pub i8, pub i8);
 
 impl Add for &Position {

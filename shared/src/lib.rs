@@ -1,3 +1,5 @@
+#![feature(is_some_and)]
+
 mod game;
 mod lobby;
 mod net;

@@ -1,4 +1,4 @@
-use shared::{Mage, Position, Team};
+use shared::{Mage, Position, Prop, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -221,6 +221,35 @@ pub fn draw_mage(
                 32.0,
                 32.0,
             )?,
+    }
+
+    context.restore();
+
+    Ok(())
+}
+
+pub fn draw_prop(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlImageElement,
+    prop: &Prop,
+    frame: u64,
+    game_started: bool,
+    game_finished: bool,
+) -> Result<(), JsValue> {
+    context.save();
+
+    match prop {
+        Prop::DoubleDamage => {
+            context.translate(
+                0.0,
+                ((((frame as i64 % 24) - 12).abs()) as f64 / -3.0).round() - 6.0,
+            )?;
+
+            let flip_timer = (frame as i64 % 48 - 24).abs();
+
+            context.scale(if flip_timer > 12 { 1.0 } else { -1.0 }, 1.0)?;
+            draw_sprite(context, atlas, 0.0, 192.0, 32.0, 32.0, -16.0, -16.0)?
+        }
     }
 
     context.restore();

@@ -1,6 +1,6 @@
 use std::{
+    collections::HashMap,
     ops::{Add, AddAssign, Deref, Sub, SubAssign},
-    slice::Iter,
 };
 
 use serde::{Deserialize, Serialize};
@@ -167,6 +167,11 @@ impl Spell {
     }
 }
 
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Copy)]
+pub enum Prop {
+    DoubleDamage,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mage {
     pub index: usize,
@@ -174,6 +179,7 @@ pub struct Mage {
     pub mana: Mana,
     pub team: Team,
     pub spell: Spell,
+    prop: Option<Prop>,
 }
 
 impl Mage {
@@ -184,6 +190,7 @@ impl Mage {
             team,
             mana: Mana::with_max(max_mana),
             spell,
+            prop: None,
         }
     }
 
@@ -191,8 +198,22 @@ impl Mage {
         self.mana.value > 0
     }
 
-    pub fn is_overdriven(&self) -> bool {
-        self.mana.value <= 2
+    pub fn has_diagonals(&self) -> bool {
+        self.mana.value <= 1
+    }
+
+    pub fn has_double_damage(&self) -> bool {
+        self.prop.is_some_and(|prop| prop == Prop::DoubleDamage)
+    }
+
+    pub fn add_prop(&mut self, prop: Prop) {
+        if !self.prop.is_some() {
+            self.prop = Some(prop);
+        }
+    }
+
+    pub fn remove_prop(&mut self) -> Option<Prop> {
+        self.prop.take()
     }
 }
 
@@ -200,13 +221,18 @@ impl Mage {
 pub struct Board {
     pub width: usize,
     pub height: usize,
+    pub props: HashMap<Position, Prop>,
 }
 
 impl Board {
     pub fn new(width: usize, height: usize) -> Result<Board, &'static str> {
         match (width, height) {
             (width, height) if width >= 4 && width <= 8 && height >= 4 && height <= 8 => {
-                Ok(Board { width, height })
+                Ok(Board {
+                    width,
+                    height,
+                    props: HashMap::new(),
+                })
             }
             _ => Err("board size does not conform to limits"),
         }
@@ -265,12 +291,37 @@ impl Game {
 
             let turns = Vec::new();
 
-            Ok(Game {
+            let mut game = Game {
                 board,
                 mages,
                 turns,
-            })
+            };
+
+            Ok(game)
         }
+    }
+
+    pub fn add_prop(&mut self, position: Position, prop: Prop) -> bool {
+        // A prop should not be overridden, ever
+
+        if self.board.props.contains_key(&position) {
+            false
+        } else {
+            self.board.props.insert(position, prop);
+            true
+        }
+    }
+
+    pub fn take_prop_at(&mut self, position: Position) -> Option<Prop> {
+        self.board.props.remove(&position)
+    }
+
+    pub fn is_prop_at(&self, position: Position) -> bool {
+        self.board.props.contains_key(&position)
+    }
+
+    pub fn iter_props(&self) -> std::collections::hash_map::Iter<Position, Prop> {
+        self.board.props.iter()
     }
 
     pub fn turns_since(&self, since: usize) -> Vec<&Turn> {
@@ -281,7 +332,7 @@ impl Game {
         self.turns.last().copied()
     }
 
-    pub fn iter_mages(&self) -> Iter<Mage> {
+    pub fn iter_mages(&self) -> std::slice::Iter<Mage> {
         self.mages.iter()
     }
 
@@ -392,7 +443,7 @@ impl Game {
 
             if position.within_bounds(0, self.board.width as i8, 0, self.board.height as i8)
                 && !self.occupied(&position)
-                && !(overdrive && !mage.is_overdriven())
+                && !(overdrive && !mage.has_diagonals())
             {
                 moves.push((position, overdrive));
             }
@@ -448,16 +499,18 @@ impl Game {
 
     pub fn alphabeta(&self, depth: isize, mut alpha: isize, mut beta: isize) -> (Turn, isize) {
         if depth == 0 {
-            (
-                self.last_turn().unwrap_or(Turn::sentinel()),
-                self.evaluate(),
-            )
+            (Turn::sentinel(), self.evaluate())
         } else {
+            let mut best_turn = self
+                .all_available_turns(self.turn_for())
+                .first()
+                .copied()
+                .unwrap_or(Turn::sentinel());
+
             match self.turn_for() {
                 Team::Red => {
                     // Maximizing
                     let mut value = isize::MIN;
-                    let mut best_turn = Turn::sentinel();
 
                     for turn in self.all_available_turns(self.turn_for()) {
                         let mut next_game = self.clone();
@@ -482,7 +535,6 @@ impl Game {
                 Team::Blue => {
                     // Minimizing
                     let mut value = isize::MAX;
-                    let mut best_turn = Turn::sentinel();
 
                     for turn in self.all_available_turns(self.turn_for()) {
                         let mut next_game = self.clone();
@@ -508,7 +560,11 @@ impl Game {
         }
     }
 
-    pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
+    pub fn take_move(
+        &mut self,
+        from: Position,
+        to: Position,
+    ) -> Option<(Option<Prop>, Vec<Position>)> {
         if let Some(mage) = self.live_occupant(&from) {
             if mage.team == self.turn_for() {
                 let available_moves = self.available_moves(mage);
@@ -518,8 +574,10 @@ impl Game {
 
                 if let Some((to, _)) = potential_move {
                     mage.position = *to;
+
                     self.turns.push(Turn(from, *to));
-                    return Some(self.attack(*to));
+
+                    return Some((self.engage_prop(*to), self.attack(*to)));
                 }
             }
         }
@@ -527,17 +585,36 @@ impl Game {
         None
     }
 
+    pub fn engage_prop(&mut self, at: Position) -> Option<Prop> {
+        if let Some(prop) = self.take_prop_at(at) {
+            if let Some(active_mage) = self.live_occupant_mut(&at) {
+                active_mage.add_prop(prop);
+                Some(prop)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn attack(&mut self, at: Position) -> Vec<Position> {
         let mut hits = Vec::new();
 
         if let Some(active_mage) = self.live_occupant(&at) {
             let targets = self.targets(active_mage, at);
+            let double_damage = active_mage.has_double_damage();
 
             for (is_enemy, tile) in targets {
                 if is_enemy {
-                    self.live_occupant_mut(&tile).unwrap().mana -= 1;
+                    self.live_occupant_mut(&tile).unwrap().mana -=
+                        if double_damage { 2 } else { 1 };
                     hits.push(tile);
                 }
+            }
+
+            if !hits.is_empty() {
+                self.live_occupant_mut(&at).unwrap().remove_prop();
             }
         }
 

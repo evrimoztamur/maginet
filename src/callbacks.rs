@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use shared::{Message, SessionRequest};
 use wasm_bindgen::JsValue;
-use web_sys::{DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
+use web_sys::{console, DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent, TouchEvent};
 
 use crate::{
     app::{App, BOARD_OFFSET, BOARD_SCALE},
@@ -159,23 +159,23 @@ pub fn on_session_response(app: &Rc<RefCell<App>>, value: JsValue) {
 }
 
 pub fn on_key_down(
-    _app: &Rc<RefCell<App>>,
-    _message_pool: &Rc<RefCell<MessagePool>>,
-    _event: KeyboardEvent,
+    app: &Rc<RefCell<App>>,
+    message_pool: &Rc<RefCell<MessagePool>>,
+    event: KeyboardEvent,
 ) {
-    // let app = app.borrow();
-    // let mut message_pool = message_pool.borrow_mut();
+    let app = app.borrow();
+    let mut message_pool = message_pool.borrow_mut();
 
-    // match event.code().as_str() {
-    //     "KeyB" => {
-    //         let turn = app.lobby.game.best_turn();
-    //         console::log_1(&format!("{:?}", turn).into());
+    match event.code().as_str() {
+        "KeyB" => {
+            // let turn = app.lobby.game.best_turn();
+            // console::log_1(&format!("{:?}", turn).into());
 
-    //         message_pool.append(vec![Message::Move(turn.0)]);
-    //     }
-    //     "KeyN" => {
-    //         console::log_1(&format!("{:?}", app.lobby.game.all_available_turns(app.lobby.game.turn_for())).into());
-    //     }
-    //     _ => (),
-    // };
+            // message_pool.push(Message::Move(turn.0));
+        }
+        "KeyN" => {
+            // console::log_1(&format!("{:?}", app.lobby.game.all_available_turns(app.lobby.game.turn_for())).into());
+        }
+        _ => (),
+    };
 }
