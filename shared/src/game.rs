@@ -225,6 +225,7 @@ impl Mage {
 pub struct Board {
     pub width: usize,
     pub height: usize,
+    #[serde(with = "vecmap")]
     pub props: HashMap<Position, Prop>,
 }
 
@@ -300,6 +301,9 @@ impl Game {
                 mages,
                 turns,
             };
+
+            // game.add_prop(Position(3, 3), Prop::DoubleDamage);
+            // game.add_prop(Position(4, 4), Prop::DoubleDamage);
 
             Ok(game)
         }

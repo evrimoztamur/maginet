@@ -565,7 +565,7 @@ impl App {
             }
         }
 
-        if let Some((position, Some(prop))) = engaged_prop {
+        if let Some((position, Some(_prop))) = engaged_prop {
             for _ in 0..40 {
                 let d = js_sys::Math::random() * std::f64::consts::TAU;
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;

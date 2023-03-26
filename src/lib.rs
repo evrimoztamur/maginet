@@ -102,7 +102,7 @@ fn start() -> Result<(), JsValue> {
             let app = app.borrow();
 
             if !app.lobby.is_local() && app.session_id.is_none() {
-                fetch(&request_session()).then(&session_closure);
+                let _ = fetch(&request_session()).then(&session_closure);
             }
         }
 
@@ -124,9 +124,9 @@ fn start() -> Result<(), JsValue> {
                 let mut message_pool = message_pool.borrow_mut();
 
                 if app.lobby.all_ready() {
-                    fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
+                    let _ = fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
                 } else {
-                    fetch(&request_state()).then(&state_closure);
+                    let _ = fetch(&request_state()).then(&state_closure);
                 }
 
                 message_pool.block(app.frame);

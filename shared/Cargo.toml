@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 rand_chacha = "0.3.1"
-serde = "1.0.152"
+serde = { version = "1.0.152", features = ["derive"] }
