@@ -23,28 +23,24 @@ impl Sub for &Position {
 
 impl Position {
     pub fn wrap(&self, xmax: i8, ymax: i8) -> Position {
-        let mut wrapped = self.clone();
-
-        while wrapped.0 < 0 {
-            wrapped.0 += xmax;
-        }
-
-        while wrapped.0 >= xmax {
-            wrapped.0 -= xmax;
-        }
-
-        while wrapped.1 < 0 {
-            wrapped.1 += ymax;
-        }
-
-        while wrapped.1 >= ymax {
-            wrapped.1 -= ymax;
-        }
-
-        wrapped
+        Position(self.0.rem_zero(xmax), self.1.rem_zero(ymax))
     }
 
     pub fn length(&self) -> isize {
         (self.0.pow(2) + self.1.pow(2)) as isize
+    }
+}
+
+pub trait RemZero<Rhs = Self> {
+    type Output;
+
+    fn rem_zero(self, rhs: Rhs) -> Self::Output;
+}
+
+impl RemZero for i8 {
+    type Output = i8;
+
+    fn rem_zero(self, rhs: Self) -> Self::Output {
+        ((self % rhs) + rhs) % rhs
     }
 }
