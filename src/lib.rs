@@ -44,7 +44,7 @@ fn start() -> Result<(), JsValue> {
     container_element.insert_before(&canvas, Some(&nav_element))?;
 
     canvas.set_width(512);
-    canvas.set_height(544);
+    canvas.set_height(512);
 
     let context = canvas
         .get_context("2d")?

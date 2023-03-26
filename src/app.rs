@@ -183,7 +183,7 @@ impl App {
         context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
     ) -> Result<(), JsValue> {
-        context.clear_rect(0.0, 0.0, 512.0, 544.0);
+        context.clear_rect(0.0, 0.0, 512.0, 512.0);
         context.save();
 
         context.scale(2.0, 2.0)?;
@@ -343,44 +343,6 @@ impl App {
                 }
 
                 context.restore();
-            }
-
-            context.restore();
-        }
-
-        // DRAW UI block
-        {
-            context.save();
-
-            {
-                // DRAW active mage
-                if let Some(mage) = self.get_active_mage() {
-                    for i in 0..mage.mana.1 {
-                        if i < mage.mana.0 {
-                            draw_sprite(
-                                context,
-                                atlas,
-                                80.0,
-                                0.0,
-                                8.0,
-                                8.0,
-                                129.0 - (mage.mana.1 * 5) as f64 + i as f64 * 10.0,
-                                256.0,
-                            )?;
-                        } else {
-                            draw_sprite(
-                                context,
-                                atlas,
-                                88.0,
-                                0.0,
-                                8.0,
-                                8.0,
-                                129.0 - (mage.mana.1 * 5) as f64 + i as f64 * 10.0,
-                                256.0,
-                            )?;
-                        }
-                    }
-                }
             }
 
             context.restore();
