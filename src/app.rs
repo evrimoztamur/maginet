@@ -5,7 +5,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 use crate::{
     draw::{
         draw_crosshair, draw_digits, draw_mage, draw_prop, draw_sprite, draw_sprite_scaled,
-        draw_tooltip,
+        draw_tooltip, rotation_from_position,
     },
     net::{get_session_id, pathname, send_message},
     window,
@@ -310,26 +310,31 @@ impl App {
 
                 if let Some(mage) = self.get_active_mage() {
                     let available_moves = self.lobby.game.available_moves(mage);
-                    for (position, overdrive) in &available_moves {
+                    for (position, _) in &available_moves {
                         if self.lobby.game.is_prop_at(*position) {
-                            draw_crosshair(
-                                context,
-                                atlas,
-                                position,
-                                (if *overdrive { 112.0 } else { 96.0 }, 32.0),
-                                0,
-                            )?;
+                            draw_crosshair(context, atlas, position, (96.0, 32.0), 0)?;
                         } else {
+                            let ri = rotation_from_position(position - &mage.position);
+                            let is_diagonal = ri % 2 == 1;
+                            context.save();
+                            context.translate(
+                                position.0 as f64 * BOARD_SCALE_F64.0 + BOARD_OFFSET_F64.0 + 7.0,
+                                position.1 as f64 * BOARD_SCALE_F64.1 + BOARD_OFFSET_F64.1 + 7.0,
+                            )?;
+                            context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
+                            let bop = (self.frame / 10 % 3) as f64;
+                            context.translate(bop, if is_diagonal { bop } else { 0.0 })?;
                             draw_sprite(
                                 context,
                                 atlas,
-                                if *overdrive { 16.0 } else { 0.0 },
+                                if is_diagonal { 16.0 } else { 0.0 },
                                 32.0,
                                 16.0,
                                 16.0,
-                                position.0 as f64 * BOARD_SCALE_F64.0 + BOARD_OFFSET_F64.0 - 1.0,
-                                position.1 as f64 * BOARD_SCALE_F64.1 + BOARD_OFFSET_F64.1 - 1.0,
+                                -8.0,
+                                -8.0,
                             )?;
+                            context.restore();
                         }
                     }
 

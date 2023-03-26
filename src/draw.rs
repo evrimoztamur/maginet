@@ -4,6 +4,22 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::app::BOARD_SCALE_F64;
 
+pub fn rotation_from_position(position: Position) -> i8 {
+    let (sx, sy) = (position.0.signum(), position.1.signum());
+
+    match (sx, sy) {
+        (1, 0) => 0,
+        (1, 1) => 1,
+        (0, 1) => 2,
+        (-1, 1) => 3,
+        (-1, 0) => 4,
+        (-1, -1) => 5,
+        (0, -1) => 6,
+        (1, -1) => 7,
+        _ => 0,
+    }
+}
+
 pub fn draw_sprite(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlImageElement,
@@ -233,8 +249,8 @@ pub fn draw_prop(
     atlas: &HtmlImageElement,
     prop: &Prop,
     frame: u64,
-    game_started: bool,
-    game_finished: bool,
+    _game_started: bool,
+    _game_finished: bool,
 ) -> Result<(), JsValue> {
     context.save();
 

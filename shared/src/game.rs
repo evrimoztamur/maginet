@@ -9,7 +9,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::Position;
+use crate::{vecmap, Position};
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum Team {
@@ -280,7 +280,7 @@ impl Game {
                 mages.push(Mage::new(
                     i * 2,
                     Position(x, board_height as i8 - 2),
-                    8,
+                    4,
                     Team::Red,
                     Spell::select_missile(i),
                 ));
@@ -288,7 +288,7 @@ impl Game {
                 mages.push(Mage::new(
                     i * 2 + 1,
                     Position(board_width as i8 - x - 1, 1),
-                    8,
+                    4,
                     Team::Blue,
                     Spell::select_missile(i),
                 ));
