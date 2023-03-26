@@ -442,46 +442,6 @@ impl App {
             self.pointer.location.1 as f64 - 1.0,
         )?;
 
-        if let Some(selected_tile) =
-            self.lobby
-                .game
-                .location_as_position(self.pointer.location, BOARD_OFFSET, BOARD_SCALE)
-        {
-            if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
-                draw_tooltip(
-                    context,
-                    atlas,
-                    (self.pointer.location.0, self.pointer.location.1 + 16),
-                    24,
-                )?;
-
-                draw_digits(
-                    context,
-                    atlas,
-                    (self.pointer.location.0 + 2, self.pointer.location.1 + 16),
-                    *occupant.mana as usize,
-                )?;
-
-                draw_sprite(
-                    context,
-                    atlas,
-                    80.0,
-                    12.0,
-                    4.0,
-                    4.0,
-                    self.pointer.location.0 as f64 + 11.0,
-                    self.pointer.location.1 as f64 + 18.0,
-                )?;
-
-                draw_digits(
-                    context,
-                    atlas,
-                    (self.pointer.location.0 + 17, self.pointer.location.1 + 16),
-                    occupant.mana.max as usize,
-                )?;
-            }
-        }
-
         context.restore();
 
         self.frame += 1;

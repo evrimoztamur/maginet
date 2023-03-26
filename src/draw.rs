@@ -210,6 +210,8 @@ pub fn draw_mage(
         )?;
         context
             .rotate(((frame as i64 % 80 - 35).max(0) / 5) as f64 * std::f64::consts::PI / 2.0)?;
+    } else if !mage.is_alive() {
+        context.translate(0.0, 4.0)?;
     }
 
     match mage.team {
@@ -221,7 +223,7 @@ pub fn draw_mage(
                 32.0,
                 32.0,
                 -16.0,
-                -16.0 + bounce,
+                -20.0 + bounce,
                 32.0,
                 32.0,
             )?,
@@ -233,13 +235,28 @@ pub fn draw_mage(
                 32.0,
                 32.0,
                 -16.0,
-                -16.0 + bounce,
+                -20.0 + bounce,
                 32.0,
                 32.0,
             )?,
     }
 
     context.restore();
+
+    for i in 0..mage.mana.max {
+        if i < *mage.mana {
+            draw_sprite(
+                context,
+                atlas,
+                80.0,
+                12.0,
+                4.0,
+                4.0,
+                i as f64 * 6.0 - mage.mana.max as f64 * 3.0 + 1.0,
+                10.0,
+            )?;
+        }
+    }
 
     Ok(())
 }
