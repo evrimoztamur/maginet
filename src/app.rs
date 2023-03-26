@@ -53,7 +53,7 @@ impl Particle {
             } + {
                 match self.5 {
                     ParticleSort::Missile => 0.0,
-                    ParticleSort::Diagonals => 48.0,
+                    ParticleSort::Diagonals => 24.0,
                 }
             },
             56.0,
@@ -232,7 +232,7 @@ impl App {
 
                     if mage.is_alive() {
                         if mage.has_diagonals() {
-                            for _ in 0..(self.frame / 2 % 2) {
+                            for _ in 0..(self.frame / 3 % 2) {
                                 let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
                                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
                                 self.particles.push(Particle(
