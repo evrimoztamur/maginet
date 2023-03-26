@@ -310,11 +310,11 @@ impl App {
 
                 if let Some(mage) = self.get_active_mage() {
                     let available_moves = self.lobby.game.available_moves(mage);
-                    for (position, _) in &available_moves {
+                    for (position, dir, _) in &available_moves {
                         if self.lobby.game.is_prop_at(*position) {
                             draw_crosshair(context, atlas, position, (96.0, 32.0), 0)?;
                         } else {
-                            let ri = rotation_from_position(position - &mage.position);
+                            let ri = rotation_from_position(*dir);
                             let is_diagonal = ri % 2 == 1;
                             context.save();
                             context.translate(
@@ -345,7 +345,7 @@ impl App {
                     ) {
                         if available_moves
                             .iter()
-                            .find(|(position, _)| position == &selected_tile)
+                            .find(|(position, _, _)| position == &selected_tile)
                             .is_some()
                         {
                             for (enemy_occupied, position) in

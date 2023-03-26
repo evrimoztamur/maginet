@@ -22,8 +22,26 @@ impl Sub for &Position {
 }
 
 impl Position {
-    pub fn within_bounds(&self, xmin: i8, xmax: i8, ymin: i8, ymax: i8) -> bool {
-        self.0 >= xmin && self.0 < xmax && self.1 >= ymin && self.1 < ymax
+    pub fn wrap(&self, xmax: i8, ymax: i8) -> Position {
+        let mut wrapped = self.clone();
+
+        while wrapped.0 < 0 {
+            wrapped.0 += xmax;
+        }
+
+        while wrapped.0 >= xmax {
+            wrapped.0 -= xmax;
+        }
+
+        while wrapped.1 < 0 {
+            wrapped.1 += ymax;
+        }
+
+        while wrapped.1 >= ymax {
+            wrapped.1 -= ymax;
+        }
+
+        wrapped
     }
 
     pub fn length(&self) -> isize {

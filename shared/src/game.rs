@@ -432,7 +432,7 @@ impl Game {
         }
     }
 
-    pub fn available_moves(&self, mage: &Mage) -> Vec<(Position, bool)> {
+    pub fn available_moves(&self, mage: &Mage) -> Vec<(Position, Position, bool)> {
         const DIRS: [(Position, bool); 8] = [
             (Position(0, -1), false),
             (Position(-1, 0), false),
@@ -448,12 +448,10 @@ impl Game {
 
         for (dir, overdrive) in DIRS {
             let position = &mage.position + &dir;
+            let position = position.wrap(self.board.width as i8, self.board.height as i8);
 
-            if position.within_bounds(0, self.board.width as i8, 0, self.board.height as i8)
-                && !self.occupied(&position)
-                && !(overdrive && !mage.has_diagonals())
-            {
-                moves.push((position, overdrive));
+            if !self.occupied(&position) && !(overdrive && !mage.has_diagonals()) {
+                moves.push((position, dir, overdrive));
             }
         }
 
@@ -468,7 +466,7 @@ impl Game {
             .map(|(mage, moves)| {
                 moves
                     .iter()
-                    .map(|(to, _)| Turn(mage.position, *to))
+                    .map(|(to, _, _)| Turn(mage.position, *to))
                     .collect::<Vec<Turn>>()
             })
             .flatten()
@@ -591,11 +589,11 @@ impl Game {
         if let Some(mage) = self.live_occupant(&from) {
             if mage.team == self.turn_for() {
                 let available_moves = self.available_moves(mage);
-                let potential_move = available_moves.iter().find(|(position, _)| *position == to);
+                let potential_move = available_moves.iter().find(|(position, _, _)| *position == to);
 
                 let mage = self.live_occupant_mut(&from).unwrap();
 
-                if let Some((to, _)) = potential_move {
+                if let Some((to, _, _)) = potential_move {
                     mage.position = *to;
 
                     self.turns.push(Turn(from, *to));
@@ -649,13 +647,12 @@ impl Game {
 
         for dir in &mage.spell.pattern {
             let position = &at + dir;
+            let position = position.wrap(self.board.width as i8, self.board.height as i8);
 
-            if position.within_bounds(0, self.board.width as i8, 0, self.board.height as i8) {
-                moves.push((
-                    self.live_occupied_by(&position, mage.team.enemy()),
-                    position,
-                ));
-            }
+            moves.push((
+                self.live_occupied_by(&position, mage.team.enemy()),
+                position,
+            ));
         }
 
         return moves;
