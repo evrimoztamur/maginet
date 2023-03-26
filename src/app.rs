@@ -3,10 +3,7 @@ use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
-    draw::{
-        draw_crosshair, draw_digits, draw_mage, draw_prop, draw_sprite, draw_sprite_scaled,
-        draw_tooltip, rotation_from_position,
-    },
+    draw::{draw_crosshair, draw_mage, draw_sprite, draw_sprite_scaled, rotation_from_position},
     net::{get_session_id, pathname, send_message},
     window,
 };
@@ -18,7 +15,6 @@ pub const BOARD_SCALE_F64: (f64, f64) = (BOARD_SCALE.0 as f64, BOARD_SCALE.1 as 
 
 enum ParticleSort {
     Missile,
-    DoubleDamage,
     Diagonals,
 }
 
@@ -57,7 +53,6 @@ impl Particle {
             } + {
                 match self.5 {
                     ParticleSort::Missile => 0.0,
-                    ParticleSort::DoubleDamage => 24.0,
                     ParticleSort::Diagonals => 48.0,
                 }
             },
@@ -216,26 +211,6 @@ impl App {
                 let game_started = self.lobby.all_ready() | self.lobby.is_local();
                 let game_finished = self.lobby.finished();
 
-                for (position, prop) in self.lobby.game.iter_props() {
-                    context.save();
-
-                    context.translate(
-                        15.0 + position.0 as f64 * BOARD_SCALE_F64.0,
-                        15.0 + position.1 as f64 * BOARD_SCALE_F64.1,
-                    )?;
-
-                    draw_prop(
-                        context,
-                        atlas,
-                        prop,
-                        self.frame,
-                        game_started,
-                        game_finished,
-                    )?;
-
-                    context.restore();
-                }
-
                 // DRAW mages
                 for mage in self.lobby.game.iter_mages() {
                     context.save();
@@ -270,21 +245,6 @@ impl App {
                                 ));
                             }
                         }
-
-                        if mage.has_double_damage() {
-                            for _ in 0..(self.frame / 2 % 2) {
-                                let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
-                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                                self.particles.push(Particle(
-                                    mage.position.0 as f64 + d.cos() * 0.4,
-                                    mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
-                                    d.cos() * v,
-                                    d.sin() * v,
-                                    (js_sys::Math::random() * 30.0) as u64,
-                                    ParticleSort::DoubleDamage,
-                                ));
-                            }
-                        }
                     }
 
                     if self.is_mage_active(mage) {
@@ -311,31 +271,27 @@ impl App {
                 if let Some(mage) = self.get_active_mage() {
                     let available_moves = self.lobby.game.available_moves(mage);
                     for (position, dir, _) in &available_moves {
-                        if self.lobby.game.is_prop_at(*position) {
-                            draw_crosshair(context, atlas, position, (96.0, 32.0), 0)?;
-                        } else {
-                            let ri = rotation_from_position(*dir);
-                            let is_diagonal = ri % 2 == 1;
-                            context.save();
-                            context.translate(
-                                position.0 as f64 * BOARD_SCALE_F64.0 + BOARD_OFFSET_F64.0 + 7.0,
-                                position.1 as f64 * BOARD_SCALE_F64.1 + BOARD_OFFSET_F64.1 + 7.0,
-                            )?;
-                            context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
-                            let bop = (self.frame / 10 % 3) as f64;
-                            context.translate(bop, if is_diagonal { bop } else { 0.0 })?;
-                            draw_sprite(
-                                context,
-                                atlas,
-                                if is_diagonal { 16.0 } else { 0.0 },
-                                32.0,
-                                16.0,
-                                16.0,
-                                -8.0,
-                                -8.0,
-                            )?;
-                            context.restore();
-                        }
+                        let ri = rotation_from_position(*dir);
+                        let is_diagonal = ri % 2 == 1;
+                        context.save();
+                        context.translate(
+                            position.0 as f64 * BOARD_SCALE_F64.0 + BOARD_OFFSET_F64.0 + 7.0,
+                            position.1 as f64 * BOARD_SCALE_F64.1 + BOARD_OFFSET_F64.1 + 7.0,
+                        )?;
+                        context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
+                        let bop = (self.frame / 10 % 3) as f64;
+                        context.translate(bop, if is_diagonal { bop } else { 0.0 })?;
+                        draw_sprite(
+                            context,
+                            atlas,
+                            if is_diagonal { 16.0 } else { 0.0 },
+                            32.0,
+                            16.0,
+                            16.0,
+                            -8.0,
+                            -8.0,
+                        )?;
+                        context.restore();
                     }
 
                     if let Some(selected_tile) = self.lobby.game.location_as_position(
@@ -464,27 +420,22 @@ impl App {
     }
 
     pub fn update(&mut self, messages: &Vec<Message>) {
-        let mut engaged_prop = None;
         let mut target_positions = Vec::new();
 
         for message in messages {
             match message {
                 Message::Moves(turns) => {
                     for Turn(from, to) in turns {
-                        if let Some((prop, mut move_targets)) =
-                            self.lobby.game.take_move(*from, *to)
-                        {
+                        if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
                             target_positions.append(&mut move_targets);
-                            engaged_prop = Some((*to, prop));
 
                             self.last_move_frame = self.frame;
                         }
                     }
                 }
                 Message::Move(Turn(from, to)) => {
-                    if let Some((prop, mut move_targets)) = self.lobby.game.take_move(*from, *to) {
+                    if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
                         target_positions.append(&mut move_targets);
-                        engaged_prop = Some((*to, prop));
 
                         self.last_move_frame = self.frame;
                     }
@@ -506,9 +457,7 @@ impl App {
                 if let Some(active_mage) = self.get_active_mage() {
                     let from = active_mage.position;
 
-                    if let Some((prop, mut move_targets)) =
-                        self.lobby.game.take_move(from, selected_tile)
-                    {
+                    if let Some(mut move_targets) = self.lobby.game.take_move(from, selected_tile) {
                         if !self.lobby.is_local() && self.session_id.is_some() {
                             send_message(
                                 self.session_id.clone().unwrap(),
@@ -517,7 +466,6 @@ impl App {
                         }
 
                         target_positions.append(&mut move_targets);
-                        engaged_prop = Some((selected_tile, prop));
 
                         self.active_mage = None;
                         self.last_move_frame = self.frame;
@@ -527,21 +475,6 @@ impl App {
                 } else {
                     self.select_mage_at(&selected_tile);
                 }
-            }
-        }
-
-        if let Some((position, Some(_prop))) = engaged_prop {
-            for _ in 0..40 {
-                let d = js_sys::Math::random() * std::f64::consts::TAU;
-                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                self.particles.push(Particle(
-                    position.0 as f64,
-                    position.1 as f64,
-                    d.cos() * v,
-                    d.sin() * v,
-                    (js_sys::Math::random() * 50.0) as u64,
-                    ParticleSort::DoubleDamage,
-                ));
             }
         }
 

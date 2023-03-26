@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    ops::{Add, AddAssign, Deref, Sub, SubAssign},
-};
+use std::ops::{Add, AddAssign, Deref, Sub, SubAssign};
 
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},
@@ -9,7 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{vecmap, Position};
+use crate::Position;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum Team {
@@ -171,11 +168,6 @@ impl Spell {
     }
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Copy)]
-pub enum Prop {
-    DoubleDamage,
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mage {
     pub index: usize,
@@ -183,7 +175,6 @@ pub struct Mage {
     pub mana: Mana,
     pub team: Team,
     pub spell: Spell,
-    prop: Option<Prop>,
 }
 
 impl Mage {
@@ -194,7 +185,6 @@ impl Mage {
             team,
             mana: Mana::with_max(max_mana),
             spell,
-            prop: None,
         }
     }
 
@@ -205,39 +195,19 @@ impl Mage {
     pub fn has_diagonals(&self) -> bool {
         self.mana.value <= 2
     }
-
-    pub fn has_double_damage(&self) -> bool {
-        self.prop.is_some_and(|prop| prop == Prop::DoubleDamage)
-    }
-
-    pub fn add_prop(&mut self, prop: Prop) {
-        if !self.prop.is_some() {
-            self.prop = Some(prop);
-        }
-    }
-
-    pub fn remove_prop(&mut self) -> Option<Prop> {
-        self.prop.take()
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Board {
     pub width: usize,
     pub height: usize,
-    #[serde(with = "vecmap")]
-    pub props: HashMap<Position, Prop>,
 }
 
 impl Board {
     pub fn new(width: usize, height: usize) -> Result<Board, &'static str> {
         match (width, height) {
             (width, height) if width >= 4 && width <= 8 && height >= 4 && height <= 8 => {
-                Ok(Board {
-                    width,
-                    height,
-                    props: HashMap::new(),
-                })
+                Ok(Board { width, height })
             }
             _ => Err("board size does not conform to limits"),
         }
@@ -296,40 +266,14 @@ impl Game {
 
             let turns = Vec::new();
 
-            let mut game = Game {
+            let game = Game {
                 board,
                 mages,
                 turns,
             };
 
-            // game.add_prop(Position(3, 3), Prop::DoubleDamage);
-            // game.add_prop(Position(4, 4), Prop::DoubleDamage);
-
             Ok(game)
         }
-    }
-
-    pub fn add_prop(&mut self, position: Position, prop: Prop) -> bool {
-        // A prop should not be overridden, ever
-
-        if self.board.props.contains_key(&position) {
-            false
-        } else {
-            self.board.props.insert(position, prop);
-            true
-        }
-    }
-
-    pub fn take_prop_at(&mut self, position: Position) -> Option<Prop> {
-        self.board.props.remove(&position)
-    }
-
-    pub fn is_prop_at(&self, position: Position) -> bool {
-        self.board.props.contains_key(&position)
-    }
-
-    pub fn iter_props(&self) -> std::collections::hash_map::Iter<Position, Prop> {
-        self.board.props.iter()
     }
 
     pub fn turns_since(&self, since: usize) -> Vec<&Turn> {
@@ -581,15 +525,13 @@ impl Game {
         }
     }
 
-    pub fn take_move(
-        &mut self,
-        from: Position,
-        to: Position,
-    ) -> Option<(Option<Prop>, Vec<Position>)> {
+    pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
         if let Some(mage) = self.live_occupant(&from) {
             if mage.team == self.turn_for() {
                 let available_moves = self.available_moves(mage);
-                let potential_move = available_moves.iter().find(|(position, _, _)| *position == to);
+                let potential_move = available_moves
+                    .iter()
+                    .find(|(position, _, _)| *position == to);
 
                 let mage = self.live_occupant_mut(&from).unwrap();
 
@@ -598,7 +540,7 @@ impl Game {
 
                     self.turns.push(Turn(from, *to));
 
-                    return Some((self.engage_prop(*to), self.attack(*to)));
+                    return Some(self.attack(*to));
                 }
             }
         }
@@ -606,36 +548,17 @@ impl Game {
         None
     }
 
-    pub fn engage_prop(&mut self, at: Position) -> Option<Prop> {
-        if let Some(prop) = self.take_prop_at(at) {
-            if let Some(active_mage) = self.live_occupant_mut(&at) {
-                active_mage.add_prop(prop);
-                Some(prop)
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-
     pub fn attack(&mut self, at: Position) -> Vec<Position> {
         let mut hits = Vec::new();
 
         if let Some(active_mage) = self.live_occupant(&at) {
             let targets = self.targets(active_mage, at);
-            let double_damage = active_mage.has_double_damage();
 
             for (is_enemy, tile) in targets {
                 if is_enemy {
-                    self.live_occupant_mut(&tile).unwrap().mana -=
-                        if double_damage { 2 } else { 1 };
+                    self.live_occupant_mut(&tile).unwrap().mana -= 1;
                     hits.push(tile);
                 }
-            }
-
-            if !hits.is_empty() {
-                self.live_occupant_mut(&at).unwrap().remove_prop();
             }
         }
 

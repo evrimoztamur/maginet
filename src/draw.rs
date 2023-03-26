@@ -1,4 +1,4 @@
-use shared::{Mage, Position, Prop, Team};
+use shared::{Mage, Position, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -110,76 +110,6 @@ pub fn draw_crosshair(
     Ok(())
 }
 
-pub fn draw_digits(
-    context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
-    location: (i32, i32),
-    num: usize,
-) -> Result<(), JsValue> {
-    let digits = num.max(1).ilog10();
-
-    for i in (0..=digits).rev() {
-        let digit = num / 10usize.pow(i) % 10;
-
-        draw_sprite(
-            context,
-            atlas,
-            digit as f64 * 8.0,
-            48.0,
-            8.0,
-            8.0,
-            location.0 as f64 + (digits - i) as f64 * 8.0,
-            location.1 as f64,
-        )?;
-    }
-
-    Ok(())
-}
-
-pub fn draw_tooltip(
-    context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
-    location: (i32, i32),
-    width: usize,
-) -> Result<(), JsValue> {
-    draw_sprite(
-        context,
-        atlas,
-        96.0,
-        0.0,
-        1.0,
-        12.0,
-        location.0 as f64,
-        location.1 as f64 - 2.0,
-    )?;
-
-    draw_sprite(
-        context,
-        atlas,
-        96.0,
-        0.0,
-        1.0,
-        12.0,
-        (location.0 + width as i32 + 1) as f64,
-        location.1 as f64 - 2.0,
-    )?;
-
-    draw_sprite_scaled(
-        context,
-        atlas,
-        97.0,
-        0.0,
-        1.0,
-        12.0,
-        (location.0 + 1) as f64,
-        location.1 as f64 - 2.0,
-        width as f64,
-        12.0,
-    )?;
-
-    Ok(())
-}
-
 pub fn draw_mage(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlImageElement,
@@ -257,35 +187,6 @@ pub fn draw_mage(
             )?;
         }
     }
-
-    Ok(())
-}
-
-pub fn draw_prop(
-    context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
-    prop: &Prop,
-    frame: u64,
-    _game_started: bool,
-    _game_finished: bool,
-) -> Result<(), JsValue> {
-    context.save();
-
-    match prop {
-        Prop::DoubleDamage => {
-            context.translate(
-                0.0,
-                ((((frame as i64 % 24) - 12).abs()) as f64 / -3.0).round() - 6.0,
-            )?;
-
-            let flip_timer = (frame as i64 % 48 - 24).abs();
-
-            context.scale(if flip_timer > 12 { 1.0 } else { -1.0 }, 1.0)?;
-            draw_sprite(context, atlas, 0.0, 192.0, 32.0, 32.0, -16.0, -16.0)?
-        }
-    }
-
-    context.restore();
 
     Ok(())
 }
