@@ -355,8 +355,8 @@ impl App {
             {
                 // DRAW active mage
                 if let Some(mage) = self.get_active_mage() {
-                    for i in 0..mage.mana.max {
-                        if i < *mage.mana {
+                    for i in 0..mage.mana.1 {
+                        if i < mage.mana.0 {
                             draw_sprite(
                                 context,
                                 atlas,
@@ -364,7 +364,7 @@ impl App {
                                 0.0,
                                 8.0,
                                 8.0,
-                                129.0 - (mage.mana.max * 5) as f64 + i as f64 * 10.0,
+                                129.0 - (mage.mana.1 * 5) as f64 + i as f64 * 10.0,
                                 256.0,
                             )?;
                         } else {
@@ -375,7 +375,7 @@ impl App {
                                 0.0,
                                 8.0,
                                 8.0,
-                                129.0 - (mage.mana.max * 5) as f64 + i as f64 * 10.0,
+                                129.0 - (mage.mana.1 * 5) as f64 + i as f64 * 10.0,
                                 256.0,
                             )?;
                         }

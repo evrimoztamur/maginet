@@ -173,8 +173,8 @@ pub fn draw_mage(
 
     context.restore();
 
-    for i in 0..mage.mana.max {
-        if i < *mage.mana {
+    for i in 0..mage.mana.1 {
+        if i < mage.mana.0 {
             draw_sprite(
                 context,
                 atlas,
@@ -182,7 +182,7 @@ pub fn draw_mage(
                 12.0,
                 4.0,
                 4.0,
-                i as f64 * 6.0 - mage.mana.max as f64 * 3.0 + 1.0,
+                i as f64 * 6.0 - mage.mana.1 as f64 * 3.0 + 1.0,
                 10.0,
             )?;
         }

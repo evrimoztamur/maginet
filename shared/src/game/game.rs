@@ -1,227 +1,10 @@
-use std::ops::{Add, AddAssign, Deref, Sub, SubAssign};
-
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},
     ChaCha8Rng,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::Position;
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub enum Team {
-    Red,
-    Blue,
-}
-
-impl Team {
-    pub fn enemy(&self) -> Team {
-        match self {
-            Team::Red => Team::Blue,
-            Team::Blue => Team::Red,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Mana {
-    value: u8,
-    pub max: u8,
-}
-
-impl Mana {
-    fn with_max(max_mana: u8) -> Mana {
-        Mana {
-            value: max_mana,
-            max: max_mana,
-        }
-    }
-}
-
-impl Add<u8> for Mana {
-    type Output = Mana;
-
-    fn add(self, rhs: u8) -> Self::Output {
-        Mana {
-            max: self.max,
-            value: self.value.saturating_add(rhs).min(self.max),
-        }
-    }
-}
-
-impl AddAssign<u8> for Mana {
-    fn add_assign(&mut self, rhs: u8) {
-        self.value = self.value.saturating_add(rhs).min(self.max)
-    }
-}
-
-impl Sub<u8> for Mana {
-    type Output = Mana;
-
-    fn sub(self, rhs: u8) -> Self::Output {
-        Mana {
-            max: self.max,
-            value: self.value.saturating_sub(rhs),
-        }
-    }
-}
-
-impl SubAssign<u8> for Mana {
-    fn sub_assign(&mut self, rhs: u8) {
-        self.value = self.value.saturating_sub(rhs);
-    }
-}
-
-impl Deref for Mana {
-    type Target = u8;
-
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Spell {
-    // cost: u8,
-    pattern: Vec<Position>,
-}
-
-impl Spell {
-    pub fn new(pattern: Vec<Position>) -> Spell {
-        Spell { pattern }
-    }
-
-    fn select_missile(index: usize) -> Spell {
-        let index = index % 4;
-
-        match index {
-            0 => Self::diamond_missile(),
-            1 => Self::spike_missile(),
-            2 => Self::knight_missile(),
-            3 => Self::cross_missile(),
-            _ => Self::default_missile(),
-        }
-    }
-
-    fn default_missile() -> Spell {
-        Self::new(vec![
-            Position(-2, 0),
-            Position(-1, 0),
-            Position(1, 0),
-            Position(2, 0),
-            Position(0, -2),
-            Position(0, -1),
-            Position(0, 1),
-            Position(0, 2),
-        ])
-    }
-
-    fn diamond_missile() -> Spell {
-        Self::new(vec![
-            Position(-2, 0),
-            Position(-1, -1),
-            Position(0, -2),
-            Position(1, -1),
-            Position(2, 0),
-            Position(1, 1),
-            Position(0, 2),
-            Position(-1, 1),
-        ])
-    }
-
-    fn cross_missile() -> Spell {
-        Self::new(vec![
-            Position(-2, -2),
-            Position(-2, 2),
-            Position(2, -2),
-            Position(2, 2),
-            Position(-1, -1),
-            Position(-1, 1),
-            Position(1, -1),
-            Position(1, 1),
-        ])
-    }
-
-    fn knight_missile() -> Spell {
-        Self::new(vec![
-            Position(-2, -1),
-            Position(-1, -2),
-            Position(1, 2),
-            Position(2, 1),
-            Position(1, -2),
-            Position(2, -1),
-            Position(-2, 1),
-            Position(-1, 2),
-        ])
-    }
-    fn spike_missile() -> Spell {
-        Self::new(vec![
-            Position(-2, -2),
-            Position(-2, 2),
-            Position(2, -2),
-            Position(2, 2),
-            Position(-1, 0),
-            Position(0, -1),
-            Position(1, 0),
-            Position(0, 1),
-        ])
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Mage {
-    pub index: usize,
-    pub position: Position,
-    pub mana: Mana,
-    pub team: Team,
-    pub spell: Spell,
-}
-
-impl Mage {
-    pub fn new(index: usize, position: Position, max_mana: u8, team: Team, spell: Spell) -> Mage {
-        Mage {
-            index,
-            position,
-            team,
-            mana: Mana::with_max(max_mana),
-            spell,
-        }
-    }
-
-    pub fn is_alive(&self) -> bool {
-        self.mana.value > 0
-    }
-
-    pub fn has_diagonals(&self) -> bool {
-        self.mana.value <= 2
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Board {
-    pub width: usize,
-    pub height: usize,
-}
-
-impl Board {
-    pub fn new(width: usize, height: usize) -> Result<Board, &'static str> {
-        match (width, height) {
-            (width, height) if width >= 4 && width <= 8 && height >= 4 && height <= 8 => {
-                Ok(Board { width, height })
-            }
-            _ => Err("board size does not conform to limits"),
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-pub struct Turn(pub Position, pub Position);
-
-impl Turn {
-    pub fn sentinel() -> Turn {
-        Turn(Position(0, 0), Position(0, 0))
-    }
-}
+use crate::{Board, Mage, Position, Spell, Team, Turn};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
@@ -422,8 +205,8 @@ impl Game {
             .mages
             .iter()
             .map(|mage| match mage.team {
-                Team::Red => mage.mana.value as isize,
-                Team::Blue => -(mage.mana.value as isize),
+                Team::Red => mage.mana.0 as isize,
+                Team::Blue => -(mage.mana.0 as isize),
             })
             .sum();
 
@@ -440,13 +223,13 @@ impl Game {
             })
             .sum();
 
-        mana_diff * 36 + pos_adv + self.turns() as isize
+        mana_diff.pow(2) * mana_diff.signum() * 10 + pos_adv + self.turns() as isize
     }
 
     pub fn best_turn(&self, seed: u64) -> (Turn, isize) {
         let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
         self.alphabeta(
-            4 + (1 - alive_mages / 5),
+            4 + (2 - alive_mages / 3),
             isize::MIN,
             isize::MAX,
             &mut ChaCha8Rng::seed_from_u64(seed),
