@@ -7,7 +7,7 @@ use std::{
 
 use axum::{
     extract::{Json, Path, State},
-    response::{IntoResponse, Redirect},
+    response::Redirect,
     routing::{get, post},
     Router,
 };
@@ -90,29 +90,32 @@ async fn process_inbound(
     State(state): State<AppState>,
     Path(id): Path<String>,
     Json(session_message): Json<SessionMessage>,
-) -> impl IntoResponse {
+) -> Json<Message> {
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    match lobbies.get_mut(&id) {
+    Json(match lobbies.get_mut(&id) {
         Some(lobby) => {
-            lobby.act_player(session_message.session_id, session_message.message);
-            Ok(record_lobby(id, lobby))
+            let result: Message = lobby
+                .act_player(session_message.session_id, session_message.message)
+                .into();
+            record_lobby(id, lobby);
+            result
         }
-        None => Err(LobbyError("lobby does not exist".to_string())),
-    };
+        None => Message::LobbyError(LobbyError("lobby does not exist".to_string())),
+    })
 }
 
 async fn post_ready(
     State(state): State<AppState>,
     Path(id): Path<String>,
     Json(session_request): Json<SessionRequest>,
-) -> impl IntoResponse {
+) -> Json<Message> {
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    match lobbies.get_mut(&id) {
-        Some(lobby) => lobby.join_player(session_request.session_id),
-        None => Err(LobbyError("lobby does not exist".to_string())),
-    };
+    Json(match lobbies.get_mut(&id) {
+        Some(lobby) => lobby.join_player(session_request.session_id).into(),
+        None => Message::LobbyError(LobbyError("lobby does not exist".to_string())),
+    })
 }
 
 async fn obtain_session() -> Json<SessionRequest> {

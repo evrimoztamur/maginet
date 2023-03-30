@@ -2,115 +2,17 @@ use shared::{Lobby, LobbySort, Mage, Message, Position, Team, Turn};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
+use super::{
+    Particle, ParticleSort, Pointer, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE, BOARD_SCALE_F64,
+};
 use crate::{
-    draw::{draw_crosshair, draw_mage, draw_sprite, draw_sprite_scaled, rotation_from_position},
+    draw::{
+        draw_crosshair, draw_mage, draw_particle, draw_sprite, draw_sprite_scaled,
+        rotation_from_position,
+    },
     net::{get_session_id, pathname, send_message},
     window,
 };
-
-pub const BOARD_OFFSET: (i32, i32) = (8, 8);
-pub const BOARD_OFFSET_F64: (f64, f64) = (BOARD_OFFSET.0 as f64, BOARD_OFFSET.1 as f64);
-pub const BOARD_SCALE: (i32, i32) = (30, 30);
-pub const BOARD_SCALE_F64: (f64, f64) = (BOARD_SCALE.0 as f64, BOARD_SCALE.1 as f64);
-
-enum ParticleSort {
-    Missile,
-    Diagonals,
-}
-
-struct Particle(f64, f64, f64, f64, u64, ParticleSort);
-
-impl Particle {
-    fn draw(
-        &mut self,
-        context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
-        frame: u64,
-    ) -> Result<(), JsValue> {
-        context.save();
-        context.translate(
-            ((self.0 + 0.5) * BOARD_SCALE_F64.0).floor(),
-            ((self.1 + 0.5) * BOARD_SCALE_F64.1).floor(),
-        )?;
-
-        let spin = self.4;
-        let cycle = frame + (self.0 * 16.0) as u64 + (self.1 * 16.0) as u64 + spin;
-
-        context.rotate((spin / 5) as f64 * std::f64::consts::PI / 2.0)?;
-        // context.rotate(frame as f64 * 0.1)?;
-        draw_sprite(
-            context,
-            atlas,
-            {
-                let t = cycle % 24;
-                if t > 16 {
-                    16.0
-                } else if t > 8 {
-                    8.0
-                } else {
-                    0.0
-                }
-            } + {
-                match self.5 {
-                    ParticleSort::Missile => 0.0,
-                    ParticleSort::Diagonals => 24.0,
-                }
-            },
-            56.0,
-            8.0,
-            8.0,
-            -4.0,
-            -4.0,
-        )?;
-        context.restore();
-        self.0 += self.2;
-        self.1 += self.3;
-        self.2 -= self.2 * 0.1;
-        self.3 -= self.3 * 0.1;
-        self.4 = self.4.saturating_sub(1);
-        Ok(())
-    }
-
-    fn is_alive(&self) -> bool {
-        self.4 > 1
-        // true
-    }
-}
-
-#[derive(Clone, Default)]
-pub struct Pointer {
-    previous: Option<Box<Pointer>>,
-    pub location: (i32, i32),
-    pub button: bool,
-    pub alt_button: bool,
-}
-
-impl Pointer {
-    fn new() -> Pointer {
-        Pointer {
-            ..Default::default()
-        }
-    }
-
-    fn clicked(&self) -> bool {
-        match &self.previous {
-            Some(pointer) => self.button && !pointer.button,
-            None => self.button,
-        }
-    }
-
-    fn alt_clicked(&self) -> bool {
-        match &self.previous {
-            Some(pointer) => self.alt_button && !pointer.alt_button,
-            None => self.alt_button,
-        }
-    }
-
-    pub fn swap(&mut self) {
-        self.previous.take(); // Must explicitly drop old Pointer from heap
-        self.previous = Some(Box::new(self.clone()));
-    }
-}
 
 pub struct App {
     pub lobby: Lobby,
@@ -202,7 +104,8 @@ impl App {
             // DRAW particles
 
             for particle in self.particles.iter_mut() {
-                particle.draw(context, atlas, self.frame)?;
+                particle.tick();
+                draw_particle(context, atlas, &particle, self.frame)?;
             }
 
             self.particles.drain_filter(|particle| !particle.is_alive());
@@ -235,11 +138,12 @@ impl App {
                             for _ in 0..(self.frame / 3 % 2) {
                                 let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
                                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                                self.particles.push(Particle(
-                                    mage.position.0 as f64 + d.cos() * 0.4,
-                                    mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
-                                    d.cos() * v,
-                                    d.sin() * v,
+                                self.particles.push(Particle::new(
+                                    (
+                                        mage.position.0 as f64 + d.cos() * 0.4,
+                                        mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
+                                    ),
+                                    (d.cos() * v, d.sin() * v),
                                     (js_sys::Math::random() * 30.0) as u64,
                                     ParticleSort::Diagonals,
                                 ));
@@ -381,7 +285,7 @@ impl App {
         }
     }
 
-    pub fn update(&mut self, messages: &Vec<Message>) {
+    pub fn tick(&mut self, messages: &Vec<Message>) {
         let mut target_positions = Vec::new();
 
         for message in messages {
@@ -444,11 +348,9 @@ impl App {
             for _ in 0..40 {
                 let d = js_sys::Math::random() * std::f64::consts::TAU;
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                self.particles.push(Particle(
-                    tile.0 as f64,
-                    tile.1 as f64,
-                    d.cos() * v,
-                    d.sin() * v,
+                self.particles.push(Particle::new(
+                    (tile.0 as f64, tile.1 as f64),
+                    (d.cos() * v, d.sin() * v),
                     (js_sys::Math::random() * 50.0) as u64,
                     ParticleSort::Missile,
                 ));

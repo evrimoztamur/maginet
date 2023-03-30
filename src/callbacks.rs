@@ -168,7 +168,10 @@ pub fn on_key_down(
 
     match event.code().as_str() {
         "KeyB" => {
-            let turn = app.lobby.game.best_turn(window().performance().unwrap().now().to_bits());
+            let turn = app
+                .lobby
+                .game
+                .best_turn(window().performance().unwrap().now().to_bits());
             console::log_1(&format!("{:?}", turn).into());
 
             message_pool.push(Message::Move(turn.0));

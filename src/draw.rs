@@ -2,7 +2,7 @@ use shared::{Mage, Position, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use crate::app::BOARD_SCALE_F64;
+use crate::app::{Particle, ParticleSort, BOARD_SCALE_F64};
 
 pub fn rotation_from_position(position: Position) -> i8 {
     let (sx, sy) = (position.0.signum(), position.1.signum());
@@ -185,6 +185,53 @@ pub fn draw_mage(
             10.0,
         )?;
     }
+
+    Ok(())
+}
+
+pub fn draw_particle(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlImageElement,
+    particle: &Particle,
+    frame: u64,
+) -> Result<(), JsValue> {
+    context.save();
+    context.translate(
+        ((particle.position.0 + 0.5) * BOARD_SCALE_F64.0).floor(),
+        ((particle.position.1 + 0.5) * BOARD_SCALE_F64.1).floor(),
+    )?;
+
+    let spin = particle.lifetime;
+    let cycle =
+        frame + (particle.position.0 * 16.0) as u64 + (particle.position.1 * 16.0) as u64 + spin;
+
+    context.rotate((spin / 5) as f64 * std::f64::consts::PI / 2.0)?;
+    // context.rotate(frame as f64 * 0.1)?;
+    draw_sprite(
+        context,
+        atlas,
+        {
+            let t = cycle % 24;
+            if t > 16 {
+                16.0
+            } else if t > 8 {
+                8.0
+            } else {
+                0.0
+            }
+        } + {
+            match particle.sort {
+                ParticleSort::Missile => 0.0,
+                ParticleSort::Diagonals => 24.0,
+            }
+        },
+        56.0,
+        8.0,
+        8.0,
+        -4.0,
+        -4.0,
+    )?;
+    context.restore();
 
     Ok(())
 }

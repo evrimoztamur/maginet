@@ -113,7 +113,7 @@ fn start() -> Result<(), JsValue> {
                 let mut message_pool = message_pool.borrow_mut();
 
                 app.preprocess(&mut message_pool.messages);
-                app.update(&message_pool.messages);
+                app.tick(&message_pool.messages);
                 app.draw(&context, &atlas).unwrap();
                 app.pointer.swap();
 
@@ -124,7 +124,8 @@ fn start() -> Result<(), JsValue> {
                 let mut message_pool = message_pool.borrow_mut();
 
                 if app.lobby.all_ready() {
-                    let _ = fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
+                    let _ =
+                        fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
                 } else {
                     let _ = fetch(&request_state()).then(&state_closure);
                 }

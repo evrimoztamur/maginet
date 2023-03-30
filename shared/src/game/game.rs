@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Board, Mage, Position, Spell, Team, Turn};
 
+/// A [`Game`] contains all the information to represent a deterministically replicable state of the game.
+/// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
     board: Board,
@@ -14,6 +16,7 @@ pub struct Game {
 }
 
 impl Game {
+    /// Instantiates the [`Game`] `struct` with a given board size (always 8-by-8) and number of mages (always 4)]
     pub fn new(
         board_width: usize,
         board_height: usize,
@@ -59,26 +62,32 @@ impl Game {
         }
     }
 
+    /// Returns a list of [`Turn`]s skipping the first `since` turns.
     pub fn turns_since(&self, since: usize) -> Vec<&Turn> {
         self.turns.iter().skip(since).collect()
     }
 
+    /// Returns the latest [`Turn`].
     pub fn last_turn(&self) -> Option<Turn> {
         self.turns.last().copied()
     }
 
+    /// Returns an iterator over all [`Mage`]s.
     pub fn iter_mages(&self) -> std::slice::Iter<Mage> {
         self.mages.iter()
     }
 
+    /// Returns a reference to a [`Mage`] of a certain index.
     pub fn get_mage(&self, index: usize) -> Option<&Mage> {
         self.mages.get(index)
     }
 
+    /// Returns a mutable reference to a [`Mage`] of a certain index.
     pub fn get_mage_mut(&mut self, index: usize) -> Option<&mut Mage> {
         self.mages.get_mut(index)
     }
 
+    /// Returns a reference to a [`Mage`] at a certain [`Position`].
     fn occupant(&self, position: &Position) -> Option<&Mage> {
         for mage in self.mages.iter() {
             if mage.position == *position {
@@ -89,10 +98,12 @@ impl Game {
         None
     }
 
+    /// Determines whether or not a move can be made to the [`Position`].
     fn occupied(&self, position: &Position) -> bool {
         self.occupant(position).is_some()
     }
 
+    /// Returns a reference to a [`Mage`] at a certain [`Position`] if the mage is alive.
     pub fn live_occupant(&self, position: &Position) -> Option<&Mage> {
         for mage in self.mages.iter().filter(|mage| mage.is_alive()) {
             if mage.position == *position {
@@ -103,6 +114,7 @@ impl Game {
         None
     }
 
+    /// Returns a mutable reference to a [`Mage`] at a certain [`Position`] if the mage is alive.
     pub fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
         for mage in self.mages.iter_mut().filter(|mage| mage.is_alive()) {
             if mage.position == *position {
@@ -113,6 +125,7 @@ impl Game {
         None
     }
 
+    /// Determines whether or not a [`Position`] is occupied by a live [`Mage`].
     fn live_occupied_by(&self, position: &Position, team: Team) -> bool {
         if let Some(occupant) = self.live_occupant(position) {
             occupant.team == team
@@ -121,14 +134,17 @@ impl Game {
         }
     }
 
+    /// Returns the number of turns since the start of the game, starting from 0.
     pub fn turns(&self) -> usize {
         self.turns.len()
     }
 
+    /// Returns the index for the team which will be making the next move.
     pub fn turn_index(&self) -> usize {
         self.turns() % 2
     }
 
+    /// Returns the [`Team`] which will be taking their turn.
     pub fn turn_for(&self) -> Team {
         if self.turn_index() == 0 {
             Team::Red
@@ -137,6 +153,7 @@ impl Game {
         }
     }
 
+    /// Converts a canvas location to a board [`Position`].
     pub fn location_as_position(
         &self,
         location: (i32, i32),
@@ -159,6 +176,7 @@ impl Game {
         }
     }
 
+    /// Returns a list of all available [`Position`]s a [`Mage`] can move to, including metadata on the direction and whether or not it's a diagonal.
     pub fn available_moves(&self, mage: &Mage) -> Vec<(Position, Position, bool)> {
         const DIRS: [(Position, bool); 8] = [
             (Position(0, -1), false),
@@ -173,18 +191,19 @@ impl Game {
 
         let mut moves = Vec::with_capacity(DIRS.len());
 
-        for (dir, overdrive) in DIRS {
+        for (dir, diagonal) in DIRS {
             let position = &mage.position + &dir;
             let position = position.wrap(self.board.width as i8, self.board.height as i8);
 
-            if !self.occupied(&position) && !(overdrive && !mage.has_diagonals()) {
-                moves.push((position, dir, overdrive));
+            if !self.occupied(&position) && !(diagonal && !mage.has_diagonals()) {
+                moves.push((position, dir, diagonal));
             }
         }
 
         return moves;
     }
 
+    /// Returns a list of all available [`Turn`]s for the active team.
     pub fn all_available_turns(&self, team: Team) -> Vec<Turn> {
         self.mages
             .iter()
@@ -200,6 +219,7 @@ impl Game {
             .collect::<Vec<Turn>>()
     }
 
+    /// Evaluates the viability of the board on a signed basis, where a positive evaluation is in favour of the red team.
     pub fn evaluate(&self) -> isize {
         let mana_diff: isize = self
             .mages
@@ -226,6 +246,7 @@ impl Game {
         mana_diff.pow(2) * mana_diff.signum() * 10 + pos_adv + self.turns() as isize
     }
 
+    /// Returns the best [`Turn`] available and its evaluation.
     pub fn best_turn(&self, seed: u64) -> (Turn, isize) {
         let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
         self.alphabeta(
@@ -236,6 +257,7 @@ impl Game {
         )
     }
 
+    /// Returns the best turn based on the evaluation function and [alpha-beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning).
     pub fn alphabeta(
         &self,
         depth: usize,
@@ -308,6 +330,7 @@ impl Game {
         }
     }
 
+    /// Executes a [`Turn`], modifying the game state.
     pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
         if let Some(mage) = self.live_occupant(&from) {
             if mage.team == self.turn_for() {
@@ -331,6 +354,8 @@ impl Game {
         None
     }
 
+    /// Executes an attack on the given [`Position`].
+    /// A mage must already be present on the tile.
     pub fn attack(&mut self, at: Position) -> Vec<Position> {
         let mut hits = Vec::new();
 
@@ -348,6 +373,7 @@ impl Game {
         hits
     }
 
+    /// Returns the list of targets a [`Mage`] can attack to on a certain [`Position`].
     pub fn targets(&self, mage: &Mage, at: Position) -> Vec<(bool, Position)> {
         let mut moves = Vec::with_capacity(mage.spell.pattern.len());
 

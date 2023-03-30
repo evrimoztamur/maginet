@@ -8,8 +8,18 @@ const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
 const DEFAULT_MAGE_COUNT: usize = 4;
 const DEFAULT_PLAYER_COUNT: usize = 2;
 
+/// Errors concerning the [`Lobby`].
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LobbyError(pub String);
+
+impl From<Result<(), LobbyError>> for Message {
+    fn from(result: Result<(), LobbyError>) -> Self {
+        match result {
+            Ok(_) => Message::Ok,
+            Err(err) => Message::LobbyError(err),
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Player {
@@ -22,23 +32,31 @@ impl Player {
     }
 }
 
+/// Sort of the lobby. Currently used to modify game logic and executing networking and AI code.
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum LobbySort {
+    /// `Lobby` is for on-the-board play involving two local players on the same board.
     Local,
+    /// `LocalAI` is the same as `Local`, but executes AI code following player turns.
     LocalAI,
+    /// `Online` excutes netcode to synchronise the game state and communicate player turns with the server.
     Online,
 }
 
+/// [`Lobby`] is a `struct` which contains all the information necessary for executing a game.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Lobby {
+    /// The active [`Game`] of the lobby.
     pub game: Game,
     players: HashMap<String, Player>,
     player_slots: VecDeque<usize>,
     ticks: usize,
+    /// The [`Lobby`]s sort.
     pub sort: LobbySort,
 }
 
 impl Lobby {
+    /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
     pub fn new(sort: LobbySort) -> Lobby {
         Lobby {
             game: Game::new(
@@ -54,15 +72,19 @@ impl Lobby {
         }
     }
 
+    /// Number of ticks since the lobby's creation.
+    /// Used to synchronise lobby-related events.
     pub fn tick(&mut self) {
         self.ticks += 1;
     }
 
+    /// Determines if all players slots are taken.
     pub fn all_ready(&self) -> bool {
         self.player_slots.is_empty()
     }
 
-    pub fn join_player(&mut self, session_id: String) -> Result<String, LobbyError> {
+    /// Includes a new session ID into the lobby, and assigns a player index to it.
+    pub fn join_player(&mut self, session_id: String) -> Result<(), LobbyError> {
         if self.all_ready() {
             Err(LobbyError("cannot join an active game".to_string()))
         } else if self.players.contains_key(&session_id) {
@@ -73,7 +95,7 @@ impl Lobby {
 
                 self.tick();
 
-                Ok(session_id)
+                Ok(())
             } else {
                 Err(LobbyError("no available slots in lobby".to_string()))
             }
@@ -99,6 +121,7 @@ impl Lobby {
     //     }
     // }
 
+    /// Executes a certain [`Message`] for the player.
     pub fn act_player(&mut self, session_id: String, message: Message) -> Result<(), LobbyError> {
         if !self.all_ready() {
             Err(LobbyError("game not yet started".to_string()))
@@ -123,6 +146,7 @@ impl Lobby {
         }
     }
 
+    /// Determines if the lobby is *not* an online one.
     pub fn is_local(&self) -> bool {
         match self.sort {
             LobbySort::Local => true,
@@ -131,16 +155,19 @@ impl Lobby {
         }
     }
 
+    /// Determines if the game is finished.
     pub fn finished(&self) -> bool {
         self.game
             .all_available_turns(self.game.turn_for())
             .is_empty()
     }
 
+    /// Returns `true` for [`LobbySort::LocalAI`].
     pub fn has_ai(&self) -> bool {
         self.sort == LobbySort::LocalAI
     }
 
+    /// Determines if the given session ID is the one taking its turn.
     pub fn is_active_player(&self, session_id: Option<&String>) -> bool {
         if self.is_local() {
             true
@@ -157,6 +184,7 @@ impl Lobby {
         }
     }
 
+    /// Detemines whether or not the given session ID is in this lobby.
     pub fn has_session_id(&self, session_id: Option<&String>) -> bool {
         match session_id {
             Some(session_id) => self.players.contains_key(session_id),
