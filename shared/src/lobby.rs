@@ -1,11 +1,14 @@
 use std::collections::{HashMap, VecDeque};
 
+use rand_chacha::{
+    rand_core::{RngCore, SeedableRng},
+    ChaCha8Rng,
+};
 use serde::{Deserialize, Serialize};
 
-use crate::{Game, Message, Turn};
+use crate::{Game, MageSort, Message, Turn};
 
 const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
-const DEFAULT_MAGE_COUNT: usize = 4;
 const DEFAULT_PLAYER_COUNT: usize = 2;
 
 /// Errors concerning the [`Lobby`].
@@ -62,14 +65,33 @@ impl Lobby {
             game: Game::new(
                 DEFAULT_BOARD_SIZE.0,
                 DEFAULT_BOARD_SIZE.1,
-                DEFAULT_MAGE_COUNT,
+                Lobby::default_loadout(),
+                Lobby::default_loadout(),
             )
-            .unwrap(),
+            .expect("game should be instantiable with default values"),
             players: HashMap::new(),
             player_slots: (0..DEFAULT_PLAYER_COUNT).collect(),
             ticks: 0,
             sort,
         }
+    }
+
+    fn default_loadout() -> Vec<MageSort> {
+        vec![
+            MageSort::Diamond,
+            MageSort::Spike,
+            MageSort::Knight,
+            MageSort::Cross,
+        ]
+    }
+
+    #[allow(dead_code)]
+    fn random_loadout(seed: u64) -> Vec<MageSort> {
+        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        (0..4)
+            .into_iter()
+            .map(|_| ((rng.next_u64() % 5) as usize).into())
+            .collect::<Vec<MageSort>>()
     }
 
     /// Number of ticks since the lobby's creation.

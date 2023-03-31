@@ -2,6 +2,33 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Mana, Position, Spell, Team};
 
+/// A [`MageSort`] is the distinct type of the mage, determining its visual appearance and spell.
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+pub enum MageSort {
+    /// A simple mage who attacks with a diamond pattern.
+    Diamond,
+    /// A simple mage who attacks with an X pattern.
+    Cross,
+    /// A simple mage who attacks with a chess knight pattern.
+    Knight,
+    /// A simple mage who attacks with a funky pattern.
+    Spike,
+    /// A simple mage who attacks with a + pattern.
+    Plus,
+}
+
+impl From<usize> for MageSort {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Self::Diamond,
+            1 => Self::Cross,
+            2 => Self::Knight,
+            3 => Self::Spike,
+            _ => Self::Plus,
+        }
+    }
+}
+
 /// A [`Mage`] is the playable unit on the [`crate::Board`].
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mage {
@@ -9,6 +36,8 @@ pub struct Mage {
     pub index: usize,
     /// [`Position`] of the mage on the board.
     pub position: Position,
+    /// [`Sort`] of the mage.
+    pub sort: MageSort,
     /// [`Mana`] of the mage.
     pub mana: Mana,
     /// [`Team`] of the mage.
@@ -19,13 +48,14 @@ pub struct Mage {
 
 impl Mage {
     /// Instantiates the [`Mage`] `struct` using [`crate::Mana::with_max()`]
-    pub fn new(index: usize, position: Position, max_mana: u8, team: Team, spell: Spell) -> Mage {
+    pub fn new(index: usize, team: Team, sort: MageSort, position: Position) -> Mage {
         Mage {
             index,
             position,
+            sort,
             team,
-            mana: Mana::with_max(max_mana),
-            spell,
+            mana: Mana::select(sort),
+            spell: Spell::select(sort),
         }
     }
 

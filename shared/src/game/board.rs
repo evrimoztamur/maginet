@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::{Mage, MageSort, Position, Team};
+
 /// [`Board`] is a struct which currently only contains the size of the playing field.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Board {
@@ -19,5 +21,23 @@ impl Board {
             }
             _ => Err("board size does not conform to limits"),
         }
+    }
+
+    /// Returns a list of [`Mage`]s already indexed, positioned on the board, and instantiated.
+    pub fn place_mages(&self, team: Team, mage_sorts: Vec<MageSort>, offset: usize) -> Vec<Mage> {
+        let x_offset = ((self.width - mage_sorts.len()) / 2) as i8;
+
+        let mut mages = Vec::with_capacity(mage_sorts.len());
+
+        for (index, mage_sort) in mage_sorts.iter().enumerate() {
+            mages.push(Mage::new(
+                offset + index,
+                team,
+                *mage_sort,
+                Position(x_offset + index as i8, self.height as i8 - 2).align(self, team),
+            ));
+        }
+
+        mages
     }
 }

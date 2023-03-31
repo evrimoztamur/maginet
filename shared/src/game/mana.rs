@@ -2,14 +2,25 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
+use crate::MageSort;
+
+const DEFAULT_MANA: u8 = 4;
+
 /// Mana is a `struct` which contains the current mana level for a specific wizard. It stores the current and maximum values.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mana(pub u8, pub u8);
 
 impl Mana {
-    /// Helper function to instantiate a [`Mana`] where current value equals the maximum. 
+    /// Helper function to instantiate a [`Mana`] where current value equals the maximum.
     pub fn with_max(max_mana: u8) -> Mana {
         Mana(max_mana, max_mana)
+    }
+
+    /// Selects the appropriate [`Mana`] for a given [`MageSort`].
+    pub fn select(mage_sort: MageSort) -> Mana {
+        match mage_sort {
+            _ => Mana::with_max(DEFAULT_MANA),
+        }
     }
 }
 

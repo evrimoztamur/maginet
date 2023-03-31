@@ -4,7 +4,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Mage, Position, Spell, Team, Turn};
+use crate::{Board, Mage, MageSort, Position, Team, Turn};
 
 /// A [`Game`] contains all the information to represent a deterministically replicable state of the game.
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
@@ -20,35 +20,18 @@ impl Game {
     pub fn new(
         board_width: usize,
         board_height: usize,
-        mage_count: usize,
+        red_mage_sorts: Vec<MageSort>,
+        blue_mage_sorts: Vec<MageSort>,
     ) -> Result<Game, &'static str> {
-        if mage_count >= (board_width - 1) * (board_height - 1) {
+        if red_mage_sorts.len().max(blue_mage_sorts.len()) > board_width {
             Err("game contains too many mages for board")
         } else {
             let board = Board::new(board_width, board_height)?;
-            let mut mages = Vec::with_capacity(mage_count * 2);
 
-            let x_offset = ((board_width - mage_count) / 2) as i8;
+            let mut mages = Vec::with_capacity(red_mage_sorts.len() + blue_mage_sorts.len());
 
-            for i in 0..mage_count {
-                let x = x_offset + i as i8;
-
-                mages.push(Mage::new(
-                    i * 2,
-                    Position(x, board_height as i8 - 2),
-                    4,
-                    Team::Red,
-                    Spell::select_missile(i),
-                ));
-
-                mages.push(Mage::new(
-                    i * 2 + 1,
-                    Position(board_width as i8 - x - 1, 1),
-                    4,
-                    Team::Blue,
-                    Spell::select_missile(i),
-                ));
-            }
+            mages.append(&mut board.place_mages(Team::Red, red_mage_sorts, 0));
+            mages.append(&mut board.place_mages(Team::Blue, blue_mage_sorts, mages.len()));
 
             let turns = Vec::new();
 

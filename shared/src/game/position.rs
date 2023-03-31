@@ -2,6 +2,8 @@ use std::ops::{Add, Sub};
 
 use serde::{Deserialize, Serialize};
 
+use crate::{Board, Team};
+
 /// Reference to a position on the game board.
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize, Hash)]
 pub struct Position(pub i8, pub i8);
@@ -32,6 +34,19 @@ impl Position {
     /// Squared length of the [`Position`] as a vector.
     pub fn length(&self) -> isize {
         (self.0.pow(2) + self.1.pow(2)) as isize
+    }
+
+    /// Rotates a [`Position`] 180 degrees.
+    pub fn rotate(&self, board: &Board) -> Position {
+        Position(board.width as i8 - self.0 - 1, board.height as i8 - self.1 - 1)
+    }
+
+    /// Aligns a [`Position`] into the team's perspective.
+    pub fn align(&self, board: &Board, team: Team) -> Position {
+        match team {
+            Team::Red => *self,
+            Team::Blue => self.rotate(board),
+        }
     }
 }
 

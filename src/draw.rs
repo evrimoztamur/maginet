@@ -144,11 +144,19 @@ pub fn draw_mage(
         context.translate(0.0, 4.0)?;
     }
 
+    let sprite_x = match mage.sort {
+        shared::MageSort::Diamond => 0.0,
+        shared::MageSort::Spike => 32.0,
+        shared::MageSort::Knight => 64.0,
+        shared::MageSort::Cross => 96.0,
+        shared::MageSort::Plus => 0.0,
+    };
+
     match mage.team {
         Team::Red => context
             .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
-                32.0 * (mage.index / 2) as f64,
+                sprite_x,
                 64.0 + sleeping_offset,
                 32.0,
                 32.0,
@@ -160,7 +168,7 @@ pub fn draw_mage(
         Team::Blue => context
             .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
-                32.0 * (mage.index / 2) as f64,
+                sprite_x,
                 96.0 + sleeping_offset,
                 32.0,
                 32.0,
