@@ -37,25 +37,6 @@ pub fn draw_sprite(
     Ok(())
 }
 
-pub fn draw_sprite_scaled(
-    context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
-    sx: f64,
-    sy: f64,
-    sw: f64,
-    sh: f64,
-    dx: f64,
-    dy: f64,
-    dw: f64,
-    dh: f64,
-) -> Result<(), JsValue> {
-    context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-        atlas, sx, sy, sw, sh, dx, dy, dw, dh,
-    )?;
-
-    Ok(())
-}
-
 pub fn draw_crosshair(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlImageElement,
@@ -160,7 +141,7 @@ pub fn draw_mage(
                 64.0 + sleeping_offset,
                 32.0,
                 32.0,
-                -16.0,
+                -15.0,
                 -20.0 + bounce,
                 32.0,
                 32.0,
@@ -172,7 +153,7 @@ pub fn draw_mage(
                 96.0 + sleeping_offset,
                 32.0,
                 32.0,
-                -16.0,
+                -15.0,
                 -20.0 + bounce,
                 32.0,
                 32.0,
@@ -189,7 +170,7 @@ pub fn draw_mage(
             12.0,
             4.0,
             4.0,
-            i as f64 * 6.0 - mage.mana.0 as f64 * 3.0 + 1.0,
+            i as f64 * 6.0 - mage.mana.0 as f64 * 3.0 + 2.0,
             10.0,
         )?;
     }

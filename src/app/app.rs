@@ -6,10 +6,7 @@ use super::{
     Particle, ParticleSort, Pointer, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE, BOARD_SCALE_F64,
 };
 use crate::{
-    draw::{
-        draw_crosshair, draw_mage, draw_particle, draw_sprite, draw_sprite_scaled,
-        rotation_from_position,
-    },
+    draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
     net::{get_session_id, pathname, send_message},
     window,
 };
@@ -99,7 +96,7 @@ impl App {
 
             context.translate(BOARD_OFFSET_F64.0, BOARD_OFFSET_F64.1)?;
 
-            draw_sprite_scaled(context, atlas, 64.0, 0.0, 8.0, 8.0, 0.0, 0.0, 240.0, 240.0)?;
+            draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
 
             // DRAW particles
 
@@ -159,7 +156,7 @@ impl App {
                             0.0,
                             8.0,
                             5.0,
-                            -4.0,
+                            -3.0,
                             -17.0 - (self.frame / 6 % 6) as f64,
                         )?;
                     }
@@ -179,12 +176,12 @@ impl App {
                         let is_diagonal = ri % 2 == 1;
                         context.save();
                         context.translate(
-                            position.0 as f64 * BOARD_SCALE_F64.0 + BOARD_OFFSET_F64.0 + 7.0,
-                            position.1 as f64 * BOARD_SCALE_F64.1 + BOARD_OFFSET_F64.1 + 7.0,
+                            (position.0 as f64 + 0.5) * BOARD_SCALE_F64.0,
+                            (position.1 as f64 + 0.5) as f64 * BOARD_SCALE_F64.1,
                         )?;
                         context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
                         let bop = (self.frame / 10 % 3) as f64;
-                        context.translate(bop, if is_diagonal { bop } else { 0.0 })?;
+                        context.translate(bop - 4.0, if is_diagonal { bop } else { 0.0 })?;
                         draw_sprite(
                             context,
                             atlas,
