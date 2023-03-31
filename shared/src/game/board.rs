@@ -40,4 +40,15 @@ impl Board {
 
         mages
     }
+
+    /// Validates a [`Position`] and, if necessary, converts it to a valid one.
+    /// Currently only confirms that the position resides on the board (albeit very inefficiently)
+    pub fn validate_position(&self, position: Position) -> Option<Position> {
+        // TODO restore bounds check
+        if &position == &position.wrap(self.width as i8, self.height as i8) {
+            Some(position)
+        } else {
+            None
+        }
+    }
 }

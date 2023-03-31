@@ -176,10 +176,12 @@ impl Game {
 
         for (dir, diagonal) in DIRS {
             let position = &mage.position + &dir;
-            let position = position.wrap(self.board.width as i8, self.board.height as i8);
+            // let position = position.wrap(self.board.width as i8, self.board.height as i8);
 
-            if !self.occupied(&position) && !(diagonal && !mage.has_diagonals()) {
-                moves.push((position, dir, diagonal));
+            if let Some(position) = self.board.validate_position(position) {
+                if !self.occupied(&position) && !(diagonal && !mage.has_diagonals()) {
+                    moves.push((position, dir, diagonal));
+                }
             }
         }
 
@@ -362,12 +364,14 @@ impl Game {
 
         for dir in &mage.spell.pattern {
             let position = &at + dir;
-            let position = position.wrap(self.board.width as i8, self.board.height as i8);
+            // let position = position.wrap(self.board.width as i8, self.board.height as i8);
 
-            moves.push((
-                self.live_occupied_by(&position, mage.team.enemy()),
-                position,
-            ));
+            if let Some(position) = self.board.validate_position(position) {
+                moves.push((
+                    self.live_occupied_by(&position, mage.team.enemy()),
+                    position,
+                ));
+            }
         }
 
         return moves;
