@@ -37,6 +37,29 @@ pub fn draw_sprite(
     Ok(())
 }
 
+pub fn draw_text(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlImageElement,
+    dx: f64,
+    dy: f64,
+    text: &String,
+) -> Result<(), JsValue> {
+    for (i, char) in text.chars().enumerate() {
+        draw_sprite(
+            context,
+            atlas,
+            ((char as u8 % 32) * 8) as f64,
+            216.0 + ((char as u8 / 32) * 8) as f64,
+            8.0,
+            8.0,
+            dx + (i * 8) as f64,
+            dy + 1.0,
+        ).unwrap();
+    }
+
+    Ok(())
+}
+
 pub fn draw_crosshair(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlImageElement,

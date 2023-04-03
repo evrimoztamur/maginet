@@ -48,18 +48,20 @@ pub struct Lobby {
     player_slots: VecDeque<usize>,
     ticks: usize,
     /// The [`Lobby`]s sort.
-    settings: LobbySettings,
+    pub settings: LobbySettings,
 }
 
 impl Lobby {
     /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
     pub fn new(settings: LobbySettings) -> Lobby {
+        let (red_mage_sorts, blue_mage_sorts) = Lobby::select_loadouts(&settings);
+
         Lobby {
             game: Game::new(
                 DEFAULT_BOARD_SIZE.0,
                 DEFAULT_BOARD_SIZE.1,
-                Lobby::default_loadout(),
-                Lobby::default_loadout(),
+                red_mage_sorts,
+                blue_mage_sorts,
             )
             .expect("game should be instantiable with default values"),
             id: None,
@@ -67,6 +69,25 @@ impl Lobby {
             player_slots: (0..DEFAULT_PLAYER_COUNT).collect(),
             ticks: 0,
             settings,
+        }
+    }
+
+    fn select_loadouts(lobby_settings: &LobbySettings) -> (Vec<MageSort>, Vec<MageSort>) {
+        match lobby_settings.loadout_method {
+            LoadoutMethod::Default => (Lobby::default_loadout(), Lobby::default_loadout()),
+            LoadoutMethod::Manual => todo!(),
+            LoadoutMethod::Random { symmetric } => {
+                if symmetric {
+                    let loadout = Lobby::random_loadout(lobby_settings.seed);
+
+                    (loadout.clone(), loadout)
+                } else {
+                    (
+                        Lobby::random_loadout(lobby_settings.seed),
+                        Lobby::random_loadout(lobby_settings.seed + 1),
+                    )
+                }
+            }
         }
     }
 
@@ -162,15 +183,6 @@ impl Lobby {
         }
     }
 
-    /// Determines if the lobby is *not* an online one.
-    pub fn is_local(&self) -> bool {
-        match self.settings.sort {
-            LobbySort::Local => true,
-            LobbySort::LocalAI => true,
-            LobbySort::Online => false,
-        }
-    }
-
     /// Determines if the game is finished.
     pub fn finished(&self) -> bool {
         self.game
@@ -178,9 +190,15 @@ impl Lobby {
             .is_empty()
     }
 
+    /// Determines if the game is local (`true`) or online.
+    pub fn is_local(&self) -> bool {
+        self.id.is_none()
+    }
+
     /// Returns `true` for [`LobbySort::LocalAI`].
     pub fn has_ai(&self) -> bool {
-        self.settings.sort == LobbySort::LocalAI
+        false
+        // self.settings.sort == LobbySort::LocalAI
     }
 
     /// Determines if the given session ID is the one taking its turn.
@@ -209,29 +227,6 @@ impl Lobby {
     }
 }
 
-/// Sort of the lobby. Currently used to modify game logic and executing networking and AI code.
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
-pub enum LobbySort {
-    /// `Lobby` is for on-the-board play involving two local players on the same board.
-    #[default]
-    Local,
-    /// `LocalAI` is the same as `Local`, but executes AI code following player turns.
-    LocalAI,
-    /// `Online` excutes netcode to synchronise the game state and communicate player turns with the server.
-    Online,
-}
-
-impl From<&str> for LobbySort {
-    fn from(value: &str) -> Self {
-        match value.to_ascii_lowercase().as_str() {
-            "local" => Self::Local,
-            "local+ai" => Self::LocalAI,
-            "online" => Self::Online,
-            _ => Self::default(),
-        }
-    }
-}
-
 /// Loadout methods.
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
 pub enum LoadoutMethod {
@@ -247,21 +242,13 @@ pub enum LoadoutMethod {
     },
 }
 
-impl From<&str> for LoadoutMethod {
-    fn from(value: &str) -> Self {
-        match value.to_ascii_lowercase().as_str() {
-            "manual" => Self::Manual,
-            "default" => Self::Default,
-            "random" => Self::Random { symmetric: false },
-            "symmetric" => Self::Random { symmetric: true },
-            _ => Self::default(),
-        }
-    }
-}
-
 /// Settings for the lobby.
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct LobbySettings {
-    sort: LobbySort,
-    loadout_methods: LoadoutMethod,
+    /// ID for lobby.
+    pub id: Option<String>,
+    /// [`LoadoutMethod`] for the lobby.
+    pub loadout_method: LoadoutMethod,
+    /// Seed for RNG.
+    pub seed: u64,
 }

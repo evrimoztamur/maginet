@@ -1,17 +1,15 @@
 use serde::{Deserialize, Serialize};
-use shared::{LobbyError, LobbyID, Message, SessionRequest};
+use shared::{LobbyError, LobbyID, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
     CanvasRenderingContext2d, DomRectReadOnly, HtmlImageElement, KeyboardEvent, MouseEvent,
     TouchEvent,
 };
 
-use super::{LobbyState, Pointer, BOARD_OFFSET, BOARD_SCALE};
+use super::{LobbyState, MenuState, Pointer, BOARD_OFFSET, BOARD_SCALE};
 use crate::{
-    app::State,
-    draw::draw_sprite,
-    net::{get_session_id, send_ready},
-    window,
+    app::State, draw::draw_sprite, net::get_session_id, window, CANVAS_HEIGHT, CANVAS_VERTICAL,
+    CANVAS_WIDTH, ELEMENT_HEIGHT, ELEMENT_WIDTH, PADDING_X, PADDING_Y,
 };
 
 /// Errors concerning the [`App`].
@@ -25,7 +23,7 @@ impl From<LobbyError> for AppError {
 }
 
 pub enum StateSort {
-    MenuMain,
+    MenuMain(MenuState),
     MenuLobby,
     MenuSettings,
     Lobby(LobbyState),
@@ -50,7 +48,7 @@ impl App {
                 pointer: Pointer::new(),
                 frame: 0,
             },
-            state_sort: StateSort::MenuMain,
+            state_sort: StateSort::MenuMain(MenuState::new()),
         }
     }
 
@@ -59,18 +57,22 @@ impl App {
         context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
     ) -> Result<(), JsValue> {
-        context.clear_rect(0.0, 0.0, 512.0, 512.0);
+        context.clear_rect(0.0, 0.0, ELEMENT_WIDTH as f64, ELEMENT_HEIGHT as f64);
         context.save();
-
+        if CANVAS_VERTICAL {
+            context.translate(CANVAS_WIDTH as f64, CANVAS_HEIGHT as f64)?;
+            context.rotate(std::f64::consts::PI / 2.0)?;
+            context.translate(-(CANVAS_WIDTH as f64), -(CANVAS_HEIGHT as f64))?;
+        }
         context.scale(2.0, 2.0)?;
+        context.translate(PADDING_X as f64, PADDING_Y as f64)?;
 
         let result = match &mut self.state_sort {
-            StateSort::MenuMain => Ok(()),
+            StateSort::MenuMain(menu_state) => menu_state.draw(context, atlas, &self.app_context),
             StateSort::MenuLobby => Ok(()),
             StateSort::MenuSettings => Ok(()),
             StateSort::Lobby(lobby_state) => lobby_state.draw(context, atlas, &self.app_context),
         };
-
         // DRAW cursor
         draw_sprite(
             context,
@@ -79,8 +81,8 @@ impl App {
             8.0,
             16.0,
             16.0,
-            self.app_context.pointer.location.0 as f64 - 5.0,
-            self.app_context.pointer.location.1 as f64 - 1.0,
+            self.app_context.pointer.location().0 as f64 - 5.0,
+            self.app_context.pointer.location().1 as f64 - 1.0,
         )?;
 
         context.restore();
@@ -92,9 +94,16 @@ impl App {
     }
 
     pub fn tick(&mut self) {
-        match &mut self.state_sort {
+        let next_state = match &mut self.state_sort {
+            StateSort::MenuMain(menu_state) => menu_state.tick(&self.app_context),
             StateSort::Lobby(lobby_state) => lobby_state.tick(&self.app_context),
-            _ => (),
+            _ => None,
+        };
+
+        web_sys::console::log_1(&format!("{:?}", next_state.is_some()).into());
+
+        if let Some(next_state) = next_state {
+            self.state_sort = next_state;
         }
     }
 
@@ -132,10 +141,12 @@ impl App {
     pub fn on_mouse_move(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
         let x = event.client_x() - bound.left() as i32;
         let y = event.client_y() - bound.top() as i32;
-        let x = (x as f64 * (512.0 / bound.width())) as i32;
-        let y = (y as f64 * (512.0 / bound.width())) as i32;
+        let x = (x as f64 * (ELEMENT_WIDTH as f64 / bound.width())) as i32;
+        let y = (y as f64 * (ELEMENT_HEIGHT as f64 / bound.height())) as i32;
 
-        self.app_context.pointer.location = (x / 2, y / 2);
+        self.app_context
+            .pointer
+            .set_real((x as i32 / 2, y as i32 / 2));
 
         event.prevent_default();
     }
@@ -144,14 +155,13 @@ impl App {
         if let Some(touch) = event.target_touches().item(0) {
             let x = touch.client_x() - bound.left() as i32;
             let y = touch.client_y() - bound.top() as i32;
-
-            let x = (x as f64 * (512.0 / bound.width())) as i32;
-            let y = (y as f64 * (512.0 / bound.width())) as i32;
+            let x = (x as f64 * (ELEMENT_WIDTH as f64 / bound.width())) as i32;
+            let y = (y as f64 * (ELEMENT_HEIGHT as f64 / bound.height())) as i32;
 
             let pointer_location = (x as i32 / 2, y as i32 / 2);
 
-            if (pointer_location.0 - self.app_context.pointer.location.0).abs() < 16
-                && (pointer_location.1 - self.app_context.pointer.location.1).abs() < 16
+            if (pointer_location.0 - self.app_context.pointer.real().0).abs() < 16
+                && (pointer_location.1 - self.app_context.pointer.real().1).abs() < 16
             {
                 self.app_context.pointer.button = true;
             } else {
@@ -171,7 +181,9 @@ impl App {
                 };
             }
 
-            self.app_context.pointer.location = (x as i32 / 2, y as i32 / 2);
+            self.app_context
+                .pointer
+                .set_real((x as i32 / 2, y as i32 / 2));
         }
 
         event.prevent_default();
@@ -186,10 +198,12 @@ impl App {
             let x = touch.client_x() - bound.left() as i32;
             let y = touch.client_y() - bound.top() as i32;
 
-            let x = (x as f64 * (512.0 / bound.width())) as i32;
-            let y = (y as f64 * (512.0 / bound.width())) as i32;
+            let x = (x as f64 * (ELEMENT_WIDTH as f64 / bound.width())) as i32;
+            let y = (y as f64 * (ELEMENT_HEIGHT as f64 / bound.height())) as i32;
 
-            self.app_context.pointer.location = (x as i32 / 2, y as i32 / 2);
+            self.app_context
+                .pointer
+                .set_real((x as i32 / 2, y as i32 / 2));
         }
 
         event.prevent_default();
@@ -223,36 +237,5 @@ impl App {
             .local_storage()
             .unwrap_or_default()
             .map(|storage| storage.set_item("session_id", session_id.as_str()));
-    }
-
-    pub fn on_state_response(&mut self, value: JsValue) {
-        let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
-
-        match &mut self.state_sort {
-            StateSort::Lobby(lobby_state) => {
-                match message {
-                    Message::Lobby(lobby) => {
-                        lobby_state.set_lobby(lobby);
-                    }
-                    _ => (),
-                }
-
-                if let Ok(lobby_id) = self.lobby_id() {
-                    send_ready(lobby_id, self.session_id().unwrap().clone());
-                }
-            }
-            _ => (),
-        };
-    }
-
-    pub fn on_message_response(&mut self, value: JsValue) {
-        let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
-
-        match &mut self.state_sort {
-            StateSort::Lobby(lobby_state) => {
-                lobby_state.push_message(message);
-            }
-            _ => (),
-        };
     }
 }

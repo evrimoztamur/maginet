@@ -30,6 +30,17 @@ fn document() -> Document {
         .expect("should have a document on window")
 }
 
+const INTERFACE_WIDTH: u32 = 256;
+const INTERFACE_HEIGHT: u32 = 256;
+const CANVAS_WIDTH: u32 = INTERFACE_WIDTH + 144;
+const CANVAS_HEIGHT: u32 = INTERFACE_HEIGHT + 16;
+const CANVAS_SCALE: u32 = 2;
+const ELEMENT_WIDTH: u32 = CANVAS_WIDTH * CANVAS_SCALE;
+const ELEMENT_HEIGHT: u32 = CANVAS_HEIGHT * CANVAS_SCALE;
+const PADDING_X: u32 = (CANVAS_WIDTH - INTERFACE_WIDTH) / 2;
+const PADDING_Y: u32 = (CANVAS_HEIGHT - INTERFACE_HEIGHT) / 2;
+const CANVAS_VERTICAL: bool = false;
+
 #[wasm_bindgen(start)]
 fn start() -> Result<(), JsValue> {
     let canvas = document()
@@ -41,8 +52,8 @@ fn start() -> Result<(), JsValue> {
 
     container_element.insert_before(&canvas, Some(&nav_element))?;
 
-    canvas.set_width(512);
-    canvas.set_height(512);
+    canvas.set_width(ELEMENT_WIDTH);
+    canvas.set_height(ELEMENT_HEIGHT);
 
     let context = canvas
         .get_context("2d")?
@@ -62,24 +73,6 @@ fn start() -> Result<(), JsValue> {
     let app = App::new();
 
     let app = Rc::new(RefCell::new(app));
-
-    let state_closure = {
-        let app = app.clone();
-
-        Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            let mut app = app.borrow_mut();
-            app.on_state_response(value);
-        })
-    };
-
-    let message_closure = {
-        let app = app.clone();
-
-        Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            let mut app = app.borrow_mut();
-            app.on_message_response(value);
-        })
-    };
 
     let session_closure = {
         let app = app.clone();
@@ -111,19 +104,6 @@ fn start() -> Result<(), JsValue> {
                 app.tick();
                 app.draw(&context, &atlas).unwrap();
             }
-
-            // if !app.lobby.is_local() && message_pool.borrow().available(app.frame) {
-            //     let mut message_pool = message_pool.borrow_mut();
-
-            //     if app.lobby.all_ready() {
-            //         let _ =
-            //             fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
-            //     } else {
-            //         let _ = fetch(&request_state()).then(&state_closure);
-            //     }
-
-            //     message_pool.block(app.frame);
-            // }
 
             request_animation_frame(f.borrow().as_ref().unwrap());
         }));

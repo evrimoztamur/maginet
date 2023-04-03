@@ -1,15 +1,17 @@
-use shared::{Lobby, LobbyError, LobbyID, Mage, Message, Position, Team, Turn};
-use wasm_bindgen::JsValue;
+use std::{cell::RefCell, rc::Rc};
+
+use shared::{Lobby, LobbyError, LobbyID, LobbySettings, Mage, Message, Position, Team, Turn};
+use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use super::State;
 use crate::{
     app::{
         AppContext, Particle, ParticleSort, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE,
-        BOARD_SCALE_F64,
+        BOARD_SCALE_F64, StateSort,
     },
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
-    net::{send_message, MessagePool},
+    net::{fetch, request_state, request_turns_since, send_message, send_ready, MessagePool},
     window,
 };
 
@@ -18,10 +20,34 @@ pub struct LobbyState {
     last_move_frame: u64,
     active_mage: Option<usize>,
     particles: Vec<Particle>,
-    message_pool: MessagePool,
+    message_pool: Rc<RefCell<MessagePool>>,
+    message_closure: Closure<dyn FnMut(JsValue)>,
 }
 
 impl LobbyState {
+    pub fn new(lobby_settings: LobbySettings) -> LobbyState {
+        let message_pool = Rc::new(RefCell::new(MessagePool::new()));
+
+        let message_closure = {
+            let message_pool = message_pool.clone();
+
+            Closure::<dyn FnMut(JsValue)>::new(move |value| {
+                let mut message_pool = message_pool.borrow_mut();
+                let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
+                message_pool.push(message);
+            })
+        };
+
+        LobbyState {
+            lobby: Lobby::new(lobby_settings),
+            last_move_frame: 0,
+            active_mage: None,
+            particles: Vec::new(),
+            message_pool,
+            message_closure,
+        }
+    }
+
     pub fn lobby_id(&self) -> Result<LobbyID, LobbyError> {
         self.lobby
             .id
@@ -88,14 +114,6 @@ impl LobbyState {
                 None
             }
         }
-    }
-
-    pub fn push_message(&mut self, message: Message) {
-        self.message_pool.push(message);
-    }
-
-    pub fn set_lobby(&mut self, lobby: Lobby) {
-        self.lobby = lobby;
     }
 }
 
@@ -217,7 +235,7 @@ impl State for LobbyState {
                     }
 
                     if let Some(selected_tile) = self.lobby.game.location_as_position(
-                        pointer.location,
+                        pointer.location(),
                         BOARD_OFFSET,
                         BOARD_SCALE,
                     ) {
@@ -240,13 +258,13 @@ impl State for LobbyState {
                 }
 
                 if let Some(selected_tile) = self.lobby.game.location_as_position(
-                    pointer.location,
+                    pointer.location(),
                     BOARD_OFFSET,
                     BOARD_SCALE,
                 ) {
                     if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
                         if let Some(selected_tile) = self.lobby.game.location_as_position(
-                            pointer.location,
+                            pointer.location(),
                             BOARD_OFFSET,
                             BOARD_SCALE,
                         ) {
@@ -267,47 +285,73 @@ impl State for LobbyState {
         Ok(())
     }
 
-    fn tick(&mut self, app_context: &AppContext) {
+    fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
         let session_id = &app_context.session_id;
 
         let mut target_positions = Vec::new();
 
-        if self.lobby.has_ai()
-            && self.lobby.game.turn_for() == Team::Blue
-            && frame - self.last_move_frame > 45
-            && !self.lobby.finished()
         {
-            let turn = self
-                .lobby
-                .game
-                .best_turn(window().performance().unwrap().now().to_bits());
-            self.message_pool
-                .messages
-                .append(&mut vec![Message::Move(turn.0)]);
-        }
+            let mut message_pool = self.message_pool.borrow_mut();
 
-        for message in &self.message_pool.messages {
-            match message {
-                Message::Moves(turns) => {
-                    for Turn(from, to) in turns {
+            if let Ok(lobby_id) = self.lobby_id() {
+                if message_pool.available(frame) {
+                    if self.lobby.all_ready() {
+                        let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
+                            .then(&self.message_closure);
+                    } else {
+                        let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
+                    }
+
+                    message_pool.block(frame);
+                }
+            }
+
+            if self.lobby.has_ai()
+                && self.lobby.game.turn_for() == Team::Blue
+                && frame - self.last_move_frame > 45
+                && !self.lobby.finished()
+            {
+                let turn = self
+                    .lobby
+                    .game
+                    .best_turn(window().performance().unwrap().now().to_bits());
+                message_pool
+                    .messages
+                    .append(&mut vec![Message::Move(turn.0)]);
+            }
+
+            for message in &message_pool.messages {
+                match message {
+                    Message::Moves(turns) => {
+                        for Turn(from, to) in turns {
+                            if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
+                                target_positions.append(&mut move_targets);
+
+                                self.last_move_frame = frame;
+                            }
+                        }
+                    }
+                    Message::Move(Turn(from, to)) => {
                         if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
                             target_positions.append(&mut move_targets);
 
                             self.last_move_frame = frame;
                         }
                     }
-                }
-                Message::Move(Turn(from, to)) => {
-                    if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
-                        target_positions.append(&mut move_targets);
+                    Message::Lobby(lobby) => {
+                        self.lobby = lobby.clone();
 
-                        self.last_move_frame = frame;
+                        if let Ok(lobby_id) = self.lobby_id() {
+                            send_ready(lobby_id, session_id.clone().unwrap());
+                        }
                     }
+                    _ => (),
                 }
-                _ => (),
             }
+
+            message_pool.clear();
         }
 
         if pointer.alt_clicked() {
@@ -318,7 +362,7 @@ impl State for LobbyState {
             if let Some(selected_tile) =
                 self.lobby
                     .game
-                    .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
+                    .location_as_position(pointer.location(), BOARD_OFFSET, BOARD_SCALE)
             {
                 if let Some(active_mage) = self.get_active_mage() {
                     let from = active_mage.position;
@@ -357,5 +401,7 @@ impl State for LobbyState {
                 ));
             }
         }
+
+        None
     }
 }
