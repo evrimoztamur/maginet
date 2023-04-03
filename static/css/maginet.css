@@ -41,6 +41,7 @@ main {
 }
 
 @supports (-webkit-touch-callout: none) {
+
     html,
     body {
         height: -webkit-fill-available;
@@ -73,7 +74,8 @@ nav {
     align-items: center;
 }
 
-button {
+button,
+.button {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -85,9 +87,11 @@ button {
     padding: 6px 12px;
     border-radius: 2px;
     cursor: pointer;
+    text-decoration: none;
 }
 
-button:hover {
+button:hover,
+.button:hover {
     background-color: #006080;
 }
 
@@ -132,10 +136,15 @@ article img {
 }
 
 .lobby-id {
+    display: none;
     padding: 8px;
     border-radius: 4px;
     flex-direction: row;
     margin-left: 16px;
+}
+
+.lobby-id[data-lobby-id] {
+    display: initial;
 }
 
 .lobby-id.activated {
@@ -144,4 +153,8 @@ article img {
 
 .icon.icon-tabler {
     margin-right: 8px;
+}
+
+.flex-fill {
+    flex: 1 1 auto;
 }

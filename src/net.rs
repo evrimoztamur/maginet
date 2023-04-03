@@ -1,6 +1,6 @@
 use futures::TryFutureExt;
 use js_sys::Promise;
-use shared::{Message, SessionMessage, SessionRequest};
+use shared::{LobbyID, Message, SessionMessage, SessionRequest};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::{future_to_promise, JsFuture};
 use web_sys::{Request, RequestInit, Response};
@@ -59,30 +59,27 @@ fn request_url(method: &str, url: &str) -> Request {
     Request::new_with_str_and_init(&url, &opts).unwrap()
 }
 
-pub fn request_turns_since(since: usize) -> Request {
-    let pathname = pathname();
-    request_url("GET", &format!("{pathname}/turns/{since}"))
-}
-
-pub fn request_state() -> Request {
-    let pathname = pathname();
-    request_url("GET", &format!("{pathname}/state"))
-}
-
 pub fn request_session() -> Request {
     request_url("GET", &format!("/session"))
 }
 
-pub fn send_ready(session_id: String) -> Option<Promise> {
+pub fn request_state(lobby_id: LobbyID) -> Request {
+    request_url("GET", &format!("lobby/{lobby_id}/state"))
+}
+
+pub fn request_turns_since(lobby_id: LobbyID, since: usize) -> Request {
+    request_url("GET", &format!("lobby/{lobby_id}/turns/{since}"))
+}
+
+pub fn send_ready(lobby_id: LobbyID, session_id: String) -> Option<Promise> {
     let session_request = SessionRequest { session_id };
 
     if let Ok(json) = serde_json::to_string(&session_request) {
-        let pathname = pathname();
         let mut opts = RequestInit::new();
         opts.method("POST");
         opts.body(Some(&json.into()));
 
-        let url = format!("{pathname}/ready");
+        let url = format!("lobby/{lobby_id}/ready");
 
         let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
 
@@ -97,19 +94,18 @@ pub fn send_ready(session_id: String) -> Option<Promise> {
     }
 }
 
-pub fn send_message(session_id: String, message: Message) -> Option<Promise> {
+pub fn send_message(lobby_id: LobbyID, session_id: String, message: Message) -> Option<Promise> {
     let session_message = SessionMessage {
         session_id,
         message,
     };
 
     if let Ok(json) = serde_json::to_string(&session_message) {
-        let pathname = pathname();
         let mut opts = RequestInit::new();
         opts.method("POST");
         opts.body(Some(&json.into()));
 
-        let url = format!("{pathname}/act");
+        let url = format!("lobby/{lobby_id}/act");
 
         let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
 
@@ -122,10 +118,6 @@ pub fn send_message(session_id: String, message: Message) -> Option<Promise> {
     } else {
         None
     }
-}
-
-pub fn pathname() -> String {
-    web_sys::window().unwrap().location().pathname().unwrap()
 }
 
 pub fn get_session_id() -> Option<String> {

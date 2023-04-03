@@ -1,15 +1,13 @@
 #![feature(drain_filter)]
 
 mod app;
-mod callbacks;
 mod draw;
 mod net;
 
 use std::{cell::RefCell, rc::Rc};
 
 use app::App;
-use callbacks::*;
-use net::{fetch, request_session, request_state, request_turns_since, MessagePool};
+use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
     CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
@@ -65,21 +63,21 @@ fn start() -> Result<(), JsValue> {
 
     let app = Rc::new(RefCell::new(app));
 
-    let message_pool: Rc<RefCell<MessagePool>> = Rc::new(RefCell::new(MessagePool::new()));
-
     let state_closure = {
         let app = app.clone();
 
         Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            on_state_response(&app, value);
+            let mut app = app.borrow_mut();
+            app.on_state_response(value);
         })
     };
 
     let message_closure = {
-        let message_pool = message_pool.clone();
+        let app = app.clone();
 
         Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            on_message_response(&message_pool, value);
+            let mut app = app.borrow_mut();
+            app.on_message_response(value);
         })
     };
 
@@ -87,7 +85,8 @@ fn start() -> Result<(), JsValue> {
         let app = app.clone();
 
         Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            on_session_response(&app, value);
+            let mut app = app.borrow_mut();
+            app.on_session_response(value);
         })
     };
 
@@ -96,12 +95,11 @@ fn start() -> Result<(), JsValue> {
 
     {
         let app = app.clone();
-        let message_pool = message_pool.clone();
 
         {
             let app = app.borrow();
 
-            if !app.lobby.is_local() && app.session_id.is_none() {
+            if app.session_id().is_none() {
                 let _ = fetch(&request_session()).then(&session_closure);
             }
         }
@@ -110,34 +108,30 @@ fn start() -> Result<(), JsValue> {
             let mut app = app.borrow_mut();
 
             {
-                let mut message_pool = message_pool.borrow_mut();
-
-                app.preprocess(&mut message_pool.messages);
-                app.tick(&message_pool.messages);
+                app.tick();
                 app.draw(&context, &atlas).unwrap();
-                app.pointer.swap();
-
-                message_pool.clear();
             }
 
-            if !app.lobby.is_local() && message_pool.borrow().available(app.frame) {
-                let mut message_pool = message_pool.borrow_mut();
+            // if !app.lobby.is_local() && message_pool.borrow().available(app.frame) {
+            //     let mut message_pool = message_pool.borrow_mut();
 
-                if app.lobby.all_ready() {
-                    let _ =
-                        fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
-                } else {
-                    let _ = fetch(&request_state()).then(&state_closure);
-                }
+            //     if app.lobby.all_ready() {
+            //         let _ =
+            //             fetch(&request_turns_since(app.lobby.game.turns())).then(&message_closure);
+            //     } else {
+            //         let _ = fetch(&request_state()).then(&state_closure);
+            //     }
 
-                message_pool.block(app.frame);
-            }
+            //     message_pool.block(app.frame);
+            // }
 
             request_animation_frame(f.borrow().as_ref().unwrap());
         }));
 
         request_animation_frame(g.borrow().as_ref().unwrap());
     }
+
+    session_closure.forget();
 
     let canvas = Rc::new(canvas);
     let bound: Rc<RefCell<Option<DomRect>>> =
@@ -147,7 +141,7 @@ fn start() -> Result<(), JsValue> {
         let canvas = canvas.clone();
         let bound = bound.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
-            on_resize(&canvas, &bound);
+            bound.replace(Some(canvas.get_bounding_client_rect()));
         });
         window().add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())?;
         closure.forget();
@@ -156,7 +150,8 @@ fn start() -> Result<(), JsValue> {
     {
         let app = app.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            on_mouse_down(&app, event);
+            let mut app = app.borrow_mut();
+            app.on_mouse_down(event);
         });
         document()
             .add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
@@ -166,7 +161,8 @@ fn start() -> Result<(), JsValue> {
     {
         let app = app.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            on_mouse_up(&app, event);
+            let mut app = app.borrow_mut();
+            app.on_mouse_up(event);
         });
         document().add_event_listener_with_callback("mouseup", closure.as_ref().unchecked_ref())?;
         closure.forget();
@@ -176,7 +172,10 @@ fn start() -> Result<(), JsValue> {
         let app = app.clone();
         let bound = bound.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            on_mouse_move(&app, &bound, event);
+            let mut app = app.borrow_mut();
+            if let Some(bound) = bound.borrow().as_deref() {
+                app.on_mouse_move(bound, event);
+            }
         });
         document()
             .add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
@@ -187,7 +186,10 @@ fn start() -> Result<(), JsValue> {
         let app = app.clone();
         let bound = bound.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
-            on_touch_move(&app, &bound, event);
+            let mut app = app.borrow_mut();
+            if let Some(bound) = bound.borrow().as_deref() {
+                app.on_touch_move(bound, event);
+            }
         });
         document()
             .add_event_listener_with_callback("touchmove", closure.as_ref().unchecked_ref())?;
@@ -199,7 +201,10 @@ fn start() -> Result<(), JsValue> {
         let app = app.clone();
 
         let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
-            on_touch_start(&app, &bound, event);
+            if let Some(bound) = bound.borrow().as_deref() {
+                let mut app = app.borrow_mut();
+                app.on_touch_start(bound, event);
+            }
         });
         document()
             .add_event_listener_with_callback("touchstart", closure.as_ref().unchecked_ref())?;
@@ -209,7 +214,8 @@ fn start() -> Result<(), JsValue> {
     {
         let app = app.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
-            on_touch_end(&app, event);
+            let mut app = app.borrow_mut();
+            app.on_touch_end(event);
         });
         document()
             .add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;
@@ -218,9 +224,9 @@ fn start() -> Result<(), JsValue> {
 
     {
         let app = app.clone();
-        let message_pool = message_pool.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            on_key_down(&app, &message_pool, event);
+            let mut app = app.borrow_mut();
+            app.on_key_down(event);
         });
         document().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
         closure.forget();
@@ -234,8 +240,6 @@ fn start() -> Result<(), JsValue> {
             .add_event_listener_with_callback("contextmenu", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
-
-    session_closure.forget();
 
     Ok(())
 }

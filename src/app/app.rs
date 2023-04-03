@@ -1,79 +1,56 @@
-use shared::{Lobby, LobbySort, Mage, Message, Position, Team, Turn};
+use serde::{Deserialize, Serialize};
+use shared::{LobbyError, LobbyID, Message, SessionRequest};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
-
-use super::{
-    Particle, ParticleSort, Pointer, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE, BOARD_SCALE_F64,
+use web_sys::{
+    CanvasRenderingContext2d, DomRectReadOnly, HtmlImageElement, KeyboardEvent, MouseEvent,
+    TouchEvent,
 };
+
+use super::{LobbyState, Pointer, BOARD_OFFSET, BOARD_SCALE};
 use crate::{
-    draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
-    net::{get_session_id, pathname, send_message},
+    app::State,
+    draw::draw_sprite,
+    net::{get_session_id, send_ready},
     window,
 };
 
-pub struct App {
-    pub lobby: Lobby,
-    particles: Vec<Particle>,
-    pub frame: u64,
-    last_move_frame: u64,
-    active_mage: Option<usize>,
+/// Errors concerning the [`App`].
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AppError(String);
+
+impl From<LobbyError> for AppError {
+    fn from(lobby_error: LobbyError) -> Self {
+        AppError(format!("LobbyError: {0}", lobby_error.0))
+    }
+}
+
+pub enum StateSort {
+    MenuMain,
+    MenuLobby,
+    MenuSettings,
+    Lobby(LobbyState),
+}
+
+pub struct AppContext {
     pub session_id: Option<String>,
     pub pointer: Pointer,
+    pub frame: u64,
+}
+
+pub struct App {
+    app_context: AppContext,
+    state_sort: StateSort,
 }
 
 impl App {
     pub fn new() -> App {
-        let pathname = pathname();
-        let lobby_sort = match pathname.as_str() {
-            "/local" => LobbySort::Local,
-            "/local/ai" => LobbySort::LocalAI,
-            _ => LobbySort::Online,
-        };
-
         App {
-            lobby: Lobby::new(lobby_sort),
-            particles: Vec::new(),
-            frame: 0,
-            last_move_frame: 0,
-            active_mage: None,
-            session_id: get_session_id(),
-            pointer: Pointer::new(),
-        }
-    }
-
-    pub fn in_lobby(&self) -> bool {
-        self.lobby.has_session_id(self.session_id.as_ref())
-    }
-
-    fn is_mage_active(&self, mage: &Mage) -> bool {
-        match self.active_mage {
-            Some(active_mage) => active_mage == mage.index,
-            None => false,
-        }
-    }
-
-    fn get_active_mage(&self) -> Option<&Mage> {
-        if let Some(index) = self.active_mage {
-            if let Some(mage) = self.lobby.game.get_mage(index) {
-                return Some(mage);
-            }
-        }
-
-        None
-    }
-
-    pub fn select_mage_at(&mut self, selected_tile: &Position) {
-        if self.lobby.is_active_player(self.session_id.as_ref()) {
-            self.active_mage = if let Some(occupant) = self.lobby.game.live_occupant(selected_tile)
-            {
-                if occupant.team == self.lobby.game.turn_for() {
-                    Some(occupant.index)
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
+            app_context: AppContext {
+                session_id: get_session_id(),
+                pointer: Pointer::new(),
+                frame: 0,
+            },
+            state_sort: StateSort::MenuMain,
         }
     }
 
@@ -87,167 +64,12 @@ impl App {
 
         context.scale(2.0, 2.0)?;
 
-        // DRAW background layer (board + UI block)
-
-        // DRAW board
-
-        {
-            context.save();
-
-            context.translate(BOARD_OFFSET_F64.0, BOARD_OFFSET_F64.1)?;
-
-            draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
-
-            // DRAW particles
-
-            for particle in self.particles.iter_mut() {
-                particle.tick();
-                draw_particle(context, atlas, &particle, self.frame)?;
-            }
-
-            self.particles.drain_filter(|particle| !particle.is_alive());
-
-            {
-                let game_started = self.lobby.all_ready() | self.lobby.is_local();
-                let game_finished = self.lobby.finished();
-
-                // DRAW mages
-                for mage in self.lobby.game.iter_mages() {
-                    context.save();
-
-                    context.translate(
-                        15.0 + mage.position.0 as f64 * BOARD_SCALE_F64.0,
-                        15.0 + mage.position.1 as f64 * BOARD_SCALE_F64.1,
-                    )?;
-
-                    draw_mage(
-                        context,
-                        atlas,
-                        mage,
-                        self.frame,
-                        self.lobby.game.turn_for(),
-                        game_started,
-                        game_finished,
-                    )?;
-
-                    if mage.is_alive() {
-                        if mage.has_diagonals() {
-                            for _ in 0..(self.frame / 3 % 2) {
-                                let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
-                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                                self.particles.push(Particle::new(
-                                    (
-                                        mage.position.0 as f64 + d.cos() * 0.4,
-                                        mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
-                                    ),
-                                    (d.cos() * v, d.sin() * v),
-                                    (js_sys::Math::random() * 30.0) as u64,
-                                    ParticleSort::Diagonals,
-                                ));
-                            }
-                        }
-                    }
-
-                    if self.is_mage_active(mage) {
-                        draw_sprite(
-                            context,
-                            atlas,
-                            72.0,
-                            0.0,
-                            8.0,
-                            5.0,
-                            -3.0,
-                            -17.0 - (self.frame / 6 % 6) as f64,
-                        )?;
-                    }
-
-                    context.restore();
-                }
-            }
-
-            {
-                // DRAW markers
-                context.save();
-
-                if let Some(mage) = self.get_active_mage() {
-                    let available_moves = self.lobby.game.available_moves(mage);
-                    for (position, dir, _) in &available_moves {
-                        let ri = rotation_from_position(*dir);
-                        let is_diagonal = ri % 2 == 1;
-                        context.save();
-                        context.translate(
-                            (position.0 as f64 + 0.5) * BOARD_SCALE_F64.0,
-                            (position.1 as f64 + 0.5) as f64 * BOARD_SCALE_F64.1,
-                        )?;
-                        context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
-                        let bop = (self.frame / 10 % 3) as f64;
-                        context.translate(bop - 4.0, if is_diagonal { bop } else { 0.0 })?;
-                        draw_sprite(
-                            context,
-                            atlas,
-                            if is_diagonal { 16.0 } else { 0.0 },
-                            32.0,
-                            16.0,
-                            16.0,
-                            -8.0,
-                            -8.0,
-                        )?;
-                        context.restore();
-                    }
-
-                    if let Some(selected_tile) = self.lobby.game.location_as_position(
-                        self.pointer.location,
-                        BOARD_OFFSET,
-                        BOARD_SCALE,
-                    ) {
-                        if available_moves
-                            .iter()
-                            .find(|(position, _, _)| position == &selected_tile)
-                            .is_some()
-                        {
-                            for (enemy_occupied, position) in
-                                &self.lobby.game.targets(mage, selected_tile)
-                            {
-                                if *enemy_occupied {
-                                    draw_crosshair(
-                                        context,
-                                        atlas,
-                                        position,
-                                        (64.0, 32.0),
-                                        self.frame,
-                                    )?;
-                                } else {
-                                    draw_crosshair(context, atlas, position, (48.0, 32.0), 0)?;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if let Some(selected_tile) = self.lobby.game.location_as_position(
-                    self.pointer.location,
-                    BOARD_OFFSET,
-                    BOARD_SCALE,
-                ) {
-                    if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
-                        if let Some(selected_tile) = self.lobby.game.location_as_position(
-                            self.pointer.location,
-                            BOARD_OFFSET,
-                            BOARD_SCALE,
-                        ) {
-                            for (_, position) in &self.lobby.game.targets(occupant, selected_tile) {
-                                draw_crosshair(context, atlas, position, (80.0, 32.0), 0)?;
-                            }
-                        }
-                    }
-                    draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), self.frame)?;
-                }
-
-                context.restore();
-            }
-
-            context.restore();
-        }
+        let result = match &mut self.state_sort {
+            StateSort::MenuMain => Ok(()),
+            StateSort::MenuLobby => Ok(()),
+            StateSort::MenuSettings => Ok(()),
+            StateSort::Lobby(lobby_state) => lobby_state.draw(context, atlas, &self.app_context),
+        };
 
         // DRAW cursor
         draw_sprite(
@@ -257,101 +79,180 @@ impl App {
             8.0,
             16.0,
             16.0,
-            self.pointer.location.0 as f64 - 5.0,
-            self.pointer.location.1 as f64 - 1.0,
+            self.app_context.pointer.location.0 as f64 - 5.0,
+            self.app_context.pointer.location.1 as f64 - 1.0,
         )?;
 
         context.restore();
 
-        self.frame += 1;
+        self.app_context.frame += 1;
+        self.app_context.pointer.swap();
 
-        Ok(())
+        result
     }
 
-    pub fn preprocess(&mut self, messages: &mut Vec<Message>) {
-        if self.lobby.has_ai()
-            && self.lobby.game.turn_for() == Team::Blue
-            && self.frame - self.last_move_frame > 45
-            && !self.lobby.finished()
-        {
-            let turn = self
-                .lobby
-                .game
-                .best_turn(window().performance().unwrap().now().to_bits());
-            messages.append(&mut vec![Message::Move(turn.0)]);
+    pub fn tick(&mut self) {
+        match &mut self.state_sort {
+            StateSort::Lobby(lobby_state) => lobby_state.tick(&self.app_context),
+            _ => (),
         }
     }
 
-    pub fn tick(&mut self, messages: &Vec<Message>) {
-        let mut target_positions = Vec::new();
+    pub fn lobby_id(&self) -> Result<LobbyID, AppError> {
+        match &self.state_sort {
+            StateSort::Lobby(lobby_state) => lobby_state.lobby_id().map_err(|err| err.into()),
+            _ => Err(AppError("app is not in the appropriate state".to_string())),
+        }
+    }
 
-        for message in messages {
-            match message {
-                Message::Moves(turns) => {
-                    for Turn(from, to) in turns {
-                        if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
-                            target_positions.append(&mut move_targets);
+    pub fn session_id(&self) -> Option<&String> {
+        self.app_context.session_id.as_ref()
+    }
 
-                            self.last_move_frame = self.frame;
+    pub fn set_session_id(&mut self, session_id: String) {
+        self.app_context.session_id = Some(session_id);
+    }
+
+    pub fn on_mouse_down(&mut self, event: MouseEvent) {
+        match event.button() {
+            0 => self.app_context.pointer.button = true,
+            2 => self.app_context.pointer.alt_button = true,
+            _ => (),
+        }
+    }
+
+    pub fn on_mouse_up(&mut self, event: MouseEvent) {
+        match event.button() {
+            0 => self.app_context.pointer.button = false,
+            2 => self.app_context.pointer.alt_button = false,
+            _ => (),
+        }
+    }
+
+    pub fn on_mouse_move(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
+        let x = event.client_x() - bound.left() as i32;
+        let y = event.client_y() - bound.top() as i32;
+        let x = (x as f64 * (512.0 / bound.width())) as i32;
+        let y = (y as f64 * (512.0 / bound.width())) as i32;
+
+        self.app_context.pointer.location = (x / 2, y / 2);
+
+        event.prevent_default();
+    }
+
+    pub fn on_touch_start(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
+        if let Some(touch) = event.target_touches().item(0) {
+            let x = touch.client_x() - bound.left() as i32;
+            let y = touch.client_y() - bound.top() as i32;
+
+            let x = (x as f64 * (512.0 / bound.width())) as i32;
+            let y = (y as f64 * (512.0 / bound.width())) as i32;
+
+            let pointer_location = (x as i32 / 2, y as i32 / 2);
+
+            if (pointer_location.0 - self.app_context.pointer.location.0).abs() < 16
+                && (pointer_location.1 - self.app_context.pointer.location.1).abs() < 16
+            {
+                self.app_context.pointer.button = true;
+            } else {
+                match &mut self.state_sort {
+                    StateSort::Lobby(lobby_state) => {
+                        if let Some(selected_tile) = lobby_state.location_as_position(
+                            pointer_location,
+                            BOARD_OFFSET,
+                            BOARD_SCALE,
+                        ) {
+                            if lobby_state.live_occupied(selected_tile) {
+                                self.app_context.pointer.button = true;
+                            }
                         }
                     }
-                }
-                Message::Move(Turn(from, to)) => {
-                    if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
-                        target_positions.append(&mut move_targets);
+                    _ => (),
+                };
+            }
 
-                        self.last_move_frame = self.frame;
+            self.app_context.pointer.location = (x as i32 / 2, y as i32 / 2);
+        }
+
+        event.prevent_default();
+    }
+
+    pub fn on_touch_end(&mut self, _: TouchEvent) {
+        self.app_context.pointer.button = false;
+    }
+
+    pub fn on_touch_move(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
+        if let Some(touch) = event.target_touches().item(0) {
+            let x = touch.client_x() - bound.left() as i32;
+            let y = touch.client_y() - bound.top() as i32;
+
+            let x = (x as f64 * (512.0 / bound.width())) as i32;
+            let y = (y as f64 * (512.0 / bound.width())) as i32;
+
+            self.app_context.pointer.location = (x as i32 / 2, y as i32 / 2);
+        }
+
+        event.prevent_default();
+    }
+
+    pub fn on_key_down(&mut self, event: KeyboardEvent) {
+        match event.code().as_str() {
+            "KeyB" => {
+                // let turn = app
+                //     .lobby
+                //     .game
+                //     .best_turn(window().performance().unwrap().now().to_bits());
+                // console::log_1(&format!("{:?}", turn).into());
+
+                // message_pool.push(Message::Move(turn.0));
+            }
+            "KeyN" => {
+                // console::log_1(&format!("{:?}", app.lobby.game.all_available_turns(app.lobby.game.turn_for())).into());
+            }
+            _ => (),
+        };
+    }
+
+    pub fn on_session_response(&mut self, value: JsValue) {
+        let session_request: SessionRequest = serde_wasm_bindgen::from_value(value).unwrap();
+        let session_id = session_request.session_id;
+
+        self.set_session_id(session_id.clone());
+
+        window()
+            .local_storage()
+            .unwrap_or_default()
+            .map(|storage| storage.set_item("session_id", session_id.as_str()));
+    }
+
+    pub fn on_state_response(&mut self, value: JsValue) {
+        let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
+
+        match &mut self.state_sort {
+            StateSort::Lobby(lobby_state) => {
+                match message {
+                    Message::Lobby(lobby) => {
+                        lobby_state.set_lobby(lobby);
                     }
+                    _ => (),
                 }
-                _ => (),
-            }
-        }
 
-        if self.pointer.alt_clicked() {
-            self.active_mage = None;
-        }
-
-        if self.pointer.clicked() {
-            if let Some(selected_tile) = self.lobby.game.location_as_position(
-                self.pointer.location,
-                BOARD_OFFSET,
-                BOARD_SCALE,
-            ) {
-                if let Some(active_mage) = self.get_active_mage() {
-                    let from = active_mage.position;
-
-                    if let Some(mut move_targets) = self.lobby.game.take_move(from, selected_tile) {
-                        if !self.lobby.is_local() && self.session_id.is_some() {
-                            send_message(
-                                self.session_id.clone().unwrap(),
-                                Message::Move(Turn(from, selected_tile)),
-                            );
-                        }
-
-                        target_positions.append(&mut move_targets);
-
-                        self.active_mage = None;
-                        self.last_move_frame = self.frame;
-                    } else {
-                        self.select_mage_at(&selected_tile);
-                    }
-                } else {
-                    self.select_mage_at(&selected_tile);
+                if let Ok(lobby_id) = self.lobby_id() {
+                    send_ready(lobby_id, self.session_id().unwrap().clone());
                 }
             }
-        }
+            _ => (),
+        };
+    }
 
-        for tile in target_positions {
-            for _ in 0..40 {
-                let d = js_sys::Math::random() * std::f64::consts::TAU;
-                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                self.particles.push(Particle::new(
-                    (tile.0 as f64, tile.1 as f64),
-                    (d.cos() * v, d.sin() * v),
-                    (js_sys::Math::random() * 50.0) as u64,
-                    ParticleSort::Missile,
-                ));
+    pub fn on_message_response(&mut self, value: JsValue) {
+        let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
+
+        match &mut self.state_sort {
+            StateSort::Lobby(lobby_state) => {
+                lobby_state.push_message(message);
             }
-        }
+            _ => (),
+        };
     }
 }

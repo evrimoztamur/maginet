@@ -109,7 +109,12 @@ impl Game {
     }
 
     /// Determines whether or not a [`Position`] is occupied by a live [`Mage`].
-    fn live_occupied_by(&self, position: &Position, team: Team) -> bool {
+    pub fn live_occupied(&self, position: &Position) -> bool {
+        self.live_occupant(position).is_some()
+    }
+
+    /// Determines whether or not a [`Position`] is occupied by a live [`Mage`] of a certain [`Team`].
+    pub fn live_occupied_by(&self, position: &Position, team: Team) -> bool {
         if let Some(occupant) = self.live_occupant(position) {
             occupant.team == team
         } else {
@@ -375,5 +380,10 @@ impl Game {
         }
 
         return moves;
+    }
+
+    /// Returns the [`Board`]'s size as an `usize` tuple.
+    pub fn board_size(&self) -> (usize, usize) {
+        (self.board.width, self.board.height)
     }
 }

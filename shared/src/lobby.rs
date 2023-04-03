@@ -11,6 +11,9 @@ use crate::{Game, MageSort, Message, Turn};
 const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
 const DEFAULT_PLAYER_COUNT: usize = 2;
 
+/// A identifier for a lobby, shared by the client and the server.
+pub type LobbyID = String;
+
 /// Errors concerning the [`Lobby`].
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LobbyError(pub String);
@@ -34,33 +37,23 @@ impl Player {
         Player { index }
     }
 }
-
-/// Sort of the lobby. Currently used to modify game logic and executing networking and AI code.
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub enum LobbySort {
-    /// `Lobby` is for on-the-board play involving two local players on the same board.
-    Local,
-    /// `LocalAI` is the same as `Local`, but executes AI code following player turns.
-    LocalAI,
-    /// `Online` excutes netcode to synchronise the game state and communicate player turns with the server.
-    Online,
-}
-
 /// [`Lobby`] is a `struct` which contains all the information necessary for executing a game.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Lobby {
-    /// The active [`Game`] of the lobby.
+    /// The active [`Game`] of this lobby.
     pub game: Game,
+    /// The [`LobbyID`] of this lobby.
+    pub id: Option<LobbyID>,
     players: HashMap<String, Player>,
     player_slots: VecDeque<usize>,
     ticks: usize,
     /// The [`Lobby`]s sort.
-    pub sort: LobbySort,
+    settings: LobbySettings,
 }
 
 impl Lobby {
     /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
-    pub fn new(sort: LobbySort) -> Lobby {
+    pub fn new(settings: LobbySettings) -> Lobby {
         Lobby {
             game: Game::new(
                 DEFAULT_BOARD_SIZE.0,
@@ -69,10 +62,11 @@ impl Lobby {
                 Lobby::default_loadout(),
             )
             .expect("game should be instantiable with default values"),
+            id: None,
             players: HashMap::new(),
             player_slots: (0..DEFAULT_PLAYER_COUNT).collect(),
             ticks: 0,
-            sort,
+            settings,
         }
     }
 
@@ -170,7 +164,7 @@ impl Lobby {
 
     /// Determines if the lobby is *not* an online one.
     pub fn is_local(&self) -> bool {
-        match self.sort {
+        match self.settings.sort {
             LobbySort::Local => true,
             LobbySort::LocalAI => true,
             LobbySort::Online => false,
@@ -186,7 +180,7 @@ impl Lobby {
 
     /// Returns `true` for [`LobbySort::LocalAI`].
     pub fn has_ai(&self) -> bool {
-        self.sort == LobbySort::LocalAI
+        self.settings.sort == LobbySort::LocalAI
     }
 
     /// Determines if the given session ID is the one taking its turn.
@@ -213,4 +207,61 @@ impl Lobby {
             None => false,
         }
     }
+}
+
+/// Sort of the lobby. Currently used to modify game logic and executing networking and AI code.
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
+pub enum LobbySort {
+    /// `Lobby` is for on-the-board play involving two local players on the same board.
+    #[default]
+    Local,
+    /// `LocalAI` is the same as `Local`, but executes AI code following player turns.
+    LocalAI,
+    /// `Online` excutes netcode to synchronise the game state and communicate player turns with the server.
+    Online,
+}
+
+impl From<&str> for LobbySort {
+    fn from(value: &str) -> Self {
+        match value.to_ascii_lowercase().as_str() {
+            "local" => Self::Local,
+            "local+ai" => Self::LocalAI,
+            "online" => Self::Online,
+            _ => Self::default(),
+        }
+    }
+}
+
+/// Loadout methods.
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
+pub enum LoadoutMethod {
+    /// Choose the default order.
+    #[default]
+    Default,
+    /// Choose wizards manually.
+    Manual,
+    /// Choose wizards randomly.
+    Random {
+        /// Assign random sets to all players, or the same random set to all.
+        symmetric: bool,
+    },
+}
+
+impl From<&str> for LoadoutMethod {
+    fn from(value: &str) -> Self {
+        match value.to_ascii_lowercase().as_str() {
+            "manual" => Self::Manual,
+            "default" => Self::Default,
+            "random" => Self::Random { symmetric: false },
+            "symmetric" => Self::Random { symmetric: true },
+            _ => Self::default(),
+        }
+    }
+}
+
+/// Settings for the lobby.
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct LobbySettings {
+    sort: LobbySort,
+    loadout_methods: LoadoutMethod,
 }

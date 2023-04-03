@@ -30,11 +30,8 @@ async fn main() {
         .nest_service("/pkg", ServeDir::new("pkg"))
         .nest_service("/static", ServeDir::new("static"))
         .route_service("/", ServeFile::new("html/index.html"))
-        .route_service("/itch", ServeFile::new("html/itch.html"))
-        .route_service("/local", ServeFile::new("html/game/local.html"))
-        .route_service("/local/ai", ServeFile::new("html/game/local.html"))
+        .route_service("/game", ServeFile::new("html/game.html"))
         .route("/lobby/create", post(create_lobby))
-        .route_service("/lobby/:id", ServeFile::new("html/game/online.html"))
         .route("/lobby/:id/turns/:since", get(get_turns_since))
         .route("/lobby/:id/act", post(process_inbound))
         .route("/lobby/:id/ready", post(post_ready))
@@ -54,7 +51,7 @@ async fn create_lobby(State(state): State<AppState>) -> Redirect {
     let lobby_id = generate_id();
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    lobbies.insert(lobby_id.clone(), Lobby::new(shared::LobbySort::Online));
+    lobbies.insert(lobby_id.clone(), Lobby::new(shared::LobbySettings::default()));
 
     Redirect::to(&format!("/lobby/{lobby_id}"))
 }

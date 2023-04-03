@@ -20,18 +20,12 @@
 <body class="page">
   <main>
     <nav>
-      <div class="logo" style="flex: 1 1 100%;">
+      <div class="flex-fill logo">
         <a href="/"><img src="/static/png/logo.png"></a>
       </div>
-      <form action="local">
-        <button type="submit""><img src=" /static/png/local.png">Local</button>
-      </form>
-      <form action="local/ai">
-        <button type="submit"><img src="/static/png/local_ai.png">AI</button>
-      </form>
-      <form action="lobby/create" method="post">
-        <button type="submit"><img src="/static/png/online.png">Online</button>
-      </form>
+      <div class="flex-fill" style="flex: 1 1 100%;">
+        <a href="/game" class="button"><img src=" /static/png/local.png">Play now!</button></a>
+      </div>
     </nav>
     <article>
       <p>Maginet is a turn-based strategy game where two guilds of mages battle each other.</p>
