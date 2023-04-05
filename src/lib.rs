@@ -6,7 +6,7 @@ mod net;
 
 use std::{cell::RefCell, rc::Rc};
 
-use app::App;
+use app::{App, CanvasSettings};
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
@@ -43,8 +43,17 @@ fn start() -> Result<(), JsValue> {
 
     container_element.insert_before(&canvas, Some(&nav_element))?;
 
-    canvas.set_width(ELEMENT_WIDTH);
-    canvas.set_height(ELEMENT_HEIGHT);
+    let canvas_settings = CanvasSettings::new(
+        384 + 16,
+        256 + 16,
+        256,
+        256,
+        2,
+        window().inner_width().unwrap().as_f64().unwrap() < window().inner_height().unwrap().as_f64().unwrap(),
+    );
+
+    canvas.set_width(canvas_settings.element_width());
+    canvas.set_height(canvas_settings.element_height());
 
     let context = canvas
         .get_context("2d")?
@@ -61,7 +70,7 @@ fn start() -> Result<(), JsValue> {
 
     atlas.set_src(&"/static/png/atlas.png?v=4");
 
-    let app = App::new();
+    let app = App::new(canvas_settings);
 
     let app = Rc::new(RefCell::new(app));
 

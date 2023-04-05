@@ -1,4 +1,4 @@
-use shared::{Lobby, LobbySettings, Team};
+use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -14,7 +14,8 @@ use crate::{
 
 pub struct MenuState {
     interface: Interface,
-    lobby: Lobby,
+    sentinel_lobby: Lobby,
+    lobby_settings: LobbySettings,
 }
 
 const BUTTON_LOCAL: usize = 1;
@@ -23,7 +24,7 @@ const BUTTON_ONLINE: usize = 3;
 const BUTTON_DEFAULT: usize = 10;
 const BUTTON_RANDOM: usize = 11;
 const BUTTON_SYMMETRIC_RANDOM: usize = 12;
-const BUTTON_ROUND_ROBIN: usize = 13;
+// const BUTTON_ROUND_ROBIN: usize = 13;
 const BUTTON_BATTLE: usize = 20;
 
 impl MenuState {
@@ -85,22 +86,22 @@ impl MenuState {
             crate::app::ContentElement::Text("Chaos".to_string(), Alignment::Center),
         );
 
-        let button_round_robin = ButtonElement::new(
-            (0, 22 * 3),
-            (80, 18),
-            BUTTON_ROUND_ROBIN,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Text("Draft".to_string(), Alignment::Center),
-        );
+        // let button_round_robin = ButtonElement::new(
+        //     (0, 22 * 3),
+        //     (80, 18),
+        //     BUTTON_ROUND_ROBIN,
+        //     ButtonTrim::Round,
+        //     ButtonClass::Default,
+        //     crate::app::ContentElement::Text("Draft".to_string(), Alignment::Center),
+        // );
 
         let group_loadout_type = ButtonGroupElement::new(
-            (16, 96 + 22),
+            (16, 96 + 33),
             vec![
                 button_default,
                 button_random,
                 button_symmetric_random,
-                button_round_robin,
+                // button_round_robin,
             ],
             BUTTON_DEFAULT,
         );
@@ -122,8 +123,14 @@ impl MenuState {
 
         MenuState {
             interface: root_element,
-            lobby: Lobby::new(LobbySettings::default()),
+            sentinel_lobby: Lobby::new(LobbySettings::default()),
+            lobby_settings: LobbySettings::default(),
         }
+    }
+
+    fn refresh_lobby(&mut self) {
+        self.lobby_settings.seed = window().performance().unwrap().now().to_bits();
+        self.sentinel_lobby = Lobby::new(self.lobby_settings.clone());
     }
 }
 
@@ -167,7 +174,7 @@ impl State for MenuState {
         draw_sprite(context, atlas, 256.0, 224.0, 64.0, 32.0, 0.0, 32.0)?;
         draw_sprite(context, atlas, 448.0, 224.0, 64.0, 32.0, 64.0, 32.0)?;
 
-        for mage in self.lobby.game.iter_mages() {
+        for mage in self.sentinel_lobby.game.iter_mages() {
             context.save();
             context.translate(
                 -49.0 + mage.position.0 as f64 * 32.0,
@@ -185,32 +192,31 @@ impl State for MenuState {
         let pointer = &app_context.pointer;
 
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
-            web_sys::console::log_1(&format!("{:?}", value).into());
             match value {
+                BUTTON_LOCAL => {
+                    self.lobby_settings.lobby_sort = LobbySort::Local;
+                }
+                BUTTON_VS_AI => {
+                    self.lobby_settings.lobby_sort = LobbySort::LocalAI;
+                }
+                BUTTON_ONLINE => {
+                    self.lobby_settings.lobby_sort = LobbySort::Online("".to_string());
+                }
                 BUTTON_DEFAULT => {
-                    self.lobby = Lobby::new(LobbySettings {
-                        loadout_method: shared::LoadoutMethod::Default,
-                        seed: window().performance().unwrap().now().to_bits(),
-                        ..Default::default()
-                    })
+                    self.lobby_settings.loadout_method = LoadoutMethod::Default;
+                    self.refresh_lobby();
                 }
                 BUTTON_RANDOM => {
-                    self.lobby = Lobby::new(LobbySettings {
-                        loadout_method: shared::LoadoutMethod::Random { symmetric: false },
-                        seed: window().performance().unwrap().now().to_bits(),
-                        ..Default::default()
-                    })
+                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: false };
+                    self.refresh_lobby();
                 }
                 BUTTON_SYMMETRIC_RANDOM => {
-                    self.lobby = Lobby::new(LobbySettings {
-                        loadout_method: shared::LoadoutMethod::Random { symmetric: true },
-                        seed: window().performance().unwrap().now().to_bits(),
-                        ..Default::default()
-                    })
+                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: true };
+                    self.refresh_lobby();
                 }
                 BUTTON_BATTLE => {
                     return Some(StateSort::Lobby(LobbyState::new(
-                        self.lobby.settings.clone(),
+                        self.lobby_settings.clone(),
                     )));
                 }
                 _ => (),

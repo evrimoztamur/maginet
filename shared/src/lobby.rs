@@ -6,7 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Game, MageSort, Message, Turn};
+use crate::{Game, MageSort, Message, Team, Turn};
 
 const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
 const DEFAULT_PLAYER_COUNT: usize = 2;
@@ -42,8 +42,6 @@ impl Player {
 pub struct Lobby {
     /// The active [`Game`] of this lobby.
     pub game: Game,
-    /// The [`LobbyID`] of this lobby.
-    pub id: Option<LobbyID>,
     players: HashMap<String, Player>,
     player_slots: VecDeque<usize>,
     ticks: usize,
@@ -64,7 +62,6 @@ impl Lobby {
                 blue_mage_sorts,
             )
             .expect("game should be instantiable with default values"),
-            id: None,
             players: HashMap::new(),
             player_slots: (0..DEFAULT_PLAYER_COUNT).collect(),
             ticks: 0,
@@ -192,19 +189,24 @@ impl Lobby {
 
     /// Determines if the game is local (`true`) or online.
     pub fn is_local(&self) -> bool {
-        self.id.is_none()
+        match self.settings.lobby_sort {
+            LobbySort::Online(_) => false,
+            _ => true,
+        }
     }
 
     /// Returns `true` for [`LobbySort::LocalAI`].
     pub fn has_ai(&self) -> bool {
-        false
-        // self.settings.sort == LobbySort::LocalAI
+        match self.settings.lobby_sort {
+            LobbySort::LocalAI => true,
+            _ => false,
+        }
     }
 
     /// Determines if the given session ID is the one taking its turn.
     pub fn is_active_player(&self, session_id: Option<&String>) -> bool {
         if self.is_local() {
-            true
+            !(self.has_ai() && self.game.turn_for() == Team::Blue)
         } else if !self.all_ready() {
             false
         } else {
@@ -242,11 +244,33 @@ pub enum LoadoutMethod {
     },
 }
 
+/// Loadout methods.
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
+pub enum LobbySort {
+    /// Choose the default order..
+    #[default]
+    Local,
+    /// Versus AI.
+    LocalAI,
+    /// Online.
+    Online(String),
+}
+
+impl LobbySort {
+    /// Returns the ID of the lobby, if Online.
+    pub fn lobby_id(&self) -> Option<String> {
+        match self {
+            LobbySort::Online(id) => Some(id.clone()),
+            _ => None,
+        }
+    }
+}
+
 /// Settings for the lobby.
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct LobbySettings {
-    /// ID for lobby.
-    pub id: Option<String>,
+    /// Sort of the lobby.
+    pub lobby_sort: LobbySort,
     /// [`LoadoutMethod`] for the lobby.
     pub loadout_method: LoadoutMethod,
     /// Seed for RNG.

@@ -7,8 +7,8 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 use super::State;
 use crate::{
     app::{
-        AppContext, Particle, ParticleSort, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE,
-        BOARD_SCALE_F64, StateSort,
+        AppContext, Particle, ParticleSort, StateSort, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE,
+        BOARD_SCALE_F64,
     },
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
     net::{fetch, request_state, request_turns_since, send_message, send_ready, MessagePool},
@@ -50,8 +50,9 @@ impl LobbyState {
 
     pub fn lobby_id(&self) -> Result<LobbyID, LobbyError> {
         self.lobby
-            .id
-            .clone()
+            .settings
+            .lobby_sort
+            .lobby_id()
             .ok_or(LobbyError("lobby has no ID".to_string()))
     }
 
@@ -115,6 +116,15 @@ impl LobbyState {
             }
         }
     }
+
+    pub fn take_best_turn(&mut self) {
+        let turn = self
+            .lobby
+            .game
+            .best_turn(window().performance().unwrap().now().to_bits());
+
+        self.message_pool.borrow_mut().push(Message::Move(turn.0));
+    }
 }
 
 impl State for LobbyState {
@@ -150,8 +160,11 @@ impl State for LobbyState {
                 let game_started = self.lobby.all_ready() | self.lobby.is_local();
                 let game_finished = self.lobby.finished();
 
+                let mut mage_heap: Vec<&Mage> = self.lobby.game.iter_mages().collect();
+                mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
+
                 // DRAW mages
-                for mage in self.lobby.game.iter_mages() {
+                for mage in mage_heap {
                     context.save();
 
                     context.translate(

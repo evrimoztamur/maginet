@@ -2,16 +2,17 @@ use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use super::Pointer;
-use crate::draw::{draw_sprite, draw_text};
+use crate::draw::{draw_sprite, draw_text, text_length};
 
 pub enum UIEvent {
     ButtonClick(usize),
 }
 
 pub trait UIElement {
-    fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
+    fn tick(&mut self, _pointer: &Pointer) -> Option<UIEvent> {
         None
     }
+
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
@@ -22,15 +23,15 @@ pub trait UIElement {
 }
 
 pub enum Alignment {
-    Start,
+    // Start,
     Center,
-    End,
+    // End,
 }
 
 pub enum ContentElement {
     Text(String, Alignment),
-    Sprite((i32, i32), (i32, i32)),
-    List(Vec<ContentElement>),
+    // Sprite((i32, i32), (i32, i32)),
+    // List(Vec<ContentElement>),
 }
 
 impl UIElement for ContentElement {
@@ -38,17 +39,15 @@ impl UIElement for ContentElement {
         &self,
         context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
-        pointer: &Pointer,
-        frame: u64,
+        _pointer: &Pointer,
+        _frame: u64,
     ) -> Result<(), JsValue> {
         context.save();
 
         match self {
             ContentElement::Text(text, _) => {
-                draw_text(context, atlas, text.len() as f64 * -4.0, -4.0, text)
+                draw_text(context, atlas, (-text_length(text) / 2) as f64, -4.0, text)
             }
-            ContentElement::Sprite(_, _) => todo!(),
-            ContentElement::List(_) => todo!(),
         }?;
 
         context.restore();

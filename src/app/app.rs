@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use shared::{LobbyError, LobbyID, SessionRequest};
+use shared::{LobbyError, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
     CanvasRenderingContext2d, DomRectReadOnly, HtmlImageElement, KeyboardEvent, MouseEvent,
@@ -7,10 +7,7 @@ use web_sys::{
 };
 
 use super::{LobbyState, MenuState, Pointer, BOARD_OFFSET, BOARD_SCALE};
-use crate::{
-    app::State, draw::draw_sprite, net::get_session_id, window, CANVAS_HEIGHT, CANVAS_VERTICAL,
-    CANVAS_WIDTH, ELEMENT_HEIGHT, ELEMENT_WIDTH, PADDING_X, PADDING_Y,
-};
+use crate::{app::State, draw::draw_sprite, net::get_session_id, window};
 
 /// Errors concerning the [`App`].
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,8 +21,6 @@ impl From<LobbyError> for AppError {
 
 pub enum StateSort {
     MenuMain(MenuState),
-    MenuLobby,
-    MenuSettings,
     Lobby(LobbyState),
 }
 
@@ -33,6 +28,7 @@ pub struct AppContext {
     pub session_id: Option<String>,
     pub pointer: Pointer,
     pub frame: u64,
+    pub canvas_settings: CanvasSettings,
 }
 
 pub struct App {
@@ -41,12 +37,13 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> App {
+    pub fn new(canvas_settings: CanvasSettings) -> App {
         App {
             app_context: AppContext {
                 session_id: get_session_id(),
-                pointer: Pointer::new(),
+                pointer: Pointer::new(&canvas_settings),
                 frame: 0,
+                canvas_settings,
             },
             state_sort: StateSort::MenuMain(MenuState::new()),
         }
@@ -57,20 +54,32 @@ impl App {
         context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
     ) -> Result<(), JsValue> {
-        context.clear_rect(0.0, 0.0, ELEMENT_WIDTH as f64, ELEMENT_HEIGHT as f64);
+        context.clear_rect(
+            0.0,
+            0.0,
+            self.app_context.canvas_settings.element_width() as f64,
+            self.app_context.canvas_settings.element_height() as f64,
+        );
         context.save();
-        if CANVAS_VERTICAL {
-            context.translate(CANVAS_WIDTH as f64, CANVAS_HEIGHT as f64)?;
+        if self.app_context.canvas_settings.orientation() {
+            context.translate(
+                self.app_context.canvas_settings.canvas_width() as f64,
+                self.app_context.canvas_settings.canvas_height() as f64,
+            )?;
             context.rotate(std::f64::consts::PI / 2.0)?;
-            context.translate(-(CANVAS_WIDTH as f64), -(CANVAS_HEIGHT as f64))?;
+            context.translate(
+                -(self.app_context.canvas_settings.canvas_width() as f64),
+                -(self.app_context.canvas_settings.canvas_height() as f64),
+            )?;
         }
         context.scale(2.0, 2.0)?;
-        context.translate(PADDING_X as f64, PADDING_Y as f64)?;
+        context.translate(
+            self.app_context.canvas_settings.padding_x() as f64,
+            self.app_context.canvas_settings.padding_y() as f64,
+        )?;
 
         let result = match &mut self.state_sort {
             StateSort::MenuMain(menu_state) => menu_state.draw(context, atlas, &self.app_context),
-            StateSort::MenuLobby => Ok(()),
-            StateSort::MenuSettings => Ok(()),
             StateSort::Lobby(lobby_state) => lobby_state.draw(context, atlas, &self.app_context),
         };
         // DRAW cursor
@@ -97,20 +106,10 @@ impl App {
         let next_state = match &mut self.state_sort {
             StateSort::MenuMain(menu_state) => menu_state.tick(&self.app_context),
             StateSort::Lobby(lobby_state) => lobby_state.tick(&self.app_context),
-            _ => None,
         };
-
-        web_sys::console::log_1(&format!("{:?}", next_state.is_some()).into());
 
         if let Some(next_state) = next_state {
             self.state_sort = next_state;
-        }
-    }
-
-    pub fn lobby_id(&self) -> Result<LobbyID, AppError> {
-        match &self.state_sort {
-            StateSort::Lobby(lobby_state) => lobby_state.lobby_id().map_err(|err| err.into()),
-            _ => Err(AppError("app is not in the appropriate state".to_string())),
         }
     }
 
@@ -141,12 +140,15 @@ impl App {
     pub fn on_mouse_move(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
         let x = event.client_x() - bound.left() as i32;
         let y = event.client_y() - bound.top() as i32;
-        let x = (x as f64 * (ELEMENT_WIDTH as f64 / bound.width())) as i32;
-        let y = (y as f64 * (ELEMENT_HEIGHT as f64 / bound.height())) as i32;
+        let x = (x as f64
+            * (self.app_context.canvas_settings.element_width() as f64 / bound.width()))
+            as i32;
+        let y = (y as f64
+            * (self.app_context.canvas_settings.element_height() as f64 / bound.height()))
+            as i32;
+        let pointer_location = (x as i32 / 2, y as i32 / 2);
 
-        self.app_context
-            .pointer
-            .set_real((x as i32 / 2, y as i32 / 2));
+        self.app_context.pointer.set_real(pointer_location);
 
         event.prevent_default();
     }
@@ -155,35 +157,51 @@ impl App {
         if let Some(touch) = event.target_touches().item(0) {
             let x = touch.client_x() - bound.left() as i32;
             let y = touch.client_y() - bound.top() as i32;
-            let x = (x as f64 * (ELEMENT_WIDTH as f64 / bound.width())) as i32;
-            let y = (y as f64 * (ELEMENT_HEIGHT as f64 / bound.height())) as i32;
-
+            let x = (x as f64
+                * (self.app_context.canvas_settings.element_width() as f64 / bound.width()))
+                as i32;
+            let y = (y as f64
+                * (self.app_context.canvas_settings.element_height() as f64 / bound.height()))
+                as i32;
             let pointer_location = (x as i32 / 2, y as i32 / 2);
 
-            if (pointer_location.0 - self.app_context.pointer.real().0).abs() < 16
-                && (pointer_location.1 - self.app_context.pointer.real().1).abs() < 16
             {
-                self.app_context.pointer.button = true;
-            } else {
                 match &mut self.state_sort {
                     StateSort::Lobby(lobby_state) => {
-                        if let Some(selected_tile) = lobby_state.location_as_position(
-                            pointer_location,
-                            BOARD_OFFSET,
-                            BOARD_SCALE,
+                        match (
+                            lobby_state.location_as_position(
+                                Pointer::location_from_real(
+                                    pointer_location,
+                                    self.app_context.canvas_settings.padding(),
+                                    self.app_context.canvas_settings.orientation,
+                                ),
+                                BOARD_OFFSET,
+                                BOARD_SCALE,
+                            ),
+                            lobby_state.location_as_position(
+                                self.app_context.pointer.location(),
+                                BOARD_OFFSET,
+                                BOARD_SCALE,
+                            ),
                         ) {
-                            if lobby_state.live_occupied(selected_tile) {
-                                self.app_context.pointer.button = true;
+                            (Some(current_tile), Some(last_tile)) => {
+                                web_sys::console::log_1(
+                                    &format!("{:?} {:?}", current_tile, last_tile).into(),
+                                );
+                                if current_tile == last_tile {
+                                    self.app_context.pointer.button = true;
+                                } else if lobby_state.live_occupied(current_tile) {
+                                    self.app_context.pointer.button = true;
+                                }
                             }
+                            _ => (),
                         }
                     }
-                    _ => (),
+                    _ => self.app_context.pointer.button = true,
                 };
             }
 
-            self.app_context
-                .pointer
-                .set_real((x as i32 / 2, y as i32 / 2));
+            self.app_context.pointer.set_real(pointer_location);
         }
 
         event.prevent_default();
@@ -197,13 +215,15 @@ impl App {
         if let Some(touch) = event.target_touches().item(0) {
             let x = touch.client_x() - bound.left() as i32;
             let y = touch.client_y() - bound.top() as i32;
+            let x = (x as f64
+                * (self.app_context.canvas_settings.element_width() as f64 / bound.width()))
+                as i32;
+            let y = (y as f64
+                * (self.app_context.canvas_settings.element_height() as f64 / bound.height()))
+                as i32;
+            let pointer_location = (x as i32 / 2, y as i32 / 2);
 
-            let x = (x as f64 * (ELEMENT_WIDTH as f64 / bound.width())) as i32;
-            let y = (y as f64 * (ELEMENT_HEIGHT as f64 / bound.height())) as i32;
-
-            self.app_context
-                .pointer
-                .set_real((x as i32 / 2, y as i32 / 2));
+            self.app_context.pointer.set_real(pointer_location);
         }
 
         event.prevent_default();
@@ -211,15 +231,12 @@ impl App {
 
     pub fn on_key_down(&mut self, event: KeyboardEvent) {
         match event.code().as_str() {
-            "KeyB" => {
-                // let turn = app
-                //     .lobby
-                //     .game
-                //     .best_turn(window().performance().unwrap().now().to_bits());
-                // console::log_1(&format!("{:?}", turn).into());
-
-                // message_pool.push(Message::Move(turn.0));
-            }
+            "KeyB" => match &mut self.state_sort {
+                StateSort::Lobby(lobby_state) => {
+                    lobby_state.take_best_turn();
+                }
+                _ => (),
+            },
             "KeyN" => {
                 // console::log_1(&format!("{:?}", app.lobby.game.all_available_turns(app.lobby.game.turn_for())).into());
             }
@@ -237,5 +254,67 @@ impl App {
             .local_storage()
             .unwrap_or_default()
             .map(|storage| storage.set_item("session_id", session_id.as_str()));
+    }
+}
+
+pub struct CanvasSettings {
+    interface_width: u32,
+    interface_height: u32,
+    canvas_width: u32,
+    canvas_height: u32,
+    canvas_scale: u32,
+    orientation: bool,
+}
+
+impl CanvasSettings {
+    pub fn canvas_width(&self) -> u32 {
+        if self.orientation() {
+            self.canvas_height
+        } else {
+            self.canvas_width
+        }
+    }
+    pub fn canvas_height(&self) -> u32 {
+        if self.orientation() {
+            self.canvas_width
+        } else {
+            self.canvas_height
+        }
+    }
+    pub fn element_width(&self) -> u32 {
+        self.canvas_width() * self.canvas_scale
+    }
+    pub fn element_height(&self) -> u32 {
+        self.canvas_height() * self.canvas_scale
+    }
+    pub fn padding_x(&self) -> u32 {
+        (self.canvas_width() - self.interface_width) / 2
+    }
+    pub fn padding_y(&self) -> u32 {
+        (self.canvas_height() - self.interface_height) / 2
+    }
+    pub fn padding(&self) -> (i32, i32) {
+        (self.padding_x() as i32, self.padding_y() as i32)
+    }
+    pub fn orientation(&self) -> bool {
+        self.orientation
+    }
+
+    pub fn new(
+        canvas_width: u32,
+        canvas_height: u32,
+        interface_width: u32,
+        interface_height: u32,
+        canvas_scale: u32,
+        orientation: bool,
+    ) -> CanvasSettings {
+        CanvasSettings {
+            interface_width,
+            interface_height,
+            canvas_width,
+            canvas_height,
+            canvas_scale,
+            orientation,
+        }
     }
 }

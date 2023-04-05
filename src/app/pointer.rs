@@ -1,18 +1,24 @@
-use crate::{CANVAS_VERTICAL, PADDING_X, PADDING_Y};
+use super::CanvasSettings;
 
 #[derive(Clone, Default)]
 pub struct Pointer {
     previous: Option<Box<Pointer>>,
     location: (i32, i32),
+    padding: (i32, i32),
     pub button: bool,
     pub alt_button: bool,
-    vertical: bool,
+    orientation: bool,
 }
 
 impl Pointer {
-    pub fn new() -> Pointer {
+    pub fn new(canvas_settings: &CanvasSettings) -> Pointer {
         Pointer {
-            vertical: CANVAS_VERTICAL,
+            orientation: canvas_settings.orientation(),
+            location: (
+                canvas_settings.canvas_width() as i32 / 2,
+                canvas_settings.canvas_height() as i32 / 2,
+            ),
+            padding: canvas_settings.padding(),
             ..Default::default()
         }
     }
@@ -39,7 +45,7 @@ impl Pointer {
     pub fn teleport(&self, location: (i32, i32)) -> Pointer {
         let mut returned = self.clone();
 
-        if self.vertical {
+        if self.orientation {
             returned.location.0 -= location.1;
             returned.location.1 += location.0;
         } else {
@@ -51,15 +57,23 @@ impl Pointer {
     }
 
     pub fn location(&self) -> (i32, i32) {
-        if self.vertical {
-            (self.location.1 - 64, 256 - self.location.0)
+        Pointer::location_from_real(self.real(), self.padding, self.orientation)
+    }
+
+    pub fn location_from_real(
+        real: (i32, i32),
+        padding: (i32, i32),
+        orientation: bool,
+    ) -> (i32, i32) {
+        if orientation {
+            (real.1 - padding.1, real.0 - padding.0)
         } else {
-            (self.location.0 - PADDING_X as i32, self.location.1 - PADDING_Y as i32)
+            (real.0 - padding.0, real.1 - padding.1)
         }
     }
 
-    pub fn real(&self) -> &(i32, i32) {
-        &self.location
+    pub fn real(&self) -> (i32, i32) {
+        self.location
     }
 
     pub fn set_real(&mut self, location: (i32, i32)) {
