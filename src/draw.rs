@@ -37,6 +37,25 @@ pub fn draw_sprite(
     Ok(())
 }
 
+fn kerning(char: char) -> (isize, isize) {
+    match char {
+        'i' => (-2, -1),
+        'l' => (-2, -2),
+        't' => (-1, 0),
+        'f' => (0, -1),
+        _ => (0, 0),
+    }
+}
+
+pub fn text_length(text: &String) -> isize {
+    text.chars()
+        .map(|char| {
+            let kern = kerning(char);
+            (kern.0 + kern.1) + 8
+        })
+        .sum()
+}
+
 pub fn draw_text(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlImageElement,
@@ -44,7 +63,12 @@ pub fn draw_text(
     dy: f64,
     text: &String,
 ) -> Result<(), JsValue> {
+    let mut kerning_acc: isize = 0;
+
     for (i, char) in text.chars().enumerate() {
+        let kern = kerning(char);
+        kerning_acc += kern.0;
+
         draw_sprite(
             context,
             atlas,
@@ -52,9 +76,12 @@ pub fn draw_text(
             216.0 + ((char as u8 / 32) * 8) as f64,
             8.0,
             8.0,
-            dx + (i * 8) as f64,
+            dx + (i * 8) as f64 + kerning_acc as f64,
             dy + 1.0,
-        ).unwrap();
+        )
+        .unwrap();
+
+        kerning_acc += kern.1;
     }
 
     Ok(())
