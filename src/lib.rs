@@ -30,19 +30,10 @@ fn document() -> Document {
         .expect("should have a document on window")
 }
 
-const INTERFACE_WIDTH: u32 = 256;
-const INTERFACE_HEIGHT: u32 = 256;
-const CANVAS_WIDTH: u32 = INTERFACE_WIDTH + 144;
-const CANVAS_HEIGHT: u32 = INTERFACE_HEIGHT + 16;
-const CANVAS_SCALE: u32 = 2;
-const ELEMENT_WIDTH: u32 = CANVAS_WIDTH * CANVAS_SCALE;
-const ELEMENT_HEIGHT: u32 = CANVAS_HEIGHT * CANVAS_SCALE;
-const PADDING_X: u32 = (CANVAS_WIDTH - INTERFACE_WIDTH) / 2;
-const PADDING_Y: u32 = (CANVAS_HEIGHT - INTERFACE_HEIGHT) / 2;
-const CANVAS_VERTICAL: bool = false;
-
 #[wasm_bindgen(start)]
 fn start() -> Result<(), JsValue> {
+    console_error_panic_hook::set_once();
+
     let canvas = document()
         .create_element("canvas")?
         .dyn_into::<HtmlCanvasElement>()?;
