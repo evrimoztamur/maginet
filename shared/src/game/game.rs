@@ -141,29 +141,6 @@ impl Game {
         }
     }
 
-    /// Converts a canvas location to a board [`Position`].
-    pub fn location_as_position(
-        &self,
-        location: (i32, i32),
-        offset: (i32, i32),
-        scale: (i32, i32),
-    ) -> Option<Position> {
-        let position = Position(
-            ((location.0 - offset.0) / scale.0) as i8,
-            ((location.1 - offset.1) / scale.1) as i8,
-        );
-
-        if (location.0 - offset.0) >= 0
-            && position.0 < self.board.width as i8
-            && (location.1 - offset.1) >= 0
-            && position.1 < self.board.height as i8
-        {
-            Some(position)
-        } else {
-            None
-        }
-    }
-
     /// Returns a list of all available [`Position`]s a [`Mage`] can move to, including metadata on the direction and whether or not it's a diagonal.
     pub fn available_moves(&self, mage: &Mage) -> Vec<(Position, Position, bool)> {
         const DIRS: [(Position, bool); 8] = [
@@ -385,5 +362,15 @@ impl Game {
     /// Returns the [`Board`]'s size as an `usize` tuple.
     pub fn board_size(&self) -> (usize, usize) {
         (self.board.width, self.board.height)
+    }
+
+    /// Converts a canvas location to a board [`Position`].
+    pub fn location_as_position(
+        &self,
+        location: (i32, i32),
+        offset: (i32, i32),
+        scale: (i32, i32),
+    ) -> Option<Position> {
+        self.board.location_as_position(location, offset, scale)
     }
 }

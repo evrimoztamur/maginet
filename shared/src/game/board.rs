@@ -51,4 +51,27 @@ impl Board {
             None
         }
     }
+
+    /// Converts a canvas location to a board [`Position`].
+    pub fn location_as_position(
+        &self,
+        location: (i32, i32),
+        offset: (i32, i32),
+        scale: (i32, i32),
+    ) -> Option<Position> {
+        let position = Position(
+            ((location.0 - offset.0) / scale.0) as i8,
+            ((location.1 - offset.1) / scale.1) as i8,
+        );
+
+        if (location.0 - offset.0) >= 0
+            && position.0 < self.width as i8
+            && (location.1 - offset.1) >= 0
+            && position.1 < self.height as i8
+        {
+            Some(position)
+        } else {
+            None
+        }
+    }
 }

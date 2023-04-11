@@ -2,7 +2,7 @@ use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use super::{LobbyState, State};
+use super::{LobbyState, MenuTeleport, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonClass, ButtonElement, ButtonGroupElement, ButtonTrim,
@@ -26,6 +26,7 @@ const BUTTON_RANDOM: usize = 11;
 const BUTTON_SYMMETRIC_RANDOM: usize = 12;
 // const BUTTON_ROUND_ROBIN: usize = 13;
 const BUTTON_BATTLE: usize = 20;
+const BUTTON_TELEPORT: usize = 21;
 
 impl MenuState {
     pub fn new() -> MenuState {
@@ -96,7 +97,7 @@ impl MenuState {
         // );
 
         let group_loadout_type = ButtonGroupElement::new(
-            (16, 96 + 33),
+            (16, 112),
             vec![
                 button_default,
                 button_random,
@@ -107,7 +108,7 @@ impl MenuState {
         );
 
         let button_battle = ButtonElement::new(
-            (132, 200),
+            (16, 188),
             (80, 24),
             BUTTON_BATTLE,
             ButtonTrim::Glorious,
@@ -115,10 +116,20 @@ impl MenuState {
             crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
         );
 
+        let button_teleport = ButtonElement::new(
+            (156, 192),
+            (88, 16),
+            BUTTON_TELEPORT,
+            ButtonTrim::Glorious,
+            ButtonClass::Default,
+            crate::app::ContentElement::Text("Teleport".to_string(), Alignment::Center),
+        );
+
         let root_element = Interface::new(vec![
             Box::new(group_lobby_type),
             Box::new(group_loadout_type),
             Box::new(button_battle),
+            Box::new(button_teleport),
         ]);
 
         MenuState {
@@ -129,7 +140,7 @@ impl MenuState {
     }
 
     fn refresh_lobby(&mut self) {
-        self.lobby_settings.seed = window().performance().unwrap().now().to_bits();
+        self.lobby_settings.seed = window().performance().unwrap().now() as u32;
         self.sentinel_lobby = Lobby::new(self.lobby_settings.clone());
     }
 }
@@ -167,7 +178,7 @@ impl State for MenuState {
         self.interface.draw(context, atlas, pointer, frame)?;
 
         context.save();
-        context.translate(108.0, 128.0)?;
+        context.translate(108.0, 112.0)?;
 
         draw_sprite(context, atlas, 256.0, 0.0, 64.0, 32.0, 0.0, 0.0)?;
         draw_sprite(context, atlas, 448.0, 0.0, 64.0, 32.0, 64.0, 0.0)?;
@@ -200,7 +211,7 @@ impl State for MenuState {
                     self.lobby_settings.lobby_sort = LobbySort::LocalAI;
                 }
                 BUTTON_ONLINE => {
-                    self.lobby_settings.lobby_sort = LobbySort::Online("".to_string());
+                    self.lobby_settings.lobby_sort = LobbySort::Online(0);
                 }
                 BUTTON_DEFAULT => {
                     self.lobby_settings.loadout_method = LoadoutMethod::Default;
@@ -218,6 +229,9 @@ impl State for MenuState {
                     return Some(StateSort::Lobby(LobbyState::new(
                         self.lobby_settings.clone(),
                     )));
+                }
+                BUTTON_TELEPORT => {
+                    return Some(StateSort::MenuTeleport(MenuTeleport::new()));
                 }
                 _ => (),
             }

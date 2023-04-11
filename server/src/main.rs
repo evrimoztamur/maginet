@@ -7,17 +7,18 @@ use std::{
 
 use axum::{
     extract::{Json, Path, State},
-    response::Redirect,
     routing::{get, post},
     Router,
 };
 use rand::Rng;
-use shared::{Lobby, LobbyError, Message, SessionMessage, SessionRequest, Turn};
+use shared::{
+    Lobby, LobbyError, LobbySort, Message, SessionMessage, SessionNewLobby, SessionRequest, Turn,
+};
 use tower_http::services::{ServeDir, ServeFile};
 
 #[derive(Clone)]
 struct AppState {
-    lobbies: Arc<Mutex<HashMap<String, Lobby>>>,
+    lobbies: Arc<Mutex<HashMap<u16, Lobby>>>,
 }
 
 #[tokio::main]
@@ -47,18 +48,24 @@ async fn main() {
         .unwrap();
 }
 
-async fn create_lobby(State(state): State<AppState>) -> Redirect {
-    let lobby_id = generate_id();
+async fn create_lobby(
+    State(state): State<AppState>,
+    Json(mut session_message): Json<SessionNewLobby>,
+) -> Json<Message> {
+    let lobby_id = generate_lobby_id();
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    lobbies.insert(lobby_id.clone(), Lobby::new(shared::LobbySettings::default()));
+    session_message.lobby_settings.lobby_sort = LobbySort::Online(lobby_id);
+    let lobby = Lobby::new(session_message.lobby_settings);
 
-    Redirect::to(&format!("/lobby/{lobby_id}"))
+    lobbies.insert(lobby_id.clone(), lobby.clone());
+
+    Json(Message::Lobby(lobby))
 }
 
 async fn get_turns_since(
     State(state): State<AppState>,
-    Path((id, since)): Path<(String, usize)>,
+    Path((id, since)): Path<(u16, usize)>,
 ) -> Json<Message> {
     let lobbies = state.lobbies.lock().unwrap();
 
@@ -72,7 +79,7 @@ async fn get_turns_since(
     }
 }
 
-async fn get_state(State(state): State<AppState>, Path(id): Path<String>) -> Json<Message> {
+async fn get_state(State(state): State<AppState>, Path(id): Path<u16>) -> Json<Message> {
     let lobbies = state.lobbies.lock().unwrap();
 
     match lobbies.get(&id) {
@@ -85,7 +92,7 @@ async fn get_state(State(state): State<AppState>, Path(id): Path<String>) -> Jso
 
 async fn process_inbound(
     State(state): State<AppState>,
-    Path(id): Path<String>,
+    Path(id): Path<u16>,
     Json(session_message): Json<SessionMessage>,
 ) -> Json<Message> {
     let mut lobbies = state.lobbies.lock().unwrap();
@@ -104,7 +111,7 @@ async fn process_inbound(
 
 async fn post_ready(
     State(state): State<AppState>,
-    Path(id): Path<String>,
+    Path(id): Path<u16>,
     Json(session_request): Json<SessionRequest>,
 ) -> Json<Message> {
     let mut lobbies = state.lobbies.lock().unwrap();
@@ -117,19 +124,29 @@ async fn post_ready(
 
 async fn obtain_session() -> Json<SessionRequest> {
     Json(SessionRequest {
-        session_id: generate_id(),
+        session_id: generate_session_id(),
     })
 }
 
-fn record_lobby(id: String, lobby: &Lobby) {
+fn record_lobby(id: u16, lobby: &Lobby) {
     let file = File::create(format!("lobbies/{}.json", id)).unwrap();
     serde_json::to_writer(&file, lobby).unwrap();
 }
 
-fn generate_id() -> String {
+fn generate_session_id() -> String {
     rand::thread_rng()
         .sample_iter(&rand::distributions::Alphanumeric)
         .take(8)
         .map(char::from)
         .collect()
+}
+
+fn generate_lobby_id() -> u16 {
+    loop {
+        let res = rand::thread_rng().gen_range(u16::MIN..=u16::MAX);
+
+        if res.count_ones() >= 4 {
+            return res;
+        }
+    }
 }

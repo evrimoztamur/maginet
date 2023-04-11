@@ -6,7 +6,7 @@ use web_sys::{
     TouchEvent,
 };
 
-use super::{LobbyState, MenuState, Pointer, BOARD_OFFSET, BOARD_SCALE};
+use super::{LobbyState, MenuState, MenuTeleport, Pointer, BOARD_OFFSET, BOARD_SCALE};
 use crate::{app::State, draw::draw_sprite, net::get_session_id, window};
 
 /// Errors concerning the [`App`].
@@ -21,6 +21,7 @@ impl From<LobbyError> for AppError {
 
 pub enum StateSort {
     MenuMain(MenuState),
+    MenuTeleport(MenuTeleport),
     Lobby(LobbyState),
 }
 
@@ -78,10 +79,21 @@ impl App {
             self.app_context.canvas_settings.padding_y() as f64,
         )?;
 
-        let result = match &mut self.state_sort {
-            StateSort::MenuMain(menu_state) => menu_state.draw(context, atlas, &self.app_context),
-            StateSort::Lobby(lobby_state) => lobby_state.draw(context, atlas, &self.app_context),
-        };
+        let mut result = Ok(());
+
+        if atlas.complete() {
+            result = match &mut self.state_sort {
+                StateSort::MenuMain(menu_state) => {
+                    menu_state.draw(context, atlas, &self.app_context)
+                }
+                StateSort::Lobby(lobby_state) => {
+                    lobby_state.draw(context, atlas, &self.app_context)
+                }
+                StateSort::MenuTeleport(menu_state) => {
+                    menu_state.draw(context, atlas, &self.app_context)
+                }
+            };
+        }
         // DRAW cursor
         draw_sprite(
             context,
@@ -90,8 +102,8 @@ impl App {
             8.0,
             16.0,
             16.0,
-            self.app_context.pointer.location().0 as f64 - 5.0,
-            self.app_context.pointer.location().1 as f64 - 1.0,
+            self.app_context.pointer.location.0 as f64 - 5.0,
+            self.app_context.pointer.location.1 as f64 - 1.0,
         )?;
 
         context.restore();
@@ -106,6 +118,7 @@ impl App {
         let next_state = match &mut self.state_sort {
             StateSort::MenuMain(menu_state) => menu_state.tick(&self.app_context),
             StateSort::Lobby(lobby_state) => lobby_state.tick(&self.app_context),
+            StateSort::MenuTeleport(menu_state) => menu_state.tick(&self.app_context),
         };
 
         if let Some(next_state) = next_state {
@@ -140,15 +153,10 @@ impl App {
     pub fn on_mouse_move(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
         let x = event.client_x() - bound.left() as i32;
         let y = event.client_y() - bound.top() as i32;
-        let x = (x as f64
-            * (self.app_context.canvas_settings.element_width() as f64 / bound.width()))
-            as i32;
-        let y = (y as f64
-            * (self.app_context.canvas_settings.element_height() as f64 / bound.height()))
-            as i32;
-        let pointer_location = (x as i32 / 2, y as i32 / 2);
+        let pointer_location =
+            App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
 
-        self.app_context.pointer.set_real(pointer_location);
+        self.app_context.pointer.location = pointer_location;
 
         event.prevent_default();
     }
@@ -157,37 +165,25 @@ impl App {
         if let Some(touch) = event.target_touches().item(0) {
             let x = touch.client_x() - bound.left() as i32;
             let y = touch.client_y() - bound.top() as i32;
-            let x = (x as f64
-                * (self.app_context.canvas_settings.element_width() as f64 / bound.width()))
-                as i32;
-            let y = (y as f64
-                * (self.app_context.canvas_settings.element_height() as f64 / bound.height()))
-                as i32;
-            let pointer_location = (x as i32 / 2, y as i32 / 2);
+            let pointer_location =
+                App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
 
             {
                 match &mut self.state_sort {
                     StateSort::Lobby(lobby_state) => {
                         match (
                             lobby_state.location_as_position(
-                                Pointer::location_from_real(
-                                    pointer_location,
-                                    self.app_context.canvas_settings.padding(),
-                                    self.app_context.canvas_settings.orientation,
-                                ),
+                                pointer_location,
                                 BOARD_OFFSET,
                                 BOARD_SCALE,
                             ),
                             lobby_state.location_as_position(
-                                self.app_context.pointer.location(),
+                                self.app_context.pointer.location,
                                 BOARD_OFFSET,
                                 BOARD_SCALE,
                             ),
                         ) {
                             (Some(current_tile), Some(last_tile)) => {
-                                web_sys::console::log_1(
-                                    &format!("{:?} {:?}", current_tile, last_tile).into(),
-                                );
                                 if current_tile == last_tile {
                                     self.app_context.pointer.button = true;
                                 } else if lobby_state.live_occupied(current_tile) {
@@ -201,7 +197,7 @@ impl App {
                 };
             }
 
-            self.app_context.pointer.set_real(pointer_location);
+            self.app_context.pointer.location = pointer_location;
         }
 
         event.prevent_default();
@@ -215,18 +211,25 @@ impl App {
         if let Some(touch) = event.target_touches().item(0) {
             let x = touch.client_x() - bound.left() as i32;
             let y = touch.client_y() - bound.top() as i32;
-            let x = (x as f64
-                * (self.app_context.canvas_settings.element_width() as f64 / bound.width()))
-                as i32;
-            let y = (y as f64
-                * (self.app_context.canvas_settings.element_height() as f64 / bound.height()))
-                as i32;
-            let pointer_location = (x as i32 / 2, y as i32 / 2);
 
-            self.app_context.pointer.set_real(pointer_location);
+            let pointer_location =
+                App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
+            self.app_context.pointer.location = pointer_location;
         }
 
         event.prevent_default();
+    }
+
+    fn transform_pointer(
+        canvas_settings: &CanvasSettings,
+        bound: &DomRectReadOnly,
+        x: i32,
+        y: i32,
+    ) -> (i32, i32) {
+        let x = (x as f64 * (canvas_settings.element_width() as f64 / bound.width())) as i32;
+        let y = (y as f64 * (canvas_settings.element_height() as f64 / bound.height())) as i32;
+
+        Pointer::location_from_real(canvas_settings, (x as i32 / 2, y as i32 / 2))
     }
 
     pub fn on_key_down(&mut self, event: KeyboardEvent) {
@@ -257,6 +260,7 @@ impl App {
     }
 }
 
+#[derive(Clone, Default)]
 pub struct CanvasSettings {
     interface_width: u32,
     interface_height: u32,
@@ -267,6 +271,20 @@ pub struct CanvasSettings {
 }
 
 impl CanvasSettings {
+    pub fn interface_width(&self) -> u32 {
+        if self.orientation() {
+            self.interface_height
+        } else {
+            self.interface_width
+        }
+    }
+    pub fn interface_height(&self) -> u32 {
+        if self.orientation() {
+            self.interface_width
+        } else {
+            self.interface_height
+        }
+    }
     pub fn canvas_width(&self) -> u32 {
         if self.orientation() {
             self.canvas_height

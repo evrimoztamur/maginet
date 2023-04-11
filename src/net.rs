@@ -1,6 +1,6 @@
 use futures::TryFutureExt;
 use js_sys::Promise;
-use shared::{LobbyID, Message, SessionMessage, SessionRequest};
+use shared::{LobbyID, LobbySettings, Message, SessionMessage, SessionNewLobby, SessionRequest};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::{future_to_promise, JsFuture};
 use web_sys::{Request, RequestInit, Response};
@@ -69,6 +69,29 @@ pub fn request_state(lobby_id: LobbyID) -> Request {
 
 pub fn request_turns_since(lobby_id: LobbyID, since: usize) -> Request {
     request_url("GET", &format!("lobby/{lobby_id}/turns/{since}"))
+}
+
+pub fn create_new_lobby(lobby_settings: LobbySettings) -> Option<Promise> {
+    let session_request = SessionNewLobby { lobby_settings };
+
+    if let Ok(json) = serde_json::to_string(&session_request) {
+        let mut opts = RequestInit::new();
+        opts.method("POST");
+        opts.body(Some(&json.into()));
+
+        let url = format!("lobby/create");
+
+        let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
+
+        request
+            .headers()
+            .set("Content-Type", "application/json")
+            .unwrap();
+
+        Some(fetch(request))
+    } else {
+        None
+    }
 }
 
 pub fn send_ready(lobby_id: LobbyID, session_id: String) -> Option<Promise> {

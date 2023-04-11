@@ -99,7 +99,7 @@ impl ButtonElement {
     }
 
     fn hovered(&self, pointer: &Pointer) -> bool {
-        let pointer_location = pointer.location();
+        let pointer_location = pointer.location;
 
         pointer_location.0 >= self.position.0
             && pointer_location.0 < self.position.0 + self.size.0

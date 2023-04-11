@@ -3,22 +3,22 @@ use super::CanvasSettings;
 #[derive(Clone, Default)]
 pub struct Pointer {
     previous: Option<Box<Pointer>>,
-    location: (i32, i32),
-    padding: (i32, i32),
+    pub real: (i32, i32),
+    pub location: (i32, i32),
     pub button: bool,
     pub alt_button: bool,
-    orientation: bool,
 }
 
 impl Pointer {
     pub fn new(canvas_settings: &CanvasSettings) -> Pointer {
+        let midpoint = (
+            canvas_settings.canvas_width() as i32 / 2,
+            canvas_settings.canvas_height() as i32 / 2,
+        );
+
         Pointer {
-            orientation: canvas_settings.orientation(),
-            location: (
-                canvas_settings.canvas_width() as i32 / 2,
-                canvas_settings.canvas_height() as i32 / 2,
-            ),
-            padding: canvas_settings.padding(),
+            location: midpoint,
+            real: midpoint,
             ..Default::default()
         }
     }
@@ -45,38 +45,23 @@ impl Pointer {
     pub fn teleport(&self, location: (i32, i32)) -> Pointer {
         let mut returned = self.clone();
 
-        if self.orientation {
-            returned.location.0 -= location.1;
-            returned.location.1 += location.0;
-        } else {
-            returned.location.0 += location.0;
-            returned.location.1 += location.1;
-        }
-
+        returned.location.0 += location.0;
+        returned.location.1 += location.1;
         returned
     }
 
-    pub fn location(&self) -> (i32, i32) {
-        Pointer::location_from_real(self.real(), self.padding, self.orientation)
-    }
+    pub fn location_from_real(canvas_settings: &CanvasSettings, real: (i32, i32)) -> (i32, i32) {
+        let orientation = canvas_settings.orientation();
+        let flip = (
+            canvas_settings.interface_width() as i32,
+            canvas_settings.interface_height() as i32,
+        );
+        let padding = canvas_settings.padding();
 
-    pub fn location_from_real(
-        real: (i32, i32),
-        padding: (i32, i32),
-        orientation: bool,
-    ) -> (i32, i32) {
         if orientation {
-            (real.1 - padding.1, real.0 - padding.0)
+            (real.1 - padding.1, flip.0 - (real.0 - padding.0))
         } else {
             (real.0 - padding.0, real.1 - padding.1)
         }
-    }
-
-    pub fn real(&self) -> (i32, i32) {
-        self.location
-    }
-
-    pub fn set_real(&mut self, location: (i32, i32)) {
-        self.location = location;
     }
 }

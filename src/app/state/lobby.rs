@@ -11,7 +11,10 @@ use crate::{
         BOARD_SCALE_F64,
     },
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
-    net::{fetch, request_state, request_turns_since, send_message, send_ready, MessagePool},
+    net::{
+        create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
+        MessagePool,
+    },
     window,
 };
 
@@ -37,6 +40,12 @@ impl LobbyState {
                 message_pool.push(message);
             })
         };
+
+        if let shared::LobbySort::Online(0) = lobby_settings.lobby_sort {
+            let _ = create_new_lobby(lobby_settings.clone())
+                .unwrap()
+                .then(&message_closure);
+        }
 
         LobbyState {
             lobby: Lobby::new(lobby_settings),
@@ -125,10 +134,8 @@ impl LobbyState {
 
         self.message_pool.borrow_mut().push(Message::Move(turn.0));
     }
-}
 
-impl State for LobbyState {
-    fn draw(
+    fn draw_game(
         &mut self,
         context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
@@ -136,6 +143,7 @@ impl State for LobbyState {
     ) -> Result<(), JsValue> {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
+
         // DRAW background layer (board + UI block)
 
         // DRAW board
@@ -146,6 +154,29 @@ impl State for LobbyState {
             context.translate(BOARD_OFFSET_F64.0, BOARD_OFFSET_F64.1)?;
 
             draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
+
+            if !self.lobby.all_ready() {
+                let mut lid = self.lobby_id().unwrap_or(0);
+
+                while lid != 0 {
+                    let tz = lid.trailing_zeros();
+                    let x = tz % 4;
+                    let y = tz / 4;
+
+                    lid ^= 1 << tz;
+
+                    draw_sprite(
+                        context,
+                        atlas,
+                        96.0,
+                        32.0,
+                        16.0,
+                        16.0,
+                        x as f64 * BOARD_SCALE_F64.0 + 72.0,
+                        y as f64 * BOARD_SCALE_F64.1 + 72.0,
+                    )?;
+                }
+            }
 
             // DRAW particles
 
@@ -248,7 +279,7 @@ impl State for LobbyState {
                     }
 
                     if let Some(selected_tile) = self.lobby.game.location_as_position(
-                        pointer.location(),
+                        pointer.location,
                         BOARD_OFFSET,
                         BOARD_SCALE,
                     ) {
@@ -271,13 +302,13 @@ impl State for LobbyState {
                 }
 
                 if let Some(selected_tile) = self.lobby.game.location_as_position(
-                    pointer.location(),
+                    pointer.location,
                     BOARD_OFFSET,
                     BOARD_SCALE,
                 ) {
                     if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
                         if let Some(selected_tile) = self.lobby.game.location_as_position(
-                            pointer.location(),
+                            pointer.location,
                             BOARD_OFFSET,
                             BOARD_SCALE,
                         ) {
@@ -297,6 +328,19 @@ impl State for LobbyState {
 
         Ok(())
     }
+}
+
+impl State for LobbyState {
+    fn draw(
+        &mut self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlImageElement,
+        app_context: &AppContext,
+    ) -> Result<(), JsValue> {
+        self.draw_game(context, atlas, app_context)?;
+
+        Ok(())
+    }
 
     fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
         let frame = app_context.frame;
@@ -305,12 +349,13 @@ impl State for LobbyState {
 
         let mut target_positions = Vec::new();
 
+        let all_ready = self.lobby.all_ready();
         {
             let mut message_pool = self.message_pool.borrow_mut();
 
-            if let Ok(lobby_id) = self.lobby_id() {
+            if let Some(lobby_id) = self.lobby.settings.lobby_sort.lobby_id() {
                 if message_pool.available(frame) {
-                    if self.lobby.all_ready() {
+                    if all_ready {
                         let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
                             .then(&self.message_closure);
                     } else {
@@ -375,7 +420,7 @@ impl State for LobbyState {
             if let Some(selected_tile) =
                 self.lobby
                     .game
-                    .location_as_position(pointer.location(), BOARD_OFFSET, BOARD_SCALE)
+                    .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
             {
                 if let Some(active_mage) = self.get_active_mage() {
                     let from = active_mage.position;

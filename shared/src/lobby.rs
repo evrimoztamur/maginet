@@ -12,7 +12,7 @@ const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
 const DEFAULT_PLAYER_COUNT: usize = 2;
 
 /// A identifier for a lobby, shared by the client and the server.
-pub type LobbyID = String;
+pub type LobbyID = u16;
 
 /// Errors concerning the [`Lobby`].
 #[derive(Debug, Serialize, Deserialize)]
@@ -98,8 +98,8 @@ impl Lobby {
     }
 
     #[allow(dead_code)]
-    fn random_loadout(seed: u64) -> Vec<MageSort> {
-        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    fn random_loadout(seed: u32) -> Vec<MageSort> {
+        let mut rng = ChaCha8Rng::seed_from_u64(seed as u64);
         (0..4)
             .into_iter()
             .map(|_| ((rng.next_u64() % 5) as usize).into())
@@ -253,12 +253,12 @@ pub enum LobbySort {
     /// Versus AI.
     LocalAI,
     /// Online.
-    Online(String),
+    Online(u16),
 }
 
 impl LobbySort {
     /// Returns the ID of the lobby, if Online.
-    pub fn lobby_id(&self) -> Option<String> {
+    pub fn lobby_id(&self) -> Option<u16> {
         match self {
             LobbySort::Online(id) => Some(id.clone()),
             _ => None,
@@ -274,5 +274,5 @@ pub struct LobbySettings {
     /// [`LoadoutMethod`] for the lobby.
     pub loadout_method: LoadoutMethod,
     /// Seed for RNG.
-    pub seed: u64,
+    pub seed: u32,
 }
