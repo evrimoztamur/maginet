@@ -139,26 +139,6 @@ article img {
     border-radius: 2px;
 }
 
-.lobby-id {
-    display: none;
-    padding: 8px;
-    border-radius: 4px;
-    flex-direction: row;
-    margin-left: 16px;
-}
-
-.lobby-id[data-lobby-id] {
-    display: initial;
-}
-
-.lobby-id.activated {
-    background-color: #008080;
-}
-
-.icon.icon-tabler {
-    margin-right: 8px;
-}
-
 .flex-fill {
     flex: 1 1 auto;
 }
