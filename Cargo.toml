@@ -6,6 +6,9 @@ edition = "2021"
 [workspace]
 members = ["server", "shared"]
 
+[features]
+deploy = []
+
 [lib]
 crate-type = ["cdylib"]
 

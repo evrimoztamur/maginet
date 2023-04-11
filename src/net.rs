@@ -7,6 +7,8 @@ use web_sys::{Request, RequestInit, Response};
 
 use crate::window;
 
+const API_URL: &str = "https://maginet.evrim.zone";
+
 pub struct MessagePool {
     pub messages: Vec<Message>,
     block_frame: u64,
@@ -60,15 +62,15 @@ fn request_url(method: &str, url: &str) -> Request {
 }
 
 pub fn request_session() -> Request {
-    request_url("GET", &format!("/session"))
+    request_url("GET", &format!("{API_URL}/session"))
 }
 
 pub fn request_state(lobby_id: LobbyID) -> Request {
-    request_url("GET", &format!("lobby/{lobby_id}/state"))
+    request_url("GET", &format!("{API_URL}/lobby/{lobby_id}/state"))
 }
 
 pub fn request_turns_since(lobby_id: LobbyID, since: usize) -> Request {
-    request_url("GET", &format!("lobby/{lobby_id}/turns/{since}"))
+    request_url("GET", &format!("{API_URL}/lobby/{lobby_id}/turns/{since}"))
 }
 
 pub fn create_new_lobby(lobby_settings: LobbySettings) -> Option<Promise> {
@@ -79,7 +81,7 @@ pub fn create_new_lobby(lobby_settings: LobbySettings) -> Option<Promise> {
         opts.method("POST");
         opts.body(Some(&json.into()));
 
-        let url = format!("lobby/create");
+        let url = format!("{API_URL}/lobby/create");
 
         let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
 
@@ -102,7 +104,7 @@ pub fn send_ready(lobby_id: LobbyID, session_id: String) -> Option<Promise> {
         opts.method("POST");
         opts.body(Some(&json.into()));
 
-        let url = format!("lobby/{lobby_id}/ready");
+        let url = format!("{API_URL}/lobby/{lobby_id}/ready");
 
         let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
 
@@ -128,7 +130,7 @@ pub fn send_message(lobby_id: LobbyID, session_id: String, message: Message) -> 
         opts.method("POST");
         opts.body(Some(&json.into()));
 
-        let url = format!("lobby/{lobby_id}/act");
+        let url = format!("{API_URL}/lobby/{lobby_id}/act");
 
         let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
 

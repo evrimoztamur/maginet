@@ -30,6 +30,11 @@ fn document() -> Document {
         .expect("should have a document on window")
 }
 
+#[cfg(feature = "deploy")]
+const RESOURCE_BASE_URL: &str = ".";
+#[cfg(not(feature = "deploy"))]
+const RESOURCE_BASE_URL: &str = "";
+
 #[wasm_bindgen(start)]
 fn start() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
@@ -49,7 +54,8 @@ fn start() -> Result<(), JsValue> {
         256,
         256,
         2,
-        window().inner_width().unwrap().as_f64().unwrap() < window().inner_height().unwrap().as_f64().unwrap(),
+        window().inner_width().unwrap().as_f64().unwrap()
+            < window().inner_height().unwrap().as_f64().unwrap(),
     );
 
     canvas.set_width(canvas_settings.element_width());
@@ -68,7 +74,7 @@ fn start() -> Result<(), JsValue> {
         .dyn_into::<HtmlImageElement>()
         .unwrap();
 
-    atlas.set_src(&"/static/png/atlas.png?v=4");
+    atlas.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=4"));
 
     let app = App::new(canvas_settings);
 
