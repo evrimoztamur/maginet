@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use shared::{LobbyError, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
-    CanvasRenderingContext2d, DomRectReadOnly, HtmlImageElement, KeyboardEvent, MouseEvent,
-    TouchEvent,
+    console, CanvasRenderingContext2d, DomRectReadOnly, HtmlImageElement, KeyboardEvent,
+    MouseEvent, TouchEvent,
 };
 
 use super::{LobbyState, MenuState, MenuTeleport, Pointer, BOARD_OFFSET, BOARD_SCALE};
@@ -298,6 +298,12 @@ impl CanvasSettings {
         } else {
             self.interface_height
         }
+    }
+    pub fn inverse_interface_center(&self) -> (i32, i32) {
+        (
+            -((self.interface_width() / 2) as i32),
+            -((self.interface_height() / 2) as i32),
+        )
     }
     pub fn canvas_width(&self) -> u32 {
         if self.orientation() {

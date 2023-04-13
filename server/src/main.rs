@@ -36,6 +36,7 @@ async fn main() {
         .route("/lobby/:id/turns/:since", get(get_turns_since))
         .route("/lobby/:id/act", post(process_inbound))
         .route("/lobby/:id/ready", post(post_ready))
+        .route("/lobby/:id/rematch", post(post_rematch))
         .route("/lobby/:id/state", get(get_state))
         .route("/session", get(obtain_session))
         .with_state(state);
@@ -70,8 +71,13 @@ async fn get_turns_since(
     let lobbies = state.lobbies.lock().unwrap();
 
     if let Some(lobby) = lobbies.get(&id) {
-        let turns_since: Vec<Turn> = lobby.game.turns_since(since).into_iter().cloned().collect();
-        Json(Message::Moves(turns_since))
+        if lobby.all_ready() {
+            let turns_since: Vec<Turn> =
+                lobby.game.turns_since(since).into_iter().cloned().collect();
+            Json(Message::Moves(turns_since))
+        } else {
+            Json(Message::Lobby(lobby.clone()))
+        }
     } else {
         Json(Message::LobbyError(LobbyError(
             "lobby does not exist".to_string(),
@@ -118,6 +124,27 @@ async fn post_ready(
 
     Json(match lobbies.get_mut(&id) {
         Some(lobby) => lobby.join_player(session_request.session_id).into(),
+        None => Message::LobbyError(LobbyError("lobby does not exist".to_string())),
+    })
+}
+
+async fn post_rematch(
+    State(state): State<AppState>,
+    Path(id): Path<u16>,
+    Json(session_request): Json<SessionRequest>,
+) -> Json<Message> {
+    let mut lobbies = state.lobbies.lock().unwrap();
+
+    Json(match lobbies.get_mut(&id) {
+        Some(lobby) => {
+            let result = lobby.request_rematch(session_request.session_id);
+
+            if let Ok(true) = result {
+                lobby.remake();
+            }
+
+            result.into()
+        }
         None => Message::LobbyError(LobbyError("lobby does not exist".to_string())),
     })
 }

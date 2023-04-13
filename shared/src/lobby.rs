@@ -18,8 +18,8 @@ pub type LobbyID = u16;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LobbyError(pub String);
 
-impl From<Result<(), LobbyError>> for Message {
-    fn from(result: Result<(), LobbyError>) -> Self {
+impl<T> From<Result<T, LobbyError>> for Message {
+    fn from(result: Result<T, LobbyError>) -> Self {
         match result {
             Ok(_) => Message::Ok,
             Err(err) => Message::LobbyError(err),
@@ -30,11 +30,15 @@ impl From<Result<(), LobbyError>> for Message {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Player {
     index: usize,
+    rematch: bool,
 }
 
 impl Player {
     fn new(index: usize) -> Player {
-        Player { index }
+        Player {
+            index,
+            rematch: false,
+        }
     }
 }
 /// [`Lobby`] is a `struct` which contains all the information necessary for executing a game.
@@ -97,7 +101,6 @@ impl Lobby {
         ]
     }
 
-    #[allow(dead_code)]
     fn random_loadout(seed: u32) -> Vec<MageSort> {
         let mut rng = ChaCha8Rng::seed_from_u64(seed as u64);
         (0..4)
@@ -117,6 +120,7 @@ impl Lobby {
         self.player_slots.is_empty()
     }
 
+    #[cfg(feature = "server")]
     /// Includes a new session ID into the lobby, and assigns a player index to it.
     pub fn join_player(&mut self, session_id: String) -> Result<(), LobbyError> {
         if self.all_ready() {
@@ -136,6 +140,7 @@ impl Lobby {
         }
     }
 
+    // #[cfg(feature = "server")]
     // pub fn leave_player(&mut self, session_id: String) -> Result<String, LobbyError> {
     //     if self.state == LobbyState::Finished {
     //         Err(LobbyError("cannot leave a finished game".to_string()))
@@ -155,6 +160,7 @@ impl Lobby {
     //     }
     // }
 
+    #[cfg(feature = "server")]
     /// Executes a certain [`Message`] for the player.
     pub fn act_player(&mut self, session_id: String, message: Message) -> Result<(), LobbyError> {
         if !self.all_ready() {
@@ -178,6 +184,33 @@ impl Lobby {
                 None => Err(LobbyError("player not in lobby".to_string())),
             }
         }
+    }
+
+    #[cfg(feature = "server")]
+    /// Requests a rematch for the active game.
+    pub fn request_rematch(&mut self, session_id: String) -> Result<bool, LobbyError> {
+        if !self.all_ready() {
+            Err(LobbyError("game not yet started".to_string()))
+        } else if !self.finished() {
+            Err(LobbyError("game not yet finished".to_string()))
+        } else {
+            match self.players.get_mut(&session_id) {
+                Some(player) => {
+                    player.rematch = true;
+
+                    Ok(self
+                        .players
+                        .values()
+                        .fold(true, |acc, player| acc & player.rematch))
+                }
+                None => Err(LobbyError("player not in lobby".to_string())),
+            }
+        }
+    }
+
+    /// Makes a fully-reset clone of this [`Lobby`].
+    pub fn remake(&mut self) {
+        *self = Lobby::new(self.settings.clone());
     }
 
     /// Determines if the game is finished.

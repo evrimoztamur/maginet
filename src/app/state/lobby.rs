@@ -7,7 +7,8 @@ use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 use super::State;
 use crate::{
     app::{
-        AppContext, Particle, ParticleSort, StateSort, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE,
+        Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, Interface, Particle,
+        ParticleSort, StateSort, UIElement, UIEvent, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE,
         BOARD_SCALE_F64,
     },
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
@@ -18,7 +19,9 @@ use crate::{
     window,
 };
 
+const BUTTON_REMATCH: usize = 1;
 pub struct LobbyState {
+    interface: Interface,
     lobby: Lobby,
     last_move_frame: u64,
     active_mage: Option<usize>,
@@ -47,7 +50,19 @@ impl LobbyState {
                 .then(&message_closure);
         }
 
+        let button_rematch = ButtonElement::new(
+            (-36, -16),
+            (72, 32),
+            BUTTON_REMATCH,
+            ButtonTrim::Glorious,
+            ButtonClass::Action,
+            crate::app::ContentElement::Text("Rematch".to_string(), Alignment::Center),
+        );
+
+        let root_element = Interface::new(vec![Box::new(button_rematch)]);
+
         LobbyState {
+            interface: root_element,
             lobby: Lobby::new(lobby_settings),
             last_move_frame: 0,
             active_mage: None,
@@ -55,6 +70,10 @@ impl LobbyState {
             message_pool,
             message_closure,
         }
+    }
+
+    pub fn lobby(&self) -> &Lobby {
+        &self.lobby
     }
 
     pub fn lobby_id(&self) -> Result<LobbyID, LobbyError> {
@@ -326,6 +345,21 @@ impl LobbyState {
             context.restore();
         }
 
+        if self.lobby.finished() {
+            context.save();
+            context.translate(
+                (app_context.canvas_settings.interface_width() / 2) as f64,
+                (app_context.canvas_settings.interface_height() / 2) as f64,
+            )?;
+            self.interface.draw(
+                context,
+                atlas,
+                &pointer.teleport(app_context.canvas_settings.inverse_interface_center()),
+                frame,
+            )?;
+            context.restore();
+        }
+
         Ok(())
     }
 }
@@ -457,6 +491,23 @@ impl State for LobbyState {
                     (js_sys::Math::random() * 50.0) as u64,
                     ParticleSort::Missile,
                 ));
+            }
+        }
+
+        if self.lobby.finished() {
+            if let Some(UIEvent::ButtonClick(value)) = self
+                .interface
+                .tick(&pointer.teleport(app_context.canvas_settings.inverse_interface_center()))
+            {
+                match value {
+                    BUTTON_REMATCH => {
+                        if self.lobby.is_local() {
+                            self.lobby.remake();
+                        } else {
+                        }
+                    }
+                    _ => (),
+                }
             }
         }
 
