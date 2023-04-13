@@ -51,8 +51,8 @@ impl LobbyState {
         }
 
         let button_rematch = ButtonElement::new(
-            (-36, -16),
-            (72, 32),
+            (-40, -12),
+            (80, 24),
             BUTTON_REMATCH,
             ButtonTrim::Glorious,
             ButtonClass::Action,
@@ -345,21 +345,6 @@ impl LobbyState {
             context.restore();
         }
 
-        if self.lobby.finished() {
-            context.save();
-            context.translate(
-                (app_context.canvas_settings.interface_width() / 2) as f64,
-                (app_context.canvas_settings.interface_height() / 2) as f64,
-            )?;
-            self.interface.draw(
-                context,
-                atlas,
-                &pointer.teleport(app_context.canvas_settings.inverse_interface_center()),
-                frame,
-            )?;
-            context.restore();
-        }
-
         Ok(())
     }
 }
@@ -368,10 +353,29 @@ impl State for LobbyState {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
+        interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
+        let frame = app_context.frame;
+        let pointer = &app_context.pointer;
+
         self.draw_game(context, atlas, app_context)?;
+
+        if self.lobby.finished() {
+            interface_context.save();
+            interface_context.translate(
+                (app_context.canvas_settings.interface_width() / 2) as f64,
+                (app_context.canvas_settings.interface_height() / 2) as f64,
+            )?;
+            self.interface.draw(
+                interface_context,
+                atlas,
+                &pointer.teleport(app_context.canvas_settings.inverse_interface_center()),
+                frame,
+            )?;
+            interface_context.restore();
+        }
 
         Ok(())
     }

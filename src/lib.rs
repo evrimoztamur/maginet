@@ -35,18 +35,32 @@ const RESOURCE_BASE_URL: &str = ".";
 #[cfg(not(feature = "deploy"))]
 const RESOURCE_BASE_URL: &str = "";
 
-#[wasm_bindgen(start)]
-fn start() -> Result<(), JsValue> {
-    console_error_panic_hook::set_once();
-
+fn init_canvas(
+    canvas_settings: &CanvasSettings,
+) -> Result<(HtmlCanvasElement, CanvasRenderingContext2d), JsValue> {
     let canvas = document()
         .create_element("canvas")?
         .dyn_into::<HtmlCanvasElement>()?;
 
+    canvas.set_width(canvas_settings.element_width());
+    canvas.set_height(canvas_settings.element_height());
+
+    let context = canvas
+        .get_context("2d")?
+        .unwrap()
+        .dyn_into::<CanvasRenderingContext2d>()?;
+
+    context.set_image_smoothing_enabled(false);
+
+    Ok((canvas, context))
+}
+
+#[wasm_bindgen(start)]
+fn start() -> Result<(), JsValue> {
+    console_error_panic_hook::set_once();
+
     let container_element = document().query_selector(&"main").unwrap().unwrap();
     let nav_element = document().query_selector(&"nav").unwrap().unwrap();
-
-    container_element.insert_before(&canvas, Some(&nav_element))?;
 
     let canvas_settings = CanvasSettings::new(
         384 + 16,
@@ -58,15 +72,10 @@ fn start() -> Result<(), JsValue> {
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
 
-    canvas.set_width(canvas_settings.element_width());
-    canvas.set_height(canvas_settings.element_height());
+    let (canvas, context) = init_canvas(&canvas_settings)?;
+    let (interface_canvas, interface_context) = init_canvas(&canvas_settings)?;
 
-    let context = canvas
-        .get_context("2d")?
-        .unwrap()
-        .dyn_into::<CanvasRenderingContext2d>()?;
-
-    context.set_image_smoothing_enabled(false);
+    container_element.insert_before(&canvas, Some(&nav_element))?;
 
     let atlas = document()
         .create_element("img")
@@ -108,7 +117,8 @@ fn start() -> Result<(), JsValue> {
 
             {
                 app.tick();
-                app.draw(&context, &atlas).unwrap();
+                app.draw(&context, &interface_context, &atlas, &interface_canvas)
+                    .unwrap();
             }
 
             request_animation_frame(f.borrow().as_ref().unwrap());

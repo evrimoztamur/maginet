@@ -57,6 +57,7 @@ impl State for MenuTeleport {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
+        interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
@@ -119,7 +120,7 @@ impl State for MenuTeleport {
 
         context.restore();
 
-        self.interface.draw(context, atlas, pointer, frame)?;
+        self.interface.draw(interface_context, atlas, pointer, frame)?;
 
         Ok(())
     }

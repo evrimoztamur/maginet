@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use shared::{LobbyError, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
-    console, CanvasRenderingContext2d, DomRectReadOnly, HtmlImageElement, KeyboardEvent,
-    MouseEvent, TouchEvent,
+    console, CanvasRenderingContext2d, DomRectReadOnly, HtmlCanvasElement, HtmlImageElement,
+    KeyboardEvent, MouseEvent, TouchEvent,
 };
 
 use super::{LobbyState, MenuState, MenuTeleport, Pointer, BOARD_OFFSET, BOARD_SCALE};
@@ -53,7 +53,9 @@ impl App {
     pub fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
+        interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
+        interface_canvas: &HtmlCanvasElement,
     ) -> Result<(), JsValue> {
         context.clear_rect(
             0.0,
@@ -61,19 +63,31 @@ impl App {
             self.app_context.canvas_settings.element_width() as f64,
             self.app_context.canvas_settings.element_height() as f64,
         );
+        interface_context.clear_rect(
+            0.0,
+            0.0,
+            self.app_context.canvas_settings.element_width() as f64,
+            self.app_context.canvas_settings.element_height() as f64,
+        );
+
         context.save();
+
         if self.app_context.canvas_settings.orientation() {
             context.translate(
                 self.app_context.canvas_settings.canvas_width() as f64,
                 self.app_context.canvas_settings.canvas_height() as f64,
             )?;
+
             context.rotate(std::f64::consts::PI / 2.0)?;
+
             context.translate(
                 -(self.app_context.canvas_settings.canvas_width() as f64),
                 -(self.app_context.canvas_settings.canvas_height() as f64),
             )?;
         }
+
         context.scale(2.0, 2.0)?;
+
         context.translate(
             self.app_context.canvas_settings.padding_x() as f64,
             self.app_context.canvas_settings.padding_y() as f64,
@@ -84,16 +98,19 @@ impl App {
         if atlas.complete() {
             result = match &mut self.state_sort {
                 StateSort::MenuMain(menu_state) => {
-                    menu_state.draw(context, atlas, &self.app_context)
+                    menu_state.draw(context, interface_context, atlas, &self.app_context)
                 }
                 StateSort::Lobby(lobby_state) => {
-                    lobby_state.draw(context, atlas, &self.app_context)
+                    lobby_state.draw(context, interface_context, atlas, &self.app_context)
                 }
                 StateSort::MenuTeleport(menu_state) => {
-                    menu_state.draw(context, atlas, &self.app_context)
+                    menu_state.draw(context, interface_context, atlas, &self.app_context)
                 }
             };
         }
+
+        context.draw_image_with_html_canvas_element(&interface_canvas, 0.0, 0.0)?;
+
         // DRAW cursor
         draw_sprite(
             context,

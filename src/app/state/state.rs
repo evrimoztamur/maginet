@@ -7,6 +7,7 @@ pub trait State {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
+        interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue>;

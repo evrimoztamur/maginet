@@ -149,6 +149,7 @@ impl State for MenuState {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
+        interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
@@ -175,8 +176,6 @@ impl State for MenuState {
         draw_sprite(context, atlas, 96.0, 96.0, 32.0, 32.0, 26.0, 6.0)?;
         context.restore();
 
-        self.interface.draw(context, atlas, pointer, frame)?;
-
         context.save();
         context.translate(108.0, 112.0)?;
 
@@ -194,6 +193,10 @@ impl State for MenuState {
             draw_mage(context, atlas, mage, frame, mage.team, true, false)?;
             context.restore();
         }
+
+        self.interface
+            .draw(interface_context, atlas, pointer, frame)?;
+
         context.restore();
 
         Ok(())
