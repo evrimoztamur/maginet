@@ -233,18 +233,32 @@ impl App {
     }
 
     pub fn on_key_down(&mut self, event: KeyboardEvent) {
-        match event.code().as_str() {
-            "KeyB" => match &mut self.state_sort {
-                StateSort::Lobby(lobby_state) => {
-                    lobby_state.take_best_turn();
-                }
-                _ => (),
-            },
-            "KeyN" => {
-                // console::log_1(&format!("{:?}", app.lobby.game.all_available_turns(app.lobby.game.turn_for())).into());
+        match &mut self.state_sort {
+            StateSort::Lobby(lobby_state) => {
+                match event.code().as_str() {
+                    "KeyB" => {
+                        lobby_state.take_best_turn();
+                    }
+                    "KeyN" => {
+                        console::log_1(
+                            &format!(
+                                "{:?}",
+                                lobby_state
+                                    .lobby()
+                                    .game
+                                    .all_available_turns(lobby_state.lobby().game.turn_for())
+                            )
+                            .into(),
+                        );
+                    }
+                    "KeyM" => {
+                        console::log_1(&format!("{:?}", lobby_state.lobby()).into());
+                    }
+                    _ => (),
+                };
             }
             _ => (),
-        };
+        }
     }
 
     pub fn on_session_response(&mut self, value: JsValue) {
