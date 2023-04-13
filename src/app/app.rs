@@ -125,7 +125,7 @@ impl App {
 
         context.restore();
 
-        self.app_context.frame += 1;
+        self.app_context.frame = (window().performance().unwrap().now() * 0.06) as u64;
         self.app_context.pointer.swap();
 
         result
