@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use shared::{Lobby, LobbyError, LobbyID, LobbySettings, Mage, Message, Position, Team, Turn};
+use shared::{Lobby, LobbyError, LobbyID, LobbySettings, Mage, Message, Position, Team, Turn, LobbySort};
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
@@ -14,7 +14,7 @@ use crate::{
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
     net::{
         create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
-        MessagePool,
+        send_rematch, MessagePool,
     },
     window,
 };
@@ -396,7 +396,7 @@ impl State for LobbyState {
                     if all_ready {
                         let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
                             .then(&self.message_closure);
-                    } else {
+                    } else if self.lobby.settings.lobby_sort != LobbySort::Online(0) {
                         let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
                     }
 
@@ -507,7 +507,11 @@ impl State for LobbyState {
                     BUTTON_REMATCH => {
                         if self.lobby.is_local() {
                             self.lobby.remake();
-                        } else {
+                        } else if let Ok(lobby_id) = self.lobby_id() {
+                            let session_id = app_context.session_id.clone().unwrap();
+                            let _ = send_rematch(lobby_id, session_id)
+                                .unwrap()
+                                .then(&self.message_closure);
                         }
                     }
                     _ => (),

@@ -96,15 +96,13 @@ pub fn create_new_lobby(lobby_settings: LobbySettings) -> Option<Promise> {
     }
 }
 
-pub fn send_ready(lobby_id: LobbyID, session_id: String) -> Option<Promise> {
+pub fn post_probe(url: String, session_id: String) -> Option<Promise> {
     let session_request = SessionRequest { session_id };
 
     if let Ok(json) = serde_json::to_string(&session_request) {
         let mut opts = RequestInit::new();
         opts.method("POST");
         opts.body(Some(&json.into()));
-
-        let url = format!("{API_URL}/lobby/{lobby_id}/ready");
 
         let request = &Request::new_with_str_and_init(&url, &opts).unwrap();
 
@@ -117,6 +115,14 @@ pub fn send_ready(lobby_id: LobbyID, session_id: String) -> Option<Promise> {
     } else {
         None
     }
+}
+
+pub fn send_ready(lobby_id: LobbyID, session_id: String) -> Option<Promise> {
+    post_probe(format!("{API_URL}/lobby/{lobby_id}/ready"), session_id)
+}
+
+pub fn send_rematch(lobby_id: LobbyID, session_id: String) -> Option<Promise> {
+    post_probe(format!("{API_URL}/lobby/{lobby_id}/rematch"), session_id)
 }
 
 pub fn send_message(lobby_id: LobbyID, session_id: String, message: Message) -> Option<Promise> {
