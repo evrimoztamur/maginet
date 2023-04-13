@@ -151,7 +151,7 @@ pub fn draw_mage(
     game_finished: bool,
 ) -> Result<(), JsValue> {
     let bounce = (if mage.is_alive() && (mage.team == team && game_started || game_finished) {
-        2 - ((frame as i64 / 6 + mage.index as i64 / 2) % 4 - 2).abs()
+        -((frame as i64 / 6 + mage.index as i64 / 2) % 4 - 2).abs()
     } else {
         0
     }) as f64;
@@ -164,15 +164,22 @@ pub fn draw_mage(
 
     context.save();
 
-    if game_finished && mage.is_alive() {
-        context.translate(
-            0.0,
-            ((frame as i64 % 80 - 40).max(0) - 20).abs() as f64 - 20.0,
-        )?;
-        context
-            .rotate(((frame as i64 % 80 - 35).max(0) / 5) as f64 * std::f64::consts::PI / 2.0)?;
-    } else if !mage.is_alive() {
+    if mage.is_alive() {
+        draw_sprite(context, atlas, 0.0, 192.0, 32.0, 32.0, -15.0, -20.0)?;
+
+        if game_finished {
+            context.translate(
+                0.0,
+                ((frame as i64 % 80 - 40).max(0) - 20).abs() as f64 - 20.0,
+            )?;
+            context.rotate(
+                ((frame as i64 % 80 - 35).max(0) / 5) as f64 * std::f64::consts::PI / 2.0,
+            )?;
+        }
+    } else {
         context.translate(0.0, 4.0)?;
+
+        draw_sprite(context, atlas, 32.0, 192.0, 32.0, 32.0, -15.0, -20.0)?;
     }
 
     let sprite_x = match mage.sort {
