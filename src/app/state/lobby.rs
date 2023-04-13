@@ -283,7 +283,7 @@ impl LobbyState {
                         )?;
                         context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
                         let bop = (frame / 10 % 3) as f64;
-                        context.translate(bop - 4.0, if is_diagonal { bop } else { 0.0 })?;
+                        context.translate(bop - 4.0, if is_diagonal { bop - 4.0 } else { 0.0 })?;
                         draw_sprite(
                             context,
                             atlas,
