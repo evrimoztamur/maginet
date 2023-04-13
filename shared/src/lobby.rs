@@ -105,7 +105,7 @@ impl Lobby {
         let mut rng = ChaCha8Rng::seed_from_u64(seed as u64);
         (0..4)
             .into_iter()
-            .map(|_| ((rng.next_u64() % 5) as usize).into())
+            .map(|_| ((rng.next_u64() % 4) as usize).into())
             .collect::<Vec<MageSort>>()
     }
 
