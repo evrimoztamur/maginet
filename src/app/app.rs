@@ -205,6 +205,8 @@ impl App {
                                     self.app_context.pointer.button = true;
                                 } else if lobby_state.live_occupied(current_tile) {
                                     self.app_context.pointer.button = true;
+                                } else if lobby_state.is_interface_active() {
+                                    self.app_context.pointer.button = true;
                                 }
                             }
                             _ => (),

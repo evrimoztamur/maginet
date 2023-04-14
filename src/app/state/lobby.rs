@@ -347,6 +347,10 @@ impl LobbyState {
 
         Ok(())
     }
+
+    pub fn is_interface_active(&self) -> bool {
+        self.lobby.finished()
+    }
 }
 
 impl State for LobbyState {
@@ -362,7 +366,7 @@ impl State for LobbyState {
 
         self.draw_game(context, atlas, app_context)?;
 
-        if self.lobby.finished() {
+        if self.is_interface_active() {
             interface_context.save();
             interface_context.translate(
                 (app_context.canvas_settings.interface_width() / 2) as f64,
@@ -498,7 +502,7 @@ impl State for LobbyState {
             }
         }
 
-        if self.lobby.finished() {
+        if self.is_interface_active() {
             if let Some(UIEvent::ButtonClick(value)) = self
                 .interface
                 .tick(&pointer.teleport(app_context.canvas_settings.inverse_interface_center()))
