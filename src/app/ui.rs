@@ -30,7 +30,7 @@ pub enum Alignment {
 
 pub enum ContentElement {
     Text(String, Alignment),
-    // Sprite((i32, i32), (i32, i32)),
+    Sprite((i32, i32), (i32, i32)),
     // List(Vec<ContentElement>),
 }
 
@@ -48,6 +48,16 @@ impl UIElement for ContentElement {
             ContentElement::Text(text, _) => {
                 draw_text(context, atlas, (-text_length(text) / 2) as f64, -4.0, text)
             }
+            ContentElement::Sprite(position, size) => draw_sprite(
+                context,
+                atlas,
+                position.0 as f64,
+                position.1 as f64,
+                size.0 as f64,
+                size.1 as f64,
+                -size.0 as f64 / 2.0,
+                -size.1 as f64 / 2.0,
+            ),
         }?;
 
         context.restore();

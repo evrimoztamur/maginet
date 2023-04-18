@@ -57,12 +57,12 @@ impl LobbyState {
         }
 
         let button_menu = ToggleButtonElement::new(
-            (-128 - 52 - 8, -9),
-            (52, 18),
+            (-128 - 18 - 8, -9),
+            (20, 20),
             BUTTON_MENU,
             ButtonTrim::Round,
             ButtonClass::Bright,
-            crate::app::ContentElement::Text("Menu".to_string(), Alignment::Center),
+            crate::app::ContentElement::Sprite((112, 32), (16, 16)),
         );
 
         let button_rematch = ButtonElement::new(

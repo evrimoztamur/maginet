@@ -83,7 +83,7 @@ fn start() -> Result<(), JsValue> {
         .dyn_into::<HtmlImageElement>()
         .unwrap();
 
-    atlas.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=5"));
+    atlas.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
 
     let app = App::new(canvas_settings);
 
