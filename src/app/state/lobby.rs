@@ -1,15 +1,17 @@
 use std::{cell::RefCell, rc::Rc};
 
-use shared::{Lobby, LobbyError, LobbyID, LobbySettings, Mage, Message, Position, Team, Turn, LobbySort};
+use shared::{
+    Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Message, Position, Team, Turn,
+};
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use super::State;
+use super::{MenuState, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, Interface, Particle,
-        ParticleSort, StateSort, UIElement, UIEvent, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE,
-        BOARD_SCALE_F64,
+        Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, ConfirmButtonElement,
+        Interface, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
+        BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE, BOARD_SCALE_F64,
     },
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
     net::{
@@ -20,8 +22,12 @@ use crate::{
 };
 
 const BUTTON_REMATCH: usize = 1;
+const BUTTON_LEAVE: usize = 2;
+const BUTTON_MENU: usize = 10;
+
 pub struct LobbyState {
     interface: Interface,
+    button_menu: ToggleButtonElement,
     lobby: Lobby,
     last_move_frame: u64,
     active_mage: Option<usize>,
@@ -50,19 +56,38 @@ impl LobbyState {
                 .then(&message_closure);
         }
 
+        let button_menu = ToggleButtonElement::new(
+            (-128 - 52 - 8, -9),
+            (52, 18),
+            BUTTON_MENU,
+            ButtonTrim::Round,
+            ButtonClass::Bright,
+            crate::app::ContentElement::Text("Menu".to_string(), Alignment::Center),
+        );
+
         let button_rematch = ButtonElement::new(
-            (-40, -12),
-            (80, 24),
+            (-44, -24),
+            (88, 24),
             BUTTON_REMATCH,
             ButtonTrim::Glorious,
             ButtonClass::Action,
             crate::app::ContentElement::Text("Rematch".to_string(), Alignment::Center),
         );
 
-        let root_element = Interface::new(vec![Box::new(button_rematch)]);
+        let button_leave = ConfirmButtonElement::new(
+            (-36, 8),
+            (72, 16),
+            BUTTON_LEAVE,
+            ButtonTrim::Glorious,
+            ButtonClass::Default,
+            crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
+        );
+
+        let root_element = Interface::new(vec![Box::new(button_rematch), Box::new(button_leave)]);
 
         LobbyState {
             interface: root_element,
+            button_menu,
             lobby: Lobby::new(lobby_settings),
             last_move_frame: 0,
             active_mage: None,
@@ -349,7 +374,7 @@ impl LobbyState {
     }
 
     pub fn is_interface_active(&self) -> bool {
-        self.lobby.finished()
+        self.button_menu.selected() || self.lobby.finished()
     }
 }
 
@@ -366,18 +391,24 @@ impl State for LobbyState {
 
         self.draw_game(context, atlas, app_context)?;
 
-        if self.is_interface_active() {
+        {
+            let interface_pointer =
+                pointer.teleport(app_context.canvas_settings.inverse_interface_center());
+
             interface_context.save();
             interface_context.translate(
                 (app_context.canvas_settings.interface_width() / 2) as f64,
                 (app_context.canvas_settings.interface_height() / 2) as f64,
             )?;
-            self.interface.draw(
-                interface_context,
-                atlas,
-                &pointer.teleport(app_context.canvas_settings.inverse_interface_center()),
-                frame,
-            )?;
+
+            self.button_menu
+                .draw(interface_context, atlas, &interface_pointer, frame)?;
+
+            if self.is_interface_active() {
+                self.interface
+                    .draw(interface_context, atlas, &interface_pointer, frame)?;
+            }
+
             interface_context.restore();
         }
 
@@ -454,37 +485,63 @@ impl State for LobbyState {
             message_pool.clear();
         }
 
-        if pointer.alt_clicked() {
-            self.active_mage = None;
-        }
+        let interface_pointer =
+            pointer.teleport(app_context.canvas_settings.inverse_interface_center());
 
-        if pointer.clicked() {
-            if let Some(selected_tile) =
-                self.lobby
-                    .game
-                    .location_as_position(pointer.location, BOARD_OFFSET, BOARD_SCALE)
-            {
-                if let Some(active_mage) = self.get_active_mage() {
-                    let from = active_mage.position;
+        self.button_menu.tick(&interface_pointer);
 
-                    if let Some(mut move_targets) = self.lobby.game.take_move(from, selected_tile) {
-                        if !self.lobby.is_local() && session_id.is_some() {
-                            send_message(
-                                self.lobby_id().unwrap(),
-                                session_id.clone().unwrap(),
-                                Message::Move(Turn(from, selected_tile)),
-                            );
+        if self.is_interface_active() {
+            if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(&interface_pointer) {
+                match value {
+                    BUTTON_REMATCH => {
+                        if self.lobby.is_local() {
+                            self.lobby.remake();
+                        } else if let Ok(lobby_id) = self.lobby_id() {
+                            let session_id = app_context.session_id.clone().unwrap();
+                            let _ = send_rematch(lobby_id, session_id)
+                                .unwrap()
+                                .then(&self.message_closure);
                         }
+                    }
+                    BUTTON_LEAVE => return Some(StateSort::MenuMain(MenuState::new())),
+                    _ => (),
+                }
+            }
+        } else {
+            if pointer.alt_clicked() {
+                self.active_mage = None;
+            }
 
-                        target_positions.append(&mut move_targets);
+            if pointer.clicked() {
+                if let Some(selected_tile) = self.lobby.game.location_as_position(
+                    pointer.location,
+                    BOARD_OFFSET,
+                    BOARD_SCALE,
+                ) {
+                    if let Some(active_mage) = self.get_active_mage() {
+                        let from = active_mage.position;
 
-                        self.active_mage = None;
-                        self.last_move_frame = frame;
+                        if let Some(mut move_targets) =
+                            self.lobby.game.take_move(from, selected_tile)
+                        {
+                            if !self.lobby.is_local() && session_id.is_some() {
+                                send_message(
+                                    self.lobby_id().unwrap(),
+                                    session_id.clone().unwrap(),
+                                    Message::Move(Turn(from, selected_tile)),
+                                );
+                            }
+
+                            target_positions.append(&mut move_targets);
+
+                            self.active_mage = None;
+                            self.last_move_frame = frame;
+                        } else {
+                            self.select_mage_at(session_id.as_ref(), &selected_tile);
+                        }
                     } else {
                         self.select_mage_at(session_id.as_ref(), &selected_tile);
                     }
-                } else {
-                    self.select_mage_at(session_id.as_ref(), &selected_tile);
                 }
             }
         }
@@ -499,27 +556,6 @@ impl State for LobbyState {
                     (js_sys::Math::random() * 50.0) as u64,
                     ParticleSort::Missile,
                 ));
-            }
-        }
-
-        if self.is_interface_active() {
-            if let Some(UIEvent::ButtonClick(value)) = self
-                .interface
-                .tick(&pointer.teleport(app_context.canvas_settings.inverse_interface_center()))
-            {
-                match value {
-                    BUTTON_REMATCH => {
-                        if self.lobby.is_local() {
-                            self.lobby.remake();
-                        } else if let Ok(lobby_id) = self.lobby_id() {
-                            let session_id = app_context.session_id.clone().unwrap();
-                            let _ = send_rematch(lobby_id, session_id)
-                                .unwrap()
-                                .then(&self.message_closure);
-                        }
-                    }
-                    _ => (),
-                }
             }
         }
 

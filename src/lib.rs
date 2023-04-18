@@ -210,8 +210,10 @@ fn start() -> Result<(), JsValue> {
     {
         let app = app.clone();
         let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
-            let mut app = app.borrow_mut();
-            app.on_touch_end(event);
+            if let Some(bound) = bound.borrow().as_deref() {
+                let mut app = app.borrow_mut();
+                app.on_touch_end(bound, event);
+            }
         });
         document()
             .add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;

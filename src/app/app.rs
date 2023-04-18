@@ -71,6 +71,7 @@ impl App {
         );
 
         context.save();
+        interface_context.save();
 
         if self.app_context.canvas_settings.orientation() {
             context.translate(
@@ -93,6 +94,11 @@ impl App {
             self.app_context.canvas_settings.padding_y() as f64,
         )?;
 
+        interface_context.translate(
+            self.app_context.canvas_settings.padding_x() as f64,
+            self.app_context.canvas_settings.padding_y() as f64,
+        )?;
+
         let mut result = Ok(());
 
         if atlas.complete() {
@@ -109,11 +115,9 @@ impl App {
             };
         }
 
-        context.draw_image_with_html_canvas_element(&interface_canvas, 0.0, 0.0)?;
-
         // DRAW cursor
         draw_sprite(
-            context,
+            interface_context,
             atlas,
             64.0,
             8.0,
@@ -123,7 +127,14 @@ impl App {
             self.app_context.pointer.location.1 as f64 - 1.0,
         )?;
 
+        context.draw_image_with_html_canvas_element(
+            &interface_canvas,
+            -(self.app_context.canvas_settings.padding_x() as f64),
+            -(self.app_context.canvas_settings.padding_y() as f64),
+        )?;
+
         context.restore();
+        interface_context.restore();
 
         self.app_context.frame = (window().performance().unwrap().now() * 0.06) as u64;
         self.app_context.pointer.swap();
@@ -188,28 +199,32 @@ impl App {
             {
                 match &mut self.state_sort {
                     StateSort::Lobby(lobby_state) => {
-                        match (
-                            lobby_state.location_as_position(
-                                pointer_location,
-                                BOARD_OFFSET,
-                                BOARD_SCALE,
-                            ),
-                            lobby_state.location_as_position(
-                                self.app_context.pointer.location,
-                                BOARD_OFFSET,
-                                BOARD_SCALE,
-                            ),
-                        ) {
-                            (Some(current_tile), Some(last_tile)) => {
-                                if current_tile == last_tile {
-                                    self.app_context.pointer.button = true;
-                                } else if lobby_state.live_occupied(current_tile) {
-                                    self.app_context.pointer.button = true;
-                                } else if lobby_state.is_interface_active() {
-                                    self.app_context.pointer.button = true;
+                        if pointer_location.0 < 0 {
+                            self.app_context.pointer.button = true;
+                        } else {
+                            match (
+                                lobby_state.location_as_position(
+                                    pointer_location,
+                                    BOARD_OFFSET,
+                                    BOARD_SCALE,
+                                ),
+                                lobby_state.location_as_position(
+                                    self.app_context.pointer.location,
+                                    BOARD_OFFSET,
+                                    BOARD_SCALE,
+                                ),
+                            ) {
+                                (Some(current_tile), Some(last_tile)) => {
+                                    if current_tile == last_tile {
+                                        self.app_context.pointer.button = true;
+                                    } else if lobby_state.live_occupied(current_tile) {
+                                        self.app_context.pointer.button = true;
+                                    } else if lobby_state.is_interface_active() {
+                                        self.app_context.pointer.button = true;
+                                    }
                                 }
+                                _ => (),
                             }
-                            _ => (),
                         }
                     }
                     _ => self.app_context.pointer.button = true,
@@ -218,11 +233,18 @@ impl App {
 
             self.app_context.pointer.location = pointer_location;
         }
-
-        event.prevent_default();
     }
 
-    pub fn on_touch_end(&mut self, _: TouchEvent) {
+    pub fn on_touch_end(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
+        if let Some(touch) = event.target_touches().item(0) {
+            let x = touch.client_x() - bound.left() as i32;
+            let y = touch.client_y() - bound.top() as i32;
+
+            let pointer_location =
+                App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
+            self.app_context.pointer.location = pointer_location;
+        }
+
         self.app_context.pointer.button = false;
     }
 

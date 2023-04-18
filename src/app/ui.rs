@@ -66,6 +66,7 @@ pub enum ButtonTrim {
 pub enum ButtonClass {
     Default,
     Action,
+    Bright,
 }
 
 pub struct ButtonElement {
@@ -143,6 +144,15 @@ impl UIElement for ButtonElement {
                     context.set_fill_style(&"#aa5f00".into());
                 } else {
                     context.set_fill_style(&"#7f1f00".into());
+                }
+            }
+            ButtonClass::Bright => {
+                if self.selected {
+                    context.set_fill_style(&"#d43f00".into());
+                } else if self.hovered(pointer) {
+                    context.set_fill_style(&"#007faa".into());
+                } else {
+                    context.set_fill_style(&"#006080".into());
                 }
             }
         }
@@ -225,6 +235,113 @@ impl UIElement for ButtonElement {
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
         if self.clicked(&pointer) {
             Some(UIEvent::ButtonClick(self.value))
+        } else {
+            None
+        }
+    }
+}
+
+pub struct ConfirmButtonElement {
+    button: ButtonElement,
+}
+
+impl ConfirmButtonElement {
+    pub fn new(
+        position: (i32, i32),
+        size: (i32, i32),
+        value: usize,
+        trim: ButtonTrim,
+        class: ButtonClass,
+        content: ContentElement,
+    ) -> ConfirmButtonElement {
+        ConfirmButtonElement {
+            button: ButtonElement::new(position, size, value, trim, class, content),
+        }
+    }
+}
+
+impl UIElement for ConfirmButtonElement {
+    fn draw(
+        &self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlImageElement,
+        pointer: &Pointer,
+        frame: u64,
+    ) -> Result<(), JsValue> {
+        context.save();
+
+        if self.button.selected {
+            context.translate(
+                ((frame as i64 / 4 - 1) % 4 - 2).abs() as f64 - 1.0,
+                ((frame as i64 / 2 - 1) % 4 - 2).abs() as f64 - 1.0,
+            )?;
+        }
+
+        self.button.draw(context, atlas, pointer, frame)?;
+
+        context.restore();
+
+        Ok(())
+    }
+
+    fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
+        if pointer.clicked() {
+            if self.button.clicked(&pointer) {
+                if self.button.selected {
+                    Some(UIEvent::ButtonClick(self.button.value))
+                } else {
+                    self.button.selected = true;
+                    None
+                }
+            } else {
+                self.button.selected = false;
+                None
+            }
+        } else {
+            None
+        }
+    }
+}
+
+pub struct ToggleButtonElement {
+    button: ButtonElement,
+}
+
+impl ToggleButtonElement {
+    pub fn new(
+        position: (i32, i32),
+        size: (i32, i32),
+        value: usize,
+        trim: ButtonTrim,
+        class: ButtonClass,
+        content: ContentElement,
+    ) -> ToggleButtonElement {
+        ToggleButtonElement {
+            button: ButtonElement::new(position, size, value, trim, class, content),
+        }
+    }
+
+    pub fn selected(&self) -> bool {
+        self.button.selected
+    }
+}
+
+impl UIElement for ToggleButtonElement {
+    fn draw(
+        &self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlImageElement,
+        pointer: &Pointer,
+        frame: u64,
+    ) -> Result<(), JsValue> {
+        self.button.draw(context, atlas, pointer, frame)
+    }
+
+    fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
+        if self.button.clicked(&pointer) {
+            self.button.selected ^= true;
+
+            Some(UIEvent::ButtonClick(self.button.value))
         } else {
             None
         }
