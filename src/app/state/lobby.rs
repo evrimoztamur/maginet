@@ -495,7 +495,9 @@ impl State for LobbyState {
                 match value {
                     BUTTON_REMATCH => {
                         if self.lobby.is_local() {
-                            self.lobby.remake();
+                            return Some(StateSort::Lobby(LobbyState::new(
+                                self.lobby.settings.clone(),
+                            )));
                         } else if let Ok(lobby_id) = self.lobby_id() {
                             let session_id = app_context.session_id.clone().unwrap();
                             let _ = send_rematch(lobby_id, session_id)
