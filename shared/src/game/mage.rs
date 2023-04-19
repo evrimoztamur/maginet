@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Mana, Position, Spell, Team};
 
+const DIAGONALS_THRESHOLD: u8 = 1;
+
 /// A [`MageSort`] is the distinct type of the mage, determining its visual appearance and spell.
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 pub enum MageSort {
@@ -66,6 +68,6 @@ impl Mage {
 
     /// Determines if the [`Mage`] has access to the diagonal moves.
     pub fn has_diagonals(&self) -> bool {
-        self.mana <= 2
+        self.mana <= DIAGONALS_THRESHOLD
     }
 }
