@@ -1,4 +1,5 @@
 debug/
+deploy/
 lobbies/
 pkg/
 target/
@@ -6,3 +7,4 @@ target/
 **/*.rs.bk
 
 *.pdb
+*.zip
