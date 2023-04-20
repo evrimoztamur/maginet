@@ -7,7 +7,10 @@ use web_sys::{Request, RequestInit, Response};
 
 use crate::window;
 
+#[cfg(feature = "deploy")]
 const API_URL: &str = "https://maginet.evrim.zone";
+#[cfg(not(feature = "deploy"))]
+const API_URL: &str = "https://tunnel.evrim.zone";
 
 pub struct MessagePool {
     pub messages: Vec<Message>,
