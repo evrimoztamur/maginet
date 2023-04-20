@@ -190,7 +190,15 @@ impl State for MenuState {
                 -49.0 + mage.position.0 as f64 * 32.0,
                 15.0 + if mage.team == Team::Red { 0.0 } else { 1.0 } as f64 * 32.0,
             )?;
-            draw_mage(context, atlas, mage, frame, self.sentinel_lobby.game.starting_team(), true, false)?;
+            draw_mage(
+                context,
+                atlas,
+                mage,
+                frame,
+                self.sentinel_lobby.game.starting_team(),
+                true,
+                false,
+            )?;
             context.restore();
         }
 

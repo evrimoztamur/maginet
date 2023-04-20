@@ -120,7 +120,8 @@ impl State for MenuTeleport {
 
         context.restore();
 
-        self.interface.draw(interface_context, atlas, pointer, frame)?;
+        self.interface
+            .draw(interface_context, atlas, pointer, frame)?;
 
         Ok(())
     }

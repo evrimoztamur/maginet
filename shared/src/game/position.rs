@@ -38,7 +38,10 @@ impl Position {
 
     /// Rotates a [`Position`] 180 degrees.
     pub fn rotate(&self, board: &Board) -> Position {
-        Position(board.width as i8 - self.0 - 1, board.height as i8 - self.1 - 1)
+        Position(
+            board.width as i8 - self.0 - 1,
+            board.height as i8 - self.1 - 1,
+        )
     }
 
     /// Aligns a [`Position`] into the team's perspective.

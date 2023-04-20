@@ -405,6 +405,36 @@ impl State for LobbyState {
                 .draw(interface_context, atlas, &interface_pointer, frame)?;
 
             if self.is_interface_active() {
+                for player in self
+                    .lobby
+                    .players()
+                    .values()
+                    .filter(|player| player.rematch)
+                {
+                    let first_mage = self
+                        .lobby
+                        .game
+                        .iter_mages()
+                        .find(|mage| mage.team == player.team);
+
+                    if let Some(first_mage) = first_mage {
+                        context.save();
+
+                        match player.team {
+                            Team::Red => {
+                                context.translate(-32.0, 0.0)?;
+                            }
+                            Team::Blue => {
+                                context.translate(32.0, 0.0)?;
+                            }
+                        }
+
+                        draw_mage(context, atlas, first_mage, frame, player.team, true, true)?;
+
+                        context.restore();
+                    }
+                }
+
                 self.interface
                     .draw(interface_context, atlas, &interface_pointer, frame)?;
             }

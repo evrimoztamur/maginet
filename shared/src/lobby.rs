@@ -26,10 +26,13 @@ impl<T> From<Result<T, LobbyError>> for Message {
     }
 }
 
+/// A player in a lobby, used in online lobbies only.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct Player {
-    team: Team,
-    rematch: bool,
+pub struct Player {
+    /// The player's team.
+    pub team: Team,
+    /// Whether the player wants to rematch or not.
+    pub rematch: bool,
 }
 
 impl Player {
@@ -274,6 +277,11 @@ impl Lobby {
             Some(session_id) => self.players.contains_key(session_id),
             None => false,
         }
+    }
+
+    /// Returns the players.
+    pub fn players(&self) -> &HashMap<String, Player> {
+        &self.players
     }
 }
 
