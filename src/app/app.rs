@@ -73,18 +73,10 @@ impl App {
         context.save();
         interface_context.save();
 
-        if self.app_context.canvas_settings.orientation() {
-            context.translate(
-                self.app_context.canvas_settings.canvas_width() as f64,
-                self.app_context.canvas_settings.canvas_height() as f64,
-            )?;
+        if self.app_context.canvas_settings.orientation {
+            context.translate(self.app_context.canvas_settings.element_width() as f64, 0.0)?;
 
             context.rotate(std::f64::consts::PI / 2.0)?;
-
-            context.translate(
-                -(self.app_context.canvas_settings.canvas_width() as f64),
-                -(self.app_context.canvas_settings.canvas_height() as f64),
-            )?;
         }
 
         context.scale(2.0, 2.0)?;
@@ -124,7 +116,7 @@ impl App {
             16.0,
             16.0,
             self.app_context.pointer.location.0 as f64 - 5.0,
-            self.app_context.pointer.location.1 as f64 - 1.0,
+            self.app_context.pointer.location.1 as f64 - 2.0,
         )?;
 
         context.draw_image_with_html_canvas_element(
@@ -317,66 +309,48 @@ impl App {
 
 #[derive(Clone, Default)]
 pub struct CanvasSettings {
-    interface_width: u32,
-    interface_height: u32,
-    canvas_width: u32,
-    canvas_height: u32,
-    canvas_scale: u32,
-    orientation: bool,
+    pub interface_width: u32,
+    pub interface_height: u32,
+    pub canvas_width: u32,
+    pub canvas_height: u32,
+    pub canvas_scale: u32,
+    pub orientation: bool,
 }
 
 impl CanvasSettings {
-    pub fn interface_width(&self) -> u32 {
-        if self.orientation() {
-            self.interface_height
-        } else {
-            self.interface_width
-        }
-    }
-    pub fn interface_height(&self) -> u32 {
-        if self.orientation() {
-            self.interface_width
-        } else {
-            self.interface_height
-        }
-    }
     pub fn inverse_interface_center(&self) -> (i32, i32) {
         (
-            -((self.interface_width() / 2) as i32),
-            -((self.interface_height() / 2) as i32),
+            -((self.interface_width / 2) as i32),
+            -((self.interface_height / 2) as i32),
         )
     }
-    pub fn canvas_width(&self) -> u32 {
-        if self.orientation() {
-            self.canvas_height
-        } else {
-            self.canvas_width
-        }
-    }
-    pub fn canvas_height(&self) -> u32 {
-        if self.orientation() {
-            self.canvas_width
-        } else {
-            self.canvas_height
-        }
-    }
+
     pub fn element_width(&self) -> u32 {
-        self.canvas_width() * self.canvas_scale
+        if self.orientation {
+            self.canvas_height * self.canvas_scale
+        } else {
+            self.canvas_width * self.canvas_scale
+        }
     }
+
     pub fn element_height(&self) -> u32 {
-        self.canvas_height() * self.canvas_scale
+        if self.orientation {
+            self.canvas_width * self.canvas_scale
+        } else {
+            self.canvas_height * self.canvas_scale
+        }
     }
+
     pub fn padding_x(&self) -> u32 {
-        (self.canvas_width() - self.interface_width) / 2
+        (self.canvas_width - self.interface_width) / 2
     }
+
     pub fn padding_y(&self) -> u32 {
-        (self.canvas_height() - self.interface_height) / 2
+        (self.canvas_height - self.interface_height) / 2
     }
+
     pub fn padding(&self) -> (i32, i32) {
         (self.padding_x() as i32, self.padding_y() as i32)
-    }
-    pub fn orientation(&self) -> bool {
-        self.orientation
     }
 
     pub fn new(

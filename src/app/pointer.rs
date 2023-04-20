@@ -12,13 +12,13 @@ pub struct Pointer {
 impl Pointer {
     pub fn new(canvas_settings: &CanvasSettings) -> Pointer {
         let midpoint = (
-            canvas_settings.canvas_width() as i32 / 2,
-            canvas_settings.canvas_height() as i32 / 2,
+            canvas_settings.canvas_width as i32 / 2,
+            canvas_settings.canvas_height as i32 / 2,
         );
 
         Pointer {
-            location: midpoint,
             real: midpoint,
+            location: Pointer::location_from_real(canvas_settings, midpoint),
             ..Default::default()
         }
     }
@@ -51,15 +51,15 @@ impl Pointer {
     }
 
     pub fn location_from_real(canvas_settings: &CanvasSettings, real: (i32, i32)) -> (i32, i32) {
-        let orientation = canvas_settings.orientation();
         let flip = (
-            canvas_settings.interface_width() as i32,
-            canvas_settings.interface_height() as i32,
+            canvas_settings.interface_width as i32,
+            canvas_settings.interface_height as i32,
         );
+
         let padding = canvas_settings.padding();
 
-        if orientation {
-            (real.1 - padding.1, flip.0 - (real.0 - padding.0))
+        if canvas_settings.orientation {
+            (real.1 - padding.0, flip.0 - (real.0 - padding.1))
         } else {
             (real.0 - padding.0, real.1 - padding.1)
         }

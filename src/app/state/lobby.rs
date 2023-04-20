@@ -397,8 +397,8 @@ impl State for LobbyState {
 
             interface_context.save();
             interface_context.translate(
-                (app_context.canvas_settings.interface_width() / 2) as f64,
-                (app_context.canvas_settings.interface_height() / 2) as f64,
+                (app_context.canvas_settings.interface_width / 2) as f64,
+                (app_context.canvas_settings.interface_height / 2) as f64,
             )?;
 
             self.button_menu
