@@ -120,7 +120,7 @@ impl Lobby {
     }
 
     fn random_team(rng: &mut ChaCha8Rng) -> Team {
-        if rng.next_u32() % 2 == 0 {
+        if true || rng.next_u32() % 2 == 0 {
             Team::Red
         } else {
             Team::Blue
