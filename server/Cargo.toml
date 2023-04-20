@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = { version = "0.6.10" }
-serde = { version = "1.0.152", features = ["derive", "rc"] }
+serde = { version = "1.0.160", features = ["derive", "rc"] }
 tokio = { version = "1.26.0", features = ["full"] }
 tower-http = { version = "0.4.0", features = ["fs", "trace"] }
 shared = { path = "../shared", features = ["server"] }
