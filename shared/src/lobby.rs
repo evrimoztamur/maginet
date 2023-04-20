@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 use crate::{Game, MageSort, Message, Team, Turn};
 
 const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
-const DEFAULT_PLAYER_COUNT: usize = 2;
 
 /// A identifier for a lobby, shared by the client and the server.
 pub type LobbyID = u16;
@@ -29,25 +28,32 @@ impl<T> From<Result<T, LobbyError>> for Message {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Player {
-    index: usize,
+    team: Team,
     rematch: bool,
 }
 
 impl Player {
-    fn new(index: usize) -> Player {
+    fn new(team: Team) -> Player {
         Player {
-            index,
+            team,
             rematch: false,
         }
     }
 }
+
+impl PartialEq for Player {
+    fn eq(&self, other: &Self) -> bool {
+        self.team == other.team
+    }
+}
+
 /// [`Lobby`] is a `struct` which contains all the information necessary for executing a game.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Lobby {
     /// The active [`Game`] of this lobby.
     pub game: Game,
     players: HashMap<String, Player>,
-    player_slots: VecDeque<usize>,
+    player_slots: VecDeque<Player>,
     ticks: usize,
     /// The [`Lobby`]s sort.
     pub settings: LobbySettings,
@@ -56,7 +62,8 @@ pub struct Lobby {
 impl Lobby {
     /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
     pub fn new(settings: LobbySettings) -> Lobby {
-        let (red_mage_sorts, blue_mage_sorts) = Lobby::select_loadouts(&settings);
+        let mut rng = ChaCha8Rng::seed_from_u64(settings.seed as u64);
+        let (red_mage_sorts, blue_mage_sorts) = Lobby::select_loadouts(&settings, &mut rng);
 
         Lobby {
             game: Game::new(
@@ -64,29 +71,30 @@ impl Lobby {
                 DEFAULT_BOARD_SIZE.1,
                 red_mage_sorts,
                 blue_mage_sorts,
+                Lobby::random_team(&mut rng),
             )
             .expect("game should be instantiable with default values"),
             players: HashMap::new(),
-            player_slots: (0..DEFAULT_PLAYER_COUNT).collect(),
+            player_slots: VecDeque::from([Player::new(Team::Red), Player::new(Team::Blue)]),
             ticks: 0,
             settings,
         }
     }
 
-    fn select_loadouts(lobby_settings: &LobbySettings) -> (Vec<MageSort>, Vec<MageSort>) {
+    fn select_loadouts(
+        lobby_settings: &LobbySettings,
+        rng: &mut ChaCha8Rng,
+    ) -> (Vec<MageSort>, Vec<MageSort>) {
         match lobby_settings.loadout_method {
             LoadoutMethod::Default => (Lobby::default_loadout(), Lobby::default_loadout()),
             LoadoutMethod::Manual => todo!(),
             LoadoutMethod::Random { symmetric } => {
                 if symmetric {
-                    let loadout = Lobby::random_loadout(lobby_settings.seed);
+                    let loadout = Lobby::random_loadout(rng);
 
                     (loadout.clone(), loadout)
                 } else {
-                    (
-                        Lobby::random_loadout(lobby_settings.seed),
-                        Lobby::random_loadout(lobby_settings.seed + 1),
-                    )
+                    (Lobby::random_loadout(rng), Lobby::random_loadout(rng))
                 }
             }
         }
@@ -101,12 +109,19 @@ impl Lobby {
         ]
     }
 
-    fn random_loadout(seed: u32) -> Vec<MageSort> {
-        let mut rng = ChaCha8Rng::seed_from_u64(seed as u64);
+    fn random_loadout(rng: &mut ChaCha8Rng) -> Vec<MageSort> {
         (0..4)
             .into_iter()
             .map(|_| ((rng.next_u64() % 4) as usize).into())
             .collect::<Vec<MageSort>>()
+    }
+
+    fn random_team(rng: &mut ChaCha8Rng) -> Team {
+        if rng.next_u32() % 2 == 0 {
+            Team::Red
+        } else {
+            Team::Blue
+        }
     }
 
     /// Number of ticks since the lobby's creation.
@@ -128,8 +143,8 @@ impl Lobby {
         } else if self.players.contains_key(&session_id) {
             Err(LobbyError("already in lobby".to_string()))
         } else {
-            if let Some(index) = self.player_slots.pop_front() {
-                self.players.insert(session_id.clone(), Player::new(index));
+            if let Some(player) = self.player_slots.pop_front() {
+                self.players.insert(session_id.clone(), player);
 
                 self.tick();
 
@@ -168,7 +183,7 @@ impl Lobby {
         } else {
             match self.players.get(&session_id) {
                 Some(player) => {
-                    if self.game.turn_index() == player.index {
+                    if self.game.turn_for() == player.team {
                         match message {
                             Message::Move(Turn(from, to)) => {
                                 self.game.take_move(from, to);
@@ -245,7 +260,7 @@ impl Lobby {
         } else {
             match session_id {
                 Some(session_id) => match self.players.get(session_id) {
-                    Some(player) => self.game.turn_index() == player.index,
+                    Some(player) => self.game.turn_for() == player.team,
                     None => false,
                 },
                 None => false,

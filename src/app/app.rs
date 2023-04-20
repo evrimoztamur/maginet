@@ -193,6 +193,8 @@ impl App {
                     StateSort::Lobby(lobby_state) => {
                         if pointer_location.0 < 0 {
                             self.app_context.pointer.button = true;
+                        } else if lobby_state.is_interface_active() {
+                            self.app_context.pointer.button = true;
                         } else {
                             match (
                                 lobby_state.location_as_position(
@@ -210,8 +212,6 @@ impl App {
                                     if current_tile == last_tile {
                                         self.app_context.pointer.button = true;
                                     } else if lobby_state.live_occupied(current_tile) {
-                                        self.app_context.pointer.button = true;
-                                    } else if lobby_state.is_interface_active() {
                                         self.app_context.pointer.button = true;
                                     }
                                 }

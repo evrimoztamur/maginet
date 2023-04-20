@@ -13,6 +13,7 @@ pub struct Game {
     board: Board,
     mages: Vec<Mage>,
     turns: Vec<Turn>,
+    starting_team: Team,
 }
 
 impl Game {
@@ -22,6 +23,7 @@ impl Game {
         board_height: usize,
         red_mage_sorts: Vec<MageSort>,
         blue_mage_sorts: Vec<MageSort>,
+        starting_team: Team,
     ) -> Result<Game, &'static str> {
         if red_mage_sorts.len().max(blue_mage_sorts.len()) > board_width {
             Err("game contains too many mages for board")
@@ -39,6 +41,7 @@ impl Game {
                 board,
                 mages,
                 turns,
+                starting_team,
             };
 
             Ok(game)
@@ -128,17 +131,28 @@ impl Game {
     }
 
     /// Returns the index for the team which will be making the next move.
-    pub fn turn_index(&self) -> usize {
+    fn turn_index(&self) -> usize {
         self.turns() % 2
     }
 
     /// Returns the [`Team`] which will be taking their turn.
     pub fn turn_for(&self) -> Team {
-        if self.turn_index() == 0 {
+        let team = if self.turn_index() == 0 {
             Team::Red
         } else {
             Team::Blue
+        };
+
+        if self.starting_team == Team::Red {
+            team
+        } else {
+            team.enemy()
         }
+    }
+
+    /// Returns the [`Team`] which makes the first move.
+    pub fn starting_team(&self) -> Team {
+        self.starting_team
     }
 
     /// Returns a list of all available [`Position`]s a [`Mage`] can move to, including metadata on the direction and whether or not it's a diagonal.
