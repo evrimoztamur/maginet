@@ -28,11 +28,9 @@ async fn main() {
     };
 
     let app = Router::new()
-        .nest_service("/pkg", ServeDir::new("pkg"))
         .nest_service("/static", ServeDir::new("static"))
         .route_service("/", ServeFile::new("html/game.html"))
         .route_service("/about", ServeFile::new("html/index.html"))
-        // .route_service("/game", ServeFile::new("html/game.html"))
         .route("/lobby/create", post(create_lobby))
         .route("/lobby/:id/turns/:since", get(get_turns_since))
         .route("/lobby/:id/act", post(process_inbound))
