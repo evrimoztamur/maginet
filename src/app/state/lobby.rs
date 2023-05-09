@@ -243,8 +243,8 @@ impl LobbyState {
                     context.save();
 
                     context.translate(
-                        15.0 + mage.position.0 as f64 * BOARD_SCALE_F64.0,
-                        15.0 + mage.position.1 as f64 * BOARD_SCALE_F64.1,
+                        16.0 + mage.position.0 as f64 * BOARD_SCALE_F64.0,
+                        16.0 + mage.position.1 as f64 * BOARD_SCALE_F64.1,
                     )?;
 
                     draw_mage(
@@ -255,6 +255,7 @@ impl LobbyState {
                         self.lobby.game.turn_for(),
                         game_started,
                         game_finished,
+                        true,
                     )?;
 
                     if mage.is_alive() {
@@ -405,6 +406,9 @@ impl State for LobbyState {
                 .draw(interface_context, atlas, &interface_pointer, frame)?;
 
             if self.is_interface_active() {
+                self.interface
+                    .draw(interface_context, atlas, &interface_pointer, frame)?;
+
                 for player in self
                     .lobby
                     .players()
@@ -418,25 +422,31 @@ impl State for LobbyState {
                         .find(|mage| mage.team == player.team);
 
                     if let Some(first_mage) = first_mage {
-                        context.save();
+                        interface_context.save();
 
                         match player.team {
                             Team::Red => {
-                                context.translate(-32.0, 0.0)?;
+                                interface_context.translate(-40.0, -8.0)?;
                             }
                             Team::Blue => {
-                                context.translate(32.0, 0.0)?;
+                                interface_context.translate(40.0, -8.0)?;
                             }
                         }
 
-                        draw_mage(context, atlas, first_mage, frame, player.team, true, true)?;
+                        draw_mage(
+                            interface_context,
+                            atlas,
+                            first_mage,
+                            frame,
+                            player.team,
+                            true,
+                            false,
+                            false,
+                        )?;
 
-                        context.restore();
+                        interface_context.restore();
                     }
                 }
-
-                self.interface
-                    .draw(interface_context, atlas, &interface_pointer, frame)?;
             }
 
             interface_context.restore();
@@ -459,8 +469,12 @@ impl State for LobbyState {
             if let Some(lobby_id) = self.lobby.settings.lobby_sort.lobby_id() {
                 if message_pool.available(frame) {
                     if all_ready {
-                        let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
-                            .then(&self.message_closure);
+                        if self.is_interface_active() {
+                            let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
+                        } else {
+                            let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
+                                .then(&self.message_closure);
+                        }
                     } else if self.lobby.settings.lobby_sort != LobbySort::Online(0) {
                         let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
                     }
@@ -505,7 +519,9 @@ impl State for LobbyState {
                         self.lobby = lobby.clone();
 
                         if let Ok(lobby_id) = self.lobby_id() {
-                            send_ready(lobby_id, session_id.clone().unwrap());
+                            if !lobby.all_ready() {
+                                send_ready(lobby_id, session_id.clone().unwrap());
+                            }
                         }
                     }
                     _ => (),

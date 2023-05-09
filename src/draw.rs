@@ -149,6 +149,7 @@ pub fn draw_mage(
     team: Team,
     game_started: bool,
     game_finished: bool,
+    show_mana: bool,
 ) -> Result<(), JsValue> {
     let bounce = (if mage.is_alive() && (mage.team == team && game_started || game_finished) {
         -((frame as i64 / 6 + mage.index as i64 / 2) % 4 - 2).abs()
@@ -165,7 +166,7 @@ pub fn draw_mage(
     context.save();
 
     if mage.is_alive() {
-        draw_sprite(context, atlas, 0.0, 192.0, 32.0, 32.0, -15.0, -20.0)?;
+        draw_sprite(context, atlas, 0.0, 192.0, 32.0, 32.0, -16.0, -20.0)?;
 
         if game_finished {
             context.translate(
@@ -179,7 +180,7 @@ pub fn draw_mage(
     } else {
         context.translate(0.0, 4.0)?;
 
-        draw_sprite(context, atlas, 32.0, 192.0, 32.0, 32.0, -15.0, -20.0)?;
+        draw_sprite(context, atlas, 32.0, 192.0, 32.0, 32.0, -16.0, -20.0)?;
     }
 
     let sprite_x = match mage.sort {
@@ -198,7 +199,7 @@ pub fn draw_mage(
                 64.0 + sleeping_offset,
                 32.0,
                 32.0,
-                -15.0,
+                -16.0,
                 -20.0 + bounce,
                 32.0,
                 32.0,
@@ -210,7 +211,7 @@ pub fn draw_mage(
                 96.0 + sleeping_offset,
                 32.0,
                 32.0,
-                -15.0,
+                -16.0,
                 -20.0 + bounce,
                 32.0,
                 32.0,
@@ -219,17 +220,19 @@ pub fn draw_mage(
 
     context.restore();
 
-    for i in 0..mage.mana.0 {
-        draw_sprite(
-            context,
-            atlas,
-            80.0,
-            12.0,
-            4.0,
-            4.0,
-            i as f64 * 6.0 - mage.mana.0 as f64 * 3.0 + 2.0,
-            10.0,
-        )?;
+    if show_mana {
+        for i in 0..mage.mana.0 {
+            draw_sprite(
+                context,
+                atlas,
+                80.0,
+                12.0,
+                4.0,
+                4.0,
+                i as f64 * 6.0 - mage.mana.0 as f64 * 3.0 + 2.0,
+                10.0,
+            )?;
+        }
     }
 
     Ok(())

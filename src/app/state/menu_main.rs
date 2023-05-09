@@ -187,7 +187,7 @@ impl State for MenuState {
         for mage in self.sentinel_lobby.game.iter_mages() {
             context.save();
             context.translate(
-                -49.0 + mage.position.0 as f64 * 32.0,
+                -48.0 + mage.position.0 as f64 * 32.0,
                 15.0 + if mage.team == Team::Red { 0.0 } else { 1.0 } as f64 * 32.0,
             )?;
             draw_mage(
@@ -198,6 +198,7 @@ impl State for MenuState {
                 self.sentinel_lobby.game.starting_team(),
                 true,
                 false,
+                true
             )?;
             context.restore();
         }

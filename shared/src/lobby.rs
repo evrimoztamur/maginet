@@ -209,9 +209,11 @@ impl Lobby {
     pub fn request_rematch(&mut self, session_id: String) -> Result<bool, LobbyError> {
         if !self.all_ready() {
             Err(LobbyError("game not yet started".to_string()))
-        } else if !self.finished() {
-            Err(LobbyError("game not yet finished".to_string()))
-        } else {
+        }
+        // else if !self.finished() {
+        //     Err(LobbyError("game not yet finished".to_string()))
+        // }
+        else {
             match self.players.get_mut(&session_id) {
                 Some(player) => {
                     player.rematch = true;
