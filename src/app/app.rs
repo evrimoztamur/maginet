@@ -6,7 +6,7 @@ use web_sys::{
     KeyboardEvent, MouseEvent, TouchEvent,
 };
 
-use super::{LobbyState, MenuState, MenuTeleport, Pointer, BOARD_OFFSET, BOARD_SCALE};
+use super::{EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_OFFSET, BOARD_SCALE};
 use crate::{app::State, draw::draw_sprite, net::get_session_id, window};
 
 /// Errors concerning the [`App`].
@@ -23,6 +23,7 @@ pub enum StateSort {
     MenuMain(MenuState),
     MenuTeleport(MenuTeleport),
     Lobby(LobbyState),
+    Editor(EditorState),
 }
 
 pub struct AppContext {
@@ -46,7 +47,7 @@ impl App {
                 frame: 0,
                 canvas_settings,
             },
-            state_sort: StateSort::MenuMain(MenuState::new()),
+            state_sort: StateSort::Editor(EditorState::new()),
         }
     }
 
@@ -95,14 +96,17 @@ impl App {
 
         if atlas.complete() {
             result = match &mut self.state_sort {
-                StateSort::MenuMain(menu_state) => {
-                    menu_state.draw(context, interface_context, atlas, &self.app_context)
+                StateSort::MenuMain(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::Lobby(lobby_state) => {
-                    lobby_state.draw(context, interface_context, atlas, &self.app_context)
+                StateSort::Lobby(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::MenuTeleport(menu_state) => {
-                    menu_state.draw(context, interface_context, atlas, &self.app_context)
+                StateSort::MenuTeleport(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
+                StateSort::Editor(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
                 }
             };
         }
@@ -136,9 +140,10 @@ impl App {
 
     pub fn tick(&mut self) {
         let next_state = match &mut self.state_sort {
-            StateSort::MenuMain(menu_state) => menu_state.tick(&self.app_context),
-            StateSort::Lobby(lobby_state) => lobby_state.tick(&self.app_context),
-            StateSort::MenuTeleport(menu_state) => menu_state.tick(&self.app_context),
+            StateSort::MenuMain(state) => state.tick(&self.app_context),
+            StateSort::Lobby(state) => state.tick(&self.app_context),
+            StateSort::MenuTeleport(state) => state.tick(&self.app_context),
+            StateSort::Editor(state) => state.tick(&self.app_context),
         };
 
         if let Some(next_state) = next_state {

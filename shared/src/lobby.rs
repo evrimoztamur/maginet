@@ -6,9 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Game, MageSort, Message, Team, Turn};
-
-const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
+use crate::{Game, MageSort, Message, Team, Turn, DEFAULT_BOARD_SIZE};
 
 /// A identifier for a lobby, shared by the client and the server.
 pub type LobbyID = u16;

@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Mage, MageSort, Position, Team};
 
+/// Default size of the game board.
+pub const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
+
 /// [`Board`] is a struct which currently only contains the size of the playing field.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Board {
