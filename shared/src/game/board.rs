@@ -19,7 +19,7 @@ impl Board {
     /// Restricted to `4..=8` on both axes. Currently always 8-by-8.
     pub fn new(width: usize, height: usize) -> Result<Board, &'static str> {
         match (width, height) {
-            (width, height) if width >= 4 && width <= 8 && height >= 4 && height <= 8 => {
+            (width, height) if width >= 3 && width <= 8 && height >= 3 && height <= 8 => {
                 Ok(Board { width, height })
             }
             _ => Err("board size does not conform to limits"),

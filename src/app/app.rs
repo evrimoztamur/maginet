@@ -6,8 +6,14 @@ use web_sys::{
     KeyboardEvent, MouseEvent, TouchEvent,
 };
 
-use super::{EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_OFFSET, BOARD_SCALE};
-use crate::{app::State, draw::draw_sprite, net::get_session_id, window};
+use super::{EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_SCALE};
+use crate::{
+    app::State,
+    document,
+    draw::{draw_board, draw_sprite},
+    net::get_session_id,
+    window,
+};
 
 /// Errors concerning the [`App`].
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,6 +42,7 @@ pub struct AppContext {
 pub struct App {
     app_context: AppContext,
     state_sort: StateSort,
+    atlas_complete: bool,
 }
 
 impl App {
@@ -48,6 +55,7 @@ impl App {
                 canvas_settings,
             },
             state_sort: StateSort::Editor(EditorState::new()),
+            atlas_complete: false,
         }
     }
 
@@ -95,20 +103,25 @@ impl App {
         let mut result = Ok(());
 
         if atlas.complete() {
-            result = match &mut self.state_sort {
-                StateSort::MenuMain(state) => {
-                    state.draw(context, interface_context, atlas, &self.app_context)
-                }
-                StateSort::Lobby(state) => {
-                    state.draw(context, interface_context, atlas, &self.app_context)
-                }
-                StateSort::MenuTeleport(state) => {
-                    state.draw(context, interface_context, atlas, &self.app_context)
-                }
-                StateSort::Editor(state) => {
-                    state.draw(context, interface_context, atlas, &self.app_context)
-                }
-            };
+            if !self.atlas_complete {
+                self.atlas_complete = true;
+                draw_board(&atlas, 256.0, 256.0, 2, 2, 2, 2)?;
+            } else {
+                result = match &mut self.state_sort {
+                    StateSort::MenuMain(state) => {
+                        state.draw(context, interface_context, atlas, &self.app_context)
+                    }
+                    StateSort::Lobby(state) => {
+                        state.draw(context, interface_context, atlas, &self.app_context)
+                    }
+                    StateSort::MenuTeleport(state) => {
+                        state.draw(context, interface_context, atlas, &self.app_context)
+                    }
+                    StateSort::Editor(state) => {
+                        state.draw(context, interface_context, atlas, &self.app_context)
+                    }
+                };
+            }
         }
 
         // DRAW cursor
@@ -201,15 +214,17 @@ impl App {
                         } else if lobby_state.is_interface_active() {
                             self.app_context.pointer.button = true;
                         } else {
+                            let board_offset = lobby_state.board_offset();
+
                             match (
                                 lobby_state.location_as_position(
                                     pointer_location,
-                                    BOARD_OFFSET,
+                                    board_offset,
                                     BOARD_SCALE,
                                 ),
                                 lobby_state.location_as_position(
                                     self.app_context.pointer.location,
-                                    BOARD_OFFSET,
+                                    board_offset,
                                     BOARD_SCALE,
                                 ),
                             ) {

@@ -1,15 +1,15 @@
-use shared::{Board, LobbySettings, LobbySort, Position, DEFAULT_BOARD_SIZE, Mage};
+use shared::{Board, Mage, Position, DEFAULT_BOARD_SIZE};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement};
 
-use super::{LobbyState, MenuState, State};
+use super::State;
 use crate::{
     app::{
         Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, Interface, Particle,
-        ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent, BOARD_OFFSET,
-        BOARD_OFFSET_F64, BOARD_SCALE, BOARD_SCALE_F64,
+        ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{draw_crosshair, draw_particle, draw_sprite},
+    draw::{draw_board, draw_crosshair, draw_particle, draw_sprite},
+    tuple_as,
 };
 
 pub enum EditorSelection {
@@ -21,12 +21,18 @@ pub enum EditorSelection {
 pub struct EditorState {
     interface: Interface,
     board: Board,
+    board_dirty: bool,
     particles: Vec<Particle>,
     selection: EditorSelection,
 }
 
 const BUTTON_MENU: usize = 0;
 const BUTTON_MODE_TOGGLE: usize = 10;
+
+const BUTTON_WIDTH_MINUS: usize = 20;
+const BUTTON_WIDTH_PLUS: usize = 21;
+const BUTTON_HEIGHT_MINUS: usize = 22;
+const BUTTON_HEIGHT_PLUS: usize = 23;
 
 impl EditorState {
     pub fn new() -> EditorState {
@@ -60,7 +66,7 @@ impl EditorState {
         let button_width_minus = ButtonElement::new(
             (82, 248),
             (12, 12),
-            BUTTON_MODE_TOGGLE,
+            BUTTON_WIDTH_MINUS,
             ButtonTrim::Round,
             ButtonClass::Default,
             crate::app::ContentElement::Sprite((88, 24), (8, 8)),
@@ -69,7 +75,7 @@ impl EditorState {
         let button_width_plus = ButtonElement::new(
             (98, 248),
             (12, 12),
-            BUTTON_MODE_TOGGLE,
+            BUTTON_WIDTH_PLUS,
             ButtonTrim::Round,
             ButtonClass::Default,
             crate::app::ContentElement::Sprite((80, 24), (8, 8)),
@@ -78,7 +84,7 @@ impl EditorState {
         let button_height_minus = ButtonElement::new(
             (216, 114),
             (12, 12),
-            BUTTON_MODE_TOGGLE,
+            BUTTON_HEIGHT_MINUS,
             ButtonTrim::Round,
             ButtonClass::Default,
             crate::app::ContentElement::Sprite((88, 24), (8, 8)),
@@ -87,14 +93,14 @@ impl EditorState {
         let button_height_plus = ButtonElement::new(
             (216, 130),
             (12, 12),
-            BUTTON_MODE_TOGGLE,
+            BUTTON_HEIGHT_PLUS,
             ButtonTrim::Round,
             ButtonClass::Default,
             crate::app::ContentElement::Sprite((80, 24), (8, 8)),
         );
 
         let button_team_left = ButtonElement::new(
-            (236, 114 - 92),
+            (240, 122 - 92),
             (12, 20),
             BUTTON_MODE_TOGGLE,
             ButtonTrim::Round,
@@ -103,7 +109,7 @@ impl EditorState {
         );
 
         let button_team_right = ButtonElement::new(
-            (304, 114 - 92),
+            (300, 122 - 92),
             (12, 20),
             BUTTON_MODE_TOGGLE,
             ButtonTrim::Round,
@@ -112,7 +118,7 @@ impl EditorState {
         );
 
         let button_spell_left = ButtonElement::new(
-            (244, 114 - 44),
+            (244, 122 - 44),
             (12, 20),
             BUTTON_MODE_TOGGLE,
             ButtonTrim::Round,
@@ -121,7 +127,7 @@ impl EditorState {
         );
 
         let button_spell_right = ButtonElement::new(
-            (296, 114 - 44),
+            (296, 122 - 44),
             (12, 20),
             BUTTON_MODE_TOGGLE,
             ButtonTrim::Round,
@@ -130,7 +136,7 @@ impl EditorState {
         );
 
         let button_mana_left = ButtonElement::new(
-            (244, 114 - 8),
+            (244, 122 - 8),
             (12, 12),
             BUTTON_MODE_TOGGLE,
             ButtonTrim::Round,
@@ -139,7 +145,7 @@ impl EditorState {
         );
 
         let button_mana_right = ButtonElement::new(
-            (296, 114 - 8),
+            (296, 122 - 8),
             (12, 12),
             BUTTON_MODE_TOGGLE,
             ButtonTrim::Round,
@@ -183,8 +189,16 @@ impl EditorState {
             interface: root_element,
             board,
             particles: Vec::new(),
-            selection: EditorSelection::None
+            selection: EditorSelection::None,
+            board_dirty: true,
         }
+    }
+
+    pub fn board_offset(&self) -> (i32, i32) {
+        (
+            ((8 - self.board.width) as i32 * BOARD_SCALE.0) / 2,
+            ((8 - self.board.height) as i32 * BOARD_SCALE.1) / 2,
+        )
     }
 }
 
@@ -196,14 +210,24 @@ impl State for EditorState {
         atlas: &HtmlImageElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
+        let board_offset = self.board_offset();
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
+        if self.board_dirty {
+            self.board_dirty = false;
+            draw_board(atlas, 256.0, 0.0, self.board.width, self.board.height, 8, 8).unwrap();
+            console::log_1(&format!("HEL {}", atlas.complete()).into());
+        }
+
         context.save();
 
-        context.translate(BOARD_OFFSET_F64.0 - 32.0, BOARD_OFFSET_F64.1)?;
+        context.translate(-32.0, 0.0)?;
 
         draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 64.0, 276.0, 8.0)?;
+
+        context.translate(board_offset.0 as f64, board_offset.1 as f64)?;
 
         for particle in self.particles.iter_mut() {
             particle.tick();
@@ -214,7 +238,7 @@ impl State for EditorState {
 
         if let Some(selected_tile) = self.board.location_as_position(
             pointer.location,
-            (BOARD_OFFSET.0 - 32, BOARD_OFFSET.1),
+            (board_offset.0 - 32, board_offset.1),
             BOARD_SCALE,
         ) {
             draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), frame)?;
@@ -229,11 +253,43 @@ impl State for EditorState {
     }
 
     fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
+        let board_offset = self.board_offset();
         let pointer = &app_context.pointer;
 
-        if let Some(selected_tile) = self.board.location_as_position(
+        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
+            match value {
+                BUTTON_MODE_TOGGLE => {}
+
+                BUTTON_WIDTH_MINUS => {
+                    if let Ok(board) = Board::new(self.board.width - 1, self.board.height) {
+                        self.board = board;
+                        self.board_dirty = true;
+                    }
+                }
+                BUTTON_WIDTH_PLUS => {
+                    if let Ok(board) = Board::new(self.board.width + 1, self.board.height) {
+                        self.board = board;
+                        self.board_dirty = true;
+                    }
+                }
+                BUTTON_HEIGHT_MINUS => {
+                    if let Ok(board) = Board::new(self.board.width, self.board.height - 1) {
+                        self.board = board;
+                        self.board_dirty = true;
+                    }
+                }
+                BUTTON_HEIGHT_PLUS => {
+                    if let Ok(board) = Board::new(self.board.width, self.board.height + 1) {
+                        self.board = board;
+                        self.board_dirty = true;
+                    }
+                }
+
+                _ => (),
+            }
+        } else if let Some(selected_tile) = self.board.location_as_position(
             pointer.location,
-            (BOARD_OFFSET.0 - 32, BOARD_OFFSET.1),
+            (board_offset.0 - 32, board_offset.1),
             BOARD_SCALE,
         ) {
             if pointer.clicked() {
@@ -247,13 +303,6 @@ impl State for EditorState {
                         ParticleSort::Missile,
                     ));
                 }
-            }
-        }
-
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
-            match value {
-                BUTTON_MODE_TOGGLE => {}
-                _ => (),
             }
         }
 

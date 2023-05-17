@@ -11,14 +11,14 @@ use crate::{
     app::{
         Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, ConfirmButtonElement,
         Interface, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
-        BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE, BOARD_SCALE_F64,
+        BOARD_SCALE,
     },
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
     net::{
         create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
         send_rematch, MessagePool,
     },
-    window,
+    tuple_as, window,
 };
 
 const BUTTON_REMATCH: usize = 1;
@@ -179,12 +179,24 @@ impl LobbyState {
         self.message_pool.borrow_mut().push(Message::Move(turn.0));
     }
 
+    pub fn board_offset(&self) -> (i32, i32) {
+        let board_size = self.lobby().game.board_size();
+
+        (
+            ((8 - board_size.0) as i32 * BOARD_SCALE.0) / 2,
+            ((8 - board_size.1) as i32 * BOARD_SCALE.1) / 2,
+        )
+    }
+
     fn draw_game(
         &mut self,
         context: &CanvasRenderingContext2d,
         atlas: &HtmlImageElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
+        let board_scale = tuple_as!(BOARD_SCALE, f64);
+        let board_offset = tuple_as!(self.board_offset(), f64);
+
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
@@ -195,7 +207,7 @@ impl LobbyState {
         {
             context.save();
 
-            context.translate(BOARD_OFFSET_F64.0, BOARD_OFFSET_F64.1)?;
+            context.translate(board_offset.0, board_offset.1)?;
 
             draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
 
@@ -216,8 +228,8 @@ impl LobbyState {
                         32.0,
                         16.0,
                         16.0,
-                        x as f64 * BOARD_SCALE_F64.0 + 72.0,
-                        y as f64 * BOARD_SCALE_F64.1 + 72.0,
+                        x as f64 * board_scale.0 + 72.0,
+                        y as f64 * board_scale.1 + 72.0,
                     )?;
                 }
             }
@@ -243,8 +255,8 @@ impl LobbyState {
                     context.save();
 
                     context.translate(
-                        16.0 + mage.position.0 as f64 * BOARD_SCALE_F64.0,
-                        16.0 + mage.position.1 as f64 * BOARD_SCALE_F64.1,
+                        16.0 + mage.position.0 as f64 * board_scale.0,
+                        16.0 + mage.position.1 as f64 * board_scale.1,
                     )?;
 
                     draw_mage(
@@ -293,6 +305,8 @@ impl LobbyState {
                 }
             }
 
+            let board_offset = self.board_offset();
+
             {
                 // DRAW markers
                 context.save();
@@ -304,8 +318,8 @@ impl LobbyState {
                         let is_diagonal = ri % 2 == 1;
                         context.save();
                         context.translate(
-                            (position.0 as f64 + 0.5) * BOARD_SCALE_F64.0,
-                            (position.1 as f64 + 0.5) as f64 * BOARD_SCALE_F64.1,
+                            (position.0 as f64 + 0.5) * board_scale.0,
+                            (position.1 as f64 + 0.5) as f64 * board_scale.1,
                         )?;
                         context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
                         let bop = (frame / 10 % 3) as f64;
@@ -325,7 +339,7 @@ impl LobbyState {
 
                     if let Some(selected_tile) = self.lobby.game.location_as_position(
                         pointer.location,
-                        BOARD_OFFSET,
+                        board_offset,
                         BOARD_SCALE,
                     ) {
                         if available_moves
@@ -348,13 +362,13 @@ impl LobbyState {
 
                 if let Some(selected_tile) = self.lobby.game.location_as_position(
                     pointer.location,
-                    BOARD_OFFSET,
+                    board_offset,
                     BOARD_SCALE,
                 ) {
                     if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
                         if let Some(selected_tile) = self.lobby.game.location_as_position(
                             pointer.location,
-                            BOARD_OFFSET,
+                            board_offset,
                             BOARD_SCALE,
                         ) {
                             for (_, position) in &self.lobby.game.targets(occupant, selected_tile) {
@@ -456,6 +470,7 @@ impl State for LobbyState {
     }
 
     fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
+        let board_offset = self.board_offset();
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
         let session_id = &app_context.session_id;
@@ -563,7 +578,7 @@ impl State for LobbyState {
             if pointer.clicked() {
                 if let Some(selected_tile) = self.lobby.game.location_as_position(
                     pointer.location,
-                    BOARD_OFFSET,
+                    board_offset,
                     BOARD_SCALE,
                 ) {
                     if let Some(active_mage) = self.get_active_mage() {

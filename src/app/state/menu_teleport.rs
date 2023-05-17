@@ -8,10 +8,10 @@ use super::{LobbyState, MenuState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, Interface, Particle,
-        ParticleSort, StateSort, UIElement, UIEvent, BOARD_OFFSET, BOARD_OFFSET_F64, BOARD_SCALE,
-        BOARD_SCALE_F64,
+        ParticleSort, StateSort, UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{draw_crosshair, draw_particle, draw_sprite},
+    tuple_as,
 };
 
 pub struct MenuTeleport {
@@ -19,6 +19,8 @@ pub struct MenuTeleport {
     lobby_id: u16,
     particles: Vec<Particle>,
 }
+
+const BOARD_OFFSET: (i32, i32) = ((4 * BOARD_SCALE.0) / 2, (4 * BOARD_SCALE.1) / 2);
 
 const BUTTON_TELEPORT: usize = 20;
 const BUTTON_BACK: usize = 21;
@@ -61,12 +63,14 @@ impl State for MenuTeleport {
         atlas: &HtmlImageElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
+        let board_scale = tuple_as!(BOARD_SCALE, f64);
+
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
         context.save();
 
-        context.translate(BOARD_OFFSET_F64.0 + 64.0, BOARD_OFFSET_F64.1 + 48.0)?;
+        context.translate(board_scale.0 + 64.0, board_scale.1 + 48.0)?;
 
         draw_sprite(context, atlas, 256.0, 0.0, 64.0, 64.0, 0.0, 0.0)?;
         draw_sprite(context, atlas, 448.0, 0.0, 64.0, 64.0, 64.0, 0.0)?;
@@ -113,8 +117,8 @@ impl State for MenuTeleport {
                 32.0,
                 16.0,
                 16.0,
-                x as f64 * BOARD_SCALE_F64.0 + 8.0,
-                y as f64 * BOARD_SCALE_F64.1 + 8.0,
+                x as f64 * board_scale.0 + 8.0,
+                y as f64 * board_scale.1 + 8.0,
             )?;
         }
 
