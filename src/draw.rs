@@ -1,7 +1,7 @@
 use js_sys::Math::random;
-use shared::{Board, Mage, Position, Team};
+use shared::{Mage, Position, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
 use crate::{
     app::{CanvasSettings, Particle, ParticleSort, BOARD_SCALE},

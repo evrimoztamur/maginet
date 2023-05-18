@@ -9,7 +9,6 @@ use web_sys::{
 use super::{EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_SCALE};
 use crate::{
     app::State,
-    document,
     draw::{draw_board, draw_sprite},
     net::get_session_id,
     window,

@@ -7,7 +7,6 @@ mod net;
 use std::{cell::RefCell, rc::Rc};
 
 use app::{App, CanvasSettings};
-use draw::draw_board;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{

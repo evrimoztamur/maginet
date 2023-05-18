@@ -198,7 +198,7 @@ impl State for MenuState {
                 self.sentinel_lobby.game.starting_team(),
                 true,
                 false,
-                true
+                true,
             )?;
             context.restore();
         }
