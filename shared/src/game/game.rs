@@ -4,7 +4,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Mage, MageSort, Position, Team, Turn};
+use crate::{Board, Mage, MageSort, Mages, Position, Team, Turn};
 
 /// A [`Game`] contains all the information to represent a deterministically replicable state of the game.
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
@@ -73,58 +73,6 @@ impl Game {
         self.mages.get_mut(index)
     }
 
-    /// Returns a reference to a [`Mage`] at a certain [`Position`].
-    fn occupant(&self, position: &Position) -> Option<&Mage> {
-        for mage in self.mages.iter() {
-            if mage.position == *position {
-                return Some(mage);
-            }
-        }
-
-        None
-    }
-
-    /// Determines whether or not a move can be made to the [`Position`].
-    fn occupied(&self, position: &Position) -> bool {
-        self.occupant(position).is_some()
-    }
-
-    /// Returns a reference to a [`Mage`] at a certain [`Position`] if the mage is alive.
-    pub fn live_occupant(&self, position: &Position) -> Option<&Mage> {
-        for mage in self.mages.iter().filter(|mage| mage.is_alive()) {
-            if mage.position == *position {
-                return Some(mage);
-            }
-        }
-
-        None
-    }
-
-    /// Returns a mutable reference to a [`Mage`] at a certain [`Position`] if the mage is alive.
-    pub fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
-        for mage in self.mages.iter_mut().filter(|mage| mage.is_alive()) {
-            if mage.position == *position {
-                return Some(mage);
-            }
-        }
-
-        None
-    }
-
-    /// Determines whether or not a [`Position`] is occupied by a live [`Mage`].
-    pub fn live_occupied(&self, position: &Position) -> bool {
-        self.live_occupant(position).is_some()
-    }
-
-    /// Determines whether or not a [`Position`] is occupied by a live [`Mage`] of a certain [`Team`].
-    pub fn live_occupied_by(&self, position: &Position, team: Team) -> bool {
-        if let Some(occupant) = self.live_occupant(position) {
-            occupant.team == team
-        } else {
-            false
-        }
-    }
-
     /// Returns the number of turns since the start of the game, starting from 0.
     pub fn turns(&self) -> usize {
         self.turns.len()
@@ -175,7 +123,7 @@ impl Game {
             // let position = position.wrap(self.board.width as i8, self.board.height as i8);
 
             if let Some(position) = self.board.validate_position(position) {
-                if !self.occupied(&position) && !(diagonal && !mage.has_diagonals()) {
+                if !self.mages.occupied(&position) && !(diagonal && !mage.has_diagonals()) {
                     moves.push((position, dir, diagonal));
                 }
             }
@@ -313,14 +261,14 @@ impl Game {
 
     /// Executes a [`Turn`], modifying the game state.
     pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
-        if let Some(mage) = self.live_occupant(&from) {
+        if let Some(mage) = self.mages.live_occupant(&from) {
             if mage.team == self.turn_for() {
                 let available_moves = self.available_moves(mage);
                 let potential_move = available_moves
                     .iter()
                     .find(|(position, _, _)| *position == to);
 
-                let mage = self.live_occupant_mut(&from).unwrap();
+                let mage = self.mages.live_occupant_mut(&from).unwrap();
 
                 if let Some((to, _, _)) = potential_move {
                     mage.position = *to;
@@ -340,12 +288,12 @@ impl Game {
     pub fn attack(&mut self, at: Position) -> Vec<Position> {
         let mut hits = Vec::new();
 
-        if let Some(active_mage) = self.live_occupant(&at) {
+        if let Some(active_mage) = self.mages.live_occupant(&at) {
             let targets = self.targets(active_mage, at);
 
             for (is_enemy, tile) in targets {
                 if is_enemy {
-                    self.live_occupant_mut(&tile).unwrap().mana -= 1;
+                    self.mages.live_occupant_mut(&tile).unwrap().mana -= 1;
                     hits.push(tile);
                 }
             }
@@ -364,7 +312,7 @@ impl Game {
 
             if let Some(position) = self.board.validate_position(position) {
                 moves.push((
-                    self.live_occupied_by(&position, mage.team.enemy()),
+                    self.mages.live_occupied_by(&position, mage.team.enemy()),
                     position,
                 ));
             }
@@ -386,5 +334,35 @@ impl Game {
         scale: (i32, i32),
     ) -> Option<Position> {
         self.board.location_as_position(location, offset, scale)
+    }
+}
+
+impl Mages for Game {
+    fn occupant(&self, position: &Position) -> Option<&Mage> {
+        self.mages.occupant(position)
+    }
+
+    fn occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
+        self.mages.occupant_mut(position)
+    }
+
+    fn occupied(&self, position: &Position) -> bool {
+        self.mages.occupied(position)
+    }
+
+    fn live_occupant(&self, position: &Position) -> Option<&Mage> {
+        self.mages.live_occupant(position)
+    }
+
+    fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
+        self.mages.live_occupant_mut(position)
+    }
+
+    fn live_occupied(&self, position: &Position) -> bool {
+        self.mages.live_occupied(position)
+    }
+
+    fn live_occupied_by(&self, position: &Position, team: Team) -> bool {
+        self.mages.live_occupied_by(position, team)
     }
 }

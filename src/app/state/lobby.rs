@@ -1,7 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use shared::{
-    Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Message, Position, Team, Turn,
+    Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages, Message, Position, Team,
+    Turn,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
