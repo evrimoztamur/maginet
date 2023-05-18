@@ -210,8 +210,9 @@ pub fn draw_mage(
                 32.0,
                 32.0,
             )?,
-        Team::Blue => context
-            .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+        Team::Blue => {
+            context.scale(-1.0, 1.0)?;
+            context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
                 sprite_x,
                 96.0 + sleeping_offset,
@@ -221,24 +222,84 @@ pub fn draw_mage(
                 -20.0 + bounce,
                 32.0,
                 32.0,
-            )?,
+            )?
+        }
     }
 
     context.restore();
 
     if show_mana {
-        for i in 0..mage.mana.0 {
-            draw_sprite(
-                context,
-                atlas,
-                80.0,
-                12.0,
-                4.0,
-                4.0,
-                i as f64 * 6.0 - mage.mana.0 as f64 * 3.0 + 2.0,
-                10.0,
-            )?;
+        draw_mana(context, atlas, mage)?;
+    }
+
+    Ok(())
+}
+
+pub fn draw_mana(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlImageElement,
+    mage: &Mage,
+) -> Result<(), JsValue> {
+    for i in 0..mage.mana.0 {
+        draw_sprite(
+            context,
+            atlas,
+            80.0,
+            12.0,
+            4.0,
+            4.0,
+            i as f64 * 6.0 - mage.mana.0 as f64 * 3.0 + 1.0,
+            10.0,
+        )?;
+    }
+
+    Ok(())
+}
+
+pub fn draw_spell_pattern(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlImageElement,
+    mage: &Mage,
+) -> Result<(), JsValue> {
+    for x in 0..5 {
+        for y in 0..5 {
+            if x == 2 && y == 2 {
+                draw_sprite(
+                    context,
+                    atlas,
+                    104.0,
+                    16.0,
+                    8.0,
+                    8.0,
+                    x as f64 * 8.0,
+                    y as f64 * 8.0,
+                )?;
+            } else {
+                draw_sprite(
+                    context,
+                    atlas,
+                    96.0,
+                    16.0,
+                    8.0,
+                    8.0,
+                    x as f64 * 8.0,
+                    y as f64 * 8.0,
+                )?;
+            }
         }
+    }
+
+    for position in &mage.spell.pattern {
+        draw_sprite(
+            context,
+            atlas,
+            96.0,
+            24.0,
+            8.0,
+            8.0,
+            position.0 as f64 * 8.0 + 16.0,
+            position.1 as f64 * 8.0 + 16.0,
+        )?;
     }
 
     Ok(())

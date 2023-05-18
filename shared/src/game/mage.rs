@@ -19,6 +19,30 @@ pub enum MageSort {
     Plus,
 }
 
+impl MageSort {
+    /// Rotates the [`MageSort`] left.
+    pub fn previous(&self) -> MageSort {
+        match self {
+            MageSort::Diamond => MageSort::Plus,
+            MageSort::Cross => MageSort::Diamond,
+            MageSort::Knight => MageSort::Cross,
+            MageSort::Spike => MageSort::Knight,
+            MageSort::Plus => MageSort::Spike,
+        }
+    }
+
+    /// Rotates the [`MageSort`] right.
+    pub fn next(&self) -> MageSort {
+        match self {
+            MageSort::Diamond => MageSort::Cross,
+            MageSort::Cross => MageSort::Knight,
+            MageSort::Knight => MageSort::Spike,
+            MageSort::Spike => MageSort::Plus,
+            MageSort::Plus => MageSort::Diamond,
+        }
+    }
+}
+
 impl From<usize> for MageSort {
     fn from(value: usize) -> Self {
         match value {
@@ -46,6 +70,12 @@ pub struct Mage {
     pub team: Team,
     /// [`Spell`] of the mage.
     pub spell: Spell,
+}
+
+impl PartialEq for Mage {
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index
+    }
 }
 
 impl Mage {
