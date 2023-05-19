@@ -21,31 +21,21 @@ impl Game {
     pub fn new(
         board_width: usize,
         board_height: usize,
-        red_mage_sorts: Vec<MageSort>,
-        blue_mage_sorts: Vec<MageSort>,
+        mages: Vec<Mage>,
         starting_team: Team,
     ) -> Result<Game, &'static str> {
-        if red_mage_sorts.len().max(blue_mage_sorts.len()) > board_width {
-            Err("game contains too many mages for board")
-        } else {
-            let board = Board::new(board_width, board_height)?;
+        let board = Board::new(board_width, board_height)?;
 
-            let mut mages = Vec::with_capacity(red_mage_sorts.len() + blue_mage_sorts.len());
+        let turns = Vec::new();
 
-            mages.append(&mut board.place_mages(Team::Red, red_mage_sorts, 0));
-            mages.append(&mut board.place_mages(Team::Blue, blue_mage_sorts, mages.len()));
+        let game = Game {
+            board,
+            mages,
+            turns,
+            starting_team,
+        };
 
-            let turns = Vec::new();
-
-            let game = Game {
-                board,
-                mages,
-                turns,
-                starting_team,
-            };
-
-            Ok(game)
-        }
+        Ok(game)
     }
 
     /// Returns a list of [`Turn`]s skipping the first `since` turns.

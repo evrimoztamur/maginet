@@ -1,13 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
 use shared::{
-    Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages, Message, Position, Team,
-    Turn,
+    LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages, Message,
+    Position, Team, Turn,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
-use super::{MenuState, State};
+use super::{EditorState, MenuState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, ConfirmButtonElement,
@@ -208,9 +208,9 @@ impl LobbyState {
         {
             context.save();
 
-            context.translate(board_offset.0, board_offset.1)?;
-
             draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
+
+            context.translate(board_offset.0, board_offset.1)?;
 
             if !self.lobby.all_ready() {
                 let mut lid = self.lobby_id().unwrap_or(0);
@@ -567,7 +567,19 @@ impl State for LobbyState {
                                 .then(&self.message_closure);
                         }
                     }
-                    BUTTON_LEAVE => return Some(StateSort::MenuMain(MenuState::new())),
+                    BUTTON_LEAVE => match &self.lobby.settings {
+                        LobbySettings {
+                            loadout_method: LoadoutMethod::Prefab(mages),
+                            board,
+                            ..
+                        } => {
+                            return Some(StateSort::Editor(EditorState::new(
+                                board.clone(),
+                                mages.clone(),
+                            )));
+                        }
+                        _ => return Some(StateSort::MenuMain(MenuState::new())),
+                    },
                     _ => (),
                 }
             }

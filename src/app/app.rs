@@ -53,7 +53,7 @@ impl App {
                 frame: 0,
                 canvas_settings,
             },
-            state_sort: StateSort::Editor(EditorState::new()),
+            state_sort: StateSort::Editor(EditorState::default()),
             atlas_complete: false,
         }
     }

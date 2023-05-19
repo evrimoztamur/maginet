@@ -1,10 +1,10 @@
 use std::mem;
 
-use shared::{Board, Mage, Mages, Position, Team, DEFAULT_BOARD_SIZE};
+use shared::{Board, LobbySettings, Mage, Mages, Position, Team, DEFAULT_BOARD_SIZE};
 use wasm_bindgen::JsValue;
 use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement};
 
-use super::State;
+use super::{LobbyState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, Interface, Particle,
@@ -55,177 +55,13 @@ const BUTTON_DELETE: usize = 39;
 const BUTTON_ADD: usize = 40;
 
 impl EditorState {
-    pub fn new() -> EditorState {
-        let button_menu = ToggleButtonElement::new(
-            (-60, 118),
-            (20, 20),
-            BUTTON_MENU,
-            ButtonTrim::Round,
-            ButtonClass::Bright,
-            crate::app::ContentElement::Sprite((112, 32), (16, 16)),
-        );
+    pub fn new(board: Board, mages: Vec<Mage>) -> EditorState {
+        let mut state = EditorState::default();
 
-        let button_mode_toggle = ButtonElement::new(
-            (236, 228),
-            (80, 24),
-            BUTTON_MODE_TOGGLE,
-            ButtonTrim::Glorious,
-            ButtonClass::Action,
-            crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
-        );
+        state.mages = mages;
+        state.board = board;
 
-        let button_save = ButtonElement::new(
-            (244, 204),
-            (64, 16),
-            BUTTON_MODE_TOGGLE,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Text("Save".to_string(), Alignment::Center),
-        );
-
-        let button_width_minus = ButtonElement::new(
-            (82, 248),
-            (12, 12),
-            BUTTON_WIDTH_MINUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((88, 24), (8, 8)),
-        );
-
-        let button_width_plus = ButtonElement::new(
-            (98, 248),
-            (12, 12),
-            BUTTON_WIDTH_PLUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((80, 24), (8, 8)),
-        );
-
-        let button_height_minus = ButtonElement::new(
-            (216, 114),
-            (12, 12),
-            BUTTON_HEIGHT_MINUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((88, 24), (8, 8)),
-        );
-
-        let button_height_plus = ButtonElement::new(
-            (216, 130),
-            (12, 12),
-            BUTTON_HEIGHT_PLUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((80, 24), (8, 8)),
-        );
-
-        let button_team_left = ButtonElement::new(
-            (240, 122 - 92),
-            (12, 20),
-            BUTTON_TEAM_LEFT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((64, 24), (8, 8)),
-        );
-
-        let button_team_right = ButtonElement::new(
-            (300, 122 - 92),
-            (12, 20),
-            BUTTON_TEAM_RIGHT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((72, 24), (8, 8)),
-        );
-
-        let button_spell_left = ButtonElement::new(
-            (240, 122 - 38),
-            (12, 32),
-            BUTTON_SPELL_LEFT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((64, 24), (8, 8)),
-        );
-
-        let button_spell_right = ButtonElement::new(
-            (300, 122 - 38),
-            (12, 32),
-            BUTTON_SPELL_RIGHT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((72, 24), (8, 8)),
-        );
-
-        let button_mana_left = ButtonElement::new(
-            (244, 122 + 8),
-            (12, 12),
-            BUTTON_MANA_LEFT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((64, 24), (8, 8)),
-        );
-
-        let button_mana_right = ButtonElement::new(
-            (296, 122 + 8),
-            (12, 12),
-            BUTTON_MANA_RIGHT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((72, 24), (8, 8)),
-        );
-
-        let button_delete = ButtonElement::new(
-            (260, 160),
-            (32, 20),
-            BUTTON_DELETE,
-            ButtonTrim::Round,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((128, 32), (16, 16)),
-        );
-
-        let mage_interface = Interface::new(vec![
-            Box::new(button_team_left),
-            Box::new(button_team_right),
-            Box::new(button_spell_left),
-            Box::new(button_spell_right),
-            Box::new(button_mana_left),
-            Box::new(button_mana_right),
-            Box::new(button_delete),
-        ]);
-
-        let button_add = ButtonElement::new(
-            (260, 122 - 44),
-            (32, 20),
-            BUTTON_ADD,
-            ButtonTrim::Glorious,
-            ButtonClass::Default,
-            crate::app::ContentElement::Sprite((144, 32), (16, 16)),
-        );
-
-        let no_mage_interface = Interface::new(vec![Box::new(button_add)]);
-
-        let root_element = Interface::new(vec![
-            Box::new(button_menu),
-            Box::new(button_mode_toggle),
-            Box::new(button_save),
-            Box::new(button_width_minus),
-            Box::new(button_width_plus),
-            Box::new(button_height_minus),
-            Box::new(button_height_plus),
-        ]);
-
-        let board = Board::new(DEFAULT_BOARD_SIZE.0, DEFAULT_BOARD_SIZE.1).unwrap();
-
-        EditorState {
-            interface: root_element,
-            mage_interface,
-            no_mage_interface,
-            board,
-            mages: Vec::new(),
-            mage_index: 0,
-            particles: Vec::new(),
-            selection: EditorSelection::None,
-            board_dirty: true,
-        }
+        state
     }
 
     pub fn board_offset(&self) -> (i32, i32) {
@@ -394,8 +230,14 @@ impl State for EditorState {
 
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
-                BUTTON_MODE_TOGGLE => {}
-
+                BUTTON_MODE_TOGGLE => {
+                    return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
+                        lobby_sort: shared::LobbySort::Local,
+                        loadout_method: shared::LoadoutMethod::Prefab(self.mages.clone()),
+                        board: self.board.clone(),
+                        ..Default::default()
+                    })));
+                }
                 BUTTON_WIDTH_MINUS => {
                     if let Ok(board) = Board::new(self.board.width - 1, self.board.height) {
                         self.board = board;
@@ -589,5 +431,180 @@ impl State for EditorState {
         }
 
         None
+    }
+}
+
+impl Default for EditorState {
+    fn default() -> Self {
+        let button_menu = ToggleButtonElement::new(
+            (-60, 118),
+            (20, 20),
+            BUTTON_MENU,
+            ButtonTrim::Round,
+            ButtonClass::Bright,
+            crate::app::ContentElement::Sprite((112, 32), (16, 16)),
+        );
+
+        let button_mode_toggle = ButtonElement::new(
+            (236, 228),
+            (80, 24),
+            BUTTON_MODE_TOGGLE,
+            ButtonTrim::Glorious,
+            ButtonClass::Action,
+            crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
+        );
+
+        let button_save = ButtonElement::new(
+            (244, 204),
+            (64, 16),
+            BUTTON_MODE_TOGGLE,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Text("Save".to_string(), Alignment::Center),
+        );
+
+        let button_width_minus = ButtonElement::new(
+            (82, 248),
+            (12, 12),
+            BUTTON_WIDTH_MINUS,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((88, 24), (8, 8)),
+        );
+
+        let button_width_plus = ButtonElement::new(
+            (98, 248),
+            (12, 12),
+            BUTTON_WIDTH_PLUS,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((80, 24), (8, 8)),
+        );
+
+        let button_height_minus = ButtonElement::new(
+            (216, 114),
+            (12, 12),
+            BUTTON_HEIGHT_MINUS,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((88, 24), (8, 8)),
+        );
+
+        let button_height_plus = ButtonElement::new(
+            (216, 130),
+            (12, 12),
+            BUTTON_HEIGHT_PLUS,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((80, 24), (8, 8)),
+        );
+
+        let button_team_left = ButtonElement::new(
+            (240, 122 - 92),
+            (12, 20),
+            BUTTON_TEAM_LEFT,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((64, 24), (8, 8)),
+        );
+
+        let button_team_right = ButtonElement::new(
+            (300, 122 - 92),
+            (12, 20),
+            BUTTON_TEAM_RIGHT,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((72, 24), (8, 8)),
+        );
+
+        let button_spell_left = ButtonElement::new(
+            (240, 122 - 38),
+            (12, 32),
+            BUTTON_SPELL_LEFT,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((64, 24), (8, 8)),
+        );
+
+        let button_spell_right = ButtonElement::new(
+            (300, 122 - 38),
+            (12, 32),
+            BUTTON_SPELL_RIGHT,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((72, 24), (8, 8)),
+        );
+
+        let button_mana_left = ButtonElement::new(
+            (244, 122 + 8),
+            (12, 12),
+            BUTTON_MANA_LEFT,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((64, 24), (8, 8)),
+        );
+
+        let button_mana_right = ButtonElement::new(
+            (296, 122 + 8),
+            (12, 12),
+            BUTTON_MANA_RIGHT,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((72, 24), (8, 8)),
+        );
+
+        let button_delete = ButtonElement::new(
+            (260, 160),
+            (32, 20),
+            BUTTON_DELETE,
+            ButtonTrim::Round,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((128, 32), (16, 16)),
+        );
+
+        let mage_interface = Interface::new(vec![
+            Box::new(button_team_left),
+            Box::new(button_team_right),
+            Box::new(button_spell_left),
+            Box::new(button_spell_right),
+            Box::new(button_mana_left),
+            Box::new(button_mana_right),
+            Box::new(button_delete),
+        ]);
+
+        let button_add = ButtonElement::new(
+            (260, 122 - 44),
+            (32, 20),
+            BUTTON_ADD,
+            ButtonTrim::Glorious,
+            ButtonClass::Default,
+            crate::app::ContentElement::Sprite((144, 32), (16, 16)),
+        );
+
+        let no_mage_interface = Interface::new(vec![Box::new(button_add)]);
+
+        let root_element = Interface::new(vec![
+            Box::new(button_menu),
+            Box::new(button_mode_toggle),
+            Box::new(button_save),
+            Box::new(button_width_minus),
+            Box::new(button_width_plus),
+            Box::new(button_height_minus),
+            Box::new(button_height_plus),
+        ]);
+
+        let board = Board::new(DEFAULT_BOARD_SIZE.0, DEFAULT_BOARD_SIZE.1).unwrap();
+
+        EditorState {
+            interface: root_element,
+            mage_interface,
+            no_mage_interface,
+            board,
+            mages: Vec::new(),
+            mage_index: 0,
+            particles: Vec::new(),
+            selection: EditorSelection::None,
+            board_dirty: true,
+        }
     }
 }

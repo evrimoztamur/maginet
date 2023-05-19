@@ -6,7 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Game, MageSort, Message, Team, Turn, DEFAULT_BOARD_SIZE};
+use crate::{Board, Game, Mage, MageSort, Message, Team, Turn, DEFAULT_BOARD_SIZE};
 
 /// A identifier for a lobby, shared by the client and the server.
 pub type LobbyID = u16;
@@ -64,14 +64,12 @@ impl Lobby {
     /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
     pub fn new(settings: LobbySettings) -> Lobby {
         let mut rng = ChaCha8Rng::seed_from_u64(settings.seed as u64);
-        let (red_mage_sorts, blue_mage_sorts) = Lobby::select_loadouts(&settings, &mut rng);
 
         Lobby {
             game: Game::new(
-                DEFAULT_BOARD_SIZE.0,
-                DEFAULT_BOARD_SIZE.1,
-                red_mage_sorts,
-                blue_mage_sorts,
+                settings.board.width,
+                settings.board.height,
+                Lobby::select_loadouts(&settings, &mut rng),
                 Lobby::random_team(&mut rng),
             )
             .expect("game should be instantiable with default values"),
@@ -82,23 +80,52 @@ impl Lobby {
         }
     }
 
-    fn select_loadouts(
-        lobby_settings: &LobbySettings,
-        rng: &mut ChaCha8Rng,
-    ) -> (Vec<MageSort>, Vec<MageSort>) {
-        match lobby_settings.loadout_method {
-            LoadoutMethod::Default => (Lobby::default_loadout(), Lobby::default_loadout()),
+    fn generate_loadout_by_sorts(
+        board: &Board,
+        red_mage_sorts: Vec<MageSort>,
+        blue_mage_sorts: Vec<MageSort>,
+    ) -> Vec<Mage> {
+        let mut mages = Vec::with_capacity(red_mage_sorts.len() + blue_mage_sorts.len());
+
+        mages.append(&mut board.place_mages(Team::Red, red_mage_sorts, 0));
+        mages.append(&mut board.place_mages(Team::Blue, blue_mage_sorts, mages.len()));
+
+        mages
+    }
+
+    fn select_loadouts(lobby_settings: &LobbySettings, rng: &mut ChaCha8Rng) -> Vec<Mage> {
+        let mut mages = match &lobby_settings.loadout_method {
+            LoadoutMethod::Default => Self::generate_loadout_by_sorts(
+                lobby_settings.board(),
+                Lobby::default_loadout(),
+                Lobby::default_loadout(),
+            ),
             LoadoutMethod::Manual => todo!(),
             LoadoutMethod::Random { symmetric } => {
-                if symmetric {
+                if *symmetric {
                     let loadout = Lobby::random_loadout(rng);
 
-                    (loadout.clone(), loadout)
+                    Self::generate_loadout_by_sorts(
+                        lobby_settings.board(),
+                        loadout.clone(),
+                        loadout,
+                    )
                 } else {
-                    (Lobby::random_loadout(rng), Lobby::random_loadout(rng))
+                    Self::generate_loadout_by_sorts(
+                        lobby_settings.board(),
+                        Lobby::random_loadout(rng),
+                        Lobby::random_loadout(rng),
+                    )
                 }
             }
+            LoadoutMethod::Prefab(mages) => mages.clone(),
+        };
+
+        for (i, mage) in mages.iter_mut().enumerate() {
+            mage.index = i;
         }
+
+        mages
     }
 
     fn default_loadout() -> Vec<MageSort> {
@@ -298,6 +325,8 @@ pub enum LoadoutMethod {
         /// Assign random sets to all players, or the same random set to all.
         symmetric: bool,
     },
+    /// A pre-fabricated list of mages.
+    Prefab(Vec<Mage>),
 }
 
 /// Loadout methods.
@@ -331,4 +360,11 @@ pub struct LobbySettings {
     pub loadout_method: LoadoutMethod,
     /// Seed for RNG.
     pub seed: u32,
+    /// Board.
+    pub board: Board,
+}
+impl LobbySettings {
+    fn board(&self) -> &Board {
+        &self.board
+    }
 }
