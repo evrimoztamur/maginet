@@ -45,13 +45,13 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(canvas_settings: CanvasSettings) -> App {
+    pub fn new(canvas_settings: &CanvasSettings) -> App {
         App {
             app_context: AppContext {
                 session_id: get_session_id(),
                 pointer: Pointer::new(&canvas_settings),
                 frame: 0,
-                canvas_settings,
+                canvas_settings: canvas_settings.clone(),
             },
             state_sort: StateSort::Editor(EditorState::default()),
             atlas_complete: false,
@@ -62,7 +62,7 @@ impl App {
         &mut self,
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         interface_canvas: &HtmlCanvasElement,
     ) -> Result<(), JsValue> {
         context.clear_rect(
@@ -101,26 +101,24 @@ impl App {
 
         let mut result = Ok(());
 
-        if atlas.complete() {
-            if !self.atlas_complete {
-                self.atlas_complete = true;
-                draw_board(&atlas, 256.0, 256.0, 2, 2, 2, 2)?;
-            } else {
-                result = match &mut self.state_sort {
-                    StateSort::MenuMain(state) => {
-                        state.draw(context, interface_context, atlas, &self.app_context)
-                    }
-                    StateSort::Lobby(state) => {
-                        state.draw(context, interface_context, atlas, &self.app_context)
-                    }
-                    StateSort::MenuTeleport(state) => {
-                        state.draw(context, interface_context, atlas, &self.app_context)
-                    }
-                    StateSort::Editor(state) => {
-                        state.draw(context, interface_context, atlas, &self.app_context)
-                    }
-                };
-            }
+        if !self.atlas_complete {
+            self.atlas_complete = true;
+            draw_board(&atlas, 256.0, 256.0, 2, 2, 2, 2)?;
+        } else {
+            result = match &mut self.state_sort {
+                StateSort::MenuMain(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
+                StateSort::Lobby(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
+                StateSort::MenuTeleport(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
+                StateSort::Editor(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
+            };
         }
 
         // DRAW cursor

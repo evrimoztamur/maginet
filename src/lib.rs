@@ -7,10 +7,11 @@ mod net;
 use std::{cell::RefCell, rc::Rc};
 
 use app::{App, CanvasSettings};
+use draw::draw_sprite;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
-    CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
+    console, CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
     KeyboardEvent, MouseEvent, TouchEvent, Window,
 };
 
@@ -72,170 +73,214 @@ fn start() -> Result<(), JsValue> {
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
 
-    let (canvas, context) = init_canvas(&canvas_settings)?;
-    let (interface_canvas, interface_context) = init_canvas(&canvas_settings)?;
+    let atlas_img = Rc::new(
+        document()
+            .create_element("img")
+            .unwrap()
+            .dyn_into::<HtmlImageElement>()
+            .unwrap(),
+    );
 
-    container_element.insert_before(&canvas, Some(&nav_element))?;
-
-    let atlas = document()
-        .create_element("img")
-        .unwrap()
-        .dyn_into::<HtmlImageElement>()
-        .unwrap();
-
-    atlas.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
-
-    let app = App::new(canvas_settings);
-
-    let app = Rc::new(RefCell::new(app));
-
-    let session_closure = {
-        let app = app.clone();
-
-        Closure::<dyn FnMut(JsValue)>::new(move |value| {
-            let mut app = app.borrow_mut();
-            app.on_session_response(value);
-        })
-    };
-
-    let f = Rc::new(RefCell::new(None));
-    let g = f.clone();
+    atlas_img.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
 
     {
-        let app = app.clone();
+        let atlas_img_a = atlas_img.clone();
+        let atlas_img = atlas_img.clone();
 
-        {
-            let app = app.borrow();
+        let closure = Closure::<dyn FnMut(_) -> Result<(), JsValue>>::new(move |_: JsValue| {
+            let (canvas, context) = init_canvas(&canvas_settings)?;
+            let (interface_canvas, interface_context) = init_canvas(&canvas_settings)?;
 
-            if app.session_id().is_none() {
-                let _ = fetch(&request_session()).then(&session_closure);
-            }
-        }
+            container_element.insert_before(&canvas, Some(&nav_element))?;
 
-        *g.borrow_mut() = Some(Closure::new(move || {
-            let mut app = app.borrow_mut();
+            let (atlas, atlas_context) = init_canvas(&CanvasSettings {
+                canvas_width: atlas_img.width(),
+                canvas_height: atlas_img.height(),
+                canvas_scale: 1,
+                ..Default::default()
+            })?;
+
+            atlas_context.draw_image_with_html_image_element(&atlas_img, 0.0, 0.0)?;
+
+            document().body().unwrap().append_child(&atlas)?;
+
+            let app = App::new(&canvas_settings);
+
+            let app = Rc::new(RefCell::new(app));
+
+            let session_closure = {
+                let app = app.clone();
+
+                Closure::<dyn FnMut(JsValue)>::new(move |value| {
+                    let mut app = app.borrow_mut();
+                    app.on_session_response(value);
+                })
+            };
+
+            let f = Rc::new(RefCell::new(None));
+            let g = f.clone();
 
             {
-                app.tick();
-                app.draw(&context, &interface_context, &atlas, &interface_canvas)
-                    .unwrap();
+                let app = app.clone();
+
+                {
+                    let app = app.borrow();
+
+                    if app.session_id().is_none() {
+                        let _ = fetch(&request_session()).then(&session_closure);
+                    }
+                }
+
+                *g.borrow_mut() = Some(Closure::new(move || {
+                    let mut app = app.borrow_mut();
+
+                    {
+                        app.tick();
+                        app.draw(&context, &interface_context, &atlas, &interface_canvas)
+                            .unwrap();
+                    }
+
+                    request_animation_frame(f.borrow().as_ref().unwrap());
+                }));
+
+                request_animation_frame(g.borrow().as_ref().unwrap());
             }
 
-            request_animation_frame(f.borrow().as_ref().unwrap());
-        }));
+            session_closure.forget();
 
-        request_animation_frame(g.borrow().as_ref().unwrap());
-    }
+            let canvas = Rc::new(canvas);
+            let bound: Rc<RefCell<Option<DomRect>>> =
+                Rc::new(RefCell::new(Some(canvas.get_bounding_client_rect())));
 
-    session_closure.forget();
-
-    let canvas = Rc::new(canvas);
-    let bound: Rc<RefCell<Option<DomRect>>> =
-        Rc::new(RefCell::new(Some(canvas.get_bounding_client_rect())));
-
-    {
-        let canvas = canvas.clone();
-        let bound = bound.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
-            bound.replace(Some(canvas.get_bounding_client_rect()));
-        });
-        window().add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
-
-    {
-        let app = app.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            let mut app = app.borrow_mut();
-            app.on_mouse_down(event);
-        });
-        document()
-            .add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
-
-    {
-        let app = app.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            let mut app = app.borrow_mut();
-            app.on_mouse_up(event);
-        });
-        document().add_event_listener_with_callback("mouseup", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
-
-    {
-        let app = app.clone();
-        let bound = bound.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            let mut app = app.borrow_mut();
-            if let Some(bound) = bound.borrow().as_deref() {
-                app.on_mouse_move(bound, event);
+            {
+                let canvas = canvas.clone();
+                let bound = bound.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
+                    bound.replace(Some(canvas.get_bounding_client_rect()));
+                });
+                window()
+                    .add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())?;
+                closure.forget();
             }
-        });
-        document()
-            .add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
 
-    {
-        let app = app.clone();
-        let bound = bound.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
-            let mut app = app.borrow_mut();
-            if let Some(bound) = bound.borrow().as_deref() {
-                app.on_touch_move(bound, event);
+            {
+                let app = app.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
+                    let mut app = app.borrow_mut();
+                    app.on_mouse_down(event);
+                });
+                document().add_event_listener_with_callback(
+                    "mousedown",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
             }
-        });
-        document()
-            .add_event_listener_with_callback("touchmove", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
 
-    {
-        let bound = bound.clone();
-        let app = app.clone();
-
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
-            if let Some(bound) = bound.borrow().as_deref() {
-                let mut app = app.borrow_mut();
-                app.on_touch_start(bound, event);
+            {
+                let app = app.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
+                    let mut app = app.borrow_mut();
+                    app.on_mouse_up(event);
+                });
+                document().add_event_listener_with_callback(
+                    "mouseup",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
             }
-        });
-        document()
-            .add_event_listener_with_callback("touchstart", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
 
-    {
-        let app = app.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
-            if let Some(bound) = bound.borrow().as_deref() {
-                let mut app = app.borrow_mut();
-                app.on_touch_end(bound, event);
+            {
+                let app = app.clone();
+                let bound = bound.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
+                    let mut app = app.borrow_mut();
+                    if let Some(bound) = bound.borrow().as_deref() {
+                        app.on_mouse_move(bound, event);
+                    }
+                });
+                document().add_event_listener_with_callback(
+                    "mousemove",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
             }
-        });
-        document()
-            .add_event_listener_with_callback("touchend", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
 
-    {
-        let app = app.clone();
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            let mut app = app.borrow_mut();
-            app.on_key_down(event);
-        });
-        document().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
-        closure.forget();
-    }
+            {
+                let app = app.clone();
+                let bound = bound.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+                    let mut app = app.borrow_mut();
+                    if let Some(bound) = bound.borrow().as_deref() {
+                        app.on_touch_move(bound, event);
+                    }
+                });
+                document().add_event_listener_with_callback(
+                    "touchmove",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
+            }
 
-    {
-        let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            event.prevent_default();
+            {
+                let bound = bound.clone();
+                let app = app.clone();
+
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+                    if let Some(bound) = bound.borrow().as_deref() {
+                        let mut app = app.borrow_mut();
+                        app.on_touch_start(bound, event);
+                    }
+                });
+                document().add_event_listener_with_callback(
+                    "touchstart",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
+            }
+
+            {
+                let app = app.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+                    if let Some(bound) = bound.borrow().as_deref() {
+                        let mut app = app.borrow_mut();
+                        app.on_touch_end(bound, event);
+                    }
+                });
+                document().add_event_listener_with_callback(
+                    "touchend",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
+            }
+
+            {
+                let app = app.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
+                    let mut app = app.borrow_mut();
+                    app.on_key_down(event);
+                });
+                document().add_event_listener_with_callback(
+                    "keydown",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
+            }
+
+            {
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
+                    event.prevent_default();
+                });
+                document().add_event_listener_with_callback(
+                    "contextmenu",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+                closure.forget();
+            }
+
+            Ok(())
         });
-        document()
-            .add_event_listener_with_callback("contextmenu", closure.as_ref().unchecked_ref())?;
+
+        atlas_img_a.add_event_listener_with_callback("load", closure.as_ref().unchecked_ref())?;
         closure.forget();
     }
 

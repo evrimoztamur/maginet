@@ -1,6 +1,6 @@
 use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
 
 use super::{LobbyState, MenuTeleport, State};
 use crate::{
@@ -150,7 +150,7 @@ impl State for MenuState {
         &mut self,
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
         let frame = app_context.frame;

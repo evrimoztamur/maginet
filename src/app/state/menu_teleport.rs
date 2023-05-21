@@ -2,7 +2,7 @@ use std::ops::BitXorAssign;
 
 use shared::{Board, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
 
 use super::{LobbyState, MenuState, State};
 use crate::{
@@ -60,7 +60,7 @@ impl State for MenuTeleport {
         &mut self,
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
         let board_scale = tuple_as!(BOARD_SCALE, f64);

@@ -5,7 +5,7 @@ use shared::{
     Position, Team, Turn,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
 
 use super::{EditorState, MenuState, State};
 use crate::{
@@ -192,7 +192,7 @@ impl LobbyState {
     fn draw_game(
         &mut self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
         let board_scale = tuple_as!(BOARD_SCALE, f64);
@@ -399,7 +399,7 @@ impl State for LobbyState {
         &mut self,
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
         let frame = app_context.frame;

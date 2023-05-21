@@ -1,7 +1,7 @@
 use js_sys::Math::random;
 use shared::{Mage, Position, Team};
-use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use wasm_bindgen::{JsCast, JsValue};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 use crate::{
     app::{CanvasSettings, Particle, ParticleSort, BOARD_SCALE},
@@ -26,7 +26,7 @@ pub fn rotation_from_position(position: Position) -> i8 {
 
 pub fn draw_sprite(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     sx: f64,
     sy: f64,
     sw: f64,
@@ -34,7 +34,7 @@ pub fn draw_sprite(
     dx: f64,
     dy: f64,
 ) -> Result<(), JsValue> {
-    context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+    context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
         atlas, sx, sy, sw, sh, dx, dy, sw, sh,
     )?;
 
@@ -62,7 +62,7 @@ pub fn text_length(text: &String) -> isize {
 
 pub fn draw_text(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     dx: f64,
     dy: f64,
     text: &String,
@@ -93,7 +93,7 @@ pub fn draw_text(
 
 pub fn draw_crosshair(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     position: &Position,
     offset: (f64, f64),
     frame: u64,
@@ -149,7 +149,7 @@ pub fn draw_crosshair(
 
 pub fn draw_mage(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     mage: &Mage,
     frame: u64,
     team: Team,
@@ -199,7 +199,7 @@ pub fn draw_mage(
 
     match mage.team {
         Team::Red => context
-            .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+            .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
                 sprite_x,
                 64.0 + sleeping_offset,
@@ -212,7 +212,7 @@ pub fn draw_mage(
             )?,
         Team::Blue => {
             context.scale(-1.0, 1.0)?;
-            context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+            context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
                 sprite_x,
                 96.0 + sleeping_offset,
@@ -237,7 +237,7 @@ pub fn draw_mage(
 
 pub fn draw_mana(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     mage: &Mage,
 ) -> Result<(), JsValue> {
     for i in 0..mage.mana.0 {
@@ -258,7 +258,7 @@ pub fn draw_mana(
 
 pub fn draw_spell_pattern(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     mage: &Mage,
 ) -> Result<(), JsValue> {
     for x in 0..5 {
@@ -307,7 +307,7 @@ pub fn draw_spell_pattern(
 
 pub fn draw_particle(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     particle: &Particle,
     frame: u64,
 ) -> Result<(), JsValue> {
@@ -365,7 +365,7 @@ fn quadrant_to_xy(corner: u8) -> (u8, u8) {
 
 pub fn draw_tile(
     context: &CanvasRenderingContext2d,
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     position: &Position,
 ) -> Result<(), JsValue> {
     let board_scale = tuple_as!(BOARD_SCALE, f64);
@@ -411,7 +411,7 @@ pub fn draw_tile(
 }
 
 pub fn draw_board(
-    atlas: &HtmlImageElement,
+    atlas: &HtmlCanvasElement,
     dx: f64,
     dy: f64,
     width: usize,
@@ -420,14 +420,14 @@ pub fn draw_board(
     clear_height: usize,
 ) -> Result<(), JsValue> {
     let board_scale = tuple_as!(BOARD_SCALE, f64);
-    let (atlas_canvas, atlas_context) = init_canvas(&CanvasSettings {
-        canvas_width: atlas.width(),
-        canvas_height: atlas.height(),
-        canvas_scale: 1,
-        ..Default::default()
-    })?;
 
-    atlas_context.draw_image_with_html_image_element(atlas, 0.0, 0.0)?;
+    let atlas_context = atlas
+        .get_context("2d")?
+        .unwrap()
+        .dyn_into::<CanvasRenderingContext2d>()?;
+
+    atlas_context.save();
+
     atlas_context.clear_rect(
         dx,
         dy,
@@ -494,7 +494,7 @@ pub fn draw_board(
         }
     }
 
-    atlas.set_src(atlas_canvas.to_data_url()?.as_str());
+    atlas_context.restore();
 
     Ok(())
 }

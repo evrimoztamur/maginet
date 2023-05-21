@@ -1,5 +1,5 @@
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
 
 use super::Pointer;
 use crate::draw::{draw_sprite, draw_text, text_length};
@@ -16,7 +16,7 @@ pub trait UIElement {
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         pointer: &Pointer,
         frame: u64,
     ) -> Result<(), JsValue>;
@@ -38,7 +38,7 @@ impl UIElement for ContentElement {
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         _pointer: &Pointer,
         _frame: u64,
     ) -> Result<(), JsValue> {
@@ -127,7 +127,7 @@ impl UIElement for ButtonElement {
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         pointer: &Pointer,
         frame: u64,
     ) -> Result<(), JsValue> {
@@ -274,7 +274,7 @@ impl UIElement for ConfirmButtonElement {
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         pointer: &Pointer,
         frame: u64,
     ) -> Result<(), JsValue> {
@@ -340,7 +340,7 @@ impl UIElement for ToggleButtonElement {
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         pointer: &Pointer,
         frame: u64,
     ) -> Result<(), JsValue> {
@@ -398,7 +398,7 @@ impl UIElement for ButtonGroupElement {
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         pointer: &Pointer,
         frame: u64,
     ) -> Result<(), JsValue> {
@@ -443,7 +443,7 @@ impl UIElement for Interface {
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         pointer: &Pointer,
         frame: u64,
     ) -> Result<(), JsValue> {

@@ -1,5 +1,5 @@
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
 
 use crate::app::{AppContext, StateSort};
 
@@ -8,7 +8,7 @@ pub trait State {
         &mut self,
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue>;
 

@@ -2,7 +2,7 @@ use std::mem;
 
 use shared::{Board, LobbySettings, Mage, Mages, Position, Team, DEFAULT_BOARD_SIZE};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
 
 use super::{LobbyState, State};
 use crate::{
@@ -77,7 +77,7 @@ impl State for EditorState {
         &mut self,
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
-        atlas: &HtmlImageElement,
+        atlas: &HtmlCanvasElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
         let board_scale = tuple_as!(BOARD_SCALE, f64);
@@ -89,7 +89,6 @@ impl State for EditorState {
         if self.board_dirty {
             self.board_dirty = false;
             draw_board(atlas, 256.0, 0.0, self.board.width, self.board.height, 8, 8).unwrap();
-            console::log_1(&format!("HEL {}", atlas.complete()).into());
         }
 
         context.save();
