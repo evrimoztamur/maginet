@@ -5,7 +5,7 @@ use shared::{
     Position, Team, Turn,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::{EditorState, MenuState, State};
 use crate::{

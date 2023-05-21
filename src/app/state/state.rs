@@ -1,5 +1,5 @@
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use crate::app::{AppContext, StateSort};
 

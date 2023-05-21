@@ -2,7 +2,7 @@ use std::mem;
 
 use shared::{Board, LobbySettings, Mage, Mages, Position, Team, DEFAULT_BOARD_SIZE};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::{LobbyState, State};
 use crate::{

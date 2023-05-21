@@ -2,7 +2,7 @@ use std::ops::BitXorAssign;
 
 use shared::{Board, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::{LobbyState, MenuState, State};
 use crate::{

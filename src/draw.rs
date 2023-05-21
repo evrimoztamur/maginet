@@ -1,11 +1,11 @@
 use js_sys::Math::random;
 use shared::{Mage, Position, Team};
 use wasm_bindgen::{JsCast, JsValue};
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use crate::{
-    app::{CanvasSettings, Particle, ParticleSort, BOARD_SCALE},
-    init_canvas, tuple_as,
+    app::{Particle, ParticleSort, BOARD_SCALE},
+    tuple_as,
 };
 
 pub fn rotation_from_position(position: Position) -> i8 {

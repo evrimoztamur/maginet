@@ -1,6 +1,6 @@
 use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlImageElement, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::{LobbyState, MenuTeleport, State};
 use crate::{

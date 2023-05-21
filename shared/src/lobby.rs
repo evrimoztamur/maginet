@@ -6,7 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Game, Mage, MageSort, Message, Team, Turn, DEFAULT_BOARD_SIZE};
+use crate::{Board, Game, Mage, MageSort, Message, Team, Turn};
 
 /// A identifier for a lobby, shared by the client and the server.
 pub type LobbyID = u16;

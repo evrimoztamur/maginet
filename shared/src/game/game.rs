@@ -4,7 +4,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Mage, MageSort, Mages, Position, Team, Turn};
+use crate::{Board, Mage, Mages, Position, Team, Turn};
 
 /// A [`Game`] contains all the information to represent a deterministically replicable state of the game.
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.

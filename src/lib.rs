@@ -7,11 +7,10 @@ mod net;
 use std::{cell::RefCell, rc::Rc};
 
 use app::{App, CanvasSettings};
-use draw::draw_sprite;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
-    console, CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
+    CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
     KeyboardEvent, MouseEvent, TouchEvent, Window,
 };
 

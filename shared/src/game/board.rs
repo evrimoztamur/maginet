@@ -14,7 +14,6 @@ pub struct Board {
     pub height: usize,
 }
 
-
 impl Board {
     /// Instantiates the [`Board`] `struct` with a certain size.
     /// Restricted to `4..=8` on both axes. Currently always 8-by-8.
@@ -82,6 +81,9 @@ impl Board {
 
 impl Default for Board {
     fn default() -> Self {
-        Self { width: DEFAULT_BOARD_SIZE.0, height: DEFAULT_BOARD_SIZE.1 }
+        Self {
+            width: DEFAULT_BOARD_SIZE.0,
+            height: DEFAULT_BOARD_SIZE.1,
+        }
     }
 }

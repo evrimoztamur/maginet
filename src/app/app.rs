@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use shared::{LobbyError, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
-    console, CanvasRenderingContext2d, DomRectReadOnly, HtmlCanvasElement, HtmlImageElement,
-    KeyboardEvent, MouseEvent, TouchEvent,
+    console, CanvasRenderingContext2d, DomRectReadOnly, HtmlCanvasElement, KeyboardEvent,
+    MouseEvent, TouchEvent,
 };
 
 use super::{EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_SCALE};
