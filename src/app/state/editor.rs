@@ -2,7 +2,7 @@ use std::mem;
 
 use shared::{Board, LobbySettings, Mage, Mages, Position, Team, DEFAULT_BOARD_SIZE};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::{LobbyState, State};
 use crate::{
@@ -55,10 +55,18 @@ const BUTTON_DELETE: usize = 39;
 const BUTTON_ADD: usize = 40;
 
 impl EditorState {
-    pub fn new(board: Board, mages: Vec<Mage>) -> EditorState {
+    pub fn new(board: Board, mut mages: Vec<Mage>) -> EditorState {
         let mut state = EditorState::default();
 
-        state.mages = mages;
+        state.mages = mages
+            .iter_mut()
+            .enumerate()
+            .map(|(i, mage)| {
+                mage.index = i;
+                mage.clone()
+            })
+            .collect();
+        state.mage_index = mages.len();
         state.board = board;
 
         state
