@@ -238,9 +238,32 @@ impl State for EditorState {
                     })));
                 }
                 BUTTON_WIDTH_MINUS => {
-                    if let Ok(board) = Board::new(self.board.width - 1, self.board.height) {
-                        self.board = board;
-                        self.board_dirty = true;
+                    let min_width = self
+                        .mages
+                        .iter()
+                        .map(|mage| mage.position.0)
+                        .reduce(|acc, e| acc.max(e))
+                        .unwrap_or_default() as usize;
+
+                    if self.board.width - 1 <= min_width {
+                        for _ in 0..self.board.width * 5 {
+                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                            self.particles.push(Particle::new(
+                                (
+                                    self.board.width as f64 - 0.5,
+                                    js_sys::Math::random() * self.board.height as f64 - 0.5,
+                                ),
+                                (-v, d.sin() * v * 0.1),
+                                (js_sys::Math::random() * 40.0) as u64,
+                                ParticleSort::Diagonals,
+                            ));
+                        }
+                    } else {
+                        if let Ok(board) = Board::new(self.board.width - 1, self.board.height) {
+                            self.board = board;
+                            self.board_dirty = true;
+                        }
                     }
                 }
                 BUTTON_WIDTH_PLUS => {
@@ -250,9 +273,32 @@ impl State for EditorState {
                     }
                 }
                 BUTTON_HEIGHT_MINUS => {
-                    if let Ok(board) = Board::new(self.board.width, self.board.height - 1) {
-                        self.board = board;
-                        self.board_dirty = true;
+                    let min_height = self
+                        .mages
+                        .iter()
+                        .map(|mage| mage.position.1)
+                        .reduce(|acc, e| acc.max(e))
+                        .unwrap_or_default() as usize;
+
+                    if self.board.height - 1 <= min_height {
+                        for _ in 0..self.board.height * 5 {
+                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                            self.particles.push(Particle::new(
+                                (
+                                    js_sys::Math::random() * self.board.width as f64 - 0.5,
+                                    self.board.height as f64 - 0.5,
+                                ),
+                                (d.cos() * v * 0.1, -v),
+                                (js_sys::Math::random() * 40.0) as u64,
+                                ParticleSort::Diagonals,
+                            ));
+                        }
+                    } else {
+                        if let Ok(board) = Board::new(self.board.width, self.board.height - 1) {
+                            self.board = board;
+                            self.board_dirty = true;
+                        }
                     }
                 }
                 BUTTON_HEIGHT_PLUS => {
