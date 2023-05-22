@@ -25,7 +25,7 @@ impl Sub for &Position {
 }
 
 impl Position {
-    /// Wraps the position from `(0, 0)` to `(xmax` - 1, ymax - 1)` in order to ignore the edges of the board.
+    /// Wraps the position from `(0, 0)` to `(xmax - 1, ymax - 1)` in order to ignore the edges of the board.
     /// Both negative and positive positions will be wrapped around as if it was on an infinite grid.
     pub fn wrap(&self, xmax: i8, ymax: i8) -> Position {
         Position(self.0.rem_zero(xmax), self.1.rem_zero(ymax))

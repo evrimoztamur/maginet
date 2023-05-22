@@ -478,9 +478,15 @@ impl State for EditorState {
             }
         }
 
-        if let EditorSelection::Mage(selected_mage) = &self.selection {
-            self.mages
-                .drain_filter(|mage| mage.index == selected_mage.index);
+        match &mut self.selection {
+            EditorSelection::Mage(selected_mage) => {
+                self.mages
+                    .drain_filter(|mage| mage.index == selected_mage.index);
+            }
+            EditorSelection::Tile(position) => {
+                *position = self.board.clamp_position(*position);
+            },
+            EditorSelection::None => (),
         }
 
         None

@@ -55,6 +55,14 @@ impl Board {
         }
     }
 
+    /// Clamps a [`Position`] to rest within this board.
+    pub fn clamp_position(&self, position: Position) -> Position {
+        Position(
+            position.0.clamp(0, self.width as i8 - 1),
+            position.1.clamp(0, self.height as i8 - 1),
+        )
+    }
+
     /// Converts a canvas location to a board [`Position`].
     pub fn location_as_position(
         &self,
