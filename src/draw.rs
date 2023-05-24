@@ -4,7 +4,10 @@ use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use crate::{
-    app::{Particle, ParticleSort, BOARD_SCALE},
+    app::{
+        ContentElement, LabelTrim, Particle, ParticleSort, Pointer, UIElement,
+        BOARD_SCALE,
+    },
     tuple_as,
 };
 
@@ -495,6 +498,96 @@ pub fn draw_board(
     }
 
     atlas_context.restore();
+
+    Ok(())
+}
+
+pub fn draw_label(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlCanvasElement,
+    position: (i32, i32),
+    size: (i32, i32),
+    color: &str,
+    content: &ContentElement,
+    pointer: &Pointer,
+    frame: u64,
+    trim: &LabelTrim,
+) -> Result<(), JsValue> {
+    context.save();
+
+    context.translate(position.0 as f64, position.1 as f64)?;
+
+    context.set_fill_style(&color.into());
+    context.fill_rect(0.0, 0.0, size.0 as f64, size.1 as f64);
+
+    context.translate(size.0 as f64 / 2.0, size.1 as f64 / 2.0)?;
+
+    content.draw(context, atlas, pointer, frame)?;
+
+    context.set_global_composite_operation("destination-out")?;
+
+    let trim_position = match trim {
+        LabelTrim::Round => (80.0, 0.0),
+        LabelTrim::Glorious => (88.0, 0.0),
+    };
+
+    draw_sprite(
+        context,
+        atlas,
+        trim_position.0,
+        trim_position.1,
+        4.0,
+        4.0,
+        -size.0 as f64 / 2.0,
+        -size.1 as f64 / 2.0,
+    )?;
+    draw_sprite(
+        context,
+        atlas,
+        trim_position.0 + 4.0,
+        trim_position.1,
+        4.0,
+        4.0,
+        size.0 as f64 / 2.0 - 4.0,
+        -size.1 as f64 / 2.0,
+    )?;
+    draw_sprite(
+        context,
+        atlas,
+        trim_position.0,
+        trim_position.1 + 4.0,
+        4.0,
+        4.0,
+        -size.0 as f64 / 2.0,
+        size.1 as f64 / 2.0 - 4.0,
+    )?;
+    draw_sprite(
+        context,
+        atlas,
+        trim_position.0 + 4.0,
+        trim_position.1 + 4.0,
+        4.0,
+        4.0,
+        size.0 as f64 / 2.0 - 4.0,
+        size.1 as f64 / 2.0 - 4.0,
+    )?;
+
+    if *trim == LabelTrim::Glorious {
+        context.fill_rect(
+            -size.0 as f64 / 2.0,
+            -size.1 as f64 / 2.0 + 2.0,
+            2.0,
+            size.1 as f64 - 4.0,
+        );
+        context.fill_rect(
+            size.0 as f64 / 2.0 - 2.0,
+            -size.1 as f64 / 2.0 + 2.0,
+            2.0,
+            size.1 as f64 - 4.0,
+        );
+    }
+
+    context.restore();
 
     Ok(())
 }

@@ -1,5 +1,6 @@
 mod board;
 mod game;
+mod level;
 mod mage;
 mod mana;
 mod position;
@@ -9,6 +10,7 @@ mod turn;
 
 pub use board::*;
 pub use game::*;
+pub use level::*;
 pub use mage::*;
 pub use mana::*;
 pub use position::*;

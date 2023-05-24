@@ -6,7 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Game, Mage, MageSort, Message, Team, Turn};
+use crate::{Board, Game, Level, Mage, MageSort, Message, Team, Turn};
 
 /// A identifier for a lobby, shared by the client and the server.
 pub type LobbyID = u16;
@@ -66,12 +66,11 @@ impl Lobby {
         let mut rng = ChaCha8Rng::seed_from_u64(settings.seed as u64);
 
         Lobby {
-            game: Game::new(
-                settings.board.width,
-                settings.board.height,
+            game: Game::new(&Level::new(
+                Board::new(settings.board.width, settings.board.height).unwrap(),
                 Lobby::select_loadouts(&settings, &mut rng),
                 Lobby::random_team(&mut rng),
-            )
+            ))
             .expect("game should be instantiable with default values"),
             players: HashMap::new(),
             player_slots: VecDeque::from([Player::new(Team::Red), Player::new(Team::Blue)]),
@@ -260,9 +259,9 @@ impl Lobby {
 
     /// Determines if the game is finished.
     pub fn finished(&self) -> bool {
-        self.game
-            .all_available_turns(self.game.turn_for())
-            .is_empty()
+        self.game.finished()
+        .all_available_turns(self.game.turn_for())
+        .is_empty()
     }
 
     /// Determines if the game is local (`true`) or online.

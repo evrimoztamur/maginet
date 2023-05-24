@@ -7,7 +7,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 use super::{LobbyState, MenuState, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, Interface, Particle,
+        Alignment, AppContext, LabelTheme, ButtonElement, LabelTrim, Interface, Particle,
         ParticleSort, StateSort, UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{draw_crosshair, draw_particle, draw_sprite},
@@ -31,8 +31,8 @@ impl MenuTeleport {
             (16, 188),
             (80, 24),
             BUTTON_TELEPORT,
-            ButtonTrim::Glorious,
-            ButtonClass::Action,
+            LabelTrim::Glorious,
+            LabelTheme::Action,
             crate::app::ContentElement::Text("Teleport".to_string(), Alignment::Center),
         );
 
@@ -40,8 +40,8 @@ impl MenuTeleport {
             (156, 192),
             (88, 16),
             BUTTON_BACK,
-            ButtonTrim::Glorious,
-            ButtonClass::Default,
+            LabelTrim::Glorious,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Back".to_string(), Alignment::Center),
         );
 

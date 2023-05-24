@@ -5,7 +5,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 use super::{LobbyState, MenuTeleport, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonClass, ButtonElement, ButtonGroupElement, ButtonTrim,
+        Alignment, AppContext, LabelTheme, ButtonElement, ButtonGroupElement, LabelTrim,
         Interface, StateSort, UIElement, UIEvent,
     },
     draw::{draw_mage, draw_sprite},
@@ -34,24 +34,24 @@ impl MenuState {
             (0, 0),
             (72, 32),
             BUTTON_LOCAL,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Local".to_string(), Alignment::Center),
         );
         let button_vs_ai = ButtonElement::new(
             (80, 0),
             (72, 32),
             BUTTON_VS_AI,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("AI".to_string(), Alignment::Center),
         );
         let button_online = ButtonElement::new(
             (160, 0),
             (72, 32),
             BUTTON_ONLINE,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Online".to_string(), Alignment::Center),
         );
 
@@ -65,16 +65,16 @@ impl MenuState {
             (0, 0),
             (80, 18),
             BUTTON_DEFAULT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Default".to_string(), Alignment::Center),
         );
         let button_random = ButtonElement::new(
             (0, 22 * 1),
             (80, 18),
             BUTTON_SYMMETRIC_RANDOM,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Random".to_string(), Alignment::Center),
         );
 
@@ -82,8 +82,8 @@ impl MenuState {
             (0, 22 * 2),
             (80, 18),
             BUTTON_RANDOM,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Chaos".to_string(), Alignment::Center),
         );
 
@@ -111,8 +111,8 @@ impl MenuState {
             (16, 188),
             (80, 24),
             BUTTON_BATTLE,
-            ButtonTrim::Glorious,
-            ButtonClass::Action,
+            LabelTrim::Glorious,
+            LabelTheme::Action,
             crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
         );
 
@@ -120,8 +120,8 @@ impl MenuState {
             (156, 192),
             (88, 16),
             BUTTON_TELEPORT,
-            ButtonTrim::Glorious,
-            ButtonClass::Default,
+            LabelTrim::Glorious,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Teleport".to_string(), Alignment::Center),
         );
 

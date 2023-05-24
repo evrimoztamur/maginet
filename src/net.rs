@@ -5,7 +5,7 @@ use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::{future_to_promise, JsFuture};
 use web_sys::{Request, RequestInit, Response};
 
-use crate::window;
+use crate::storage;
 
 #[cfg(feature = "deploy")]
 const API_URL: &str = "https://maginet.evrim.zone";
@@ -155,8 +155,5 @@ pub fn send_message(lobby_id: LobbyID, session_id: String, message: Message) -> 
 }
 
 pub fn get_session_id() -> Option<String> {
-    window()
-        .local_storage()
-        .unwrap_or_default()
-        .and_then(|storage| storage.get_item("session_id").unwrap_or_default())
+    storage().and_then(|storage| storage.get_item("session_id").unwrap_or_default())
 }

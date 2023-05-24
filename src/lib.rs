@@ -11,7 +11,7 @@ use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
     CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
-    KeyboardEvent, MouseEvent, TouchEvent, Window,
+    KeyboardEvent, MouseEvent, TouchEvent, Window, Storage,
 };
 
 fn window() -> Window {
@@ -28,6 +28,10 @@ fn document() -> Document {
     window()
         .document()
         .expect("should have a document on window")
+}
+
+fn storage() -> Option<Storage> {
+    window().local_storage().unwrap_or_default()
 }
 
 #[cfg(feature = "deploy")]

@@ -10,7 +10,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 use super::{EditorState, MenuState, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, ConfirmButtonElement,
+        Alignment, AppContext, LabelTheme, ButtonElement, LabelTrim, ConfirmButtonElement,
         Interface, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
         BOARD_SCALE,
     },
@@ -61,8 +61,8 @@ impl LobbyState {
             (-128 - 18 - 8, -9),
             (20, 20),
             BUTTON_MENU,
-            ButtonTrim::Round,
-            ButtonClass::Bright,
+            LabelTrim::Round,
+            LabelTheme::Bright,
             crate::app::ContentElement::Sprite((112, 32), (16, 16)),
         );
 
@@ -70,8 +70,8 @@ impl LobbyState {
             (-44, -24),
             (88, 24),
             BUTTON_REMATCH,
-            ButtonTrim::Glorious,
-            ButtonClass::Action,
+            LabelTrim::Glorious,
+            LabelTheme::Action,
             crate::app::ContentElement::Text("Rematch".to_string(), Alignment::Center),
         );
 
@@ -79,8 +79,8 @@ impl LobbyState {
             (-36, 8),
             (72, 16),
             BUTTON_LEAVE,
-            ButtonTrim::Glorious,
-            ButtonClass::Default,
+            LabelTrim::Glorious,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
         );
 

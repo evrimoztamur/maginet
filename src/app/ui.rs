@@ -2,7 +2,7 @@ use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::Pointer;
-use crate::draw::{draw_sprite, draw_text, text_length};
+use crate::draw::{draw_label, draw_sprite, draw_text, text_length};
 
 pub enum UIEvent {
     ButtonClick(usize),
@@ -67,13 +67,13 @@ impl UIElement for ContentElement {
 }
 
 #[derive(PartialEq)]
-pub enum ButtonTrim {
+pub enum LabelTrim {
     Round,
     Glorious,
 }
 
 #[derive(PartialEq)]
-pub enum ButtonClass {
+pub enum LabelTheme {
     Default,
     Action,
     Bright,
@@ -83,8 +83,8 @@ pub struct ButtonElement {
     position: (i32, i32),
     size: (i32, i32),
     value: usize,
-    trim: ButtonTrim,
-    class: ButtonClass,
+    trim: LabelTrim,
+    class: LabelTheme,
     content: ContentElement,
     selected: bool,
 }
@@ -94,8 +94,8 @@ impl ButtonElement {
         position: (i32, i32),
         size: (i32, i32),
         value: usize,
-        trim: ButtonTrim,
-        class: ButtonClass,
+        trim: LabelTrim,
+        class: LabelTheme,
         content: ContentElement,
     ) -> ButtonElement {
         ButtonElement {
@@ -131,113 +131,47 @@ impl UIElement for ButtonElement {
         pointer: &Pointer,
         frame: u64,
     ) -> Result<(), JsValue> {
-        context.save();
-
-        context.translate(self.position.0 as f64, self.position.1 as f64)?;
-
-        let fs = context.fill_style();
-
-        match self.class {
-            ButtonClass::Default => {
+        let color = match self.class {
+            LabelTheme::Default => {
                 if self.selected {
-                    context.set_fill_style(&"#007faa".into());
+                    &"#007faa"
                 } else if self.hovered(pointer) {
-                    context.set_fill_style(&"#008080".into());
+                    &"#008080"
                 } else {
-                    context.set_fill_style(&"#006080".into());
+                    &"#006080"
                 }
             }
-            ButtonClass::Action => {
+            LabelTheme::Action => {
                 if self.selected {
-                    context.set_fill_style(&"#007faa".into());
+                    &"#007faa"
                 } else if self.hovered(pointer) {
-                    context.set_fill_style(&"#aa5f00".into());
+                    &"#aa5f00"
                 } else {
-                    context.set_fill_style(&"#7f1f00".into());
+                    &"#7f1f00"
                 }
             }
-            ButtonClass::Bright => {
+            LabelTheme::Bright => {
                 if self.selected {
-                    context.set_fill_style(&"#d43f00".into());
+                    &"#d43f00"
                 } else if self.hovered(pointer) {
-                    context.set_fill_style(&"#007faa".into());
+                    &"#007faa"
                 } else {
-                    context.set_fill_style(&"#006080".into());
+                    &"#006080"
                 }
             }
-        }
-
-        context.fill_rect(0.0, 0.0, self.size.0 as f64, self.size.1 as f64);
-        context.set_fill_style(&fs);
-
-        context.translate(self.size.0 as f64 / 2.0, self.size.1 as f64 / 2.0)?;
-
-        self.content.draw(context, atlas, pointer, frame)?;
-
-        context.set_global_composite_operation("destination-out")?;
-
-        let trim_position = match self.trim {
-            ButtonTrim::Round => (80.0, 0.0),
-            ButtonTrim::Glorious => (88.0, 0.0),
         };
 
-        draw_sprite(
+        draw_label(
             context,
             atlas,
-            trim_position.0,
-            trim_position.1,
-            4.0,
-            4.0,
-            -self.size.0 as f64 / 2.0,
-            -self.size.1 as f64 / 2.0,
+            self.position,
+            self.size,
+            color,
+            &self.content,
+            pointer,
+            frame,
+            &self.trim,
         )?;
-        draw_sprite(
-            context,
-            atlas,
-            trim_position.0 + 4.0,
-            trim_position.1,
-            4.0,
-            4.0,
-            self.size.0 as f64 / 2.0 - 4.0,
-            -self.size.1 as f64 / 2.0,
-        )?;
-        draw_sprite(
-            context,
-            atlas,
-            trim_position.0,
-            trim_position.1 + 4.0,
-            4.0,
-            4.0,
-            -self.size.0 as f64 / 2.0,
-            self.size.1 as f64 / 2.0 - 4.0,
-        )?;
-        draw_sprite(
-            context,
-            atlas,
-            trim_position.0 + 4.0,
-            trim_position.1 + 4.0,
-            4.0,
-            4.0,
-            self.size.0 as f64 / 2.0 - 4.0,
-            self.size.1 as f64 / 2.0 - 4.0,
-        )?;
-
-        if self.trim == ButtonTrim::Glorious {
-            context.fill_rect(
-                -self.size.0 as f64 / 2.0,
-                -self.size.1 as f64 / 2.0 + 2.0,
-                2.0,
-                self.size.1 as f64 - 4.0,
-            );
-            context.fill_rect(
-                self.size.0 as f64 / 2.0 - 2.0,
-                -self.size.1 as f64 / 2.0 + 2.0,
-                2.0,
-                self.size.1 as f64 - 4.0,
-            );
-        }
-
-        context.restore();
 
         Ok(())
     }
@@ -260,8 +194,8 @@ impl ConfirmButtonElement {
         position: (i32, i32),
         size: (i32, i32),
         value: usize,
-        trim: ButtonTrim,
-        class: ButtonClass,
+        trim: LabelTrim,
+        class: LabelTheme,
         content: ContentElement,
     ) -> ConfirmButtonElement {
         ConfirmButtonElement {
@@ -322,8 +256,8 @@ impl ToggleButtonElement {
         position: (i32, i32),
         size: (i32, i32),
         value: usize,
-        trim: ButtonTrim,
-        class: ButtonClass,
+        trim: LabelTrim,
+        class: LabelTheme,
         content: ContentElement,
     ) -> ToggleButtonElement {
         ToggleButtonElement {

@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
-use shared::{LobbyError, SessionRequest};
+use shared::{Level, LobbyError, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
     console, CanvasRenderingContext2d, DomRectReadOnly, HtmlCanvasElement, KeyboardEvent,
@@ -11,7 +13,7 @@ use crate::{
     app::State,
     draw::{draw_board, draw_sprite},
     net::get_session_id,
-    window,
+    storage, window,
 };
 
 /// Errors concerning the [`App`].
@@ -317,10 +319,38 @@ impl App {
 
         self.set_session_id(session_id.clone());
 
-        window()
-            .local_storage()
-            .unwrap_or_default()
-            .map(|storage| storage.set_item("session_id", session_id.as_str()));
+        storage().map(|storage| storage.set_item("session_id", session_id.as_str()));
+    }
+
+    fn load_levels() -> HashMap<usize, Level> {
+        serde_json::from_str(
+            storage()
+                .and_then(|storage| storage.get_item("levels").unwrap_or_default())
+                .unwrap_or_default()
+                .as_str(),
+        )
+        .unwrap_or_default()
+    }
+
+    fn save_levels(levels: HashMap<usize, Level>) {
+        let value = serde_json::to_string(&levels).unwrap();
+        storage().and_then(|storage| storage.set_item("levels", value.as_str()).ok());
+    }
+
+    pub fn load_level(level_id: usize) -> Option<Level> {
+        let levels = Self::load_levels();
+
+        console::log_1(&format!("{:?}", levels).into());
+
+        levels.get(&level_id).cloned()
+    }
+
+    pub fn save_level(level_id: usize, level: Level) {
+        let mut levels = Self::load_levels();
+
+        levels.insert(level_id, level);
+
+        Self::save_levels(levels);
     }
 }
 

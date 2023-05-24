@@ -4,7 +4,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Mage, Mages, Position, Team, Turn};
+use crate::{Board, Level, Mage, Mages, Position, Team, Turn};
 
 /// A [`Game`] contains all the information to represent a deterministically replicable state of the game.
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
@@ -18,13 +18,10 @@ pub struct Game {
 
 impl Game {
     /// Instantiates the [`Game`] `struct` with a given board size (always 8-by-8) and number of mages (always 4)]
-    pub fn new(
-        board_width: usize,
-        board_height: usize,
-        mages: Vec<Mage>,
-        starting_team: Team,
-    ) -> Result<Game, &'static str> {
-        let board = Board::new(board_width, board_height)?;
+    pub fn new(level: &Level) -> Result<Game, &'static str> {
+        let board = Board::new(level.board.width, level.board.height)?;
+        let mages = level.mages.clone();
+        let starting_team = level.starting_team;
 
         let turns = Vec::new();
 
@@ -36,6 +33,11 @@ impl Game {
         };
 
         Ok(game)
+    }
+
+    /// Determines if the game is finished.
+    pub fn finished(&self) -> bool {
+        self.all_available_turns(self.turn_for()).is_empty()
     }
 
     /// Returns a list of [`Turn`]s skipping the first `since` turns.
@@ -162,14 +164,14 @@ impl Game {
             })
             .sum();
 
-        mana_diff.pow(2) * mana_diff.signum() * 10 + pos_adv + self.turns() as isize
+        mana_diff.pow(2) * mana_diff.signum() * 10 + pos_adv
     }
 
     /// Returns the best [`Turn`] available and its evaluation.
     pub fn best_turn(&self, seed: u64) -> (Turn, isize) {
         let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
         self.alphabeta(
-            4 + (2 - alive_mages / 3),
+            4 + (2usize.saturating_sub(alive_mages) / 3),
             isize::MIN,
             isize::MAX,
             &mut ChaCha8Rng::seed_from_u64(seed),
@@ -187,7 +189,7 @@ impl Game {
         if depth == 0 {
             (
                 Turn::sentinel(),
-                self.evaluate() + (rng.next_u64() & 0b11) as isize,
+                self.evaluate() + (rng.next_u64() & 0b111) as isize,
             )
         } else {
             let mut best_turn = self

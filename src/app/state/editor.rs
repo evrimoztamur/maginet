@@ -1,20 +1,21 @@
 use std::mem;
 
-use shared::{Board, LobbySettings, Mage, Mages, Position, Team, DEFAULT_BOARD_SIZE};
+use shared::{Board, Level, LobbySettings, Mage, Mages, Position, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::{LobbyState, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonClass, ButtonElement, ButtonTrim, Interface, Particle,
-        ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent, BOARD_SCALE,
+        Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
+        LabelTrim, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
+        BOARD_SCALE,
     },
     draw::{
         draw_board, draw_crosshair, draw_mage, draw_mana, draw_particle, draw_spell_pattern,
         draw_sprite,
     },
-    tuple_as,
+    tuple_as, window,
 };
 
 #[derive(PartialEq)]
@@ -25,7 +26,9 @@ pub enum EditorSelection {
 }
 
 pub struct EditorState {
+    button_menu: ToggleButtonElement,
     interface: Interface,
+    menu_interface: Interface,
     mage_interface: Interface,
     no_mage_interface: Interface,
     board: Board,
@@ -38,6 +41,7 @@ pub struct EditorState {
 
 const BUTTON_MENU: usize = 0;
 const BUTTON_MODE_TOGGLE: usize = 10;
+const BUTTON_SAVE: usize = 11;
 
 const BUTTON_WIDTH_MINUS: usize = 20;
 const BUTTON_WIDTH_PLUS: usize = 21;
@@ -53,6 +57,9 @@ const BUTTON_MANA_RIGHT: usize = 35;
 const BUTTON_DELETE: usize = 39;
 
 const BUTTON_ADD: usize = 40;
+
+const BUTTON_SIMULATE: usize = 50;
+const BUTTON_LEAVE: usize = 100;
 
 impl EditorState {
     pub fn new(board: Board, mut mages: Vec<Mage>) -> EditorState {
@@ -77,6 +84,10 @@ impl EditorState {
             ((8 - self.board.width) as i32 * BOARD_SCALE.0) / 2,
             ((8 - self.board.height) as i32 * BOARD_SCALE.1) / 2,
         )
+    }
+
+    pub fn is_interface_active(&self) -> bool {
+        self.button_menu.selected()
     }
 }
 
@@ -228,6 +239,14 @@ impl State for EditorState {
         self.interface
             .draw(interface_context, atlas, pointer, frame)?;
 
+        self.button_menu
+            .draw(interface_context, atlas, pointer, frame)?;
+
+        if self.is_interface_active() {
+            self.menu_interface
+                .draw(interface_context, atlas, pointer, frame)?;
+        }
+
         Ok(())
     }
 
@@ -235,8 +254,50 @@ impl State for EditorState {
         let board_offset = self.board_offset();
         let pointer = &app_context.pointer;
 
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
+        if self.is_interface_active() {
+            if let Some(UIEvent::ButtonClick(value)) = self.menu_interface.tick(&pointer) {
+                match value {
+                    BUTTON_SIMULATE => {
+                        let simulations = Level::simulate(
+                            Level::new(self.board.clone(), self.mages.clone(), Team::Red),
+                            5,
+                            window().performance().unwrap().now() as u64,
+                        );
+
+                        console::log_1(
+                            &format!(
+                                "{}",
+                                simulations
+                                    .iter()
+                                    .map(|game| {
+                                        console::log_1(
+                                            &format!(
+                                                "{} {} {:?}",
+                                                game.turns(),
+                                                game.evaluate(),
+                                                game
+                                            )
+                                            .into(),
+                                        );
+                                        game.evaluate()
+                                    })
+                                    .sum::<isize>()
+                                    / 5
+                            )
+                            .into(),
+                        );
+                    }
+                    _ => (),
+                }
+            }
+        } else if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
+                BUTTON_SAVE => {
+                    App::save_level(
+                        0,
+                        Level::new(self.board.clone(), self.mages.clone(), Team::Red),
+                    );
+                }
                 BUTTON_MODE_TOGGLE => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Local,
@@ -485,9 +546,11 @@ impl State for EditorState {
             }
             EditorSelection::Tile(position) => {
                 *position = self.board.clamp_position(*position);
-            },
+            }
             EditorSelection::None => (),
         }
+
+        self.button_menu.tick(pointer);
 
         None
     }
@@ -499,8 +562,8 @@ impl Default for EditorState {
             (-60, 118),
             (20, 20),
             BUTTON_MENU,
-            ButtonTrim::Round,
-            ButtonClass::Bright,
+            LabelTrim::Round,
+            LabelTheme::Bright,
             crate::app::ContentElement::Sprite((112, 32), (16, 16)),
         );
 
@@ -508,17 +571,17 @@ impl Default for EditorState {
             (236, 228),
             (80, 24),
             BUTTON_MODE_TOGGLE,
-            ButtonTrim::Glorious,
-            ButtonClass::Action,
+            LabelTrim::Glorious,
+            LabelTheme::Action,
             crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
         );
 
         let button_save = ButtonElement::new(
             (244, 204),
             (64, 16),
-            BUTTON_MODE_TOGGLE,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            BUTTON_SAVE,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Save".to_string(), Alignment::Center),
         );
 
@@ -526,8 +589,8 @@ impl Default for EditorState {
             (82, 248),
             (12, 12),
             BUTTON_WIDTH_MINUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((88, 24), (8, 8)),
         );
 
@@ -535,8 +598,8 @@ impl Default for EditorState {
             (98, 248),
             (12, 12),
             BUTTON_WIDTH_PLUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((80, 24), (8, 8)),
         );
 
@@ -544,8 +607,8 @@ impl Default for EditorState {
             (216, 114),
             (12, 12),
             BUTTON_HEIGHT_MINUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((88, 24), (8, 8)),
         );
 
@@ -553,8 +616,8 @@ impl Default for EditorState {
             (216, 130),
             (12, 12),
             BUTTON_HEIGHT_PLUS,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((80, 24), (8, 8)),
         );
 
@@ -562,8 +625,8 @@ impl Default for EditorState {
             (240, 122 - 92),
             (12, 20),
             BUTTON_TEAM_LEFT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((64, 24), (8, 8)),
         );
 
@@ -571,8 +634,8 @@ impl Default for EditorState {
             (300, 122 - 92),
             (12, 20),
             BUTTON_TEAM_RIGHT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((72, 24), (8, 8)),
         );
 
@@ -580,8 +643,8 @@ impl Default for EditorState {
             (240, 122 - 38),
             (12, 32),
             BUTTON_SPELL_LEFT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((64, 24), (8, 8)),
         );
 
@@ -589,8 +652,8 @@ impl Default for EditorState {
             (300, 122 - 38),
             (12, 32),
             BUTTON_SPELL_RIGHT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((72, 24), (8, 8)),
         );
 
@@ -598,8 +661,8 @@ impl Default for EditorState {
             (244, 122 + 8),
             (12, 12),
             BUTTON_MANA_LEFT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((64, 24), (8, 8)),
         );
 
@@ -607,8 +670,8 @@ impl Default for EditorState {
             (296, 122 + 8),
             (12, 12),
             BUTTON_MANA_RIGHT,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((72, 24), (8, 8)),
         );
 
@@ -616,8 +679,8 @@ impl Default for EditorState {
             (260, 160),
             (32, 20),
             BUTTON_DELETE,
-            ButtonTrim::Round,
-            ButtonClass::Default,
+            LabelTrim::Round,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((128, 32), (16, 16)),
         );
 
@@ -635,15 +698,14 @@ impl Default for EditorState {
             (260, 122 - 44),
             (32, 20),
             BUTTON_ADD,
-            ButtonTrim::Glorious,
-            ButtonClass::Default,
+            LabelTrim::Glorious,
+            LabelTheme::Default,
             crate::app::ContentElement::Sprite((144, 32), (16, 16)),
         );
 
         let no_mage_interface = Interface::new(vec![Box::new(button_add)]);
 
         let root_element = Interface::new(vec![
-            Box::new(button_menu),
             Box::new(button_mode_toggle),
             Box::new(button_save),
             Box::new(button_width_minus),
@@ -652,14 +714,37 @@ impl Default for EditorState {
             Box::new(button_height_plus),
         ]);
 
-        let board = Board::new(DEFAULT_BOARD_SIZE.0, DEFAULT_BOARD_SIZE.1).unwrap();
+        let button_simulate = ButtonElement::new(
+            (96 - 44, 128 - 24),
+            (88, 24),
+            BUTTON_SIMULATE,
+            LabelTrim::Round,
+            LabelTheme::Default,
+            crate::app::ContentElement::Text("Simulate".to_string(), Alignment::Center),
+        );
+
+        let button_leave = ConfirmButtonElement::new(
+            (96 - 36, 128 + 8),
+            (72, 16),
+            BUTTON_LEAVE,
+            LabelTrim::Glorious,
+            LabelTheme::Default,
+            crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
+        );
+
+        let menu_interface =
+            Interface::new(vec![Box::new(button_leave), Box::new(button_simulate)]);
+
+        let level = App::load_level(0).unwrap_or_default();
 
         EditorState {
+            button_menu,
             interface: root_element,
             mage_interface,
+            menu_interface,
             no_mage_interface,
-            board,
-            mages: Vec::new(),
+            board: level.board,
+            mages: level.mages,
             mage_index: 0,
             particles: Vec::new(),
             selection: EditorSelection::None,
