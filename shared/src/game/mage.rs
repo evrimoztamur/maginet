@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Mana, Position, Spell, Team};
+use crate::{Board, Mana, Position, Spell, Team};
 
 const DIAGONALS_THRESHOLD: u8 = 1;
 
@@ -99,6 +99,22 @@ impl Mage {
     /// Determines if the [`Mage`] has access to the diagonal moves.
     pub fn has_diagonals(&self) -> bool {
         self.mana <= DIAGONALS_THRESHOLD
+    }
+
+    /// Returns the list of targets a [`Mage`] can attack to on a certain [`Position`].
+    pub fn targets(&self, board: &Board, at: &Position) -> Vec<Position> {
+        let mut moves = Vec::with_capacity(self.spell.pattern.len());
+
+        for dir in &self.spell.pattern {
+            let position = at + dir;
+            // let position = position.wrap(self.board.width as i8, self.board.height as i8);
+
+            if let Some(position) = board.validate_position(position) {
+                moves.push(position);
+            }
+        }
+
+        return moves;
     }
 }
 

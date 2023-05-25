@@ -197,6 +197,10 @@ impl State for EditorState {
                 draw_crosshair(context, atlas, &position, (48.0, 32.0), frame)?;
 
                 if let Some(mage) = self.mages.occupant(&position) {
+                    for position in &mage.targets(&self.board, position) {
+                        draw_crosshair(context, atlas, position, (80.0, 32.0), 0)?;
+                    }
+
                     self.mage_interface
                         .draw(interface_context, atlas, pointer, frame)?;
 
@@ -507,12 +511,28 @@ impl State for EditorState {
                     ));
                 }
 
-                if let Some(selected_mage) = self.mages.occupant(&selected_tile) {
-                    match self.selection {
-                        EditorSelection::Tile(tile) if tile == selected_tile => {
-                            self.selection = EditorSelection::Mage(selected_mage.clone());
+                if let Some(selected_mage) = self.mages.occupant(&selected_tile).cloned() {
+                    match &mut self.selection {
+                        EditorSelection::Tile(tile) if *tile == selected_tile => {
+                            self.selection = EditorSelection::Mage(selected_mage);
                         }
-                        EditorSelection::Mage(_) => (),
+                        EditorSelection::Mage(mage) => {
+                            mage.position = selected_tile;
+                            self.mages.push(mage.clone());
+
+                            for _ in 0..40 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particles.push(Particle::new(
+                                    (selected_tile.0 as f64, selected_tile.1 as f64),
+                                    (d.cos() * v * 2.0, d.sin() * v),
+                                    (js_sys::Math::random() * 20.0) as u64,
+                                    ParticleSort::Missile,
+                                ));
+                            }
+
+                            self.selection = EditorSelection::Mage(selected_mage);
+                        }
                         _ => self.selection = EditorSelection::Tile(selected_tile),
                     }
                 } else {
