@@ -10,8 +10,8 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 use super::{EditorState, MenuState, State};
 use crate::{
     app::{
-        Alignment, AppContext, LabelTheme, ButtonElement, LabelTrim, ConfirmButtonElement,
-        Interface, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
+        Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
+        LabelTrim, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
         BOARD_SCALE,
     },
     draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
@@ -177,7 +177,9 @@ impl LobbyState {
             .game
             .best_turn(window().performance().unwrap().now().to_bits());
 
-        self.message_pool.borrow_mut().push(Message::Move(turn.0));
+        if let Some((turn, _)) = turn {
+            self.message_pool.borrow_mut().push(Message::Move(turn));
+        }
     }
 
     pub fn board_offset(&self) -> (i32, i32) {
@@ -246,7 +248,6 @@ impl LobbyState {
 
             {
                 let game_started = self.lobby.all_ready() | self.lobby.is_local();
-                let game_finished = self.lobby.finished();
 
                 let mut mage_heap: Vec<&Mage> = self.lobby.game.iter_mages().collect();
                 mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
@@ -267,7 +268,7 @@ impl LobbyState {
                         frame,
                         self.lobby.game.turn_for(),
                         game_started,
-                        game_finished,
+                        self.lobby.game.result(),
                         true,
                     )?;
 
@@ -455,7 +456,7 @@ impl State for LobbyState {
                             frame,
                             player.team,
                             true,
-                            false,
+                            None,
                             false,
                         )?;
 
@@ -508,9 +509,12 @@ impl State for LobbyState {
                     .lobby
                     .game
                     .best_turn(window().performance().unwrap().now().to_bits());
-                message_pool
-                    .messages
-                    .append(&mut vec![Message::Move(turn.0)]);
+
+                if let Some((turn, _)) = turn {
+                    message_pool
+                        .messages
+                        .append(&mut vec![Message::Move(turn)]);
+                }
             }
 
             for message in &message_pool.messages {

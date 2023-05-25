@@ -1,13 +1,10 @@
 use js_sys::Math::random;
-use shared::{Mage, Position, Team};
+use shared::{GameResult, Mage, Position, Team};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use crate::{
-    app::{
-        ContentElement, LabelTrim, Particle, ParticleSort, Pointer, UIElement,
-        BOARD_SCALE,
-    },
+    app::{ContentElement, LabelTrim, Particle, ParticleSort, Pointer, UIElement, BOARD_SCALE},
     tuple_as,
 };
 
@@ -157,10 +154,11 @@ pub fn draw_mage(
     frame: u64,
     team: Team,
     game_started: bool,
-    game_finished: bool,
+    game_result: Option<GameResult>,
     show_mana: bool,
 ) -> Result<(), JsValue> {
-    let bounce = (if mage.is_alive() && (mage.team == team && game_started || game_finished) {
+    let bounce = (if mage.is_alive() && (mage.team == team && game_started || game_result.is_some())
+    {
         -((frame as i64 / 6 + mage.index as i64 / 2) % 4 - 2).abs()
     } else {
         0
@@ -177,14 +175,16 @@ pub fn draw_mage(
     if mage.is_alive() {
         draw_sprite(context, atlas, 0.0, 192.0, 32.0, 32.0, -16.0, -20.0)?;
 
-        if game_finished {
-            context.translate(
-                0.0,
-                ((frame as i64 % 80 - 40).max(0) - 20).abs() as f64 - 20.0,
-            )?;
-            context.rotate(
-                ((frame as i64 % 80 - 35).max(0) / 5) as f64 * std::f64::consts::PI / 2.0,
-            )?;
+        if let Some(GameResult::Win(team)) = game_result {
+            if team == mage.team {
+                context.translate(
+                    0.0,
+                    ((frame as i64 % 80 - 40).max(0) - 20).abs() as f64 - 20.0,
+                )?;
+                context.rotate(
+                    ((frame as i64 % 80 - 35).max(0) / 5) as f64 * std::f64::consts::PI / 2.0,
+                )?;
+            }
         }
     } else {
         context.translate(0.0, 4.0)?;

@@ -31,12 +31,10 @@ impl Level {
                 let mut game = Game::new(&level).unwrap();
 
                 for i in 0..50 {
-                    let (Turn(from, to), _) = game.best_turn(seed + m as u64 + i as u64);
-
-                    {
+                    if let Some((Turn(from, to), _)) = game.best_turn(seed + m as u64 + i as u64) {
                         game.take_move(from, to);
 
-                        if game.finished() {
+                        if game.result().is_some() {
                             break;
                         }
                     }

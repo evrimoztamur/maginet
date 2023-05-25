@@ -5,8 +5,8 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 use super::{LobbyState, MenuTeleport, State};
 use crate::{
     app::{
-        Alignment, AppContext, LabelTheme, ButtonElement, ButtonGroupElement, LabelTrim,
-        Interface, StateSort, UIElement, UIEvent,
+        Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
+        StateSort, UIElement, UIEvent,
     },
     draw::{draw_mage, draw_sprite},
     window,
@@ -197,7 +197,7 @@ impl State for MenuState {
                 frame,
                 self.sentinel_lobby.game.starting_team(),
                 true,
-                false,
+                None,
                 true,
             )?;
             context.restore();

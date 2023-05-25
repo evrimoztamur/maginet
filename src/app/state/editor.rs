@@ -138,7 +138,7 @@ impl State for EditorState {
                 16.0 + mage.position.1 as f64 * board_scale.1,
             )?;
 
-            draw_mage(context, atlas, mage, frame, mage.team, true, false, true)?;
+            draw_mage(context, atlas, mage, frame, mage.team, true, None, true)?;
 
             context.restore();
         }
@@ -174,7 +174,7 @@ impl State for EditorState {
                     frame,
                     mage.team,
                     true,
-                    false,
+                    None,
                     false,
                 )?;
                 interface_context.restore();
@@ -188,7 +188,7 @@ impl State for EditorState {
                     frame,
                     mage.team,
                     true,
-                    false,
+                    None,
                     true,
                 )?;
                 interface_context.restore();
@@ -213,7 +213,7 @@ impl State for EditorState {
                         frame,
                         mage.team,
                         true,
-                        false,
+                        None,
                         true,
                     )?;
 

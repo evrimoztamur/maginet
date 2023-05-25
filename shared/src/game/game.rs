@@ -6,6 +6,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Board, Level, Mage, Mages, Position, Team, Turn};
 
+/// Result of a game.
+pub enum GameResult {
+    /// Win for a [`Team`]
+    Win(Team),
+    /// Stalemate
+    Stalemate,
+}
+
 /// A [`Game`] contains all the information to represent a deterministically replicable state of the game.
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -14,6 +22,7 @@ pub struct Game {
     mages: Vec<Mage>,
     turns: Vec<Turn>,
     starting_team: Team,
+    last_nominal: usize,
 }
 
 impl Game {
@@ -22,22 +31,47 @@ impl Game {
         let board = Board::new(level.board.width, level.board.height)?;
         let mages = level.mages.clone();
         let starting_team = level.starting_team;
-
         let turns = Vec::new();
+        let last_nominal = 0;
 
         let game = Game {
             board,
             mages,
             turns,
             starting_team,
+            last_nominal,
         };
 
         Ok(game)
     }
 
+    /// Determines if the game is stalemated.
+    fn stalemate(&self) -> bool {
+        self.last_nominal + 8 < self.turns()
+    }
+
     /// Determines if the game is finished.
-    pub fn finished(&self) -> bool {
-        self.all_available_turns(self.turn_for()).is_empty()
+    pub fn result(&self) -> Option<GameResult> {
+        if self.all_available_turns(self.turn_for()).is_empty() || self.stalemate() {
+            let mana_diff: isize = self
+                .mages
+                .iter()
+                .map(|mage| match mage.team {
+                    Team::Red => mage.mana.0 as isize,
+                    Team::Blue => -(mage.mana.0 as isize),
+                })
+                .sum();
+
+            if mana_diff == 0 {
+                Some(GameResult::Stalemate)
+            } else if mana_diff > 0 {
+                Some(GameResult::Win(Team::Red))
+            } else {
+                Some(GameResult::Win(Team::Blue))
+            }
+        } else {
+            None
+        }
     }
 
     /// Returns a list of [`Turn`]s skipping the first `since` turns.
@@ -168,14 +202,19 @@ impl Game {
     }
 
     /// Returns the best [`Turn`] available and its evaluation.
-    pub fn best_turn(&self, seed: u64) -> (Turn, isize) {
-        let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
-        self.alphabeta(
-            4 + (2usize.saturating_sub(alive_mages) / 3),
-            isize::MIN,
-            isize::MAX,
-            &mut ChaCha8Rng::seed_from_u64(seed),
-        )
+    pub fn best_turn(&self, seed: u64) -> Option<(Turn, isize)> {
+        if self.result().is_none() {
+            let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
+
+            Some(self.alphabeta(
+                4 + (2usize.saturating_sub(alive_mages) / 3),
+                isize::MIN,
+                isize::MAX,
+                &mut ChaCha8Rng::seed_from_u64(seed),
+            ))
+        } else {
+            None
+        }
     }
 
     /// Returns the best turn based on the evaluation function and [alpha-beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning).
@@ -189,7 +228,7 @@ impl Game {
         if depth == 0 {
             (
                 Turn::sentinel(),
-                self.evaluate() + (rng.next_u64() & 0b111) as isize,
+                self.evaluate() + (rng.next_u64() % 8) as isize,
             )
         } else {
             let mut best_turn = self
@@ -265,9 +304,15 @@ impl Game {
                 if let Some((to, _, _)) = potential_move {
                     mage.position = *to;
 
+                    let attacks = self.attack(*to);
+
+                    if !attacks.is_empty() {
+                        self.last_nominal = self.turns();
+                    }
+
                     self.turns.push(Turn(from, *to));
 
-                    return Some(self.attack(*to));
+                    return Some(attacks);
                 }
             }
         }
@@ -296,21 +341,15 @@ impl Game {
 
     /// Returns the list of targets a [`Mage`] can attack to on a certain [`Position`].
     pub fn targets(&self, mage: &Mage, at: Position) -> Vec<(bool, Position)> {
-        let mut moves = Vec::with_capacity(mage.spell.pattern.len());
-
-        for dir in &mage.spell.pattern {
-            let position = &at + dir;
-            // let position = position.wrap(self.board.width as i8, self.board.height as i8);
-
-            if let Some(position) = self.board.validate_position(position) {
-                moves.push((
+        mage.targets(&self.board, &at)
+            .iter()
+            .map(|position| {
+                (
                     self.mages.live_occupied_by(&position, mage.team.enemy()),
-                    position,
-                ));
-            }
-        }
-
-        return moves;
+                    *position,
+                )
+            })
+            .collect()
     }
 
     /// Returns the [`Board`]'s size as an `usize` tuple.

@@ -259,9 +259,7 @@ impl Lobby {
 
     /// Determines if the game is finished.
     pub fn finished(&self) -> bool {
-        self.game.finished()
-        .all_available_turns(self.game.turn_for())
-        .is_empty()
+        self.game.result().is_some()
     }
 
     /// Determines if the game is local (`true`) or online.
