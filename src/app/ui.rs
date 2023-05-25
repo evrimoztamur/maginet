@@ -268,6 +268,14 @@ impl ToggleButtonElement {
     pub fn selected(&self) -> bool {
         self.button.selected
     }
+
+    pub fn set_selected(&mut self, selected: bool) {
+        self.button.selected ^= selected;
+    }
+
+    pub fn toggle(&mut self) {
+        self.button.selected ^= true;
+    }
 }
 
 impl UIElement for ToggleButtonElement {
@@ -283,7 +291,7 @@ impl UIElement for ToggleButtonElement {
 
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
         if self.button.clicked(&pointer) {
-            self.button.selected ^= true;
+            self.toggle();
 
             Some(UIEvent::ButtonClick(self.button.value))
         } else {

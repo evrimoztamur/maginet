@@ -191,6 +191,10 @@ impl LobbyState {
         )
     }
 
+    pub fn frames_since_last_move(&self, frame: u64) -> u64 {
+        frame.saturating_sub(self.last_move_frame)
+    }
+
     fn draw_game(
         &mut self,
         context: &CanvasRenderingContext2d,
@@ -391,7 +395,7 @@ impl LobbyState {
     }
 
     pub fn is_interface_active(&self) -> bool {
-        self.button_menu.selected() || self.lobby.finished()
+        self.button_menu.selected()
     }
 }
 
@@ -480,6 +484,7 @@ impl State for LobbyState {
         let mut target_positions = Vec::new();
 
         let all_ready = self.lobby.all_ready();
+
         {
             let mut message_pool = self.message_pool.borrow_mut();
 
@@ -511,9 +516,7 @@ impl State for LobbyState {
                     .best_turn(window().performance().unwrap().now().to_bits());
 
                 if let Some((turn, _)) = turn {
-                    message_pool
-                        .messages
-                        .append(&mut vec![Message::Move(turn)]);
+                    message_pool.messages.append(&mut vec![Message::Move(turn)]);
                 }
             }
 
@@ -549,6 +552,10 @@ impl State for LobbyState {
             }
 
             message_pool.clear();
+        }
+
+        if self.lobby.finished() && self.frames_since_last_move(frame) == 120 {
+            self.button_menu.set_selected(true);
         }
 
         let interface_pointer =
