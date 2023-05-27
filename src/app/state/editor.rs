@@ -143,11 +143,13 @@ impl State for EditorState {
             context.restore();
         }
 
-        if let Some(selected_tile) = self.board.location_as_position(
+        let selected_tile = self.board.location_as_position(
             pointer.location,
             (board_offset.0 - 32, board_offset.1),
             BOARD_SCALE,
-        ) {
+        );
+
+        if let Some(selected_tile) = selected_tile {
             draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), frame)?;
         }
 
@@ -156,6 +158,12 @@ impl State for EditorState {
 
         match &self.selection {
             EditorSelection::Mage(mage) => {
+                if let Some(selected_tile) = selected_tile {
+                    for position in &mage.targets(&self.board, &selected_tile) {
+                        draw_crosshair(context, atlas, position, (80.0, 32.0), 0)?;
+                    }
+                }
+
                 interface_context.save();
                 interface_context.translate(
                     (pointer.location.0 as f64).clamp(
