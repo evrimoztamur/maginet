@@ -79,6 +79,10 @@ impl EditorState {
         state
     }
 
+    pub fn with_level(level: Level) -> EditorState {
+        EditorState::new(level.board, level.mages)
+    }
+
     pub fn board_offset(&self) -> (i32, i32) {
         (
             ((8 - self.board.width) as i32 * BOARD_SCALE.0) / 2,
@@ -88,6 +92,10 @@ impl EditorState {
 
     pub fn is_interface_active(&self) -> bool {
         self.button_menu.selected()
+    }
+
+    pub fn level(&self) -> Level {
+        Level::new(self.board.clone(), self.mages.clone(), Team::Red)
     }
 }
 
@@ -305,10 +313,7 @@ impl State for EditorState {
         } else if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
                 BUTTON_SAVE => {
-                    App::save_level(
-                        0,
-                        Level::new(self.board.clone(), self.mages.clone(), Team::Red),
-                    );
+                    App::save_level(0, self.level());
                 }
                 BUTTON_MODE_TOGGLE => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {

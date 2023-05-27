@@ -63,3 +63,15 @@ impl PartialOrd<u8> for Mana {
         self.0.partial_cmp(other)
     }
 }
+
+impl Into<u8> for Mana {
+    fn into(self) -> u8 {
+        (self.0 as u8 & 0b1111) << 4 | self.1 & 0b1111
+    }
+}
+
+impl From<u8> for Mana {
+    fn from(value: u8) -> Self {
+        Mana((value >> 4) & 0b1111, value & 0b1111)
+    }
+}

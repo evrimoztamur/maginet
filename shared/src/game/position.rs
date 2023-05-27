@@ -65,3 +65,9 @@ impl RemZero for i8 {
         ((self % rhs) + rhs) % rhs
     }
 }
+
+impl Default for Position {
+    fn default() -> Self {
+        Self(Default::default(), Default::default())
+    }
+}

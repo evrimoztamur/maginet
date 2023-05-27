@@ -55,6 +55,12 @@ impl From<usize> for MageSort {
     }
 }
 
+impl Default for MageSort {
+    fn default() -> Self {
+        Self::Cross
+    }
+}
+
 /// A [`Mage`] is the playable unit on the [`crate::Board`].
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mage {
@@ -190,6 +196,55 @@ impl Mages for Vec<Mage> {
             occupant.team == team
         } else {
             false
+        }
+    }
+}
+
+impl Default for Mage {
+    fn default() -> Self {
+        Self::new(0, Team::default(), MageSort::default(), Position::default())
+    }
+}
+
+impl Into<Vec<u8>> for Mage {
+    fn into(self) -> Vec<u8> {
+        let position_x = self.position.0 as u8;
+        let position_y = self.position.1 as u8;
+        let team = self.team as u8;
+
+        let sort = self.sort as u8;
+        let mana = self.mana.into();
+
+        vec![
+            (position_x & 0b111) << 5 | (position_y & 0b111) << 2 | team & 0b11,
+            sort,
+            mana,
+        ]
+    }
+}
+
+impl From<Vec<u8>> for Mage {
+    fn from(value: Vec<u8>) -> Self {
+        if value.len() == 3 {
+            let pos_team_byte = value[0];
+            let position_x = (pos_team_byte >> 5) & 0b111;
+            let position_y = (pos_team_byte >> 2) & 0b111;
+            let position = Position(position_x as i8, position_y as i8);
+            let team = Team::from_index((pos_team_byte & 0b11) as usize);
+
+            let sort_byte = value[1] as usize;
+            let sort = sort_byte.into();
+
+            let mut mage = Mage::new(0, team, sort, position);
+
+            let mana_byte = value[2];
+            let mana = mana_byte.into();
+
+            mage.mana = mana;
+
+            mage
+        } else {
+            Mage::default()
         }
     }
 }

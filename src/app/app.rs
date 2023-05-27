@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use shared::{Level, LobbyError, SessionRequest};
+use shared::{Level, LobbyError, SessionRequest, BASE32};
 use wasm_bindgen::JsValue;
 use web_sys::{
     console, CanvasRenderingContext2d, DomRectReadOnly, HtmlCanvasElement, KeyboardEvent,
@@ -286,29 +286,43 @@ impl App {
 
     pub fn on_key_down(&mut self, event: KeyboardEvent) {
         match &mut self.state_sort {
-            StateSort::Lobby(lobby_state) => {
+            StateSort::Lobby(state) => {
                 match event.code().as_str() {
                     "KeyB" => {
-                        lobby_state.take_best_turn();
+                        state.take_best_turn();
                     }
                     "KeyN" => {
                         console::log_1(
                             &format!(
                                 "{:?}",
-                                lobby_state
+                                state
                                     .lobby()
                                     .game
-                                    .all_available_turns(lobby_state.lobby().game.turn_for())
+                                    .all_available_turns(state.lobby().game.turn_for())
                             )
                             .into(),
                         );
                     }
                     "KeyM" => {
-                        console::log_1(&format!("{:?}", lobby_state.lobby()).into());
+                        console::log_1(&format!("{:?}", state.lobby()).into());
                     }
                     _ => (),
                 };
             }
+            StateSort::Editor(state) => match event.code().as_str() {
+                "KeyC" => {
+                    let encoded_level: Vec<u8> = state.level().into();
+                    console::log_1(
+                        &format!("{:?}", BASE32.encode(encoded_level.as_slice())).into(),
+                    );
+                }
+                "KeyV" => {
+                    let level = Level::from("ph2g4h150426a0a45g0m8k038hp04d0");
+                    
+                    *state = EditorState::with_level(level);
+                }
+                _ => (),
+            },
             _ => (),
         }
     }

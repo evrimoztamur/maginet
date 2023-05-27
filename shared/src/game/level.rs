@@ -1,6 +1,14 @@
+use data_encoding::Encoding;
+use data_encoding_macro::new_encoding;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{Board, Game, Mage, Team, Turn};
+
+/// Base 32 (Crockford) encoding for levels.
+pub const BASE32: Encoding = new_encoding! {
+    symbols: "0123456789abcdefghjkmnpqrstvwxyz",
+};
 
 /// [`Level`] is the builder for a [`Game`] instance.
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -43,5 +51,65 @@ impl Level {
                 game
             })
             .collect()
+    }
+}
+
+impl Into<Vec<u8>> for Level {
+    fn into(self) -> Vec<u8> {
+        let board_width = self.board.width as u8;
+        let board_height = self.board.height as u8;
+
+        let starting_team = self.starting_team as u8;
+
+        let mut result = Vec::new();
+
+        let board_byte =
+            ((board_width & 0b111) << 5) | ((board_height & 0b111) << 2) | (starting_team & 0b11);
+
+        result.push(board_byte);
+
+        for mage in self.mages {
+            let mut mage_bytes: Vec<u8> = mage.into();
+            result.append(&mut mage_bytes);
+        }
+
+        result
+    }
+}
+
+impl From<Vec<u8>> for Level {
+    fn from(value: Vec<u8>) -> Self {
+        if value.len() % 3 == 1 {
+            let board_byte = value[0];
+
+            let board_width = (board_byte >> 5) & 0b111;
+            let board_height = (board_byte >> 2) & 0b111;
+
+            let board = Board::new(board_width.into(), board_height.into()).unwrap();
+
+            let starting_team = Team::from_index((board_byte & 0b11) as usize);
+
+            let mages: Vec<Mage> = value
+                .iter()
+                .skip(1)
+                .chunks(3)
+                .into_iter()
+                .map(|chunk| chunk.cloned().collect::<Vec<u8>>().into())
+                .collect();
+
+            Level::new(board, mages, starting_team)
+        } else {
+            Level::default()
+        }
+    }
+}
+
+impl From<&str> for Level {
+    fn from(value: &str) -> Self {
+        if let Ok(decoded) = BASE32.decode(value.as_bytes()) {
+            decoded.into()
+        } else {
+            Level::default()
+        }
     }
 }
