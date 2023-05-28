@@ -1,6 +1,6 @@
 use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{LobbyState, MenuTeleport, State};
 use crate::{
@@ -158,19 +158,16 @@ impl State for MenuState {
 
         context.save();
         context.translate(16.0, 32.0)?;
-        draw_sprite(context, atlas, 256.0, 0.0, 32.0, 32.0, 0.0, 0.0)?;
-        draw_sprite(context, atlas, 480.0, 0.0, 32.0, 32.0, 32.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
         draw_sprite(context, atlas, 96.0, 64.0, 32.0, 32.0, 16.0, 4.0)?;
         context.translate(80.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 0.0, 32.0, 32.0, 0.0, 0.0)?;
-        draw_sprite(context, atlas, 480.0, 0.0, 32.0, 32.0, 32.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
         draw_sprite(context, atlas, 64.0, 64.0, 32.0, 32.0, 26.0, 4.0)?;
         draw_sprite(context, atlas, 128.0, 64.0, 32.0, 32.0, 6.0, 6.0)?;
         context.translate(80.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 0.0, 32.0, 32.0, 0.0, 0.0)?;
-        draw_sprite(context, atlas, 480.0, 0.0, 32.0, 32.0, 32.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
         draw_sprite(context, atlas, 32.0, 64.0, 32.0, 32.0, 6.0, 4.0)?;
         draw_sprite(context, atlas, 96.0, 96.0, 32.0, 32.0, 26.0, 6.0)?;
@@ -179,10 +176,7 @@ impl State for MenuState {
         context.save();
         context.translate(108.0, 112.0)?;
 
-        draw_sprite(context, atlas, 256.0, 0.0, 64.0, 32.0, 0.0, 0.0)?;
-        draw_sprite(context, atlas, 448.0, 0.0, 64.0, 32.0, 64.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 224.0, 64.0, 32.0, 0.0, 32.0)?;
-        draw_sprite(context, atlas, 448.0, 224.0, 64.0, 32.0, 64.0, 32.0)?;
+        draw_sprite(context, atlas, 256.0, 320.0, 256.0, 64.0, 0.0, 0.0)?;
 
         for mage in self.sentinel_lobby.game.iter_mages() {
             context.save();
@@ -211,7 +205,11 @@ impl State for MenuState {
         Ok(())
     }
 
-    fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
+    fn tick(
+        &mut self,
+        text_input: &HtmlInputElement,
+        app_context: &AppContext,
+    ) -> Option<StateSort> {
         let pointer = &app_context.pointer;
 
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {

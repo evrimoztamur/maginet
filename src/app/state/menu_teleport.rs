@@ -2,15 +2,15 @@ use std::ops::BitXorAssign;
 
 use shared::{Board, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{LobbyState, MenuState, State};
 use crate::{
     app::{
-        Alignment, AppContext, LabelTheme, ButtonElement, LabelTrim, Interface, Particle,
+        Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
         ParticleSort, StateSort, UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{draw_crosshair, draw_particle, draw_sprite},
+    draw::{draw_board, draw_crosshair, draw_particle, draw_sprite},
     tuple_as,
 };
 
@@ -18,9 +18,10 @@ pub struct MenuTeleport {
     interface: Interface,
     lobby_id: u16,
     particles: Vec<Particle>,
+    board_dirty: bool,
 }
 
-const BOARD_OFFSET: (i32, i32) = ((4 * BOARD_SCALE.0) / 2, (4 * BOARD_SCALE.1) / 2);
+const BOARD_OFFSET: (i32, i32) = ((4 * BOARD_SCALE.0) / 2, (4 * BOARD_SCALE.1) / 2 - 16);
 
 const BUTTON_TELEPORT: usize = 20;
 const BUTTON_BACK: usize = 21;
@@ -51,6 +52,7 @@ impl MenuTeleport {
             interface: root_element,
             lobby_id: 0,
             particles: Vec::new(),
+            board_dirty: true,
         }
     }
 }
@@ -68,14 +70,18 @@ impl State for MenuTeleport {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
+        if self.board_dirty {
+            self.board_dirty = false;
+            draw_board(atlas, 256.0, 0.0, 4, 4, 8, 8).unwrap();
+        }
+
         context.save();
 
-        context.translate(board_scale.0 + 64.0, board_scale.1 + 48.0)?;
+        context.translate(0.0, -16.0)?;
 
-        draw_sprite(context, atlas, 256.0, 0.0, 64.0, 64.0, 0.0, 0.0)?;
-        draw_sprite(context, atlas, 448.0, 0.0, 64.0, 64.0, 64.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 192.0, 64.0, 64.0, 0.0, 64.0)?;
-        draw_sprite(context, atlas, 448.0, 192.0, 64.0, 64.0, 64.0, 64.0)?;
+        draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
+
+        context.translate(64.0, 64.0)?;
 
         for particle in self.particles.iter_mut() {
             particle.tick();
@@ -91,7 +97,7 @@ impl State for MenuTeleport {
 
         if let Some(selected_tile) = board.location_as_position(
             pointer.location,
-            (BOARD_OFFSET.0 + 64, BOARD_OFFSET.1 + 48),
+            (BOARD_OFFSET.0, BOARD_OFFSET.1),
             BOARD_SCALE,
         ) {
             if self.lobby_id & (1 << ((selected_tile.1 << 2) | selected_tile.0)) as u16 == 0 {
@@ -130,7 +136,11 @@ impl State for MenuTeleport {
         Ok(())
     }
 
-    fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
+    fn tick(
+        &mut self,
+        text_input: &HtmlInputElement,
+        app_context: &AppContext,
+    ) -> Option<StateSort> {
         let pointer = &app_context.pointer;
 
         let board = Board {
@@ -140,7 +150,7 @@ impl State for MenuTeleport {
 
         if let Some(selected_tile) = board.location_as_position(
             pointer.location,
-            (BOARD_OFFSET.0 + 64, BOARD_OFFSET.1 + 48),
+            (BOARD_OFFSET.0, BOARD_OFFSET.1),
             BOARD_SCALE,
         ) {
             if pointer.clicked() {

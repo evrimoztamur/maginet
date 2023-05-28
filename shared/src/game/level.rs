@@ -52,12 +52,18 @@ impl Level {
             })
             .collect()
     }
+
+    /// Converts the level to a Base 32 code string.
+    pub fn as_code(&self) -> String {
+        let encoded_level: Vec<u8> = self.into();
+        BASE32.encode(encoded_level.as_slice())
+    }
 }
 
-impl Into<Vec<u8>> for Level {
+impl Into<Vec<u8>> for &Level {
     fn into(self) -> Vec<u8> {
-        let board_width = self.board.width as u8;
-        let board_height = self.board.height as u8;
+        let board_width = self.board.width as u8 - 1;
+        let board_height = self.board.height as u8 - 1;
 
         let starting_team = self.starting_team as u8;
 
@@ -68,7 +74,7 @@ impl Into<Vec<u8>> for Level {
 
         result.push(board_byte);
 
-        for mage in self.mages {
+        for mage in &self.mages {
             let mut mage_bytes: Vec<u8> = mage.into();
             result.append(&mut mage_bytes);
         }
@@ -82,8 +88,8 @@ impl From<Vec<u8>> for Level {
         if value.len() % 3 == 1 {
             let board_byte = value[0];
 
-            let board_width = (board_byte >> 5) & 0b111;
-            let board_height = (board_byte >> 2) & 0b111;
+            let board_width = ((board_byte >> 5) & 0b111) + 1;
+            let board_height = ((board_byte >> 2) & 0b111) + 1;
 
             let board = Board::new(board_width.into(), board_height.into()).unwrap();
 

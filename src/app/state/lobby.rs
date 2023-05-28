@@ -5,7 +5,7 @@ use shared::{
     Position, Team, Turn,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{EditorState, MenuState, State};
 use crate::{
@@ -14,7 +14,7 @@ use crate::{
         LabelTrim, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
         BOARD_SCALE,
     },
-    draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position},
+    draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position, draw_board},
     net::{
         create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
         send_rematch, MessagePool,
@@ -35,6 +35,7 @@ pub struct LobbyState {
     particles: Vec<Particle>,
     message_pool: Rc<RefCell<MessagePool>>,
     message_closure: Closure<dyn FnMut(JsValue)>,
+    board_dirty: bool,
 }
 
 impl LobbyState {
@@ -95,6 +96,7 @@ impl LobbyState {
             particles: Vec::new(),
             message_pool,
             message_closure,
+            board_dirty: true
         }
     }
 
@@ -410,6 +412,13 @@ impl State for LobbyState {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
+        let (board_width, board_height) = self.lobby.game.board_size();
+
+        if self.board_dirty {
+            self.board_dirty = false;
+            draw_board(atlas, 256.0, 0.0, board_width, board_height, 8, 8).unwrap();
+        }
+
         self.draw_game(context, atlas, app_context)?;
 
         {
@@ -475,7 +484,7 @@ impl State for LobbyState {
         Ok(())
     }
 
-    fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
+    fn tick(&mut self, text_input: &HtmlInputElement, app_context: &AppContext) -> Option<StateSort> {
         let board_offset = self.board_offset();
         let frame = app_context.frame;
         let pointer = &app_context.pointer;

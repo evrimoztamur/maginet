@@ -7,11 +7,12 @@ mod net;
 use std::{cell::RefCell, rc::Rc};
 
 use app::{App, CanvasSettings};
+use draw::draw_text;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
-    CanvasRenderingContext2d, Document, DomRect, HtmlCanvasElement, HtmlImageElement,
-    KeyboardEvent, MouseEvent, TouchEvent, Window, Storage,
+    console, CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement,
+    HtmlImageElement, HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
 };
 
 fn window() -> Window {
@@ -63,8 +64,10 @@ fn init_canvas(
 fn start() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
 
-    let container_element = document().query_selector(&"main").unwrap().unwrap();
-    let nav_element = document().query_selector(&"nav").unwrap().unwrap();
+    let container_element = document()
+        .query_selector(&"#canvas-container")
+        .unwrap()
+        .unwrap();
 
     let canvas_settings = CanvasSettings::new(
         384 + 16,
@@ -94,7 +97,18 @@ fn start() -> Result<(), JsValue> {
             let (canvas, context) = init_canvas(&canvas_settings)?;
             let (interface_canvas, interface_context) = init_canvas(&canvas_settings)?;
 
-            container_element.insert_before(&canvas, Some(&nav_element))?;
+            interface_canvas.set_id("interface-canvas");
+
+            let text_input_element = document()
+                .query_selector(&"#text-input")
+                .unwrap()
+                .unwrap()
+                .dyn_into::<HtmlInputElement>()
+                .unwrap();
+            let text_input_element = Rc::new(RefCell::new(text_input_element));
+
+            container_element.append_child(&canvas)?;
+            container_element.append_child(&interface_canvas)?;
 
             let (atlas, atlas_context) = init_canvas(&CanvasSettings {
                 canvas_width: atlas_img.width(),
@@ -104,8 +118,9 @@ fn start() -> Result<(), JsValue> {
             })?;
 
             atlas_context.draw_image_with_html_image_element(&atlas_img, 0.0, 0.0)?;
+            // container_element.append_child(&atlas)?;
 
-            // document().body().unwrap().append_child(&atlas)?;
+            document().body().unwrap().append_child(&atlas)?;
 
             let app = App::new(&canvas_settings);
 
@@ -125,6 +140,7 @@ fn start() -> Result<(), JsValue> {
 
             {
                 let app = app.clone();
+                let text_input = text_input_element.clone();
 
                 {
                     let app = app.borrow();
@@ -136,9 +152,10 @@ fn start() -> Result<(), JsValue> {
 
                 *g.borrow_mut() = Some(Closure::new(move || {
                     let mut app = app.borrow_mut();
+                    let text_input = text_input.borrow_mut();
 
                     {
-                        app.tick();
+                        app.tick(&text_input);
                         app.draw(&context, &interface_context, &atlas, &interface_canvas)
                             .unwrap();
                     }
@@ -163,6 +180,23 @@ fn start() -> Result<(), JsValue> {
                 });
                 window()
                     .add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref())?;
+                closure.forget();
+            }
+
+            {
+                let app = app.clone();
+                let text_input = text_input_element.clone();
+                let closure = Closure::<dyn FnMut(_)>::new(move |event: FocusEvent| {
+                    let mut app = app.borrow_mut();
+                    let text_input = text_input.borrow();
+                    app.on_blur(event, text_input.as_ref());
+                });
+
+                document().add_event_listener_with_callback(
+                    "focusout",
+                    closure.as_ref().unchecked_ref(),
+                )?;
+
                 closure.forget();
             }
 

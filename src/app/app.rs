@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use shared::{Level, LobbyError, SessionRequest, BASE32};
 use wasm_bindgen::JsValue;
 use web_sys::{
-    console, CanvasRenderingContext2d, DomRectReadOnly, HtmlCanvasElement, KeyboardEvent,
-    MouseEvent, TouchEvent,
+    console, CanvasRenderingContext2d, DomRectReadOnly, FocusEvent, HtmlCanvasElement,
+    HtmlInputElement, KeyboardEvent, MouseEvent, TouchEvent,
 };
 
 use super::{EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_SCALE};
@@ -38,6 +38,7 @@ pub struct AppContext {
     pub pointer: Pointer,
     pub frame: u64,
     pub canvas_settings: CanvasSettings,
+    pub text_input: Option<(String, String)>,
 }
 
 pub struct App {
@@ -54,6 +55,7 @@ impl App {
                 pointer: Pointer::new(&canvas_settings),
                 frame: 0,
                 canvas_settings: canvas_settings.clone(),
+                text_input: None,
             },
             state_sort: StateSort::Editor(EditorState::default()),
             atlas_complete: false,
@@ -85,11 +87,14 @@ impl App {
 
         if self.app_context.canvas_settings.orientation {
             context.translate(self.app_context.canvas_settings.element_width() as f64, 0.0)?;
-
             context.rotate(std::f64::consts::PI / 2.0)?;
+            interface_context
+                .translate(self.app_context.canvas_settings.element_width() as f64, 0.0)?;
+            interface_context.rotate(std::f64::consts::PI / 2.0)?;
         }
 
         context.scale(2.0, 2.0)?;
+        interface_context.scale(2.0, 2.0)?;
 
         context.translate(
             self.app_context.canvas_settings.padding_x() as f64,
@@ -106,6 +111,8 @@ impl App {
         if !self.atlas_complete {
             self.atlas_complete = true;
             draw_board(&atlas, 256.0, 256.0, 2, 2, 2, 2)?;
+            draw_board(atlas, 256.0, 320.0, 4, 2, 4, 2)?;
+
         } else {
             result = match &mut self.state_sort {
                 StateSort::MenuMain(state) => {
@@ -135,27 +142,22 @@ impl App {
             self.app_context.pointer.location.1 as f64 - 2.0,
         )?;
 
-        context.draw_image_with_html_canvas_element(
-            &interface_canvas,
-            -(self.app_context.canvas_settings.padding_x() as f64),
-            -(self.app_context.canvas_settings.padding_y() as f64),
-        )?;
-
         context.restore();
         interface_context.restore();
 
         self.app_context.frame = (window().performance().unwrap().now() * 0.06) as u64;
         self.app_context.pointer.swap();
+        self.app_context.text_input = None;
 
         result
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self, text_input: &HtmlInputElement) {
         let next_state = match &mut self.state_sort {
-            StateSort::MenuMain(state) => state.tick(&self.app_context),
-            StateSort::Lobby(state) => state.tick(&self.app_context),
-            StateSort::MenuTeleport(state) => state.tick(&self.app_context),
-            StateSort::Editor(state) => state.tick(&self.app_context),
+            StateSort::MenuMain(state) => state.tick(text_input, &self.app_context),
+            StateSort::Lobby(state) => state.tick(text_input, &self.app_context),
+            StateSort::MenuTeleport(state) => state.tick(text_input, &self.app_context),
+            StateSort::Editor(state) => state.tick(text_input, &self.app_context),
         };
 
         if let Some(next_state) = next_state {
@@ -169,6 +171,13 @@ impl App {
 
     pub fn set_session_id(&mut self, session_id: String) {
         self.app_context.session_id = Some(session_id);
+    }
+
+    pub fn on_blur(&mut self, event: FocusEvent, text_input: &HtmlInputElement) {
+        if let Some(field) = text_input.dataset().get("field") {
+            self.app_context.text_input = Some((field, text_input.value()));
+            text_input.dataset().delete("field");
+        }
     }
 
     pub fn on_mouse_down(&mut self, event: MouseEvent) {
@@ -188,8 +197,8 @@ impl App {
     }
 
     pub fn on_mouse_move(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
-        let x = event.client_x() - bound.left() as i32;
-        let y = event.client_y() - bound.top() as i32;
+        let x = event.page_x() - bound.left() as i32;
+        let y = event.page_y() - bound.top() as i32;
         let pointer_location =
             App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
 
@@ -200,8 +209,8 @@ impl App {
 
     pub fn on_touch_start(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.client_x() - bound.left() as i32;
-            let y = touch.client_y() - bound.top() as i32;
+            let x = touch.page_x() - bound.left() as i32;
+            let y = touch.page_y() - bound.top() as i32;
             let pointer_location =
                 App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
 
@@ -248,8 +257,8 @@ impl App {
 
     pub fn on_touch_end(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.client_x() - bound.left() as i32;
-            let y = touch.client_y() - bound.top() as i32;
+            let x = touch.page_x() - bound.left() as i32;
+            let y = touch.page_y() - bound.top() as i32;
 
             let pointer_location =
                 App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
@@ -261,8 +270,8 @@ impl App {
 
     pub fn on_touch_move(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.client_x() - bound.left() as i32;
-            let y = touch.client_y() - bound.top() as i32;
+            let x = touch.page_x() - bound.left() as i32;
+            let y = touch.page_y() - bound.top() as i32;
 
             let pointer_location =
                 App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
@@ -310,17 +319,6 @@ impl App {
                 };
             }
             StateSort::Editor(state) => match event.code().as_str() {
-                "KeyC" => {
-                    let encoded_level: Vec<u8> = state.level().into();
-                    console::log_1(
-                        &format!("{:?}", BASE32.encode(encoded_level.as_slice())).into(),
-                    );
-                }
-                "KeyV" => {
-                    let level = Level::from("ph2g4h150426a0a45g0m8k038hp04d0");
-                    
-                    *state = EditorState::with_level(level);
-                }
                 _ => (),
             },
             _ => (),

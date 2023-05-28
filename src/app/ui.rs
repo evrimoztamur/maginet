@@ -270,7 +270,7 @@ impl ToggleButtonElement {
     }
 
     pub fn set_selected(&mut self, selected: bool) {
-        self.button.selected ^= selected;
+        self.button.selected = selected;
     }
 
     pub fn toggle(&mut self) {

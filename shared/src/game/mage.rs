@@ -206,14 +206,14 @@ impl Default for Mage {
     }
 }
 
-impl Into<Vec<u8>> for Mage {
+impl Into<Vec<u8>> for &Mage {
     fn into(self) -> Vec<u8> {
         let position_x = self.position.0 as u8;
         let position_y = self.position.1 as u8;
         let team = self.team as u8;
 
         let sort = self.sort as u8;
-        let mana = self.mana.into();
+        let mana: u8 = (&self.mana).into();
 
         vec![
             (position_x & 0b111) << 5 | (position_y & 0b111) << 2 | team & 0b11,

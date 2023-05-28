@@ -2,9 +2,9 @@ use std::mem;
 
 use shared::{Board, Level, LobbySettings, Mage, Mages, Position, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{LobbyState, State};
+use super::{LobbyState, MenuState, State};
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -58,6 +58,7 @@ const BUTTON_DELETE: usize = 39;
 
 const BUTTON_ADD: usize = 40;
 
+const BUTTON_LOAD: usize = 12;
 const BUTTON_SIMULATE: usize = 50;
 const BUTTON_LEAVE: usize = 100;
 
@@ -270,13 +271,39 @@ impl State for EditorState {
         Ok(())
     }
 
-    fn tick(&mut self, app_context: &AppContext) -> Option<StateSort> {
+    fn tick(
+        &mut self,
+        text_input: &HtmlInputElement,
+        app_context: &AppContext,
+    ) -> Option<StateSort> {
         let board_offset = self.board_offset();
         let pointer = &app_context.pointer;
+
+        if text_input.dataset().get("field").is_some() {
+            return None;
+        }
+
+        match &app_context.text_input {
+            Some((field, value)) => {
+                if field == "level_code" {
+                    return Some(StateSort::Editor(EditorState::with_level(
+                        value.as_str().into(),
+                    )));
+                }
+            }
+            _ => (),
+        }
 
         if self.is_interface_active() {
             if let Some(UIEvent::ButtonClick(value)) = self.menu_interface.tick(&pointer) {
                 match value {
+                    BUTTON_LOAD => {
+                        text_input.set_value(self.level().as_code().as_str());
+                        text_input.set_placeholder("Enter level code");
+                        text_input.dataset().set("field", "level_code").unwrap();
+                        text_input.focus().unwrap();
+                        self.button_menu.set_selected(false);
+                    }
                     BUTTON_SIMULATE => {
                         let simulations = Level::simulate(
                             Level::new(self.board.clone(), self.mages.clone(), Team::Red),
@@ -307,6 +334,9 @@ impl State for EditorState {
                             .into(),
                         );
                     }
+                    BUTTON_LEAVE => {
+                        return Some(StateSort::MenuMain(MenuState::new()));
+                    }
                     _ => (),
                 }
             }
@@ -314,6 +344,10 @@ impl State for EditorState {
             match value {
                 BUTTON_SAVE => {
                     App::save_level(0, self.level());
+
+                    text_input.set_value(self.level().as_code().as_str());
+                    text_input.dataset().set("field", "save_level_code").unwrap();
+                    text_input.focus().unwrap();
                 }
                 BUTTON_MODE_TOGGLE => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
@@ -747,9 +781,18 @@ impl Default for EditorState {
             Box::new(button_height_plus),
         ]);
 
-        let button_simulate = ButtonElement::new(
-            (96 - 44, 128 - 24),
+        let button_load = ButtonElement::new(
+            (96 - 44, 128 - 32),
             (88, 24),
+            BUTTON_LOAD,
+            LabelTrim::Round,
+            LabelTheme::Action,
+            crate::app::ContentElement::Text("Load".to_string(), Alignment::Center),
+        );
+
+        let button_simulate = ButtonElement::new(
+            (96 - 44, 128),
+            (88, 16),
             BUTTON_SIMULATE,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -757,7 +800,7 @@ impl Default for EditorState {
         );
 
         let button_leave = ConfirmButtonElement::new(
-            (96 - 36, 128 + 8),
+            (96 - 36, 128 + 24),
             (72, 16),
             BUTTON_LEAVE,
             LabelTrim::Glorious,
@@ -765,8 +808,11 @@ impl Default for EditorState {
             crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
         );
 
-        let menu_interface =
-            Interface::new(vec![Box::new(button_leave), Box::new(button_simulate)]);
+        let menu_interface = Interface::new(vec![
+            Box::new(button_load),
+            Box::new(button_leave),
+            Box::new(button_simulate),
+        ]);
 
         let level = App::load_level(0).unwrap_or_default();
 

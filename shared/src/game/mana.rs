@@ -64,7 +64,7 @@ impl PartialOrd<u8> for Mana {
     }
 }
 
-impl Into<u8> for Mana {
+impl Into<u8> for &Mana {
     fn into(self) -> u8 {
         (self.0 as u8 & 0b1111) << 4 | self.1 & 0b1111
     }

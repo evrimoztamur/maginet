@@ -47,7 +47,7 @@ impl Game {
 
     /// Determines if the game is stalemated.
     fn stalemate(&self) -> bool {
-        self.last_nominal + 8 < self.turns()
+        self.last_nominal + 8 < self.turns() && self.turns() > 24
     }
 
     /// Determines if the game is finished.
@@ -292,27 +292,29 @@ impl Game {
 
     /// Executes a [`Turn`], modifying the game state.
     pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
-        if let Some(mage) = self.mages.live_occupant(&from) {
-            if mage.team == self.turn_for() {
-                let available_moves = self.available_moves(mage);
-                let potential_move = available_moves
-                    .iter()
-                    .find(|(position, _, _)| *position == to);
+        if self.result().is_none() {
+            if let Some(mage) = self.mages.live_occupant(&from) {
+                if mage.team == self.turn_for() {
+                    let available_moves = self.available_moves(mage);
+                    let potential_move = available_moves
+                        .iter()
+                        .find(|(position, _, _)| *position == to);
 
-                let mage = self.mages.live_occupant_mut(&from).unwrap();
+                    let mage = self.mages.live_occupant_mut(&from).unwrap();
 
-                if let Some((to, _, _)) = potential_move {
-                    mage.position = *to;
+                    if let Some((to, _, _)) = potential_move {
+                        mage.position = *to;
 
-                    let attacks = self.attack(*to);
+                        let attacks = self.attack(*to);
 
-                    if !attacks.is_empty() {
-                        self.last_nominal = self.turns();
+                        if !attacks.is_empty() {
+                            self.last_nominal = self.turns();
+                        }
+
+                        self.turns.push(Turn(from, *to));
+
+                        return Some(attacks);
                     }
-
-                    self.turns.push(Turn(from, *to));
-
-                    return Some(attacks);
                 }
             }
         }
