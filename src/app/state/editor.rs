@@ -60,6 +60,7 @@ const BUTTON_ADD: usize = 40;
 
 const BUTTON_LOAD: usize = 12;
 const BUTTON_SIMULATE: usize = 50;
+const BUTTON_RESET: usize = 51;
 const BUTTON_LEAVE: usize = 100;
 
 impl EditorState {
@@ -333,6 +334,9 @@ impl State for EditorState {
                             )
                             .into(),
                         );
+                    }
+                    BUTTON_RESET => {
+                        return Some(StateSort::Editor(EditorState::with_level(Level::default())));
                     }
                     BUTTON_LEAVE => {
                         return Some(StateSort::MenuMain(MenuState::new()));
@@ -799,8 +803,17 @@ impl Default for EditorState {
             crate::app::ContentElement::Text("Simulate".to_string(), Alignment::Center),
         );
 
+        let button_reset = ConfirmButtonElement::new(
+            (96 - 44, 128 + 20),
+            (88, 16),
+            BUTTON_RESET,
+            LabelTrim::Round,
+            LabelTheme::Default,
+            crate::app::ContentElement::Text("Reset".to_string(), Alignment::Center),
+        );
+
         let button_leave = ConfirmButtonElement::new(
-            (96 - 36, 128 + 24),
+            (96 - 36, 128 + 48),
             (72, 16),
             BUTTON_LEAVE,
             LabelTrim::Glorious,
@@ -810,8 +823,9 @@ impl Default for EditorState {
 
         let menu_interface = Interface::new(vec![
             Box::new(button_load),
-            Box::new(button_leave),
             Box::new(button_simulate),
+            Box::new(button_reset),
+            Box::new(button_leave),
         ]);
 
         let level = App::load_level(0).unwrap_or_default();

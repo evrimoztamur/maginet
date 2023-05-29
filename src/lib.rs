@@ -120,7 +120,7 @@ fn start() -> Result<(), JsValue> {
             atlas_context.draw_image_with_html_image_element(&atlas_img, 0.0, 0.0)?;
             // container_element.append_child(&atlas)?;
 
-            document().body().unwrap().append_child(&atlas)?;
+            // document().body().unwrap().append_child(&atlas)?;
 
             let app = App::new(&canvas_settings);
 
