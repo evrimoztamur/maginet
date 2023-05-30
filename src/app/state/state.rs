@@ -12,5 +12,9 @@ pub trait State {
         app_context: &AppContext,
     ) -> Result<(), JsValue>;
 
-    fn tick(&mut self, text_input: &HtmlInputElement, app_context: &AppContext) -> Option<StateSort>;
+    fn tick(
+        &mut self,
+        text_input: &HtmlInputElement,
+        app_context: &AppContext,
+    ) -> Option<StateSort>;
 }

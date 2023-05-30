@@ -4,7 +4,7 @@ use shared::{Board, Level, LobbySettings, Mage, Mages, Position, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{LobbyState, MenuState, State};
+use super::{BaseState, LobbyState, State};
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -339,7 +339,7 @@ impl State for EditorState {
                         return Some(StateSort::Editor(EditorState::with_level(Level::default())));
                     }
                     BUTTON_LEAVE => {
-                        return Some(StateSort::MenuMain(MenuState::new()));
+                        return Some(StateSort::Base(BaseState::default()));
                     }
                     _ => (),
                 }
@@ -350,7 +350,10 @@ impl State for EditorState {
                     App::save_level(0, self.level());
 
                     text_input.set_value(self.level().as_code().as_str());
-                    text_input.dataset().set("field", "save_level_code").unwrap();
+                    text_input
+                        .dataset()
+                        .set("field", "save_level_code")
+                        .unwrap();
                     text_input.focus().unwrap();
                 }
                 BUTTON_MODE_TOGGLE => {
@@ -756,13 +759,13 @@ impl Default for EditorState {
         );
 
         let mage_interface = Interface::new(vec![
-            Box::new(button_team_left),
-            Box::new(button_team_right),
-            Box::new(button_spell_left),
-            Box::new(button_spell_right),
-            Box::new(button_mana_left),
-            Box::new(button_mana_right),
-            Box::new(button_delete),
+            button_team_left.boxed(),
+            button_team_right.boxed(),
+            button_spell_left.boxed(),
+            button_spell_right.boxed(),
+            button_mana_left.boxed(),
+            button_mana_right.boxed(),
+            button_delete.boxed(),
         ]);
 
         let button_add = ButtonElement::new(
@@ -774,15 +777,15 @@ impl Default for EditorState {
             crate::app::ContentElement::Sprite((144, 32), (16, 16)),
         );
 
-        let no_mage_interface = Interface::new(vec![Box::new(button_add)]);
+        let no_mage_interface = Interface::new(vec![button_add.boxed()]);
 
         let root_element = Interface::new(vec![
-            Box::new(button_mode_toggle),
-            Box::new(button_save),
-            Box::new(button_width_minus),
-            Box::new(button_width_plus),
-            Box::new(button_height_minus),
-            Box::new(button_height_plus),
+            button_mode_toggle.boxed(),
+            button_save.boxed(),
+            button_width_minus.boxed(),
+            button_width_plus.boxed(),
+            button_height_minus.boxed(),
+            button_height_plus.boxed(),
         ]);
 
         let button_load = ButtonElement::new(
@@ -816,16 +819,16 @@ impl Default for EditorState {
             (96 - 36, 128 + 48),
             (72, 16),
             BUTTON_LEAVE,
-            LabelTrim::Glorious,
+            LabelTrim::Return,
             LabelTheme::Default,
             crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
         );
 
         let menu_interface = Interface::new(vec![
-            Box::new(button_load),
-            Box::new(button_simulate),
-            Box::new(button_reset),
-            Box::new(button_leave),
+            button_load.boxed(),
+            button_simulate.boxed(),
+            button_reset.boxed(),
+            button_leave.boxed(),
         ]);
 
         let level = App::load_level(0).unwrap_or_default();

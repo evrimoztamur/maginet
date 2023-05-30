@@ -7,12 +7,11 @@ mod net;
 use std::{cell::RefCell, rc::Rc};
 
 use app::{App, CanvasSettings};
-use draw::draw_text;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
-    console, CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement,
-    HtmlImageElement, HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
+    CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement, HtmlImageElement,
+    HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
 };
 
 fn window() -> Window {
@@ -156,8 +155,7 @@ fn start() -> Result<(), JsValue> {
 
                     {
                         app.tick(&text_input);
-                        app.draw(&context, &interface_context, &atlas, &interface_canvas)
-                            .unwrap();
+                        app.draw(&context, &interface_context, &atlas).unwrap();
                     }
 
                     request_animation_frame(f.borrow().as_ref().unwrap());

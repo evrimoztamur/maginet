@@ -358,7 +358,7 @@ pub struct LobbySettings {
     /// [`LoadoutMethod`] for the lobby.
     pub loadout_method: LoadoutMethod,
     /// Seed for RNG.
-    pub seed: u32,
+    pub seed: u64,
     /// Board.
     pub board: Board,
 }

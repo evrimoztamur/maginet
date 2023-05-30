@@ -4,7 +4,7 @@ use shared::{Board, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{LobbyState, MenuState, State};
+use super::{BaseState, LobbyState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
@@ -25,38 +25,6 @@ const BOARD_OFFSET: (i32, i32) = ((4 * BOARD_SCALE.0) / 2, (4 * BOARD_SCALE.1) /
 
 const BUTTON_TELEPORT: usize = 20;
 const BUTTON_BACK: usize = 21;
-
-impl MenuTeleport {
-    pub fn new() -> MenuTeleport {
-        let button_teleport = ButtonElement::new(
-            (16, 188),
-            (80, 24),
-            BUTTON_TELEPORT,
-            LabelTrim::Glorious,
-            LabelTheme::Action,
-            crate::app::ContentElement::Text("Teleport".to_string(), Alignment::Center),
-        );
-
-        let button_back = ButtonElement::new(
-            (156, 192),
-            (88, 16),
-            BUTTON_BACK,
-            LabelTrim::Glorious,
-            LabelTheme::Default,
-            crate::app::ContentElement::Text("Back".to_string(), Alignment::Center),
-        );
-
-        let root_element = Interface::new(vec![Box::new(button_teleport), Box::new(button_back)]);
-
-        MenuTeleport {
-            interface: root_element,
-            lobby_id: 0,
-            particles: Vec::new(),
-            board_dirty: true,
-        }
-    }
-}
-
 impl State for MenuTeleport {
     fn draw(
         &mut self,
@@ -138,7 +106,7 @@ impl State for MenuTeleport {
 
     fn tick(
         &mut self,
-        text_input: &HtmlInputElement,
+        _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
         let pointer = &app_context.pointer;
@@ -173,7 +141,7 @@ impl State for MenuTeleport {
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
                 BUTTON_BACK => {
-                    return Some(StateSort::MenuMain(MenuState::new()));
+                    return Some(StateSort::Base(BaseState::default()));
                 }
                 BUTTON_TELEPORT => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
@@ -186,5 +154,36 @@ impl State for MenuTeleport {
         }
 
         None
+    }
+}
+
+impl Default for MenuTeleport {
+    fn default() -> MenuTeleport {
+        let button_teleport = ButtonElement::new(
+            (16, 188),
+            (80, 24),
+            BUTTON_TELEPORT,
+            LabelTrim::Glorious,
+            LabelTheme::Action,
+            crate::app::ContentElement::Text("Teleport".to_string(), Alignment::Center),
+        );
+
+        let button_back = ButtonElement::new(
+            (156, 192),
+            (88, 16),
+            BUTTON_BACK,
+            LabelTrim::Return,
+            LabelTheme::Default,
+            crate::app::ContentElement::Text("Back".to_string(), Alignment::Center),
+        );
+
+        let root_element = Interface::new(vec![button_teleport.boxed(), button_back.boxed()]);
+
+        MenuTeleport {
+            interface: root_element,
+            lobby_id: 0,
+            particles: Vec::new(),
+            board_dirty: true,
+        }
     }
 }

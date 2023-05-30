@@ -9,6 +9,8 @@ pub enum UIEvent {
 }
 
 pub trait UIElement {
+    fn boxed(self) -> Box<dyn UIElement>;
+
     fn tick(&mut self, _pointer: &Pointer) -> Option<UIEvent> {
         None
     }
@@ -35,6 +37,10 @@ pub enum ContentElement {
 }
 
 impl UIElement for ContentElement {
+    fn boxed(self) -> Box<dyn UIElement> {
+        Box::new(self)
+    }
+
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
@@ -70,6 +76,7 @@ impl UIElement for ContentElement {
 pub enum LabelTrim {
     Round,
     Glorious,
+    Return,
 }
 
 #[derive(PartialEq)]
@@ -124,6 +131,10 @@ impl ButtonElement {
 }
 
 impl UIElement for ButtonElement {
+    fn boxed(self) -> Box<dyn UIElement> {
+        Box::new(self)
+    }
+
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
@@ -205,6 +216,10 @@ impl ConfirmButtonElement {
 }
 
 impl UIElement for ConfirmButtonElement {
+    fn boxed(self) -> Box<dyn UIElement> {
+        Box::new(self)
+    }
+
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
@@ -279,6 +294,10 @@ impl ToggleButtonElement {
 }
 
 impl UIElement for ToggleButtonElement {
+    fn boxed(self) -> Box<dyn UIElement> {
+        Box::new(self)
+    }
+
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,
@@ -321,6 +340,10 @@ impl ButtonGroupElement {
 }
 
 impl UIElement for ButtonGroupElement {
+    fn boxed(self) -> Box<dyn UIElement> {
+        Box::new(self)
+    }
+
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
         let pointer = pointer.teleport((-self.position.0, -self.position.1));
         let mut event = None;
@@ -371,6 +394,10 @@ impl Interface {
 }
 
 impl UIElement for Interface {
+    fn boxed(self) -> Box<dyn UIElement> {
+        Box::new(self)
+    }
+
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
         let mut event = None;
 
@@ -382,6 +409,7 @@ impl UIElement for Interface {
 
         event
     }
+
     fn draw(
         &self,
         context: &CanvasRenderingContext2d,

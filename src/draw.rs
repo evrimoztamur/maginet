@@ -47,6 +47,7 @@ fn kerning(char: char) -> (isize, isize) {
         'l' => (-2, -2),
         't' => (-1, 0),
         'f' => (0, -1),
+        'a' => (0, -1),
         _ => (0, 0),
     }
 }
@@ -529,6 +530,7 @@ pub fn draw_label(
     let trim_position = match trim {
         LabelTrim::Round => (80.0, 0.0),
         LabelTrim::Glorious => (88.0, 0.0),
+        LabelTrim::Return => (96.0, 0.0),
     };
 
     draw_sprite(

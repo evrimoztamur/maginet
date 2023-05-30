@@ -2,7 +2,7 @@ use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{LobbyState, MenuTeleport, State};
+use super::{BaseState, LobbyState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
@@ -26,10 +26,123 @@ const BUTTON_RANDOM: usize = 11;
 const BUTTON_SYMMETRIC_RANDOM: usize = 12;
 // const BUTTON_ROUND_ROBIN: usize = 13;
 const BUTTON_BATTLE: usize = 20;
-const BUTTON_TELEPORT: usize = 21;
+const BUTTON_BACK: usize = 21;
 
 impl MenuState {
-    pub fn new() -> MenuState {
+    fn refresh_lobby(&mut self) {
+        self.lobby_settings.seed = window().performance().unwrap().now() as u64;
+        self.sentinel_lobby = Lobby::new(self.lobby_settings.clone());
+    }
+}
+
+impl State for MenuState {
+    fn draw(
+        &mut self,
+        context: &CanvasRenderingContext2d,
+        interface_context: &CanvasRenderingContext2d,
+        atlas: &HtmlCanvasElement,
+        app_context: &AppContext,
+    ) -> Result<(), JsValue> {
+        let frame = app_context.frame;
+        let pointer = &app_context.pointer;
+
+        context.save();
+        context.translate(16.0, 32.0)?;
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
+
+        draw_sprite(context, atlas, 96.0, 64.0, 32.0, 32.0, 16.0, 4.0)?;
+        context.translate(80.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
+
+        draw_sprite(context, atlas, 64.0, 64.0, 32.0, 32.0, 26.0, 4.0)?;
+        draw_sprite(context, atlas, 128.0, 64.0, 32.0, 32.0, 6.0, 6.0)?;
+        context.translate(80.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
+
+        draw_sprite(context, atlas, 32.0, 64.0, 32.0, 32.0, 6.0, 4.0)?;
+        draw_sprite(context, atlas, 96.0, 96.0, 32.0, 32.0, 26.0, 6.0)?;
+        context.restore();
+
+        context.save();
+        context.translate(108.0, 112.0)?;
+
+        draw_sprite(context, atlas, 256.0, 320.0, 256.0, 64.0, 0.0, 0.0)?;
+
+        for mage in self.sentinel_lobby.game.iter_mages() {
+            context.save();
+            context.translate(
+                -48.0 + mage.position.0 as f64 * 32.0,
+                15.0 + if mage.team == Team::Red { 0.0 } else { 1.0 } as f64 * 32.0,
+            )?;
+            draw_mage(
+                context,
+                atlas,
+                mage,
+                frame,
+                self.sentinel_lobby.game.starting_team(),
+                true,
+                None,
+                true,
+            )?;
+            context.restore();
+        }
+
+        self.interface
+            .draw(interface_context, atlas, pointer, frame)?;
+
+        context.restore();
+
+        Ok(())
+    }
+
+    fn tick(
+        &mut self,
+        _text_input: &HtmlInputElement,
+        app_context: &AppContext,
+    ) -> Option<StateSort> {
+        let pointer = &app_context.pointer;
+
+        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
+            match value {
+                BUTTON_LOCAL => {
+                    self.lobby_settings.lobby_sort = LobbySort::Local;
+                }
+                BUTTON_VS_AI => {
+                    self.lobby_settings.lobby_sort = LobbySort::LocalAI;
+                }
+                BUTTON_ONLINE => {
+                    self.lobby_settings.lobby_sort = LobbySort::Online(0);
+                }
+                BUTTON_DEFAULT => {
+                    self.lobby_settings.loadout_method = LoadoutMethod::Default;
+                    self.refresh_lobby();
+                }
+                BUTTON_RANDOM => {
+                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: false };
+                    self.refresh_lobby();
+                }
+                BUTTON_SYMMETRIC_RANDOM => {
+                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: true };
+                    self.refresh_lobby();
+                }
+                BUTTON_BATTLE => {
+                    return Some(StateSort::Lobby(LobbyState::new(
+                        self.lobby_settings.clone(),
+                    )));
+                }
+                BUTTON_BACK => {
+                    return Some(StateSort::Base(BaseState::default()));
+                }
+                _ => (),
+            }
+        }
+
+        None
+    }
+}
+
+impl Default for MenuState {
+    fn default() -> MenuState {
         let button_local = ButtonElement::new(
             (0, 0),
             (72, 32),
@@ -116,20 +229,20 @@ impl MenuState {
             crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
         );
 
-        let button_teleport = ButtonElement::new(
+        let button_back = ButtonElement::new(
             (156, 192),
             (88, 16),
-            BUTTON_TELEPORT,
-            LabelTrim::Glorious,
+            BUTTON_BACK,
+            LabelTrim::Return,
             LabelTheme::Default,
-            crate::app::ContentElement::Text("Teleport".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Back".to_string(), Alignment::Center),
         );
 
         let root_element = Interface::new(vec![
-            Box::new(group_lobby_type),
-            Box::new(group_loadout_type),
-            Box::new(button_battle),
-            Box::new(button_teleport),
+            group_lobby_type.boxed(),
+            group_loadout_type.boxed(),
+            button_battle.boxed(),
+            button_back.boxed(),
         ]);
 
         MenuState {
@@ -137,116 +250,5 @@ impl MenuState {
             sentinel_lobby: Lobby::new(LobbySettings::default()),
             lobby_settings: LobbySettings::default(),
         }
-    }
-
-    fn refresh_lobby(&mut self) {
-        self.lobby_settings.seed = window().performance().unwrap().now() as u32;
-        self.sentinel_lobby = Lobby::new(self.lobby_settings.clone());
-    }
-}
-
-impl State for MenuState {
-    fn draw(
-        &mut self,
-        context: &CanvasRenderingContext2d,
-        interface_context: &CanvasRenderingContext2d,
-        atlas: &HtmlCanvasElement,
-        app_context: &AppContext,
-    ) -> Result<(), JsValue> {
-        let frame = app_context.frame;
-        let pointer = &app_context.pointer;
-
-        context.save();
-        context.translate(16.0, 32.0)?;
-        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
-
-        draw_sprite(context, atlas, 96.0, 64.0, 32.0, 32.0, 16.0, 4.0)?;
-        context.translate(80.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
-
-        draw_sprite(context, atlas, 64.0, 64.0, 32.0, 32.0, 26.0, 4.0)?;
-        draw_sprite(context, atlas, 128.0, 64.0, 32.0, 32.0, 6.0, 6.0)?;
-        context.translate(80.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
-
-        draw_sprite(context, atlas, 32.0, 64.0, 32.0, 32.0, 6.0, 4.0)?;
-        draw_sprite(context, atlas, 96.0, 96.0, 32.0, 32.0, 26.0, 6.0)?;
-        context.restore();
-
-        context.save();
-        context.translate(108.0, 112.0)?;
-
-        draw_sprite(context, atlas, 256.0, 320.0, 256.0, 64.0, 0.0, 0.0)?;
-
-        for mage in self.sentinel_lobby.game.iter_mages() {
-            context.save();
-            context.translate(
-                -48.0 + mage.position.0 as f64 * 32.0,
-                15.0 + if mage.team == Team::Red { 0.0 } else { 1.0 } as f64 * 32.0,
-            )?;
-            draw_mage(
-                context,
-                atlas,
-                mage,
-                frame,
-                self.sentinel_lobby.game.starting_team(),
-                true,
-                None,
-                true,
-            )?;
-            context.restore();
-        }
-
-        self.interface
-            .draw(interface_context, atlas, pointer, frame)?;
-
-        context.restore();
-
-        Ok(())
-    }
-
-    fn tick(
-        &mut self,
-        text_input: &HtmlInputElement,
-        app_context: &AppContext,
-    ) -> Option<StateSort> {
-        let pointer = &app_context.pointer;
-
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
-            match value {
-                BUTTON_LOCAL => {
-                    self.lobby_settings.lobby_sort = LobbySort::Local;
-                }
-                BUTTON_VS_AI => {
-                    self.lobby_settings.lobby_sort = LobbySort::LocalAI;
-                }
-                BUTTON_ONLINE => {
-                    self.lobby_settings.lobby_sort = LobbySort::Online(0);
-                }
-                BUTTON_DEFAULT => {
-                    self.lobby_settings.loadout_method = LoadoutMethod::Default;
-                    self.refresh_lobby();
-                }
-                BUTTON_RANDOM => {
-                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: false };
-                    self.refresh_lobby();
-                }
-                BUTTON_SYMMETRIC_RANDOM => {
-                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: true };
-                    self.refresh_lobby();
-                }
-                BUTTON_BATTLE => {
-                    return Some(StateSort::Lobby(LobbyState::new(
-                        self.lobby_settings.clone(),
-                    )));
-                }
-                BUTTON_TELEPORT => {
-                    return Some(StateSort::MenuTeleport(MenuTeleport::new()));
-                }
-                _ => (),
-            }
-        }
-
-        None
     }
 }

@@ -1,3 +1,5 @@
+use std::ops::Neg;
+
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},
     ChaCha8Rng,
@@ -5,6 +7,29 @@ use rand_chacha::{
 use serde::{Deserialize, Serialize};
 
 use crate::{Board, Level, Mage, Mages, Position, Team, Turn};
+
+/// Leaf node for use in search algorithms.
+pub struct TurnLeaf(pub Turn, pub isize);
+
+impl Neg for TurnLeaf {
+    type Output = TurnLeaf;
+
+    fn neg(self) -> Self::Output {
+        Self(self.0, -self.1)
+    }
+}
+
+impl PartialEq<isize> for TurnLeaf {
+    fn eq(&self, other: &isize) -> bool {
+        self.1 == *other
+    }
+}
+
+impl PartialOrd<isize> for TurnLeaf {
+    fn partial_cmp(&self, other: &isize) -> Option<std::cmp::Ordering> {
+        self.1.partial_cmp(other)
+    }
+}
 
 /// Result of a game.
 pub enum GameResult {
@@ -202,14 +227,28 @@ impl Game {
     }
 
     /// Returns the best [`Turn`] available and its evaluation.
-    pub fn best_turn(&self, seed: u64) -> Option<(Turn, isize)> {
+    pub fn best_turn(&self, depth: usize, seed: u64) -> Option<TurnLeaf> {
+        if self.result().is_none() {
+            Some(self.pvs(
+                depth,
+                isize::MIN + 0xff,
+                isize::MAX - 0xff,
+                &mut ChaCha8Rng::seed_from_u64(seed),
+            ))
+        } else {
+            None
+        }
+    }
+
+    /// Returns the best [`Turn`] available and its evaluation.
+    pub fn best_turn_auto(&self, seed: u64) -> Option<TurnLeaf> {
         if self.result().is_none() {
             let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
 
-            Some(self.alphabeta(
+            Some(self.pvs(
                 4 + (2usize.saturating_sub(alive_mages) / 3),
-                isize::MIN,
-                isize::MAX,
+                isize::MIN + 0xff,
+                isize::MAX - 0xff,
                 &mut ChaCha8Rng::seed_from_u64(seed),
             ))
         } else {
@@ -224,9 +263,9 @@ impl Game {
         mut alpha: isize,
         mut beta: isize,
         rng: &mut ChaCha8Rng,
-    ) -> (Turn, isize) {
+    ) -> TurnLeaf {
         if depth == 0 {
-            (
+            TurnLeaf(
                 Turn::sentinel(),
                 self.evaluate() + (rng.next_u64() % 8) as isize,
             )
@@ -246,7 +285,8 @@ impl Game {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta, rng);
+                        let TurnLeaf(_, next_value) =
+                            next_game.alphabeta(depth - 1, alpha, beta, rng);
 
                         if next_value > value {
                             value = value.max(next_value);
@@ -260,7 +300,7 @@ impl Game {
                         }
                     }
 
-                    (best_turn, value)
+                    TurnLeaf(best_turn, value)
                 }
                 Team::Blue => {
                     // Minimizing
@@ -270,7 +310,8 @@ impl Game {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
-                        let (_, next_value) = next_game.alphabeta(depth - 1, alpha, beta, rng);
+                        let TurnLeaf(_, next_value) =
+                            next_game.alphabeta(depth - 1, alpha, beta, rng);
 
                         if next_value < value {
                             value = value.min(next_value);
@@ -284,9 +325,81 @@ impl Game {
                         }
                     }
 
-                    (best_turn, value)
+                    TurnLeaf(best_turn, value)
                 }
             }
+        }
+    }
+
+    // function pvs(node, depth, α, β, color) is
+
+    /// Returns the best turn based on the evaluation function and [principal variation search](https://en.wikipedia.org/wiki/Principal_variation_search).
+    pub fn pvs(
+        &self,
+        depth: usize,
+        mut alpha: isize,
+        beta: isize,
+        rng: &mut ChaCha8Rng,
+    ) -> TurnLeaf {
+        //     if depth = 0 or node is a terminal node then
+        if depth == 0 {
+            //         return color × the heuristic value of node
+            match self.turn_for() {
+                Team::Red => TurnLeaf(
+                    Turn::sentinel(),
+                    self.evaluate() + (rng.next_u64() % 4) as isize,
+                ),
+                Team::Blue => TurnLeaf(
+                    Turn::sentinel(),
+                    -self.evaluate() + (rng.next_u64() % 4) as isize,
+                ),
+            }
+        } else {
+            let mut best_turn = self
+                .all_available_turns(self.turn_for())
+                .first()
+                .copied()
+                .unwrap_or(Turn::sentinel());
+
+            //     for each child of node do
+            for (i, turn) in self.all_available_turns(self.turn_for()).iter().enumerate() {
+                let mut next_game = self.clone();
+                next_game.take_move(turn.0, turn.1);
+
+                //         if child is first child then
+                //             score := −pvs(child, depth − 1, −β, −α, −color)
+                //         else
+                //             score := −pvs(child, depth − 1, −α − 1, −α, −color) (* search with a null window *)
+                //             if α < score < β then
+                //                 score := −pvs(child, depth − 1, −β, −score, −color) (* if it failed high, do a full re-search *)
+
+                let score = if i == 0 {
+                    -next_game.pvs(depth - 1, -beta, -alpha, rng)
+                } else {
+                    let mut score = -next_game.pvs(depth - 1, -(alpha + 1), -alpha, rng);
+
+                    if score > alpha && score < beta {
+                        score = -next_game.pvs(depth - 1, -beta, -score.1, rng);
+                    }
+
+                    score
+                };
+
+                //         α := max(α, score)
+                if score.1 >= alpha {
+                    alpha = score.1;
+                    best_turn = *turn;
+                }
+
+                //         if α ≥ β then
+                if alpha > beta {
+                    //             break (* beta cut-off *)
+                    break;
+                }
+            }
+
+            //     return α
+            TurnLeaf(best_turn, alpha)
         }
     }
 

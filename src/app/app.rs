@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use shared::{Level, LobbyError, SessionRequest, BASE32};
+use shared::{Level, LobbyError, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
     console, CanvasRenderingContext2d, DomRectReadOnly, FocusEvent, HtmlCanvasElement,
     HtmlInputElement, KeyboardEvent, MouseEvent, TouchEvent,
 };
 
-use super::{EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_SCALE};
+use super::{BaseState, EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_SCALE};
 use crate::{
     app::State,
     draw::{draw_board, draw_sprite},
@@ -27,10 +27,11 @@ impl From<LobbyError> for AppError {
 }
 
 pub enum StateSort {
+    Base(BaseState),
     MenuMain(MenuState),
-    MenuTeleport(MenuTeleport),
     Lobby(LobbyState),
     Editor(EditorState),
+    MenuTeleport(MenuTeleport),
 }
 
 pub struct AppContext {
@@ -57,7 +58,7 @@ impl App {
                 canvas_settings: canvas_settings.clone(),
                 text_input: None,
             },
-            state_sort: StateSort::Editor(EditorState::default()),
+            state_sort: StateSort::Base(BaseState::default()),
             atlas_complete: false,
         }
     }
@@ -67,7 +68,6 @@ impl App {
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlCanvasElement,
-        interface_canvas: &HtmlCanvasElement,
     ) -> Result<(), JsValue> {
         context.clear_rect(
             0.0,
@@ -112,16 +112,18 @@ impl App {
             self.atlas_complete = true;
             draw_board(&atlas, 256.0, 256.0, 2, 2, 2, 2)?;
             draw_board(atlas, 256.0, 320.0, 4, 2, 4, 2)?;
-
         } else {
             result = match &mut self.state_sort {
                 StateSort::MenuMain(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
+                StateSort::MenuTeleport(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
                 StateSort::Lobby(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::MenuTeleport(state) => {
+                StateSort::Base(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
                 StateSort::Editor(state) => {
@@ -155,8 +157,9 @@ impl App {
     pub fn tick(&mut self, text_input: &HtmlInputElement) {
         let next_state = match &mut self.state_sort {
             StateSort::MenuMain(state) => state.tick(text_input, &self.app_context),
-            StateSort::Lobby(state) => state.tick(text_input, &self.app_context),
             StateSort::MenuTeleport(state) => state.tick(text_input, &self.app_context),
+            StateSort::Lobby(state) => state.tick(text_input, &self.app_context),
+            StateSort::Base(state) => state.tick(text_input, &self.app_context),
             StateSort::Editor(state) => state.tick(text_input, &self.app_context),
         };
 
@@ -173,7 +176,7 @@ impl App {
         self.app_context.session_id = Some(session_id);
     }
 
-    pub fn on_blur(&mut self, event: FocusEvent, text_input: &HtmlInputElement) {
+    pub fn on_blur(&mut self, _event: FocusEvent, text_input: &HtmlInputElement) {
         if let Some(field) = text_input.dataset().get("field") {
             self.app_context.text_input = Some((field, text_input.value()));
             text_input.dataset().delete("field");
@@ -318,7 +321,7 @@ impl App {
                     _ => (),
                 };
             }
-            StateSort::Editor(state) => match event.code().as_str() {
+            StateSort::Editor(_state) => match event.code().as_str() {
                 _ => (),
             },
             _ => (),

@@ -1,9 +1,11 @@
+mod base;
 mod editor;
 mod lobby;
 mod menu_main;
 mod menu_teleport;
 mod state;
 
+pub use base::*;
 pub use editor::*;
 pub use lobby::*;
 pub use menu_main::*;

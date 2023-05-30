@@ -3,7 +3,7 @@ use data_encoding_macro::new_encoding;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Game, Mage, Team, Turn};
+use crate::{Board, Game, Mage, Team, Turn, TurnLeaf};
 
 /// Base 32 (Crockford) encoding for levels.
 pub const BASE32: Encoding = new_encoding! {
@@ -39,7 +39,9 @@ impl Level {
                 let mut game = Game::new(&level).unwrap();
 
                 for i in 0..50 {
-                    if let Some((Turn(from, to), _)) = game.best_turn(seed + m as u64 + i as u64) {
+                    if let Some(TurnLeaf(Turn(from, to), _)) =
+                        game.best_turn(5, seed + m as u64 + i as u64)
+                    {
                         game.take_move(from, to);
 
                         if game.result().is_some() {

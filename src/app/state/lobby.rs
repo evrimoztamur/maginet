@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use shared::{
     LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages, Message,
-    Position, Team, Turn,
+    Position, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
@@ -11,10 +11,12 @@ use super::{EditorState, MenuState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
-        LabelTrim, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
-        BOARD_SCALE,
+        LabelTrim, Particle, ParticleSort, Pointer, StateSort, ToggleButtonElement, UIElement,
+        UIEvent, BOARD_SCALE,
     },
-    draw::{draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position, draw_board},
+    draw::{
+        draw_board, draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position,
+    },
     net::{
         create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
         send_rematch, MessagePool,
@@ -80,12 +82,12 @@ impl LobbyState {
             (-36, 8),
             (72, 16),
             BUTTON_LEAVE,
-            LabelTrim::Glorious,
+            LabelTrim::Return,
             LabelTheme::Default,
             crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
         );
 
-        let root_element = Interface::new(vec![Box::new(button_rematch), Box::new(button_leave)]);
+        let root_element = Interface::new(vec![button_rematch.boxed(), button_leave.boxed()]);
 
         LobbyState {
             interface: root_element,
@@ -96,7 +98,7 @@ impl LobbyState {
             particles: Vec::new(),
             message_pool,
             message_closure,
-            board_dirty: true
+            board_dirty: true,
         }
     }
 
@@ -173,13 +175,24 @@ impl LobbyState {
         }
     }
 
+    pub fn take_best_turn_quick(&mut self) {
+        let turn = self
+            .lobby
+            .game
+            .best_turn(3, window().performance().unwrap().now().to_bits());
+
+        if let Some(TurnLeaf(turn, _)) = turn {
+            self.message_pool.borrow_mut().push(Message::Move(turn));
+        }
+    }
+
     pub fn take_best_turn(&mut self) {
         let turn = self
             .lobby
             .game
-            .best_turn(window().performance().unwrap().now().to_bits());
+            .best_turn_auto(window().performance().unwrap().now().to_bits());
 
-        if let Some((turn, _)) = turn {
+        if let Some(TurnLeaf(turn, _)) = turn {
             self.message_pool.borrow_mut().push(Message::Move(turn));
         }
     }
@@ -197,17 +210,22 @@ impl LobbyState {
         frame.saturating_sub(self.last_move_frame)
     }
 
-    fn draw_game(
+    pub fn draw_game(
         &mut self,
         context: &CanvasRenderingContext2d,
         atlas: &HtmlCanvasElement,
-        app_context: &AppContext,
+        frame: u64,
+        pointer: &Pointer,
     ) -> Result<(), JsValue> {
         let board_scale = tuple_as!(BOARD_SCALE, f64);
         let board_offset = tuple_as!(self.board_offset(), f64);
 
-        let frame = app_context.frame;
-        let pointer = &app_context.pointer;
+        let (board_width, board_height) = self.lobby.game.board_size();
+
+        if self.board_dirty {
+            self.board_dirty = false;
+            draw_board(atlas, 256.0, 0.0, board_width, board_height, 8, 8).unwrap();
+        }
 
         // DRAW background layer (board + UI block)
 
@@ -412,14 +430,7 @@ impl State for LobbyState {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
-        let (board_width, board_height) = self.lobby.game.board_size();
-
-        if self.board_dirty {
-            self.board_dirty = false;
-            draw_board(atlas, 256.0, 0.0, board_width, board_height, 8, 8).unwrap();
-        }
-
-        self.draw_game(context, atlas, app_context)?;
+        self.draw_game(context, atlas, frame, pointer)?;
 
         {
             let interface_pointer =
@@ -484,7 +495,11 @@ impl State for LobbyState {
         Ok(())
     }
 
-    fn tick(&mut self, text_input: &HtmlInputElement, app_context: &AppContext) -> Option<StateSort> {
+    fn tick(
+        &mut self,
+        _text_input: &HtmlInputElement,
+        app_context: &AppContext,
+    ) -> Option<StateSort> {
         let board_offset = self.board_offset();
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
@@ -522,9 +537,9 @@ impl State for LobbyState {
                 let turn = self
                     .lobby
                     .game
-                    .best_turn(window().performance().unwrap().now().to_bits());
+                    .best_turn_auto(window().performance().unwrap().now().to_bits());
 
-                if let Some((turn, _)) = turn {
+                if let Some(TurnLeaf(turn, _)) = turn {
                     message_pool.messages.append(&mut vec![Message::Move(turn)]);
                 }
             }
@@ -598,7 +613,7 @@ impl State for LobbyState {
                                 mages.clone(),
                             )));
                         }
-                        _ => return Some(StateSort::MenuMain(MenuState::new())),
+                        _ => return Some(StateSort::MenuMain(MenuState::default())),
                     },
                     _ => (),
                 }
