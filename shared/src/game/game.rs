@@ -386,7 +386,7 @@ impl Game {
                 };
 
                 //         α := max(α, score)
-                if score.1 >= alpha {
+                if score.1 > alpha {
                     alpha = score.1;
                     best_turn = *turn;
                 }

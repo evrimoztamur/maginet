@@ -221,8 +221,8 @@ impl Default for MenuState {
         );
 
         let button_battle = ButtonElement::new(
-            (16, 188),
-            (80, 24),
+            (8, 188),
+            (96, 24),
             BUTTON_BATTLE,
             LabelTrim::Glorious,
             LabelTheme::Action,

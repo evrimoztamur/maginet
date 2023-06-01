@@ -160,8 +160,8 @@ impl State for MenuTeleport {
 impl Default for MenuTeleport {
     fn default() -> MenuTeleport {
         let button_teleport = ButtonElement::new(
-            (16, 188),
-            (80, 24),
+            (8, 188),
+            (96, 24),
             BUTTON_TELEPORT,
             LabelTrim::Glorious,
             LabelTheme::Action,

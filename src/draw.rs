@@ -166,15 +166,15 @@ pub fn draw_mage(
     }) as f64;
 
     let sleeping_offset = if mage.is_alive() && game_started {
-        0.0
+        (0.0, 40.0)
     } else {
-        64.0
+        (80.0, 32.0)
     };
 
     context.save();
 
     if mage.is_alive() {
-        draw_sprite(context, atlas, 0.0, 192.0, 32.0, 32.0, -16.0, -20.0)?;
+        draw_sprite(context, atlas, 0.0, 208.0, 32.0, 16.0, -16.0, -4.0)?;
 
         if let Some(GameResult::Win(team)) = game_result {
             if team == mage.team {
@@ -190,7 +190,7 @@ pub fn draw_mage(
     } else {
         context.translate(0.0, 4.0)?;
 
-        draw_sprite(context, atlas, 32.0, 192.0, 32.0, 32.0, -16.0, -20.0)?;
+        draw_sprite(context, atlas, 32.0, 208.0, 32.0, 16.0, -16.0, -4.0)?;
     }
 
     let sprite_x = match mage.sort {
@@ -198,7 +198,7 @@ pub fn draw_mage(
         shared::MageSort::Spike => 32.0,
         shared::MageSort::Knight => 64.0,
         shared::MageSort::Cross => 96.0,
-        shared::MageSort::Plus => 0.0,
+        shared::MageSort::Plus => 128.0,
     };
 
     match mage.team {
@@ -206,26 +206,26 @@ pub fn draw_mage(
             .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
                 sprite_x,
-                64.0 + sleeping_offset,
+                64.0 + sleeping_offset.0,
                 32.0,
+                sleeping_offset.1,
+                -19.0,
+                -28.0 + bounce + 40.0 - sleeping_offset.1,
                 32.0,
-                -16.0,
-                -20.0 + bounce,
-                32.0,
-                32.0,
+                sleeping_offset.1,
             )?,
         Team::Blue => {
             context.scale(-1.0, 1.0)?;
             context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
                 sprite_x,
-                96.0 + sleeping_offset,
+                64.0 + sleeping_offset.1 + sleeping_offset.0,
                 32.0,
+                sleeping_offset.1,
+                -19.0,
+                -28.0 + bounce + 40.0 - sleeping_offset.1,
                 32.0,
-                -16.0,
-                -20.0 + bounce,
-                32.0,
-                32.0,
+                sleeping_offset.1,
             )?
         }
     }
@@ -577,15 +577,15 @@ pub fn draw_label(
     if *trim == LabelTrim::Glorious {
         context.fill_rect(
             -size.0 as f64 / 2.0,
-            -size.1 as f64 / 2.0 + 2.0,
-            2.0,
-            size.1 as f64 - 4.0,
+            -size.1 as f64 / 2.0 + 3.0,
+            3.0,
+            size.1 as f64 - 6.0,
         );
         context.fill_rect(
-            size.0 as f64 / 2.0 - 2.0,
-            -size.1 as f64 / 2.0 + 2.0,
-            2.0,
-            size.1 as f64 - 4.0,
+            size.0 as f64 / 2.0 - 3.0,
+            -size.1 as f64 / 2.0 + 3.0,
+            3.0,
+            size.1 as f64 - 6.0,
         );
     }
 
