@@ -201,29 +201,41 @@ impl Game {
 
     /// Evaluates the viability of the board on a signed basis, where a positive evaluation is in favour of the red team.
     pub fn evaluate(&self) -> isize {
-        let mana_diff: isize = self
-            .mages
-            .iter()
-            .map(|mage| match mage.team {
-                Team::Red => mage.mana.0 as isize,
-                Team::Blue => -(mage.mana.0 as isize),
-            })
-            .sum();
+        match self.result() {
+            Some(result) => match result {
+                GameResult::Win(team) => match team {
+                    Team::Red => 99999,
+                    Team::Blue => -99999,
+                },
+                GameResult::Stalemate => 0,
+            },
+            None => {
+                let mana_diff: isize = self
+                    .mages
+                    .iter()
+                    .map(|mage| match mage.team {
+                        Team::Red => mage.mana.0 as isize,
+                        Team::Blue => -(mage.mana.0 as isize),
+                    })
+                    .sum();
 
-        let pos_adv: isize = self
-            .mages
-            .iter()
-            .map(|mage| {
-                let centre_dist = &Position(mage.position.0 * 2, mage.position.1 * 2)
-                    - &Position((self.board.width - 1) as i8, (self.board.height - 1) as i8);
-                match mage.team {
-                    Team::Red => -centre_dist.length() as isize,
-                    Team::Blue => centre_dist.length() as isize,
-                }
-            })
-            .sum();
+                let pos_adv: isize = self
+                    .mages
+                    .iter()
+                    .filter(|mage| mage.is_alive())
+                    .map(|mage| {
+                        let centre_dist = &Position(mage.position.0 * 2, mage.position.1 * 2)
+                            - &Position((self.board.width) as i8 - 1, (self.board.height) as i8 - 1);
+                        match mage.team {
+                            Team::Red => -centre_dist.length() as isize,
+                            Team::Blue => centre_dist.length() as isize,
+                        }
+                    })
+                    .sum();
 
-        mana_diff.pow(2) * mana_diff.signum() * 10 + pos_adv
+                    mana_diff.pow(2) * mana_diff.signum() * 20 + pos_adv * 5
+            }
+        }
     }
 
     /// Returns the best [`Turn`] available and its evaluation.
