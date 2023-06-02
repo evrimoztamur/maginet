@@ -450,7 +450,7 @@ pub fn draw_board(
         }
     }
 
-    atlas_context.set_global_composite_operation(&"xor")?;
+    atlas_context.set_global_composite_operation(&"destination-out")?;
 
     for x in 0..width {
         for y in 0..height {

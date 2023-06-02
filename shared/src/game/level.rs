@@ -40,7 +40,7 @@ impl Level {
 
                 for i in 0..50 {
                     if let Some(TurnLeaf(Turn(from, to), _)) =
-                        game.best_turn(5, seed + m as u64 + i as u64)
+                        game.best_turn(4, seed + m as u64 + i as u64)
                     {
                         game.take_move(from, to);
 

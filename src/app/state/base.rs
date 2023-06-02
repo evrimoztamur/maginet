@@ -125,7 +125,7 @@ impl Default for BaseState {
             (80, 20),
             BUTTON_TUTORIAL,
             LabelTrim::Round,
-            LabelTheme::Default,
+            LabelTheme::Disabled,
             crate::app::ContentElement::Text("Tutorial".to_string(), Alignment::Center),
         );
 

@@ -492,6 +492,14 @@ impl State for LobbyState {
             interface_context.restore();
         }
 
+        // draw_text(
+        //     interface_context,
+        //     atlas,
+        //     16.0,
+        //     16.0,
+        //     &format!("{:?}", self.lobby().game.evaluate()),
+        // )?;
+
         Ok(())
     }
 

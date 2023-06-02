@@ -84,6 +84,7 @@ pub enum LabelTheme {
     Default,
     Action,
     Bright,
+    Disabled,
 }
 
 pub struct ButtonElement {
@@ -170,19 +171,47 @@ impl UIElement for ButtonElement {
                     &"#006080"
                 }
             }
+            LabelTheme::Disabled => {
+                if self.selected {
+                    &"#005247"
+                } else if self.hovered(pointer) {
+                    &"#005247"
+                } else {
+                    &"#005247"
+                }
+            }
         };
 
-        draw_label(
-            context,
-            atlas,
-            self.position,
-            self.size,
-            color,
-            &self.content,
-            pointer,
-            frame,
-            &self.trim,
-        )?;
+        match self.class {
+            LabelTheme::Disabled => {
+                context.save();
+                context.set_global_composite_operation("xor")?;
+                draw_label(
+                    context,
+                    atlas,
+                    self.position,
+                    self.size,
+                    color,
+                    &self.content,
+                    pointer,
+                    frame,
+                    &self.trim,
+                )?;
+                context.restore();
+            }
+
+            _ => draw_label(
+                context,
+                atlas,
+                self.position,
+                self.size,
+                color,
+                &self.content,
+                pointer,
+                frame,
+                &self.trim,
+            )?,
+        }
 
         Ok(())
     }

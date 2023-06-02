@@ -33,7 +33,8 @@ impl Position {
 
     /// Squared length of the [`Position`] as a vector.
     pub fn length(&self) -> isize {
-        (self.0.pow(2) + self.1.pow(2)) as isize
+        // (self.0.pow(2) + self.1.pow(2)) as isize
+        (self.0.abs() + self.1.abs()) as isize
     }
 
     /// Rotates a [`Position`] 180 degrees.

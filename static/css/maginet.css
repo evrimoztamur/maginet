@@ -25,6 +25,14 @@ body {
     align-items: center;
 
     overflow: hidden;
+
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
 }
 
 body.page {
@@ -175,4 +183,24 @@ a {
 #text-input[data-field] {
     display: initial;
     left: unset;
+}
+
+.twitter {
+    margin-right: 12px;
+}
+
+.twitter .icon-tabler-brand-twitter-filled {
+    width: 2rem;
+    height: auto;
+    color: #00DFFF;
+}
+
+.heart {
+    margin-right: 12px;
+}
+
+.heart .icon-tabler-heart-filled {
+    width: 2rem;
+    height: auto;
+    color: #F94E6D;
 }
