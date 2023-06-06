@@ -1,11 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
 use shared::{
-    LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages, Message,
-    Position, Team, Turn, TurnLeaf,
+    Level, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
+    Message, Position, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{EditorState, MenuState, State};
 use crate::{
@@ -15,7 +15,8 @@ use crate::{
         UIEvent, BOARD_SCALE,
     },
     draw::{
-        draw_board, draw_crosshair, draw_mage, draw_particle, draw_sprite, rotation_from_position,
+        draw_board, draw_crosshair, draw_mage, draw_mana, draw_particle, draw_sprite,
+        rotation_from_position,
     },
     net::{
         create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
@@ -38,6 +39,7 @@ pub struct LobbyState {
     message_pool: Rc<RefCell<MessagePool>>,
     message_closure: Closure<dyn FnMut(JsValue)>,
     board_dirty: bool,
+    shake_frame: (u64, usize),
 }
 
 impl LobbyState {
@@ -99,6 +101,7 @@ impl LobbyState {
             message_pool,
             message_closure,
             board_dirty: true,
+            shake_frame: (0, 0),
         }
     }
 
@@ -213,6 +216,7 @@ impl LobbyState {
     pub fn draw_game(
         &mut self,
         context: &CanvasRenderingContext2d,
+        interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlCanvasElement,
         frame: u64,
         pointer: &Pointer,
@@ -231,12 +235,22 @@ impl LobbyState {
 
         // DRAW board
 
+        context.save();
+
+        if frame.saturating_sub(self.shake_frame.0) < 20 {
+            let magnitude = self.shake_frame.1.saturating_sub(1) as f64 * 0.65;
+            context.translate(
+                ((frame as f64 * 0.15 * self.shake_frame.1 as f64).sin() * (magnitude)).round()
+                    as f64,
+                ((frame as f64 * 0.3 * self.shake_frame.1 as f64).sin() * (magnitude)).round()
+                    as f64,
+            )?;
+        }
+
         {
             context.save();
 
             draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
-
-            context.translate(board_offset.0, board_offset.1)?;
 
             if !self.lobby.all_ready() {
                 let mut lid = self.lobby_id().unwrap_or(0);
@@ -261,6 +275,8 @@ impl LobbyState {
                 }
             }
 
+            context.translate(board_offset.0, board_offset.1)?;
+
             // DRAW particles
 
             for particle in self.particles.iter_mut() {
@@ -277,7 +293,7 @@ impl LobbyState {
                 mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
 
                 // DRAW mages
-                for mage in mage_heap {
+                for mage in &mage_heap {
                     context.save();
 
                     context.translate(
@@ -293,7 +309,6 @@ impl LobbyState {
                         self.lobby.game.turn_for(),
                         game_started,
                         self.lobby.game.result(),
-                        true,
                     )?;
 
                     if mage.is_alive() {
@@ -326,6 +341,18 @@ impl LobbyState {
                             -17.0 - (frame / 6 % 6) as f64,
                         )?;
                     }
+
+                    context.restore();
+                }
+
+                for mage in &mage_heap {
+                    context.save();
+
+                    context.translate(
+                        16.0 + mage.position.0 as f64 * board_scale.0,
+                        16.0 + mage.position.1 as f64 * board_scale.1,
+                    )?;
+                    draw_mana(context, atlas, mage)?;
 
                     context.restore();
                 }
@@ -398,7 +425,16 @@ impl LobbyState {
                             BOARD_SCALE,
                         ) {
                             for (_, position) in &self.lobby.game.targets(occupant, selected_tile) {
-                                draw_crosshair(context, atlas, position, (80.0, 32.0), 0)?;
+                                draw_sprite(
+                                    context,
+                                    atlas,
+                                    80.0,
+                                    32.0,
+                                    16.0,
+                                    16.0,
+                                    position.0 as f64 * board_scale.0 + 8.0,
+                                    position.1 as f64 * board_scale.1 + 8.0,
+                                )?;
                             }
                         }
                     }
@@ -411,7 +447,162 @@ impl LobbyState {
             context.restore();
         }
 
+        context.restore();
+
+        context.save();
+
+        context.translate(6.0 - self.board_offset().0 as f64 + 128.0, -40.0 + 128.0)?;
+
+        if let (_, true, gap) = self.lobby.game.stalemate() {
+            for i in 1..9 {
+                if gap > i {
+                    if i % 2 == 1 {
+                        draw_sprite(
+                            context,
+                            atlas,
+                            128.0,
+                            8.0,
+                            8.0,
+                            8.0,
+                            128.0,
+                            0.0 + (i * 8) as f64,
+                        )?;
+                    } else {
+                        draw_sprite(
+                            context,
+                            atlas,
+                            136.0,
+                            0.0,
+                            8.0,
+                            16.0,
+                            128.0,
+                            0.0 + (i * 8 - 8) as f64,
+                        )?;
+                    }
+                } else {
+                    draw_sprite(
+                        context,
+                        atlas,
+                        128.0,
+                        0.0,
+                        8.0,
+                        8.0,
+                        128.0,
+                        0.0 + (i * 8) as f64,
+                    )?;
+                }
+            }
+        } else {
+            for i in 1..9 {
+                draw_sprite(
+                    context,
+                    atlas,
+                    128.0,
+                    0.0,
+                    8.0,
+                    8.0,
+                    128.0,
+                    0.0 + (i * 8) as f64,
+                )?;
+            }
+        }
+
+        context.restore();
+
         Ok(())
+    }
+
+    pub fn tick_game(&mut self, frame: u64, app_context: &AppContext) {
+        let session_id = &app_context.session_id;
+
+        let mut target_positions = Vec::new();
+
+        let all_ready = self.lobby.all_ready();
+
+        let mut message_pool = self.message_pool.borrow_mut();
+
+        if let Some(lobby_id) = self.lobby.settings.lobby_sort.lobby_id() {
+            if message_pool.available(frame) {
+                if all_ready {
+                    if self.is_interface_active() {
+                        let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
+                    } else {
+                        let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
+                            .then(&self.message_closure);
+                    }
+                } else if self.lobby.settings.lobby_sort != LobbySort::Online(0) {
+                    let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
+                }
+
+                message_pool.block(frame);
+            }
+        }
+
+        if self.lobby.has_ai()
+            && self.lobby.game.turn_for() == Team::Blue
+            && frame - self.last_move_frame > 45
+            && !self.lobby.finished()
+        {
+            let turn = self
+                .lobby
+                .game
+                .best_turn_auto(window().performance().unwrap().now().to_bits());
+
+            if let Some(TurnLeaf(turn, _)) = turn {
+                message_pool.messages.append(&mut vec![Message::Move(turn)]);
+            }
+        }
+
+        for message in &message_pool.messages {
+            match message {
+                Message::Moves(turns) => {
+                    for Turn(from, to) in turns {
+                        if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
+                            target_positions.append(&mut move_targets);
+
+                            self.last_move_frame = frame;
+                        }
+                    }
+                }
+                Message::Move(Turn(from, to)) => {
+                    if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
+                        target_positions.append(&mut move_targets);
+
+                        self.last_move_frame = frame;
+                    }
+                }
+                Message::Lobby(lobby) => {
+                    self.lobby = lobby.clone();
+                    self.board_dirty = true;
+
+                    if let Ok(lobby_id) = self.lobby_id() {
+                        if !lobby.all_ready() {
+                            send_ready(lobby_id, session_id.clone().unwrap());
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
+
+        message_pool.clear();
+
+        for tile in &target_positions {
+            for _ in 0..40 {
+                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                self.particles.push(Particle::new(
+                    (tile.0 as f64, tile.1 as f64),
+                    (d.cos() * v, d.sin() * v),
+                    (js_sys::Math::random() * 50.0) as u64,
+                    ParticleSort::Missile,
+                ));
+            }
+        }
+
+        if !target_positions.is_empty() {
+            self.shake_frame = (frame, target_positions.len());
+        }
     }
 
     pub fn is_interface_active(&self) -> bool {
@@ -430,7 +621,7 @@ impl State for LobbyState {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
-        self.draw_game(context, atlas, frame, pointer)?;
+        self.draw_game(context, interface_context, atlas, frame, pointer)?;
 
         {
             let interface_pointer =
@@ -481,7 +672,6 @@ impl State for LobbyState {
                             player.team,
                             true,
                             None,
-                            false,
                         )?;
 
                         interface_context.restore();
@@ -513,78 +703,7 @@ impl State for LobbyState {
         let pointer = &app_context.pointer;
         let session_id = &app_context.session_id;
 
-        let mut target_positions = Vec::new();
-
-        let all_ready = self.lobby.all_ready();
-
-        {
-            let mut message_pool = self.message_pool.borrow_mut();
-
-            if let Some(lobby_id) = self.lobby.settings.lobby_sort.lobby_id() {
-                if message_pool.available(frame) {
-                    if all_ready {
-                        if self.is_interface_active() {
-                            let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
-                        } else {
-                            let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
-                                .then(&self.message_closure);
-                        }
-                    } else if self.lobby.settings.lobby_sort != LobbySort::Online(0) {
-                        let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
-                    }
-
-                    message_pool.block(frame);
-                }
-            }
-
-            if self.lobby.has_ai()
-                && self.lobby.game.turn_for() == Team::Blue
-                && frame - self.last_move_frame > 45
-                && !self.lobby.finished()
-            {
-                let turn = self
-                    .lobby
-                    .game
-                    .best_turn_auto(window().performance().unwrap().now().to_bits());
-
-                if let Some(TurnLeaf(turn, _)) = turn {
-                    message_pool.messages.append(&mut vec![Message::Move(turn)]);
-                }
-            }
-
-            for message in &message_pool.messages {
-                match message {
-                    Message::Moves(turns) => {
-                        for Turn(from, to) in turns {
-                            if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
-                                target_positions.append(&mut move_targets);
-
-                                self.last_move_frame = frame;
-                            }
-                        }
-                    }
-                    Message::Move(Turn(from, to)) => {
-                        if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
-                            target_positions.append(&mut move_targets);
-
-                            self.last_move_frame = frame;
-                        }
-                    }
-                    Message::Lobby(lobby) => {
-                        self.lobby = lobby.clone();
-
-                        if let Ok(lobby_id) = self.lobby_id() {
-                            if !lobby.all_ready() {
-                                send_ready(lobby_id, session_id.clone().unwrap());
-                            }
-                        }
-                    }
-                    _ => (),
-                }
-            }
-
-            message_pool.clear();
-        }
+        let message_pool = self.message_pool.clone();
 
         if self.lobby.finished() && self.frames_since_last_move(frame) == 120 {
             self.button_menu.set_selected(true);
@@ -616,10 +735,11 @@ impl State for LobbyState {
                             board,
                             ..
                         } => {
-                            return Some(StateSort::Editor(EditorState::new(
+                            return Some(StateSort::Editor(EditorState::new(Level::new(
                                 board.clone(),
                                 mages.clone(),
-                            )));
+                                Team::Red,
+                            ))));
                         }
                         _ => return Some(StateSort::MenuMain(MenuState::default())),
                     },
@@ -640,9 +760,7 @@ impl State for LobbyState {
                     if let Some(active_mage) = self.get_active_mage() {
                         let from = active_mage.position;
 
-                        if let Some(mut move_targets) =
-                            self.lobby.game.take_move(from, selected_tile)
-                        {
+                        if self.lobby.game.try_move(from, selected_tile) {
                             if !self.lobby.is_local() && session_id.is_some() {
                                 send_message(
                                     self.lobby_id().unwrap(),
@@ -651,7 +769,11 @@ impl State for LobbyState {
                                 );
                             }
 
-                            target_positions.append(&mut move_targets);
+                            let mut message_pool = message_pool.borrow_mut();
+
+                            message_pool
+                                .messages
+                                .push(Message::Move(Turn(from, selected_tile)));
 
                             self.active_mage = None;
                             self.last_move_frame = frame;
@@ -665,18 +787,7 @@ impl State for LobbyState {
             }
         }
 
-        for tile in target_positions {
-            for _ in 0..40 {
-                let d = js_sys::Math::random() * std::f64::consts::TAU;
-                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                self.particles.push(Particle::new(
-                    (tile.0 as f64, tile.1 as f64),
-                    (d.cos() * v, d.sin() * v),
-                    (js_sys::Math::random() * 50.0) as u64,
-                    ParticleSort::Missile,
-                ));
-            }
-        }
+        self.tick_game(frame, &app_context);
 
         None
     }

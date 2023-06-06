@@ -156,7 +156,6 @@ pub fn draw_mage(
     team: Team,
     game_started: bool,
     game_result: Option<GameResult>,
-    show_mana: bool,
 ) -> Result<(), JsValue> {
     let bounce = (if mage.is_alive() && (mage.team == team && game_started || game_result.is_some())
     {
@@ -231,10 +230,6 @@ pub fn draw_mage(
     }
 
     context.restore();
-
-    if show_mana {
-        draw_mana(context, atlas, mage)?;
-    }
 
     Ok(())
 }
@@ -383,7 +378,14 @@ pub fn draw_tile(
     for corner in 0..4 {
         let (x, y) = quadrant_to_xy(corner);
 
-        if random() < 0.75 {
+        if (((position.0 + position.1 + position.0 % 3 + position.1 % 5 + corner as i8 * 2) as f64)
+            .sin()
+            + ((position.0 + position.1 + position.0 % 5 + position.1 % 3 + corner as i8 * 2)
+                as f64)
+                .cos())
+        .abs()
+            < 1.0
+        {
             draw_sprite(
                 context,
                 atlas,

@@ -8,7 +8,9 @@ use web_sys::{
     HtmlInputElement, KeyboardEvent, MouseEvent, TouchEvent,
 };
 
-use super::{BaseState, EditorState, LobbyState, MenuState, MenuTeleport, Pointer, BOARD_SCALE};
+use super::{
+    BaseState, EditorState, LobbyState, MenuState, MenuTeleport, Pointer, PreviewState, BOARD_SCALE,
+};
 use crate::{
     app::State,
     draw::{draw_board, draw_sprite},
@@ -32,6 +34,7 @@ pub enum StateSort {
     Lobby(LobbyState),
     Editor(EditorState),
     MenuTeleport(MenuTeleport),
+    Preview(PreviewState),
 }
 
 pub struct AppContext {
@@ -129,6 +132,9 @@ impl App {
                 StateSort::Editor(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
+                StateSort::Preview(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
             };
         }
 
@@ -161,6 +167,7 @@ impl App {
             StateSort::Lobby(state) => state.tick(text_input, &self.app_context),
             StateSort::Base(state) => state.tick(text_input, &self.app_context),
             StateSort::Editor(state) => state.tick(text_input, &self.app_context),
+            StateSort::Preview(state) => state.tick(text_input, &self.app_context),
         };
 
         if let Some(next_state) = next_state {

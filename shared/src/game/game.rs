@@ -71,13 +71,20 @@ impl Game {
     }
 
     /// Determines if the game is stalemated.
-    fn stalemate(&self) -> bool {
-        self.last_nominal + 8 < self.turns() && self.turns() > 24
+    pub fn stalemate(&self) -> (bool, bool, usize) {
+        let turns_passed = self.turns() > 24;
+        let gap = 8;
+        let gap_passed = self.last_nominal + gap < self.turns();
+        (
+            turns_passed && gap_passed,
+            turns_passed,
+            self.turns() - self.last_nominal,
+        )
     }
 
     /// Determines if the game is finished.
     pub fn result(&self) -> Option<GameResult> {
-        if self.all_available_turns(self.turn_for()).is_empty() || self.stalemate() {
+        if self.all_available_turns(self.turn_for()).is_empty() || self.stalemate().0 {
             let mana_diff: isize = self
                 .mages
                 .iter()
@@ -225,7 +232,10 @@ impl Game {
                     .filter(|mage| mage.is_alive())
                     .map(|mage| {
                         let centre_dist = &Position(mage.position.0 * 2, mage.position.1 * 2)
-                            - &Position((self.board.width) as i8 - 1, (self.board.height) as i8 - 1);
+                            - &Position(
+                                (self.board.width) as i8 - 1,
+                                (self.board.height) as i8 - 1,
+                            );
                         match mage.team {
                             Team::Red => -centre_dist.length() as isize,
                             Team::Blue => centre_dist.length() as isize,
@@ -233,7 +243,7 @@ impl Game {
                     })
                     .sum();
 
-                    mana_diff.pow(2) * mana_diff.signum() * 20 + pos_adv * 5
+                mana_diff.pow(2) * mana_diff.signum() * 20 + pos_adv * 5
             }
         }
     }
@@ -445,6 +455,24 @@ impl Game {
         }
 
         None
+    }
+
+    /// Executes a [`Turn`], modifying the game state.
+    pub fn try_move(&mut self, from: Position, to: Position) -> bool {
+        if self.result().is_none() {
+            if let Some(mage) = self.mages.live_occupant(&from) {
+                if mage.team == self.turn_for() {
+                    let available_moves = self.available_moves(mage);
+                    let potential_move = available_moves
+                        .iter()
+                        .find(|(position, _, _)| *position == to);
+
+                    return potential_move.is_some();
+                }
+            }
+        }
+
+        false
     }
 
     /// Executes an attack on the given [`Position`].

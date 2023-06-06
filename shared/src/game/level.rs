@@ -17,15 +17,26 @@ pub struct Level {
     pub board: Board,
     /// Level's mages as a [`Vec<Board>`].
     pub mages: Vec<Mage>,
+    /// Number of mages.
+    pub mage_index: usize,
     /// Level's starting [`Team`].
     pub starting_team: Team,
 }
 
 impl Level {
     /// Instantiates a new [`Level`].
-    pub fn new(board: Board, mages: Vec<Mage>, starting_team: Team) -> Level {
+    pub fn new(board: Board, mut mages: Vec<Mage>, starting_team: Team) -> Level {
+        mages = mages
+        .iter_mut()
+        .enumerate()
+        .map(|(i, mage)| {
+            mage.index = i;
+            mage.clone()
+        })
+        .collect();
         Level {
             board,
+            mage_index: mages.len(),
             mages,
             starting_team,
         }

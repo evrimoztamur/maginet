@@ -8,6 +8,7 @@ use crate::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
         LabelTrim, Pointer, StateSort, UIElement, UIEvent,
     },
+    draw::draw_text,
     window,
 };
 
@@ -38,8 +39,13 @@ impl State for BaseState {
 
         context.translate(-72.0, 0.0)?;
 
-        self.preview_state
-            .draw_game(context, atlas, frame, &Pointer::default())?;
+        self.preview_state.draw_game(
+            context,
+            interface_context,
+            atlas,
+            frame,
+            &Pointer::default(),
+        )?;
 
         context.restore();
 
@@ -62,11 +68,11 @@ impl State for BaseState {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
-        if self.preview_state.frames_since_last_move(frame) > 30 {
+        if self.preview_state.frames_since_last_move(frame) > 70 {
             self.preview_state.take_best_turn_quick();
         }
 
-        self.preview_state.tick(text_input, app_context);
+        self.preview_state.tick_game(frame, &app_context);
 
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {

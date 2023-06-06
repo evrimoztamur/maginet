@@ -8,7 +8,7 @@ use crate::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
         StateSort, UIElement, UIEvent,
     },
-    draw::{draw_mage, draw_sprite},
+    draw::{draw_mage, draw_sprite, draw_mana},
     window,
 };
 
@@ -50,17 +50,17 @@ impl State for MenuState {
         context.translate(16.0, 32.0)?;
         draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
-        draw_sprite(context, atlas, 96.0, 64.0, 32.0, 40.0, 16.0, 0.0)?;
+        draw_sprite(context, atlas, 96.0, 64.0, 32.0, 40.0, 16.0, -2.0)?;
         context.translate(80.0, 0.0)?;
         draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
-        draw_sprite(context, atlas, 64.0, 64.0, 32.0, 40.0, 26.0, 0.0)?;
-        draw_sprite(context, atlas, 128.0, 64.0, 32.0, 40.0, 6.0, 2.0)?;
+        draw_sprite(context, atlas, 64.0, 64.0, 32.0, 40.0, 26.0,-4.0)?;
+        draw_sprite(context, atlas, 128.0, 104.0, 32.0, 40.0, 6.0, -2.0)?;
         context.translate(80.0, 0.0)?;
         draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
-        draw_sprite(context, atlas, 32.0, 64.0, 32.0, 40.0, 6.0, 0.0)?;
-        draw_sprite(context, atlas, 96.0, 64.0, 32.0, 40.0, 26.0, 2.0)?;
+        draw_sprite(context, atlas, 32.0, 64.0, 32.0, 40.0, 6.0, -4.0)?;
+        draw_sprite(context, atlas, 0.0, 256.0, 32.0, 40.0, 26.0, -2.0)?;
         context.restore();
 
         context.save();
@@ -82,8 +82,8 @@ impl State for MenuState {
                 self.sentinel_lobby.game.starting_team(),
                 true,
                 None,
-                true,
             )?;
+            draw_mana(context, atlas, mage)?;
             context.restore();
         }
 
