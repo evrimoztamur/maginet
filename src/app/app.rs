@@ -310,18 +310,6 @@ impl App {
                     "KeyB" => {
                         state.take_best_turn();
                     }
-                    "KeyN" => {
-                        console::log_1(
-                            &format!(
-                                "{:?}",
-                                state
-                                    .lobby()
-                                    .game
-                                    .all_available_turns(state.lobby().game.turn_for())
-                            )
-                            .into(),
-                        );
-                    }
                     "KeyM" => {
                         console::log_1(&format!("{:?}", state.lobby()).into());
                     }

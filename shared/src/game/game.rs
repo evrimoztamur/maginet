@@ -48,6 +48,7 @@ pub struct Game {
     turns: Vec<Turn>,
     starting_team: Team,
     last_nominal: usize,
+    available_turns: Vec<Turn>,
 }
 
 impl Game {
@@ -59,32 +60,33 @@ impl Game {
         let turns = Vec::new();
         let last_nominal = 0;
 
-        let game = Game {
+        let mut game = Game {
             board,
             mages,
             turns,
             starting_team,
             last_nominal,
+            available_turns: Vec::new(),
         };
+
+        game.available_turns = game.generate_available_turns();
 
         Ok(game)
     }
 
     /// Determines if the game is stalemated.
-    pub fn stalemate(&self) -> (bool, bool, usize) {
-        let turns_passed = self.turns() > 24;
-        let gap = 8;
-        let gap_passed = self.last_nominal + gap < self.turns();
-        (
-            turns_passed && gap_passed,
-            turns_passed,
-            self.turns() - self.last_nominal,
-        )
+    pub fn stalemate(&self) -> (bool, usize) {
+        let gap = self
+            .turns()
+            .saturating_sub(self.last_nominal.max(self.mages.len() * 3));
+        let gap_passed = gap > 8;
+
+        (gap_passed, gap)
     }
 
     /// Determines if the game is finished.
     pub fn result(&self) -> Option<GameResult> {
-        if self.all_available_turns(self.turn_for()).is_empty() || self.stalemate().0 {
+        if self.available_turns.is_empty() || self.stalemate().0 {
             let mana_diff: isize = self
                 .mages
                 .iter()
@@ -190,11 +192,10 @@ impl Game {
         return moves;
     }
 
-    /// Returns a list of all available [`Turn`]s for the active team.
-    pub fn all_available_turns(&self, team: Team) -> Vec<Turn> {
+    fn generate_available_turns(&self) -> Vec<Turn> {
         self.mages
             .iter()
-            .filter(|mage| mage.is_alive() && mage.team == team)
+            .filter(|mage| mage.is_alive() && mage.team == self.turn_for())
             .map(|mage| (mage, self.available_moves(mage)))
             .map(|(mage, moves)| {
                 moves
@@ -251,7 +252,7 @@ impl Game {
     /// Returns the best [`Turn`] available and its evaluation.
     pub fn best_turn(&self, depth: usize, seed: u64) -> Option<TurnLeaf> {
         if self.result().is_none() {
-            Some(self.pvs(
+            Some(self.alphabeta(
                 depth,
                 isize::MIN + 0xff,
                 isize::MAX - 0xff,
@@ -293,7 +294,7 @@ impl Game {
             )
         } else {
             let mut best_turn = self
-                .all_available_turns(self.turn_for())
+                .available_turns
                 .first()
                 .copied()
                 .unwrap_or(Turn::sentinel());
@@ -303,7 +304,7 @@ impl Game {
                     // Maximizing
                     let mut value = isize::MIN;
 
-                    for turn in self.all_available_turns(self.turn_for()) {
+                    for turn in self.available_turns.iter() {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
@@ -314,7 +315,7 @@ impl Game {
                             value = value.max(next_value);
                             alpha = alpha.max(value);
 
-                            best_turn = turn;
+                            best_turn = turn.clone();
                         }
 
                         if value >= beta {
@@ -328,7 +329,7 @@ impl Game {
                     // Minimizing
                     let mut value = isize::MAX;
 
-                    for turn in self.all_available_turns(self.turn_for()) {
+                    for turn in self.available_turns.iter() {
                         let mut next_game = self.clone();
                         next_game.take_move(turn.0, turn.1);
 
@@ -339,7 +340,7 @@ impl Game {
                             value = value.min(next_value);
                             beta = beta.min(value);
 
-                            best_turn = turn;
+                            best_turn = turn.clone();
                         }
 
                         if value <= alpha {
@@ -378,13 +379,13 @@ impl Game {
             }
         } else {
             let mut best_turn = self
-                .all_available_turns(self.turn_for())
+                .available_turns
                 .first()
                 .copied()
                 .unwrap_or(Turn::sentinel());
 
             //     for each child of node do
-            for (i, turn) in self.all_available_turns(self.turn_for()).iter().enumerate() {
+            for (i, turn) in self.available_turns.iter().enumerate() {
                 let mut next_game = self.clone();
                 next_game.take_move(turn.0, turn.1);
 
@@ -447,6 +448,7 @@ impl Game {
                         }
 
                         self.turns.push(Turn(from, *to));
+                        self.available_turns = self.generate_available_turns();
 
                         return Some(attacks);
                     }
