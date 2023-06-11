@@ -453,47 +453,33 @@ impl LobbyState {
 
         context.translate(6.0 - self.board_offset().0 as f64 + 128.0, -40.0 + 128.0)?;
 
-        if let (_, true, gap) = self.lobby.game.stalemate() {
-            for i in 1..9 {
-                if gap > i {
-                    if i % 2 == 1 {
-                        draw_sprite(
-                            context,
-                            atlas,
-                            128.0,
-                            8.0,
-                            8.0,
-                            8.0,
-                            128.0,
-                            0.0 + (i * 8) as f64,
-                        )?;
-                    } else {
-                        draw_sprite(
-                            context,
-                            atlas,
-                            136.0,
-                            0.0,
-                            8.0,
-                            16.0,
-                            128.0,
-                            0.0 + (i * 8 - 8) as f64,
-                        )?;
-                    }
-                } else {
+        let (_, gap) = self.lobby.game.stalemate();
+        for i in 1..9 {
+            if gap > i {
+                if i % 2 == 1 {
                     draw_sprite(
                         context,
                         atlas,
                         128.0,
-                        0.0,
+                        8.0,
                         8.0,
                         8.0,
                         128.0,
                         0.0 + (i * 8) as f64,
                     )?;
+                } else {
+                    draw_sprite(
+                        context,
+                        atlas,
+                        136.0,
+                        0.0,
+                        8.0,
+                        16.0,
+                        128.0,
+                        0.0 + (i * 8 - 8) as f64,
+                    )?;
                 }
-            }
-        } else {
-            for i in 1..9 {
+            } else {
                 draw_sprite(
                     context,
                     atlas,
