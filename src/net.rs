@@ -61,7 +61,7 @@ fn request_url(method: &str, url: &str) -> Request {
     let mut opts = RequestInit::new();
     opts.method(method);
 
-    Request::new_with_str_and_init(&url, &opts).unwrap()
+    Request::new_with_str_and_init(url, &opts).unwrap()
 }
 
 pub fn request_session() -> Request {

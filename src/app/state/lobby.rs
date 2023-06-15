@@ -5,7 +5,7 @@ use shared::{
     Message, Position, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{EditorState, MenuState, State};
 use crate::{
@@ -216,7 +216,7 @@ impl LobbyState {
     pub fn draw_game(
         &mut self,
         context: &CanvasRenderingContext2d,
-        interface_context: &CanvasRenderingContext2d,
+        _interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlCanvasElement,
         frame: u64,
         pointer: &Pointer,
@@ -240,10 +240,8 @@ impl LobbyState {
         if frame.saturating_sub(self.shake_frame.0) < 20 {
             let magnitude = self.shake_frame.1.saturating_sub(1) as f64 * 0.65;
             context.translate(
-                ((frame as f64 * 0.15 * self.shake_frame.1 as f64).sin() * (magnitude)).round()
-                    as f64,
-                ((frame as f64 * 0.3 * self.shake_frame.1 as f64).sin() * (magnitude)).round()
-                    as f64,
+                ((frame as f64 * 0.15 * self.shake_frame.1 as f64).sin() * (magnitude)).round(),
+                ((frame as f64 * 0.3 * self.shake_frame.1 as f64).sin() * (magnitude)).round(),
             )?;
         }
 
@@ -281,7 +279,7 @@ impl LobbyState {
 
             for particle in self.particles.iter_mut() {
                 particle.tick();
-                draw_particle(context, atlas, &particle, frame)?;
+                draw_particle(context, atlas, particle, frame)?;
             }
 
             self.particles.drain_filter(|particle| !particle.is_alive());
@@ -311,21 +309,19 @@ impl LobbyState {
                         self.lobby.game.result(),
                     )?;
 
-                    if mage.is_alive() {
-                        if mage.has_diagonals() {
-                            for _ in 0..(frame / 3 % 2) {
-                                let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
-                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                                self.particles.push(Particle::new(
-                                    (
-                                        mage.position.0 as f64 + d.cos() * 0.4,
-                                        mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
-                                    ),
-                                    (d.cos() * v, d.sin() * v),
-                                    (js_sys::Math::random() * 30.0) as u64,
-                                    ParticleSort::Diagonals,
-                                ));
-                            }
+                    if mage.is_alive() && mage.has_diagonals() {
+                        for _ in 0..(frame / 3 % 2) {
+                            let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
+                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                            self.particles.push(Particle::new(
+                                (
+                                    mage.position.0 as f64 + d.cos() * 0.4,
+                                    mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
+                                ),
+                                (d.cos() * v, d.sin() * v),
+                                (js_sys::Math::random() * 30.0) as u64,
+                                ParticleSort::Diagonals,
+                            ));
                         }
                     }
 
@@ -372,7 +368,7 @@ impl LobbyState {
                         context.save();
                         context.translate(
                             (position.0 as f64 + 0.5) * board_scale.0,
-                            (position.1 as f64 + 0.5) as f64 * board_scale.1,
+                            (position.1 as f64 + 0.5) * board_scale.1,
                         )?;
                         context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
                         let bop = (frame / 10 % 3) as f64;
@@ -397,8 +393,7 @@ impl LobbyState {
                     ) {
                         if available_moves
                             .iter()
-                            .find(|(position, _, _)| position == &selected_tile)
-                            .is_some()
+                            .any(|(position, _, _)| position == &selected_tile)
                         {
                             for (enemy_occupied, position) in
                                 &self.lobby.game.targets(mage, selected_tile)
@@ -773,7 +768,7 @@ impl State for LobbyState {
             }
         }
 
-        self.tick_game(frame, &app_context);
+        self.tick_game(frame, app_context);
 
         None
     }

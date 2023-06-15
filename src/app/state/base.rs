@@ -8,7 +8,6 @@ use crate::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
         LabelTrim, Pointer, StateSort, UIElement, UIEvent,
     },
-    draw::draw_text,
     window,
 };
 
@@ -62,7 +61,7 @@ impl State for BaseState {
 
     fn tick(
         &mut self,
-        text_input: &HtmlInputElement,
+        _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
         let frame = app_context.frame;
@@ -72,7 +71,7 @@ impl State for BaseState {
             self.preview_state.take_best_turn_quick();
         }
 
-        self.preview_state.tick_game(frame, &app_context);
+        self.preview_state.tick_game(frame, app_context);
 
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {

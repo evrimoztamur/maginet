@@ -56,7 +56,7 @@ impl App {
         App {
             app_context: AppContext {
                 session_id: get_session_id(),
-                pointer: Pointer::new(&canvas_settings),
+                pointer: Pointer::new(canvas_settings),
                 frame: 0,
                 canvas_settings: canvas_settings.clone(),
                 text_input: None,
@@ -113,7 +113,7 @@ impl App {
 
         if !self.atlas_complete {
             self.atlas_complete = true;
-            draw_board(&atlas, 256.0, 256.0, 2, 2, 2, 2)?;
+            draw_board(atlas, 256.0, 256.0, 2, 2, 2, 2)?;
             draw_board(atlas, 256.0, 320.0, 4, 2, 4, 2)?;
         } else {
             result = match &mut self.state_sort {
@@ -300,7 +300,7 @@ impl App {
         let x = (x as f64 * (canvas_settings.element_width() as f64 / bound.width())) as i32;
         let y = (y as f64 * (canvas_settings.element_height() as f64 / bound.height())) as i32;
 
-        Pointer::location_from_real(canvas_settings, (x as i32 / 2, y as i32 / 2))
+        Pointer::location_from_real(canvas_settings, (x / 2, y / 2))
     }
 
     pub fn on_key_down(&mut self, event: KeyboardEvent) {
@@ -350,7 +350,7 @@ impl App {
     pub fn load_level(level_id: usize) -> Option<Level> {
         let levels = Self::load_levels();
 
-        console::log_1(&format!("{:?}", levels).into());
+        console::log_1(&format!("{levels:?}").into());
 
         levels.get(&level_id).cloned()
     }

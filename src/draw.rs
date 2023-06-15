@@ -1,4 +1,3 @@
-use js_sys::Math::random;
 use shared::{GameResult, Mage, Position, Team};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
@@ -394,7 +393,7 @@ pub fn draw_tile(
                 16.0,
                 16.0,
                 (position.0 as f64 + x as f64 / 2.0) * board_scale.0,
-                (position.1 as f64 + y as f64 / 2.0) as f64 * board_scale.1,
+                (position.1 as f64 + y as f64 / 2.0) * board_scale.1,
             )?;
         } else {
             context.save();
@@ -407,7 +406,7 @@ pub fn draw_tile(
                 16.0,
                 16.0,
                 (position.0 as f64 + x as f64 / 2.0) * board_scale.0,
-                (position.1 as f64 + y as f64 / 2.0) as f64 * board_scale.1,
+                (position.1 as f64 + y as f64 / 2.0) * board_scale.1,
             )?;
 
             context.restore();
@@ -452,7 +451,7 @@ pub fn draw_board(
         }
     }
 
-    atlas_context.set_global_composite_operation(&"destination-out")?;
+    atlas_context.set_global_composite_operation("destination-out")?;
 
     for x in 0..width {
         for y in 0..height {

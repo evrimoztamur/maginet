@@ -217,7 +217,7 @@ impl UIElement for ButtonElement {
     }
 
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
-        if self.clicked(&pointer) {
+        if self.clicked(pointer) {
             Some(UIEvent::ButtonClick(self.value))
         } else {
             None
@@ -274,7 +274,7 @@ impl UIElement for ConfirmButtonElement {
 
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
         if pointer.clicked() {
-            if self.button.clicked(&pointer) {
+            if self.button.clicked(pointer) {
                 if self.button.selected {
                     Some(UIEvent::ButtonClick(self.button.value))
                 } else {
@@ -338,7 +338,7 @@ impl UIElement for ToggleButtonElement {
     }
 
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
-        if self.button.clicked(&pointer) {
+        if self.button.clicked(pointer) {
             self.toggle();
 
             Some(UIEvent::ButtonClick(self.button.value))

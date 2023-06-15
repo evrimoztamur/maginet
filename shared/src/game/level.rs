@@ -27,13 +27,13 @@ impl Level {
     /// Instantiates a new [`Level`].
     pub fn new(board: Board, mut mages: Vec<Mage>, starting_team: Team) -> Level {
         mages = mages
-        .iter_mut()
-        .enumerate()
-        .map(|(i, mage)| {
-            mage.index = i;
-            mage.clone()
-        })
-        .collect();
+            .iter_mut()
+            .enumerate()
+            .map(|(i, mage)| {
+                mage.index = i;
+                mage.clone()
+            })
+            .collect();
         Level {
             board,
             mage_index: mages.len(),

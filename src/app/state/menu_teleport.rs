@@ -53,7 +53,7 @@ impl State for MenuTeleport {
 
         for particle in self.particles.iter_mut() {
             particle.tick();
-            draw_particle(context, atlas, &particle, frame)?;
+            draw_particle(context, atlas, particle, frame)?;
         }
 
         self.particles.drain_filter(|particle| !particle.is_alive());

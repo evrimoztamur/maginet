@@ -1,21 +1,15 @@
-use std::mem;
-
-use shared::{Board, Level, LobbySettings, Mage, Mages, Position, Team};
+use shared::{Level, LobbySettings, Mage, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, EditorState, LobbyState, State};
+use super::{EditorState, LobbyState, State};
 use crate::{
     app::{
-        Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
-        LabelTrim, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
-        BOARD_SCALE,
+        Alignment, App, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, StateSort,
+        UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{
-        draw_board, draw_crosshair, draw_mage, draw_mana, draw_particle, draw_spell_pattern,
-        draw_sprite,
-    },
-    tuple_as, window,
+    draw::{draw_board, draw_mage, draw_mana, draw_sprite},
+    tuple_as,
 };
 
 pub struct PreviewState {
@@ -184,10 +178,10 @@ impl State for PreviewState {
 
     fn tick(
         &mut self,
-        text_input: &HtmlInputElement,
+        _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
-        let board_offset = self.board_offset();
+        let _board_offset = self.board_offset();
         let pointer = &app_context.pointer;
 
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {

@@ -8,7 +8,7 @@ use crate::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
         StateSort, UIElement, UIEvent,
     },
-    draw::{draw_mage, draw_sprite, draw_mana},
+    draw::{draw_mage, draw_mana, draw_sprite},
     window,
 };
 
@@ -54,7 +54,7 @@ impl State for MenuState {
         context.translate(80.0, 0.0)?;
         draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
-        draw_sprite(context, atlas, 64.0, 64.0, 32.0, 40.0, 26.0,-4.0)?;
+        draw_sprite(context, atlas, 64.0, 64.0, 32.0, 40.0, 26.0, -4.0)?;
         draw_sprite(context, atlas, 128.0, 104.0, 32.0, 40.0, 6.0, -2.0)?;
         context.translate(80.0, 0.0)?;
         draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
@@ -72,7 +72,7 @@ impl State for MenuState {
             context.save();
             context.translate(
                 -48.0 + mage.position.0 as f64 * 32.0,
-                15.0 + if mage.team == Team::Red { 0.0 } else { 1.0 } as f64 * 32.0,
+                15.0 + if mage.team == Team::Red { 0.0 } else { 1.0 } * 32.0,
             )?;
             draw_mage(
                 context,
@@ -183,7 +183,7 @@ impl Default for MenuState {
             crate::app::ContentElement::Text("Default".to_string(), Alignment::Center),
         );
         let button_random = ButtonElement::new(
-            (0, 22 * 1),
+            (0, 22),
             (80, 18),
             BUTTON_SYMMETRIC_RANDOM,
             LabelTrim::Round,

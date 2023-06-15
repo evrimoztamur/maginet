@@ -1,10 +1,10 @@
 use std::mem;
 
-use shared::{Board, Level, LobbySettings, Mage, Mages, Position, Team};
+use shared::{Board, Level, Mage, Mages, Position, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, LobbyState, PreviewState, State};
+use super::{BaseState, PreviewState, State};
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -15,7 +15,7 @@ use crate::{
         draw_board, draw_crosshair, draw_mage, draw_mana, draw_particle, draw_spell_pattern,
         draw_sprite,
     },
-    tuple_as, window,
+    tuple_as,
 };
 
 #[derive(PartialEq)]
@@ -326,7 +326,7 @@ impl State for EditorState {
 
         for particle in self.particles.iter_mut() {
             particle.tick();
-            draw_particle(context, atlas, &particle, frame)?;
+            draw_particle(context, atlas, particle, frame)?;
         }
 
         self.particles.drain_filter(|particle| !particle.is_alive());
@@ -400,9 +400,9 @@ impl State for EditorState {
                 interface_context.restore();
             }
             EditorSelection::Tile(position) => {
-                draw_crosshair(context, atlas, &position, (48.0, 32.0), frame)?;
+                draw_crosshair(context, atlas, position, (48.0, 32.0), frame)?;
 
-                if let Some(mage) = self.level.mages.occupant(&position) {
+                if let Some(mage) = self.level.mages.occupant(position) {
                     for position in &mage.targets(&self.level.board, position) {
                         draw_sprite(
                             context,
@@ -483,7 +483,7 @@ impl State for EditorState {
         }
 
         if self.is_interface_active() {
-            if let Some(UIEvent::ButtonClick(value)) = self.menu_interface.tick(&pointer) {
+            if let Some(UIEvent::ButtonClick(value)) = self.menu_interface.tick(pointer) {
                 match value {
                     BUTTON_LOAD => {
                         text_input.set_value(self.level.as_code().as_str());
@@ -579,13 +579,11 @@ impl State for EditorState {
                                 ParticleSort::Diagonals,
                             ));
                         }
-                    } else {
-                        if let Ok(board) =
-                            Board::new(self.level.board.width - 1, self.level.board.height)
-                        {
-                            self.level.board = board;
-                            self.board_dirty = true;
-                        }
+                    } else if let Ok(board) =
+                        Board::new(self.level.board.width - 1, self.level.board.height)
+                    {
+                        self.level.board = board;
+                        self.board_dirty = true;
                     }
                 }
                 BUTTON_WIDTH_PLUS => {
@@ -619,13 +617,11 @@ impl State for EditorState {
                                 ParticleSort::Diagonals,
                             ));
                         }
-                    } else {
-                        if let Ok(board) =
-                            Board::new(self.level.board.width, self.level.board.height - 1)
-                        {
-                            self.level.board = board;
-                            self.board_dirty = true;
-                        }
+                    } else if let Ok(board) =
+                        Board::new(self.level.board.width, self.level.board.height - 1)
+                    {
+                        self.level.board = board;
+                        self.board_dirty = true;
                     }
                 }
                 BUTTON_HEIGHT_PLUS => {
@@ -793,27 +789,25 @@ impl State for EditorState {
                         }
                         _ => self.selection = EditorSelection::Tile(selected_tile),
                     }
-                } else {
-                    if let EditorSelection::Mage(mut selected_mage) =
-                        mem::replace(&mut self.selection, EditorSelection::Tile(selected_tile))
-                    {
-                        selected_mage.position = selected_tile;
-                        self.level.mages.push(selected_mage);
+                } else if let EditorSelection::Mage(mut selected_mage) =
+                    mem::replace(&mut self.selection, EditorSelection::Tile(selected_tile))
+                {
+                    selected_mage.position = selected_tile;
+                    self.level.mages.push(selected_mage);
 
-                        for _ in 0..40 {
-                            let d = js_sys::Math::random() * std::f64::consts::TAU;
-                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                            self.particles.push(Particle::new(
-                                (selected_tile.0 as f64, selected_tile.1 as f64),
-                                (d.cos() * v * 2.0, d.sin() * v),
-                                (js_sys::Math::random() * 20.0) as u64,
-                                ParticleSort::Missile,
-                            ));
-                        }
+                    for _ in 0..40 {
+                        let d = js_sys::Math::random() * std::f64::consts::TAU;
+                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                        self.particles.push(Particle::new(
+                            (selected_tile.0 as f64, selected_tile.1 as f64),
+                            (d.cos() * v * 2.0, d.sin() * v),
+                            (js_sys::Math::random() * 20.0) as u64,
+                            ParticleSort::Missile,
+                        ));
                     }
                 }
             } else if pointer.alt_clicked() {
-                if let EditorSelection::Mage(mage) = &self.selection {
+                if let EditorSelection::Mage(_mage) = &self.selection {
                     for _ in 0..40 {
                         let d = js_sys::Math::random() * std::f64::consts::TAU;
                         let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;

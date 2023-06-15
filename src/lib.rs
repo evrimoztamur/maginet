@@ -64,7 +64,7 @@ fn start() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
 
     let container_element = document()
-        .query_selector(&"#canvas-container")
+        .query_selector("#canvas-container")
         .unwrap()
         .unwrap();
 
@@ -99,7 +99,7 @@ fn start() -> Result<(), JsValue> {
             interface_canvas.set_id("interface-canvas");
 
             let text_input_element = document()
-                .query_selector(&"#text-input")
+                .query_selector("#text-input")
                 .unwrap()
                 .unwrap()
                 .dyn_into::<HtmlInputElement>()
