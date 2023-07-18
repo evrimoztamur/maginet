@@ -48,8 +48,8 @@ impl Position {
     /// Aligns a [`Position`] into the team's perspective.
     pub fn align(&self, board: &Board, team: Team) -> Position {
         match team {
-            Team::Red => *self,
-            Team::Blue => self.rotate(board),
+            Team::Red => self.rotate(board),
+            Team::Blue => *self,
         }
     }
 }

@@ -28,10 +28,12 @@ use crate::{
 const BUTTON_REMATCH: usize = 1;
 const BUTTON_LEAVE: usize = 2;
 const BUTTON_MENU: usize = 10;
+const BUTTON_UNDO: usize = 20;
 
 pub struct LobbyState {
     interface: Interface,
     button_menu: ToggleButtonElement,
+    button_undo: ButtonElement,
     lobby: Lobby,
     last_move_frame: u64,
     active_mage: Option<usize>,
@@ -63,12 +65,21 @@ impl LobbyState {
         }
 
         let button_menu = ToggleButtonElement::new(
-            (-128 - 18 - 8, -9),
+            (-128 - 18 - 8, -9 - 12),
             (20, 20),
             BUTTON_MENU,
             LabelTrim::Round,
             LabelTheme::Bright,
             crate::app::ContentElement::Sprite((112, 32), (16, 16)),
+        );
+
+        let button_undo = ButtonElement::new(
+            (-128 - 18 - 8, -9 + 12),
+            (20, 20),
+            BUTTON_UNDO,
+            LabelTrim::Round,
+            LabelTheme::Action,
+            crate::app::ContentElement::Sprite((144, 16), (16, 16)),
         );
 
         let button_rematch = ButtonElement::new(
@@ -94,6 +105,7 @@ impl LobbyState {
         LobbyState {
             interface: root_element,
             button_menu,
+            button_undo,
             lobby: Lobby::new(lobby_settings),
             last_move_frame: 0,
             active_mage: None,
@@ -617,6 +629,11 @@ impl State for LobbyState {
             self.button_menu
                 .draw(interface_context, atlas, &interface_pointer, frame)?;
 
+            if self.lobby.is_local() {
+                self.button_undo
+                    .draw(interface_context, atlas, &interface_pointer, frame)?;
+            }
+
             if self.is_interface_active() {
                 self.interface
                     .draw(interface_context, atlas, &interface_pointer, frame)?;
@@ -694,6 +711,13 @@ impl State for LobbyState {
             pointer.teleport(app_context.canvas_settings.inverse_interface_center());
 
         self.button_menu.tick(&interface_pointer);
+
+        if self.lobby.is_local() {
+            if self.button_undo.tick(&interface_pointer).is_some() {
+                self.lobby.rewind(2);
+                self.last_move_frame = frame;
+            }
+        }
 
         if self.is_interface_active() {
             if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(&interface_pointer) {

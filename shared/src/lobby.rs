@@ -309,6 +309,17 @@ impl Lobby {
     pub fn players(&self) -> &HashMap<String, Player> {
         &self.players
     }
+
+    /// Rewinds the [`Game`] by `delta` turns.
+    pub fn rewind(&mut self, delta: usize) {
+        let rewinded_game = self.game.rewind(delta);
+
+        self.game = rewinded_game;
+        
+        // This is a state-modfying action and in turn must be communicated with the connected clients.
+        // Rewinding is currently only available in local lobbies, but take-backs may be implemented.
+        self.tick();
+    }
 }
 
 /// Loadout methods.

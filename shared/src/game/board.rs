@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{Mage, MageSort, Position, Team};
 
 /// Default size of the game board.
-pub const DEFAULT_BOARD_SIZE: (usize, usize) = (8, 8);
+pub const DEFAULT_BOARD_SIZE: (usize, usize) = (6, 6);
 
 /// [`Board`] is a struct which currently only contains the size of the playing field.
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -37,7 +37,8 @@ impl Board {
                 offset + index,
                 team,
                 *mage_sort,
-                Position(x_offset + index as i8, self.height as i8 - 2).align(self, team),
+                Position(x_offset + index as i8, if self.height >= 7 { 1 } else { 0 })
+                    .align(self, team),
             ));
         }
 

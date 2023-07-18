@@ -43,6 +43,7 @@ pub enum GameResult {
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
+    level: Level,
     board: Board,
     mages: Vec<Mage>,
     turns: Vec<Turn>,
@@ -61,6 +62,7 @@ impl Game {
         let last_nominal = 0;
 
         let mut game = Game {
+            level: level.clone(),
             board,
             mages,
             turns,
@@ -522,6 +524,19 @@ impl Game {
         scale: (i32, i32),
     ) -> Option<Position> {
         self.board.location_as_position(location, offset, scale)
+    }
+
+    /// Rewinds the [`Game`] by `delta` turns.
+    /// Works via replicating the game from the initial [`Level`] with its [`Turn`] history.
+    pub fn rewind(&self, delta: usize) -> Game {
+        let mut rewinded_game = Game::new(&self.level).unwrap();
+        let turn_toward = self.turns().saturating_sub(delta);
+
+        for Turn(from, to) in self.turns.iter().take(turn_toward) {
+            rewinded_game.take_move(*from, *to);
+        }
+
+        rewinded_game
     }
 }
 
