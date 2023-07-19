@@ -297,6 +297,111 @@ impl LobbyState {
             self.particles.drain_filter(|particle| !particle.is_alive());
 
             {
+                let board_offset = self.board_offset();
+
+                // DRAW markers
+                context.save();
+
+                if let Some(mage) = self.get_active_mage() {
+                    let available_moves = self.lobby.game.available_moves(mage);
+                    for (position, dir, _) in &available_moves {
+                        let ri = rotation_from_position(*dir);
+                        let is_diagonal = ri % 2 == 1;
+                        context.save();
+                        context.translate(
+                            (position.0 as f64 + 0.5) * board_scale.0,
+                            (position.1 as f64 + 0.5) * board_scale.1,
+                        )?;
+                        context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
+                        let bop = (frame / 10 % 3) as f64;
+                        context.translate(bop - 4.0, if is_diagonal { bop - 4.0 } else { 0.0 })?;
+                        draw_sprite(
+                            context,
+                            atlas,
+                            if is_diagonal { 16.0 } else { 0.0 },
+                            32.0,
+                            16.0,
+                            16.0,
+                            -8.0,
+                            -8.0,
+                        )?;
+                        context.restore();
+                    }
+
+                    if let Some(selected_tile) = self.lobby.game.location_as_position(
+                        pointer.location,
+                        board_offset,
+                        BOARD_SCALE,
+                    ) {
+                        if available_moves
+                            .iter()
+                            .any(|(position, _, _)| position == &selected_tile)
+                        {
+                            for (enemy_occupied, position) in
+                                &self.lobby.game.targets(mage, selected_tile)
+                            {
+                                if *enemy_occupied {
+                                    draw_sprite(
+                                        context,
+                                        atlas,
+                                        192.0,
+                                        64.0,
+                                        32.0,
+                                        32.0,
+                                        position.0 as f64 * 32.0,
+                                        position.1 as f64 * 32.0,
+                                    )?;
+                                    draw_crosshair(context, atlas, position, (64.0, 32.0), frame)?;
+                                } else {
+                                    draw_sprite(
+                                        context,
+                                        atlas,
+                                        224.0,
+                                        64.0,
+                                        32.0,
+                                        32.0,
+                                        position.0 as f64 * 32.0,
+                                        position.1 as f64 * 32.0,
+                                    )?;
+                                    // draw_crosshair(context, atlas, position, (48.0, 32.0), 0)?;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if let Some(selected_tile) = self.lobby.game.location_as_position(
+                    pointer.location,
+                    board_offset,
+                    BOARD_SCALE,
+                ) {
+                    if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
+                        if let Some(selected_tile) = self.lobby.game.location_as_position(
+                            pointer.location,
+                            board_offset,
+                            BOARD_SCALE,
+                        ) {
+                            for (_, position) in &self.lobby.game.targets(occupant, selected_tile) {
+                                draw_sprite(
+                                    context,
+                                    atlas,
+                                    80.0,
+                                    32.0,
+                                    16.0,
+                                    16.0,
+                                    position.0 as f64 * board_scale.0 + 8.0,
+                                    position.1 as f64 * board_scale.1 + 8.0,
+                                )?;
+                            }
+                        }
+                    }
+                    draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), frame)?;
+                }
+
+                context.restore();
+            }
+
+            {
                 let game_started = self.lobby.all_ready() | self.lobby.is_local();
 
                 let mut mage_heap: Vec<&Mage> = self.lobby.game.iter_mages().collect();
@@ -364,91 +469,6 @@ impl LobbyState {
 
                     context.restore();
                 }
-            }
-
-            let board_offset = self.board_offset();
-
-            {
-                // DRAW markers
-                context.save();
-
-                if let Some(mage) = self.get_active_mage() {
-                    let available_moves = self.lobby.game.available_moves(mage);
-                    for (position, dir, _) in &available_moves {
-                        let ri = rotation_from_position(*dir);
-                        let is_diagonal = ri % 2 == 1;
-                        context.save();
-                        context.translate(
-                            (position.0 as f64 + 0.5) * board_scale.0,
-                            (position.1 as f64 + 0.5) * board_scale.1,
-                        )?;
-                        context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
-                        let bop = (frame / 10 % 3) as f64;
-                        context.translate(bop - 4.0, if is_diagonal { bop - 4.0 } else { 0.0 })?;
-                        draw_sprite(
-                            context,
-                            atlas,
-                            if is_diagonal { 16.0 } else { 0.0 },
-                            32.0,
-                            16.0,
-                            16.0,
-                            -8.0,
-                            -8.0,
-                        )?;
-                        context.restore();
-                    }
-
-                    if let Some(selected_tile) = self.lobby.game.location_as_position(
-                        pointer.location,
-                        board_offset,
-                        BOARD_SCALE,
-                    ) {
-                        if available_moves
-                            .iter()
-                            .any(|(position, _, _)| position == &selected_tile)
-                        {
-                            for (enemy_occupied, position) in
-                                &self.lobby.game.targets(mage, selected_tile)
-                            {
-                                if *enemy_occupied {
-                                    draw_crosshair(context, atlas, position, (64.0, 32.0), frame)?;
-                                } else {
-                                    draw_crosshair(context, atlas, position, (48.0, 32.0), 0)?;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if let Some(selected_tile) = self.lobby.game.location_as_position(
-                    pointer.location,
-                    board_offset,
-                    BOARD_SCALE,
-                ) {
-                    if let Some(occupant) = self.lobby.game.live_occupant(&selected_tile) {
-                        if let Some(selected_tile) = self.lobby.game.location_as_position(
-                            pointer.location,
-                            board_offset,
-                            BOARD_SCALE,
-                        ) {
-                            for (_, position) in &self.lobby.game.targets(occupant, selected_tile) {
-                                draw_sprite(
-                                    context,
-                                    atlas,
-                                    80.0,
-                                    32.0,
-                                    16.0,
-                                    16.0,
-                                    position.0 as f64 * board_scale.0 + 8.0,
-                                    position.1 as f64 * board_scale.1 + 8.0,
-                                )?;
-                            }
-                        }
-                    }
-                    draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), frame)?;
-                }
-
-                context.restore();
             }
 
             context.restore();
