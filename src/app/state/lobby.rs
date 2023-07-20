@@ -36,6 +36,7 @@ pub struct LobbyState {
     button_undo: ButtonElement,
     lobby: Lobby,
     last_move_frame: u64,
+    last_hits: Vec<Position>,
     active_mage: Option<usize>,
     particles: Vec<Particle>,
     message_pool: Rc<RefCell<MessagePool>>,
@@ -108,6 +109,7 @@ impl LobbyState {
             button_undo,
             lobby: Lobby::new(lobby_settings),
             last_move_frame: 0,
+            last_hits: Vec::new(),
             active_mage: None,
             particles: Vec::new(),
             message_pool,
@@ -416,6 +418,15 @@ impl LobbyState {
                         16.0 + mage.position.1 as f64 * board_scale.1,
                     )?;
 
+                    context.save();
+
+                    if self.frames_since_last_move(frame) < 32
+                        && self.frames_since_last_move(frame) % 16 < 8
+                        && self.last_hits.contains(&mage.position)
+                    {
+                        context.set_global_composite_operation(&"lighter")?;
+                    }
+
                     draw_mage(
                         context,
                         atlas,
@@ -425,6 +436,8 @@ impl LobbyState {
                         game_started,
                         self.lobby.game.result(),
                     )?;
+
+                    context.restore();
 
                     if mage.is_alive() && mage.has_diagonals() {
                         for _ in 0..(frame / 3 % 2) {
@@ -570,18 +583,20 @@ impl LobbyState {
             match message {
                 Message::Moves(turns) => {
                     for Turn(from, to) in turns {
-                        if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
-                            target_positions.append(&mut move_targets);
+                        if let Some(move_targets) = self.lobby.game.take_move(*from, *to) {
+                            target_positions.append(&mut move_targets.clone());
 
                             self.last_move_frame = frame;
+                            self.last_hits = move_targets;
                         }
                     }
                 }
                 Message::Move(Turn(from, to)) => {
-                    if let Some(mut move_targets) = self.lobby.game.take_move(*from, *to) {
-                        target_positions.append(&mut move_targets);
+                    if let Some(move_targets) = self.lobby.game.take_move(*from, *to) {
+                        target_positions.append(&mut move_targets.clone());
 
                         self.last_move_frame = frame;
+                        self.last_hits = move_targets;
                     }
                 }
                 Message::Lobby(lobby) => {
@@ -735,7 +750,11 @@ impl State for LobbyState {
         if self.lobby.is_local() {
             if self.button_undo.tick(&interface_pointer).is_some() {
                 self.lobby.rewind(2);
+
                 self.last_move_frame = frame;
+                self.last_hits = Vec::new();
+
+                self.button_menu.set_selected(false);
             }
         }
 
