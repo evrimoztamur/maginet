@@ -2,16 +2,17 @@ use shared::{GameResult, Level, LoadoutMethod, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{LobbyState, State};
+use super::{BaseState, LobbyState, State};
 use crate::{
     app::{
-        Alignment::Center, App, AppContext, ContentElement::Text, LabelTrim, Particle,
-        ParticleSort, StateSort,
+        Alignment::Center, AppContext, ContentElement::Text, LabelTrim, Particle, ParticleSort,
+        StateSort,
     },
     draw::{draw_label, draw_text_centered},
     window,
 };
 
+#[derive(PartialEq)]
 enum TutorialStage {
     Movement,
     Attacking,
@@ -26,21 +27,6 @@ pub struct TutorialState {
 }
 
 impl TutorialState {
-    pub fn new(level: Level) -> TutorialState {
-        let level: Level = "p24g091804j0".into();
-
-        TutorialState {
-            game_state: LobbyState::new(LobbySettings {
-                lobby_sort: LobbySort::LocalAI,
-                loadout_method: LoadoutMethod::Prefab(level.mages),
-                seed: window().performance().unwrap().now() as u64,
-                board: level.board,
-                can_stalemate: false,
-            }),
-            tutorial_stage: TutorialStage::Movement,
-        }
-    }
-
     pub fn spark_board(&mut self) {
         let board_size = self.game_state.lobby().game.board_size();
 
@@ -243,22 +229,40 @@ impl State for TutorialState {
                     self.spark_board();
                 }
             }
-            TutorialStage::FinalBlow => {
-                if self.game_state.lobby().game.result() == Some(GameResult::Win(Team::Red)) {
-                    self.tutorial_stage = TutorialStage::Victory;
-
-                    self.spark_board();
-                }
-            }
-            TutorialStage::Victory => {}
+            _ => {}
         }
 
-        self.game_state.tick(text_input, app_context)
+        if self.tutorial_stage != TutorialStage::Victory
+            && self.game_state.lobby().game.result() == Some(GameResult::Win(Team::Red))
+        {
+            self.tutorial_stage = TutorialStage::Victory;
+
+            self.spark_board();
+        }
+
+        let next_state = self.game_state.tick(text_input, app_context);
+
+        match next_state {
+            Some(StateSort::Lobby(_)) => Some(StateSort::Tutorial(TutorialState::default())),
+            Some(StateSort::MenuMain(_)) => Some(StateSort::Base(BaseState::default())),
+            _ => next_state,
+        }
     }
 }
 
 impl Default for TutorialState {
     fn default() -> Self {
-        TutorialState::new(App::load_level(0).unwrap_or_default())
+        let level: Level = "p24g091804j0".into();
+
+        TutorialState {
+            game_state: LobbyState::new(LobbySettings {
+                lobby_sort: LobbySort::LocalAI,
+                loadout_method: LoadoutMethod::Prefab(level.mages),
+                seed: window().performance().unwrap().now() as u64,
+                board: level.board,
+                can_stalemate: false,
+            }),
+            tutorial_stage: TutorialStage::Movement,
+        }
     }
 }
