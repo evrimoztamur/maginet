@@ -66,7 +66,7 @@ impl State for MenuState {
         context.save();
         context.translate(108.0, 112.0)?;
 
-        draw_sprite(context, atlas, 256.0, 320.0, 256.0, 64.0, 0.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 320.0, 128.0, 64.0, 0.0, 0.0)?;
 
         for mage in self.sentinel_lobby.game.iter_mages() {
             context.save();

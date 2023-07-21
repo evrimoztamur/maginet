@@ -311,6 +311,7 @@ impl State for EditorState {
                 self.level.board.height,
                 8,
                 8,
+                (0, 0),
             )
             .unwrap();
         }

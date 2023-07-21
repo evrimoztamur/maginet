@@ -105,6 +105,7 @@ impl State for PreviewState {
                 self.level.board.height,
                 8,
                 8,
+                (0, 0),
             )
             .unwrap();
         }
@@ -196,7 +197,9 @@ impl State for PreviewState {
                 BUTTON_LOCAL => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Local,
-                        loadout_method: shared::LoadoutMethod::Prefab(self.level.mages.clone()),
+                        loadout_method: shared::LoadoutMethod::EditorPrefab(
+                            self.level.mages.clone(),
+                        ),
                         board: self.level.board.clone(),
                         ..Default::default()
                     })));
@@ -204,7 +207,9 @@ impl State for PreviewState {
                 BUTTON_VS_AI => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
                         lobby_sort: shared::LobbySort::LocalAI,
-                        loadout_method: shared::LoadoutMethod::Prefab(self.level.mages.clone()),
+                        loadout_method: shared::LoadoutMethod::EditorPrefab(
+                            self.level.mages.clone(),
+                        ),
                         board: self.level.board.clone(),
                         ..Default::default()
                     })));
@@ -212,7 +217,9 @@ impl State for PreviewState {
                 BUTTON_ONLINE => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Online(0),
-                        loadout_method: shared::LoadoutMethod::Prefab(self.level.mages.clone()),
+                        loadout_method: shared::LoadoutMethod::EditorPrefab(
+                            self.level.mages.clone(),
+                        ),
                         board: self.level.board.clone(),
                         ..Default::default()
                     })));

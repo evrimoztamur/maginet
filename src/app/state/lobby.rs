@@ -119,6 +119,10 @@ impl LobbyState {
         }
     }
 
+    pub fn particles(&mut self) -> &mut Vec<Particle> {
+        &mut self.particles
+    }
+
     pub fn lobby(&self) -> &Lobby {
         &self.lobby
     }
@@ -242,7 +246,8 @@ impl LobbyState {
 
         if self.board_dirty {
             self.board_dirty = false;
-            draw_board(atlas, 256.0, 0.0, board_width, board_height, 8, 8).unwrap();
+            draw_board(atlas, 256.0, 0.0, board_width, board_height, 8, 8, (0, 0)).unwrap();
+            draw_board(atlas, 384.0, 256.0, 4, 4, 4, 4, (0, 64)).unwrap();
         }
 
         // DRAW background layer (board + UI block)
@@ -263,29 +268,6 @@ impl LobbyState {
             context.save();
 
             draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
-
-            if !self.lobby.all_ready() {
-                let mut lid = self.lobby_id().unwrap_or(0);
-
-                while lid != 0 {
-                    let tz = lid.trailing_zeros();
-                    let x = tz % 4;
-                    let y = tz / 4;
-
-                    lid ^= 1 << tz;
-
-                    draw_sprite(
-                        context,
-                        atlas,
-                        96.0,
-                        32.0,
-                        16.0,
-                        16.0,
-                        x as f64 * board_scale.0 + 72.0,
-                        y as f64 * board_scale.1 + 72.0,
-                    )?;
-                }
-            }
 
             context.translate(board_offset.0, board_offset.1)?;
 
@@ -346,8 +328,8 @@ impl LobbyState {
                                     draw_sprite(
                                         context,
                                         atlas,
-                                        192.0,
-                                        64.0,
+                                        32.0,
+                                        256.0,
                                         32.0,
                                         32.0,
                                         position.0 as f64 * 32.0,
@@ -358,8 +340,8 @@ impl LobbyState {
                                     draw_sprite(
                                         context,
                                         atlas,
-                                        224.0,
                                         64.0,
+                                        256.0,
                                         32.0,
                                         32.0,
                                         position.0 as f64 * 32.0,
@@ -484,6 +466,33 @@ impl LobbyState {
                 }
             }
 
+            context.translate(-board_offset.0, -board_offset.1)?;
+
+            if !self.lobby.all_ready() && !self.lobby.is_local() {
+                draw_sprite(context, atlas, 384.0, 256.0, 128.0, 128.0, 64.0, 64.0)?;
+
+                let mut lid = self.lobby_id().unwrap_or(0);
+
+                while lid != 0 {
+                    let tz = lid.trailing_zeros();
+                    let x = tz % 4;
+                    let y = tz / 4;
+
+                    lid ^= 1 << tz;
+
+                    draw_sprite(
+                        context,
+                        atlas,
+                        96.0,
+                        32.0,
+                        16.0,
+                        16.0,
+                        x as f64 * board_scale.0 + 72.0,
+                        y as f64 * board_scale.1 + 72.0,
+                    )?;
+                }
+            }
+
             context.restore();
         }
 
@@ -493,43 +502,45 @@ impl LobbyState {
 
         context.translate(6.0 - self.board_offset().0 as f64 + 128.0, -40.0 + 128.0)?;
 
-        let (_, gap) = self.lobby.game.stalemate();
-        for i in 1..9 {
-            if gap > i {
-                if i % 2 == 1 {
+        if self.lobby.game.can_stalemate() {
+            let (_, gap) = self.lobby.game.stalemate();
+            for i in 1..9 {
+                if gap > i {
+                    if i % 2 == 1 {
+                        draw_sprite(
+                            context,
+                            atlas,
+                            128.0,
+                            8.0,
+                            8.0,
+                            8.0,
+                            128.0,
+                            0.0 + (i * 8) as f64,
+                        )?;
+                    } else {
+                        draw_sprite(
+                            context,
+                            atlas,
+                            136.0,
+                            0.0,
+                            8.0,
+                            16.0,
+                            128.0,
+                            0.0 + (i * 8 - 8) as f64,
+                        )?;
+                    }
+                } else {
                     draw_sprite(
                         context,
                         atlas,
                         128.0,
-                        8.0,
+                        0.0,
                         8.0,
                         8.0,
                         128.0,
                         0.0 + (i * 8) as f64,
                     )?;
-                } else {
-                    draw_sprite(
-                        context,
-                        atlas,
-                        136.0,
-                        0.0,
-                        8.0,
-                        16.0,
-                        128.0,
-                        0.0 + (i * 8 - 8) as f64,
-                    )?;
                 }
-            } else {
-                draw_sprite(
-                    context,
-                    atlas,
-                    128.0,
-                    0.0,
-                    8.0,
-                    8.0,
-                    128.0,
-                    0.0 + (i * 8) as f64,
-                )?;
             }
         }
 
@@ -775,7 +786,7 @@ impl State for LobbyState {
                     }
                     BUTTON_LEAVE => match &self.lobby.settings {
                         LobbySettings {
-                            loadout_method: LoadoutMethod::Prefab(mages),
+                            loadout_method: LoadoutMethod::EditorPrefab(mages),
                             board,
                             ..
                         } => {

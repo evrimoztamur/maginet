@@ -9,7 +9,8 @@ use web_sys::{
 };
 
 use super::{
-    BaseState, EditorState, LobbyState, MenuState, MenuTeleport, Pointer, PreviewState, BOARD_SCALE,
+    BaseState, EditorState, LobbyState, MenuState, MenuTeleport, Pointer, PreviewState,
+    TutorialState, BOARD_SCALE,
 };
 use crate::{
     app::State,
@@ -35,6 +36,7 @@ pub enum StateSort {
     Editor(EditorState),
     MenuTeleport(MenuTeleport),
     Preview(PreviewState),
+    Tutorial(TutorialState),
 }
 
 pub struct AppContext {
@@ -113,8 +115,8 @@ impl App {
 
         if !self.atlas_complete {
             self.atlas_complete = true;
-            draw_board(atlas, 256.0, 256.0, 2, 2, 2, 2)?;
-            draw_board(atlas, 256.0, 320.0, 4, 2, 4, 2)?;
+            draw_board(atlas, 256.0, 256.0, 2, 2, 2, 2, (0, 0))?;
+            draw_board(atlas, 256.0, 320.0, 4, 2, 4, 2, (0, 0))?;
         } else {
             result = match &mut self.state_sort {
                 StateSort::MenuMain(state) => {
@@ -133,6 +135,9 @@ impl App {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
                 StateSort::Preview(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
+                StateSort::Tutorial(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
             };
@@ -168,6 +173,7 @@ impl App {
             StateSort::Base(state) => state.tick(text_input, &self.app_context),
             StateSort::Editor(state) => state.tick(text_input, &self.app_context),
             StateSort::Preview(state) => state.tick(text_input, &self.app_context),
+            StateSort::Tutorial(state) => state.tick(text_input, &self.app_context),
         };
 
         if let Some(next_state) = next_state {
@@ -217,6 +223,36 @@ impl App {
         event.prevent_default();
     }
 
+    fn lobby_touch(
+        lobby_state: &mut LobbyState,
+        pointer: &Pointer,
+        pointer_location: (i32, i32),
+    ) -> bool {
+        if pointer_location.0 < 0 {
+            return true;
+        } else if lobby_state.is_interface_active() {
+            return true;
+        } else {
+            let board_offset = lobby_state.board_offset();
+
+            match (
+                lobby_state.location_as_position(pointer_location, board_offset, BOARD_SCALE),
+                lobby_state.location_as_position(pointer.location, board_offset, BOARD_SCALE),
+            ) {
+                (Some(current_tile), Some(last_tile)) => {
+                    if current_tile == last_tile {
+                        return true;
+                    } else if lobby_state.live_occupied(current_tile) {
+                        return true;
+                    }
+                }
+                _ => (),
+            }
+        }
+
+        return false;
+    }
+
     pub fn on_touch_start(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if let Some(touch) = event.target_touches().item(0) {
             let x = touch.page_x() - bound.left() as i32;
@@ -227,35 +263,18 @@ impl App {
             {
                 match &mut self.state_sort {
                     StateSort::Lobby(lobby_state) => {
-                        if pointer_location.0 < 0 {
-                            self.app_context.pointer.button = true;
-                        } else if lobby_state.is_interface_active() {
-                            self.app_context.pointer.button = true;
-                        } else {
-                            let board_offset = lobby_state.board_offset();
-
-                            match (
-                                lobby_state.location_as_position(
-                                    pointer_location,
-                                    board_offset,
-                                    BOARD_SCALE,
-                                ),
-                                lobby_state.location_as_position(
-                                    self.app_context.pointer.location,
-                                    board_offset,
-                                    BOARD_SCALE,
-                                ),
-                            ) {
-                                (Some(current_tile), Some(last_tile)) => {
-                                    if current_tile == last_tile {
-                                        self.app_context.pointer.button = true;
-                                    } else if lobby_state.live_occupied(current_tile) {
-                                        self.app_context.pointer.button = true;
-                                    }
-                                }
-                                _ => (),
-                            }
-                        }
+                        self.app_context.pointer.button = App::lobby_touch(
+                            lobby_state,
+                            &self.app_context.pointer,
+                            pointer_location,
+                        );
+                    }
+                    StateSort::Tutorial(state) => {
+                        self.app_context.pointer.button = App::lobby_touch(
+                            &mut state.game_state,
+                            &self.app_context.pointer,
+                            pointer_location,
+                        );
                     }
                     _ => self.app_context.pointer.button = true,
                 };

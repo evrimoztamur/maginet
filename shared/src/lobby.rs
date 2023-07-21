@@ -68,11 +68,14 @@ impl Lobby {
         let mut rng = ChaCha8Rng::seed_from_u64(settings.seed as u64);
 
         Lobby {
-            game: Game::new(&Level::new(
-                Board::new(settings.board.width, settings.board.height).unwrap(),
-                Lobby::select_loadouts(&settings, &mut rng),
-                Lobby::random_team(&mut rng),
-            ))
+            game: Game::new(
+                &Level::new(
+                    Board::new(settings.board.width, settings.board.height).unwrap(),
+                    Lobby::select_loadouts(&settings, &mut rng),
+                    Lobby::random_team(&mut rng),
+                ),
+                settings.can_stalemate,
+            )
             .expect("game should be instantiable with default values"),
             players: HashMap::new(),
             player_slots: VecDeque::from([Player::new(Team::Red), Player::new(Team::Blue)]),
@@ -119,7 +122,7 @@ impl Lobby {
                     )
                 }
             }
-            LoadoutMethod::Prefab(mages) => mages.clone(),
+            LoadoutMethod::Prefab(mages) | LoadoutMethod::EditorPrefab(mages) => mages.clone(),
         };
 
         for (i, mage) in mages.iter_mut().enumerate() {
@@ -315,7 +318,7 @@ impl Lobby {
         let rewinded_game = self.game.rewind(delta);
 
         self.game = rewinded_game;
-        
+
         // This is a state-modfying action and in turn must be communicated with the connected clients.
         // Rewinding is currently only available in local lobbies, but take-backs may be implemented.
         self.tick();
@@ -337,6 +340,8 @@ pub enum LoadoutMethod {
     },
     /// A pre-fabricated list of mages.
     Prefab(Vec<Mage>),
+    /// A pre-fabricated list of mages from the editor.
+    EditorPrefab(Vec<Mage>),
 }
 
 /// Loadout methods.
@@ -372,6 +377,8 @@ pub struct LobbySettings {
     pub seed: u64,
     /// Board.
     pub board: Board,
+    /// Can stalemate
+    pub can_stalemate: bool,
 }
 impl LobbySettings {
     fn board(&self) -> &Board {

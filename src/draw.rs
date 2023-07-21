@@ -91,6 +91,22 @@ pub fn draw_text(
     Ok(())
 }
 
+pub fn draw_text_centered(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlCanvasElement,
+    dx: f64,
+    dy: f64,
+    text: &String,
+) -> Result<(), JsValue> {
+    draw_text(
+        context,
+        atlas,
+        dx + (-text_length(text) / 2) as f64,
+        dy - 4.0,
+        text,
+    )
+}
+
 pub fn draw_crosshair(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,
@@ -365,13 +381,15 @@ pub fn draw_tile(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,
     position: &Position,
+    sprite_offset: (usize, usize),
 ) -> Result<(), JsValue> {
     let board_scale = tuple_as!(BOARD_SCALE, f64);
+    let sprite_offset = tuple_as!(sprite_offset, f64);
 
     let offset = if (position.0 + position.1) % 2 == 0 {
-        (224.0, 0.0)
+        (224.0 + sprite_offset.0, 0.0 + sprite_offset.1)
     } else {
-        (224.0, 32.0)
+        (224.0 + sprite_offset.0, 32.0 + sprite_offset.1)
     };
 
     for corner in 0..4 {
@@ -423,6 +441,7 @@ pub fn draw_board(
     height: usize,
     clear_width: usize,
     clear_height: usize,
+    sprite_offset: (usize, usize),
 ) -> Result<(), JsValue> {
     let board_scale = tuple_as!(BOARD_SCALE, f64);
 
@@ -447,9 +466,16 @@ pub fn draw_board(
 
     for x in 0..width {
         for y in 0..height {
-            draw_tile(&atlas_context, atlas, &Position(x as i8, y as i8))?;
+            draw_tile(
+                &atlas_context,
+                atlas,
+                &Position(x as i8, y as i8),
+                sprite_offset,
+            )?;
         }
     }
+
+    let sprite_offset = tuple_as!(sprite_offset, f64);
 
     atlas_context.set_global_composite_operation("destination-out")?;
 
@@ -464,34 +490,106 @@ pub fn draw_board(
             atlas_context.translate(dx + 16.0, dy + 16.0)?;
             match (edge_l, edge_r, edge_t, edge_b) {
                 (true, false, true, false) => {
-                    draw_sprite(&atlas_context, atlas, 192.0, 0.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        0.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // TL corner
                 (false, true, true, false) => {
                     atlas_context.rotate(std::f64::consts::PI * 0.5)?;
-                    draw_sprite(&atlas_context, atlas, 192.0, 0.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        0.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // TR corner
                 (true, false, false, true) => {
                     atlas_context.rotate(std::f64::consts::PI * 1.5)?;
-                    draw_sprite(&atlas_context, atlas, 192.0, 0.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        0.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // BL corner
                 (false, true, false, true) => {
                     atlas_context.rotate(std::f64::consts::PI)?;
-                    draw_sprite(&atlas_context, atlas, 192.0, 0.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        0.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // BR corner
                 (true, false, false, false) => {
-                    draw_sprite(&atlas_context, atlas, 192.0, 32.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        32.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // L edge
                 (false, true, false, false) => {
                     atlas_context.rotate(std::f64::consts::PI)?;
-                    draw_sprite(&atlas_context, atlas, 192.0, 32.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        32.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // R edge
                 (false, false, true, false) => {
                     atlas_context.rotate(std::f64::consts::PI * 0.5)?;
-                    draw_sprite(&atlas_context, atlas, 192.0, 32.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        32.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // T edge
                 (false, false, false, true) => {
                     atlas_context.rotate(std::f64::consts::PI * 1.5)?;
-                    draw_sprite(&atlas_context, atlas, 192.0, 32.0, 32.0, 32.0, -16.0, -16.0)?;
+                    draw_sprite(
+                        &atlas_context,
+                        atlas,
+                        192.0 + sprite_offset.0,
+                        32.0 + sprite_offset.1,
+                        32.0,
+                        32.0,
+                        -16.0,
+                        -16.0,
+                    )?;
                 } // B edge
                 _ => (),
             }
