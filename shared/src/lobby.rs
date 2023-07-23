@@ -367,7 +367,7 @@ impl LobbySort {
 }
 
 /// Settings for the lobby.
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LobbySettings {
     /// Sort of the lobby.
     pub lobby_sort: LobbySort,
@@ -380,8 +380,21 @@ pub struct LobbySettings {
     /// Can stalemate
     pub can_stalemate: bool,
 }
+
 impl LobbySettings {
     fn board(&self) -> &Board {
         &self.board
+    }
+}
+
+impl Default for LobbySettings {
+    fn default() -> Self {
+        Self {
+            lobby_sort: Default::default(),
+            loadout_method: Default::default(),
+            seed: Default::default(),
+            board: Default::default(),
+            can_stalemate: true,
+        }
     }
 }

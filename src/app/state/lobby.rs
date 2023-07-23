@@ -1,8 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use shared::{
-    Level, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
-    Message, Position, Team, Turn, TurnLeaf,
+    GameResult, Level, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage,
+    Mages, Message, Position, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
@@ -751,6 +751,56 @@ impl State for LobbyState {
 
         if self.lobby.finished() && self.frames_since_last_move(frame) == 120 {
             self.button_menu.set_selected(true);
+        }
+
+        if self.lobby.finished() {
+            if let Some(GameResult::Win(team)) = self.lobby.game.result() {
+                let board_size = self.lobby().game.board_size();
+
+                let particle_sort = match team {
+                    Team::Red => ParticleSort::RedWin,
+                    Team::Blue => ParticleSort::BlueWin,
+                };
+
+                for _ in 0..(board_size.0 + board_size.1) / 5 {
+                    let d = js_sys::Math::random() * std::f64::consts::TAU;
+                    let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+
+                    self.particles().push(Particle::new(
+                        (js_sys::Math::random() * board_size.0 as f64 - 0.5, -0.5),
+                        (d.sin() * v * 0.5, -v),
+                        (js_sys::Math::random() * 40.0) as u64,
+                        particle_sort,
+                    ));
+
+                    self.particles().push(Particle::new(
+                        (
+                            js_sys::Math::random() * board_size.0 as f64 - 0.5,
+                            board_size.1 as f64 - 0.5,
+                        ),
+                        (d.sin() * v * 0.5, v),
+                        (js_sys::Math::random() * 40.0) as u64,
+                        particle_sort,
+                    ));
+
+                    self.particles().push(Particle::new(
+                        (-0.5, js_sys::Math::random() * board_size.1 as f64 - 0.5),
+                        (-v, d.sin() * v * 0.5),
+                        (js_sys::Math::random() * 40.0) as u64,
+                        particle_sort,
+                    ));
+
+                    self.particles().push(Particle::new(
+                        (
+                            board_size.0 as f64 - 0.5,
+                            js_sys::Math::random() * board_size.1 as f64 - 0.5,
+                        ),
+                        (v, d.sin() * v * 0.5),
+                        (js_sys::Math::random() * 40.0) as u64,
+                        particle_sort,
+                    ));
+                }
+            }
         }
 
         let interface_pointer =

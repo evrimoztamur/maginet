@@ -355,6 +355,8 @@ pub fn draw_particle(
             match particle.sort {
                 ParticleSort::Missile => 0.0,
                 ParticleSort::Diagonals => 24.0,
+                ParticleSort::BlueWin => 48.0,
+                ParticleSort::RedWin => 72.0,
             }
         },
         56.0,

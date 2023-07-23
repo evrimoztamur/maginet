@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    fs::File,
+    fs::{File, self},
     net::SocketAddr,
     sync::{Arc, Mutex},
 };
@@ -155,6 +155,7 @@ async fn obtain_session() -> Json<SessionRequest> {
 }
 
 fn record_lobby(id: u16, lobby: &Lobby) {
+    fs::create_dir_all("lobbies").unwrap();
     let file = File::create(format!("lobbies/{}.json", id)).unwrap();
     serde_json::to_writer(&file, lobby).unwrap();
 }

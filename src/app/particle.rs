@@ -1,6 +1,9 @@
+#[derive(Copy, Clone)]
 pub enum ParticleSort {
     Missile,
     Diagonals,
+    RedWin,
+    BlueWin,
 }
 
 pub struct Particle {
