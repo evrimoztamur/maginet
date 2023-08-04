@@ -43,7 +43,7 @@ impl Level {
     }
 
     /// Simulated `n` games and yields results.
-    pub fn simulate(level: Level, n: usize, seed: u64) -> Vec<Game> {
+    pub fn simulate(level: &Level, n: usize, seed: u64) -> Vec<Game> {
         (0..n)
             .into_iter()
             .map(|m| {
@@ -51,7 +51,7 @@ impl Level {
 
                 for i in 0..50 {
                     if let Some(TurnLeaf(Turn(from, to), _)) =
-                        game.best_turn(4, seed + m as u64 + i as u64)
+                        game.best_turn(5, seed + m as u64 + i as u64)
                     {
                         game.take_move(from, to);
 
