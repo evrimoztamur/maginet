@@ -40,7 +40,7 @@ impl State for MenuTeleport {
 
         if self.board_dirty {
             self.board_dirty = false;
-            draw_board(atlas, 256.0, 0.0, 4, 4, 8, 8).unwrap();
+            draw_board(atlas, 256.0, 0.0, 4, 4, 8, 8, (0, 64)).unwrap();
         }
 
         context.save();

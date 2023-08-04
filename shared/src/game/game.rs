@@ -32,6 +32,7 @@ impl PartialOrd<isize> for TurnLeaf {
 }
 
 /// Result of a game.
+#[derive(PartialEq)]
 pub enum GameResult {
     /// Win for a [`Team`]
     Win(Team),
@@ -43,17 +44,19 @@ pub enum GameResult {
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
+    level: Level,
     board: Board,
     mages: Vec<Mage>,
     turns: Vec<Turn>,
     starting_team: Team,
     last_nominal: usize,
     available_turns: Vec<Turn>,
+    can_stalemate: bool,
 }
 
 impl Game {
     /// Instantiates the [`Game`] `struct` with a given board size (always 8-by-8) and number of mages (always 4)]
-    pub fn new(level: &Level) -> Result<Game, &'static str> {
+    pub fn new(level: &Level, can_stalemate: bool) -> Result<Game, &'static str> {
         let board = Board::new(level.board.width, level.board.height)?;
         let mages = level.mages.clone();
         let starting_team = level.starting_team;
@@ -61,12 +64,14 @@ impl Game {
         let last_nominal = 0;
 
         let mut game = Game {
+            level: level.clone(),
             board,
             mages,
             turns,
             starting_team,
             last_nominal,
             available_turns: Vec::new(),
+            can_stalemate,
         };
 
         game.available_turns = game.generate_available_turns();
@@ -74,14 +79,23 @@ impl Game {
         Ok(game)
     }
 
+    /// Can the game stalemate.
+    pub fn can_stalemate(&self) -> bool {
+        self.can_stalemate
+    }
+
     /// Determines if the game is stalemated.
     pub fn stalemate(&self) -> (bool, usize) {
-        let gap = self
-            .turns()
-            .saturating_sub(self.last_nominal.max(self.mages.len() * 3));
-        let gap_passed = gap > 8;
+        if self.can_stalemate {
+            let gap = self
+                .turns()
+                .saturating_sub(self.last_nominal.max(self.mages.len() * 3));
+            let gap_passed = gap > 8;
 
-        (gap_passed, gap)
+            (gap_passed, gap)
+        } else {
+            (false, 0)
+        }
     }
 
     /// Determines if the game is finished.
@@ -207,6 +221,17 @@ impl Game {
             .collect::<Vec<Turn>>()
     }
 
+    /// Evaluates the difference in total mana for both teams, where a positive evaluation is in favour of the red team.
+    pub fn mana_difference(&self) -> isize {
+        self.mages
+            .iter()
+            .map(|mage| match mage.team {
+                Team::Red => mage.mana.0 as isize,
+                Team::Blue => -(mage.mana.0 as isize),
+            })
+            .sum()
+    }
+
     /// Evaluates the viability of the board on a signed basis, where a positive evaluation is in favour of the red team.
     pub fn evaluate(&self) -> isize {
         match self.result() {
@@ -218,15 +243,6 @@ impl Game {
                 GameResult::Stalemate => 0,
             },
             None => {
-                let mana_diff: isize = self
-                    .mages
-                    .iter()
-                    .map(|mage| match mage.team {
-                        Team::Red => mage.mana.0 as isize,
-                        Team::Blue => -(mage.mana.0 as isize),
-                    })
-                    .sum();
-
                 let pos_adv: isize = self
                     .mages
                     .iter()
@@ -243,6 +259,8 @@ impl Game {
                         }
                     })
                     .sum();
+
+                let mana_diff = self.mana_difference();
 
                 mana_diff.pow(2) * mana_diff.signum() * 20 + pos_adv * 5
             }
@@ -522,6 +540,19 @@ impl Game {
         scale: (i32, i32),
     ) -> Option<Position> {
         self.board.location_as_position(location, offset, scale)
+    }
+
+    /// Rewinds the [`Game`] by `delta` turns.
+    /// Works via replicating the game from the initial [`Level`] with its [`Turn`] history.
+    pub fn rewind(&self, delta: usize) -> Game {
+        let mut rewinded_game = Game::new(&self.level, self.can_stalemate).unwrap();
+        let turn_toward = self.turns().saturating_sub(delta);
+
+        for Turn(from, to) in self.turns.iter().take(turn_toward) {
+            rewinded_game.take_move(*from, *to);
+        }
+
+        rewinded_game
     }
 }
 

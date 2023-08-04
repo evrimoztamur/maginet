@@ -2,7 +2,7 @@ use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::Pointer;
-use crate::draw::{draw_label, draw_sprite, draw_text, text_length};
+use crate::draw::{draw_label, draw_sprite, draw_text_centered};
 
 pub enum UIEvent {
     ButtonClick(usize),
@@ -51,9 +51,7 @@ impl UIElement for ContentElement {
         context.save();
 
         match self {
-            ContentElement::Text(text, _) => {
-                draw_text(context, atlas, (-text_length(text) / 2) as f64, -4.0, text)
-            }
+            ContentElement::Text(text, _) => draw_text_centered(context, atlas, 0.0, 0.0, text),
             ContentElement::Sprite(position, size) => draw_sprite(
                 context,
                 atlas,

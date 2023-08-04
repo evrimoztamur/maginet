@@ -47,7 +47,7 @@ impl Level {
         (0..n)
             .into_iter()
             .map(|m| {
-                let mut game = Game::new(&level).unwrap();
+                let mut game = Game::new(&level, true).unwrap();
 
                 for i in 0..50 {
                     if let Some(TurnLeaf(Turn(from, to), _)) =

@@ -2,7 +2,7 @@ use shared::{Board, LoadoutMethod, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{EditorState, LobbyState, MenuState, MenuTeleport, State};
+use super::{EditorState, LobbyState, MenuState, MenuTeleport, State, TutorialState};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -84,6 +84,9 @@ impl State for BaseState {
                 BUTTON_TELEPORT => {
                     return Some(StateSort::MenuTeleport(MenuTeleport::default()));
                 }
+                BUTTON_TUTORIAL => {
+                    return Some(StateSort::Tutorial(TutorialState::default()));
+                }
                 _ => (),
             }
         }
@@ -130,7 +133,7 @@ impl Default for BaseState {
             (80, 20),
             BUTTON_TUTORIAL,
             LabelTrim::Round,
-            LabelTheme::Disabled,
+            LabelTheme::Default,
             crate::app::ContentElement::Text("Tutorial".to_string(), Alignment::Center),
         );
 
@@ -158,6 +161,7 @@ impl Default for BaseState {
                 loadout_method: LoadoutMethod::Default,
                 seed: window().performance().unwrap().now() as u64,
                 board: Board::new(6, 7).unwrap(),
+                can_stalemate: true,
             }),
         }
     }
