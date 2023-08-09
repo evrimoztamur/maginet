@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    fs::{File, self},
+    fs::{self, File},
     net::SocketAddr,
     sync::{Arc, Mutex},
 };

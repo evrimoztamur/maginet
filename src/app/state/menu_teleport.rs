@@ -56,7 +56,7 @@ impl State for MenuTeleport {
             draw_particle(context, atlas, particle, frame)?;
         }
 
-        self.particles.drain_filter(|particle| !particle.is_alive());
+        self.particles.retain(|particle| particle.is_alive());
 
         let board = Board {
             width: 4,

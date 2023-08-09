@@ -278,7 +278,7 @@ impl LobbyState {
                 draw_particle(context, atlas, particle, frame)?;
             }
 
-            self.particles.drain_filter(|particle| !particle.is_alive());
+            self.particles.retain(|particle| particle.is_alive());
 
             {
                 let board_offset = self.board_offset();

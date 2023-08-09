@@ -59,19 +59,14 @@ fn main() {
         .map(|level| {
             let simulations = Level::simulate(level, N, seed);
             let result = simulations
-            .par_iter()
-            .map(|game| {
-                // println!("  {:?}", (game.turns(), game.evaluate()));
-                (game.turns(), game.evaluate())
-            })
-            .reduce(|| (0, 0), |(aa, ba), (ab, bb)| (aa + ab, ba + bb));
+                .par_iter()
+                .map(|game| {
+                    // println!("  {:?}", (game.turns(), game.evaluate()));
+                    (game.turns(), game.evaluate())
+                })
+                .reduce(|| (0, 0), |(aa, ba), (ab, bb)| (aa + ab, ba + bb));
 
-            println!(
-                "{}, {}, {}",
-                level.as_code(),
-                result.0,
-                result.1
-            );
+            println!("{}, {}, {}", level.as_code(), result.0, result.1);
         })
         .count();
 }
