@@ -330,7 +330,7 @@ impl State for EditorState {
             draw_particle(context, atlas, particle, frame)?;
         }
 
-        self.particles.drain_filter(|particle| !particle.is_alive());
+        self.particles.retain(|particle| !particle.is_alive());
 
         let mut mage_heap: Vec<&Mage> = self.level.mages.iter().collect();
         mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
@@ -729,7 +729,7 @@ impl State for EditorState {
                     EditorSelection::Tile(position) => {
                         self.level
                             .mages
-                            .drain_filter(|mage| mage.position == position);
+                            .retain(|mage| mage.position == position);
 
                         for _ in 0..40 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
@@ -832,7 +832,7 @@ impl State for EditorState {
             EditorSelection::Mage(selected_mage) => {
                 self.level
                     .mages
-                    .drain_filter(|mage| mage.index == selected_mage.index);
+                    .retain(|mage| mage.index == selected_mage.index);
             }
             EditorSelection::Tile(position) => {
                 *position = self.level.board.clamp_position(*position);

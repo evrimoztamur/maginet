@@ -1,5 +1,3 @@
-#![feature(drain_filter)]
-
 mod app;
 mod draw;
 mod net;
