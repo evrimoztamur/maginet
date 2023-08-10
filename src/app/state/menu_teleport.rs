@@ -1,5 +1,3 @@
-use std::ops::BitXorAssign;
-
 use shared::{Board, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
@@ -133,8 +131,7 @@ impl State for MenuTeleport {
                     ));
                 }
 
-                self.lobby_id
-                    .bitxor_assign(1 << ((selected_tile.1 << 2) | selected_tile.0));
+                self.lobby_id ^= 1 << ((selected_tile.1 << 2) | selected_tile.0);
             }
         }
 
