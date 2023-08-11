@@ -6,16 +6,16 @@ use super::{BaseState, LobbyState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
-        ParticleSort, StateSort, UIElement, UIEvent, BOARD_SCALE,
+        ParticleSort, StateSort, UIElement, UIEvent, BOARD_SCALE, ParticleSystem,
     },
-    draw::{draw_board, draw_crosshair, draw_particle, draw_sprite},
+    draw::{draw_board, draw_crosshair, draw_sprite},
     tuple_as,
 };
 
 pub struct MenuTeleport {
     interface: Interface,
     lobby_id: u16,
-    particles: Vec<Particle>,
+    particle_system: ParticleSystem,
     board_dirty: bool,
 }
 
@@ -49,12 +49,7 @@ impl State for MenuTeleport {
 
         context.translate(64.0, 64.0)?;
 
-        for particle in self.particles.iter_mut() {
-            particle.tick();
-            draw_particle(context, atlas, particle, frame)?;
-        }
-
-        self.particles.retain(|particle| particle.is_alive());
+        self.particle_system.tick_and_draw(context, atlas, frame)?;
 
         let board = Board {
             width: 4,
@@ -123,7 +118,7 @@ impl State for MenuTeleport {
                 for _ in 0..40 {
                     let d = js_sys::Math::random() * std::f64::consts::TAU;
                     let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                    self.particles.push(Particle::new(
+                    self.particle_system.add(Particle::new(
                         (selected_tile.0 as f64, selected_tile.1 as f64),
                         (d.cos() * v, d.sin() * v),
                         (js_sys::Math::random() * 20.0) as u64,
@@ -179,7 +174,7 @@ impl Default for MenuTeleport {
         MenuTeleport {
             interface: root_element,
             lobby_id: 0,
-            particles: Vec::new(),
+            particle_system: ParticleSystem::default(),
             board_dirty: true,
         }
     }

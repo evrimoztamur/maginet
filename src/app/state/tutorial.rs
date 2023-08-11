@@ -34,7 +34,7 @@ impl TutorialState {
             let d = js_sys::Math::random() * std::f64::consts::TAU;
             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
 
-            self.game_state.particles().push(Particle::new(
+            self.game_state.particle_system().add(Particle::new(
                 (js_sys::Math::random() * board_size.0 as f64 - 0.5, -0.5),
                 (d.sin() * v * 0.2, -v),
                 (js_sys::Math::random() * 40.0) as u64,

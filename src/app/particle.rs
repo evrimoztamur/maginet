@@ -1,3 +1,40 @@
+use wasm_bindgen::JsValue;
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+
+use crate::draw::draw_particle;
+
+#[derive(Clone, Default)]
+pub struct ParticleSystem {
+    particles: Vec<Particle>,
+    last_tick_at: u64,
+}
+
+impl ParticleSystem {
+    pub fn tick_and_draw(
+        &mut self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlCanvasElement,
+        frame: u64,
+    ) -> Result<(), JsValue> {
+        if self.last_tick_at != frame {
+            self.last_tick_at = frame;
+
+            for particle in self.particles.iter_mut() {
+                particle.tick();
+                draw_particle(context, atlas, particle, frame)?;
+            }
+
+            self.particles.retain(|particle| particle.is_alive());
+        }
+
+        Ok(())
+    }
+
+    pub fn add(&mut self, particle: Particle) {
+        self.particles.push(particle)
+    }
+}
+
 #[derive(Copy, Clone)]
 pub enum ParticleSort {
     Missile,
@@ -6,6 +43,7 @@ pub enum ParticleSort {
     BlueWin,
 }
 
+#[derive(Copy, Clone)]
 pub struct Particle {
     pub position: (f64, f64),
     velocity: (f64, f64),

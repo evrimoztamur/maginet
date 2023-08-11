@@ -11,11 +11,11 @@ use super::{EditorState, MenuState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
-        LabelTrim, Particle, ParticleSort, Pointer, StateSort, ToggleButtonElement, UIElement,
-        UIEvent, BOARD_SCALE,
+        LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
+        UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{
-        draw_board, draw_crosshair, draw_mage, draw_mana, draw_particle, draw_sprite,
+        draw_board, draw_crosshair, draw_mage, draw_mana, draw_sprite,
         rotation_from_position,
     },
     net::{
@@ -38,7 +38,7 @@ pub struct LobbyState {
     last_move_frame: u64,
     last_hits: Vec<Position>,
     active_mage: Option<usize>,
-    particles: Vec<Particle>,
+    particle_system: ParticleSystem,
     message_pool: Rc<RefCell<MessagePool>>,
     message_closure: Closure<dyn FnMut(JsValue)>,
     board_dirty: bool,
@@ -111,7 +111,7 @@ impl LobbyState {
             last_move_frame: 0,
             last_hits: Vec::new(),
             active_mage: None,
-            particles: Vec::new(),
+            particle_system: ParticleSystem::default(),
             message_pool,
             message_closure,
             board_dirty: true,
@@ -119,8 +119,8 @@ impl LobbyState {
         }
     }
 
-    pub fn particles(&mut self) -> &mut Vec<Particle> {
-        &mut self.particles
+    pub fn particle_system(&mut self) -> &mut ParticleSystem {
+        &mut self.particle_system
     }
 
     pub fn lobby(&self) -> &Lobby {
@@ -273,12 +273,7 @@ impl LobbyState {
 
             // DRAW particles
 
-            for particle in self.particles.iter_mut() {
-                particle.tick();
-                draw_particle(context, atlas, particle, frame)?;
-            }
-
-            self.particles.retain(|particle| particle.is_alive());
+            self.particle_system().tick_and_draw(context, atlas, frame)?;
 
             {
                 let board_offset = self.board_offset();
@@ -425,7 +420,7 @@ impl LobbyState {
                         for _ in 0..(frame / 3 % 2) {
                             let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
                             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                            self.particles.push(Particle::new(
+                            self.particle_system.add(Particle::new(
                                 (
                                     mage.position.0 as f64 + d.cos() * 0.4,
                                     mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
@@ -630,7 +625,7 @@ impl LobbyState {
             for _ in 0..40 {
                 let d = js_sys::Math::random() * std::f64::consts::TAU;
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                self.particles.push(Particle::new(
+                self.particle_system.add(Particle::new(
                     (tile.0 as f64, tile.1 as f64),
                     (d.cos() * v, d.sin() * v),
                     (js_sys::Math::random() * 50.0) as u64,
@@ -766,14 +761,14 @@ impl State for LobbyState {
                     let d = js_sys::Math::random() * std::f64::consts::TAU;
                     let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
 
-                    self.particles().push(Particle::new(
+                    self.particle_system.add(Particle::new(
                         (js_sys::Math::random() * board_size.0 as f64 - 0.5, -0.5),
                         (d.sin() * v * 0.5, -v),
                         (js_sys::Math::random() * 40.0) as u64,
                         particle_sort,
                     ));
 
-                    self.particles().push(Particle::new(
+                    self.particle_system().add(Particle::new(
                         (
                             js_sys::Math::random() * board_size.0 as f64 - 0.5,
                             board_size.1 as f64 - 0.5,
@@ -783,14 +778,14 @@ impl State for LobbyState {
                         particle_sort,
                     ));
 
-                    self.particles().push(Particle::new(
+                    self.particle_system().add(Particle::new(
                         (-0.5, js_sys::Math::random() * board_size.1 as f64 - 0.5),
                         (-v, d.sin() * v * 0.5),
                         (js_sys::Math::random() * 40.0) as u64,
                         particle_sort,
                     ));
 
-                    self.particles().push(Particle::new(
+                    self.particle_system().add(Particle::new(
                         (
                             board_size.0 as f64 - 0.5,
                             js_sys::Math::random() * board_size.1 as f64 - 0.5,

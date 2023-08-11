@@ -9,10 +9,10 @@ use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
         LabelTrim, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
-        BOARD_SCALE,
+        BOARD_SCALE, ParticleSystem,
     },
     draw::{
-        draw_board, draw_crosshair, draw_mage, draw_mana, draw_particle, draw_spell_pattern,
+        draw_board, draw_crosshair, draw_mage, draw_mana, draw_spell_pattern,
         draw_sprite,
     },
     tuple_as,
@@ -33,7 +33,7 @@ pub struct EditorState {
     no_mage_interface: Interface,
     board_dirty: bool,
     level: Level,
-    particles: Vec<Particle>,
+    particle_system: ParticleSystem,
     selection: EditorSelection,
 }
 
@@ -269,7 +269,7 @@ impl EditorState {
             menu_interface,
             no_mage_interface,
             level,
-            particles: Vec::new(),
+            particle_system: ParticleSystem::default(),
             selection: EditorSelection::None,
             board_dirty: true,
         }
@@ -325,12 +325,7 @@ impl State for EditorState {
 
         context.translate(board_offset.0 as f64, board_offset.1 as f64)?;
 
-        for particle in self.particles.iter_mut() {
-            particle.tick();
-            draw_particle(context, atlas, particle, frame)?;
-        }
-
-        self.particles.retain(|particle| particle.is_alive());
+        self.particle_system.tick_and_draw(context, atlas, frame)?;
 
         let mut mage_heap: Vec<&Mage> = self.level.mages.iter().collect();
         mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
@@ -570,7 +565,7 @@ impl State for EditorState {
                         for _ in 0..self.level.board.width * 5 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
                             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                            self.particles.push(Particle::new(
+                            self.particle_system.add(Particle::new(
                                 (
                                     self.level.board.width as f64 - 0.5,
                                     js_sys::Math::random() * self.level.board.height as f64 - 0.5,
@@ -608,7 +603,7 @@ impl State for EditorState {
                         for _ in 0..self.level.board.height * 5 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
                             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                            self.particles.push(Particle::new(
+                            self.particle_system.add(Particle::new(
                                 (
                                     js_sys::Math::random() * self.level.board.width as f64 - 0.5,
                                     self.level.board.height as f64 - 0.5,
@@ -652,7 +647,7 @@ impl State for EditorState {
                             for _ in 0..40 {
                                 let d = js_sys::Math::random() * std::f64::consts::TAU;
                                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                                self.particles.push(Particle::new(
+                                self.particle_system.add(Particle::new(
                                     (position.0 as f64, position.1 as f64),
                                     (d.cos() * v * 2.0, d.sin() * v),
                                     (js_sys::Math::random() * 20.0) as u64,
@@ -734,7 +729,7 @@ impl State for EditorState {
                         for _ in 0..40 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
                             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                            self.particles.push(Particle::new(
+                            self.particle_system.add(Particle::new(
                                 (
                                     position.0 as f64 + d.cos() * 1.25,
                                     position.1 as f64 + d.sin() * 1.25,
@@ -758,7 +753,7 @@ impl State for EditorState {
                 for _ in 0..10 {
                     let d = js_sys::Math::random() * std::f64::consts::TAU;
                     let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                    self.particles.push(Particle::new(
+                    self.particle_system.add(Particle::new(
                         (selected_tile.0 as f64, selected_tile.1 as f64),
                         (d.cos() * v, d.sin() * v),
                         (js_sys::Math::random() * 20.0) as u64,
@@ -778,7 +773,7 @@ impl State for EditorState {
                             for _ in 0..40 {
                                 let d = js_sys::Math::random() * std::f64::consts::TAU;
                                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                                self.particles.push(Particle::new(
+                                self.particle_system.add(Particle::new(
                                     (selected_tile.0 as f64, selected_tile.1 as f64),
                                     (d.cos() * v * 2.0, d.sin() * v),
                                     (js_sys::Math::random() * 20.0) as u64,
@@ -799,7 +794,7 @@ impl State for EditorState {
                     for _ in 0..40 {
                         let d = js_sys::Math::random() * std::f64::consts::TAU;
                         let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                        self.particles.push(Particle::new(
+                        self.particle_system.add(Particle::new(
                             (selected_tile.0 as f64, selected_tile.1 as f64),
                             (d.cos() * v * 2.0, d.sin() * v),
                             (js_sys::Math::random() * 20.0) as u64,
@@ -812,7 +807,7 @@ impl State for EditorState {
                     for _ in 0..40 {
                         let d = js_sys::Math::random() * std::f64::consts::TAU;
                         let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                        self.particles.push(Particle::new(
+                        self.particle_system.add(Particle::new(
                             (
                                 selected_tile.0 as f64 + d.cos() * 1.25,
                                 selected_tile.1 as f64 + d.sin() * 1.25,
