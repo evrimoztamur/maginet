@@ -21,10 +21,13 @@ impl ParticleSystem {
 
             for particle in self.particles.iter_mut() {
                 particle.tick();
-                draw_particle(context, atlas, particle, frame)?;
             }
 
             self.particles.retain(|particle| particle.is_alive());
+        }
+
+        for particle in &self.particles {
+            draw_particle(context, atlas, particle, frame)?;
         }
 
         Ok(())
