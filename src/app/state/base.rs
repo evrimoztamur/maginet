@@ -18,7 +18,7 @@ pub struct BaseState {
 }
 
 const BUTTON_ARENA: usize = 20;
-const BUTTON_TELEPORT: usize = 21;
+const BUTTON_SKIRMISH: usize = 21;
 const BUTTON_TUTORIAL: usize = 22;
 const BUTTON_EDITOR: usize = 23;
 const BUTTON_RESET: usize = 50;
@@ -81,8 +81,8 @@ impl State for BaseState {
                 BUTTON_EDITOR => {
                     return Some(StateSort::Editor(EditorState::default()));
                 }
-                BUTTON_TELEPORT => {
-                    return Some(StateSort::MenuTeleport(MenuTeleport::default()));
+                BUTTON_SKIRMISH => {
+                    return Some(StateSort::MenuMain(MenuState::default()));
                 }
                 BUTTON_TUTORIAL => {
                     return Some(StateSort::Tutorial(TutorialState::default()));
@@ -102,21 +102,21 @@ impl State for BaseState {
 impl Default for BaseState {
     fn default() -> Self {
         let button_arena = ButtonElement::new(
-            (200, 68),
-            (96, 24),
+            (192, 68),
+            (112, 24),
             BUTTON_ARENA,
             LabelTrim::Glorious,
             LabelTheme::Action,
             crate::app::ContentElement::Text("Arena".to_string(), Alignment::Center),
         );
 
-        let button_teleport = ButtonElement::new(
+        let button_skirmish = ButtonElement::new(
             (200, 68 + 32),
             (96, 20),
-            BUTTON_TELEPORT,
+            BUTTON_SKIRMISH,
             LabelTrim::Glorious,
             LabelTheme::Default,
-            crate::app::ContentElement::Text("Teleport".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Skirmish".to_string(), Alignment::Center),
         );
 
         let button_editor = ButtonElement::new(
@@ -141,7 +141,7 @@ impl Default for BaseState {
             button_arena.boxed(),
             button_editor.boxed(),
             button_tutorial.boxed(),
-            button_teleport.boxed(),
+            button_skirmish.boxed(),
         ]);
 
         let button_reset = ConfirmButtonElement::new(

@@ -2,7 +2,7 @@ use shared::{Board, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, LobbyState, State};
+use super::{BaseState, LobbyState, State, MenuState};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
@@ -133,7 +133,7 @@ impl State for MenuTeleport {
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
                 BUTTON_BACK => {
-                    return Some(StateSort::Base(BaseState::default()));
+                    return Some(StateSort::MenuMain(MenuState::default()));
                 }
                 BUTTON_TELEPORT => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {

@@ -2,7 +2,7 @@ use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, LobbyState, State};
+use super::{BaseState, LobbyState, State, MenuTeleport};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
@@ -27,6 +27,7 @@ const BUTTON_SYMMETRIC_RANDOM: usize = 12;
 // const BUTTON_ROUND_ROBIN: usize = 13;
 const BUTTON_BATTLE: usize = 20;
 const BUTTON_BACK: usize = 21;
+const BUTTON_TELEPORT: usize = 30;
 
 impl MenuState {
     fn refresh_lobby(&mut self) {
@@ -130,6 +131,9 @@ impl State for MenuState {
                         self.lobby_settings.clone(),
                     )));
                 }
+                BUTTON_TELEPORT => {
+                    return Some(StateSort::MenuTeleport(MenuTeleport::default()));
+                }
                 BUTTON_BACK => {
                     return Some(StateSort::Base(BaseState::default()));
                 }
@@ -221,16 +225,25 @@ impl Default for MenuState {
         );
 
         let button_battle = ButtonElement::new(
-            (8, 188),
-            (96, 24),
+            (64, 188),
+            (128, 24),
             BUTTON_BATTLE,
             LabelTrim::Glorious,
             LabelTheme::Action,
             crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
         );
 
+        let button_teleport = ButtonElement::new(
+            (35, 220),
+            (88, 16),
+            BUTTON_TELEPORT,
+            LabelTrim::Glorious,
+            LabelTheme::Default,
+            crate::app::ContentElement::Text("Join".to_string(), Alignment::Center),
+        );
+
         let button_back = ButtonElement::new(
-            (156, 192),
+            (129, 220),
             (88, 16),
             BUTTON_BACK,
             LabelTrim::Return,
@@ -242,6 +255,7 @@ impl Default for MenuState {
             group_lobby_type.boxed(),
             group_loadout_type.boxed(),
             button_battle.boxed(),
+            button_teleport.boxed(),
             button_back.boxed(),
         ]);
 
