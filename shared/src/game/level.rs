@@ -45,9 +45,8 @@ impl Level {
     /// Simulated `n` games and yields results.
     pub fn simulate(level: &Level, n: usize, seed: u64) -> Vec<Game> {
         (0..n)
-            .into_iter()
             .map(|m| {
-                let mut game = Game::new(&level, true).unwrap();
+                let mut game = Game::new(level, true).unwrap();
 
                 for i in 0..50 {
                     if let Some(TurnLeaf(Turn(from, to), _)) =
@@ -73,12 +72,12 @@ impl Level {
     }
 }
 
-impl Into<Vec<u8>> for &Level {
-    fn into(self) -> Vec<u8> {
-        let board_width = self.board.width as u8 - 1;
-        let board_height = self.board.height as u8 - 1;
+impl From<&Level> for Vec<u8> {
+    fn from(level: &Level) -> Self {
+        let board_width = level.board.width as u8 - 1;
+        let board_height = level.board.height as u8 - 1;
 
-        let starting_team = self.starting_team as u8;
+        let starting_team = level.starting_team as u8;
 
         let mut result = Vec::new();
 
@@ -87,7 +86,7 @@ impl Into<Vec<u8>> for &Level {
 
         result.push(board_byte);
 
-        for mage in &self.mages {
+        for mage in &level.mages {
             let mut mage_bytes: Vec<u8> = mage.into();
             result.append(&mut mage_bytes);
         }

@@ -19,7 +19,7 @@ impl Board {
     /// Restricted to `4..=8` on both axes. Currently always 8-by-8.
     pub fn new(width: usize, height: usize) -> Result<Board, &'static str> {
         match (width, height) {
-            (width, height) if width >= 3 && width <= 8 && height >= 3 && height <= 8 => {
+            (width, height) if (3..=8).contains(&width) && (3..=8).contains(&height) => {
                 Ok(Board { width, height })
             }
             _ => Err("board size does not conform to limits"),
@@ -49,7 +49,7 @@ impl Board {
     /// Currently only confirms that the position resides on the board (albeit very inefficiently)
     pub fn validate_position(&self, position: Position) -> Option<Position> {
         // TODO restore bounds check
-        if &position == &position.wrap(self.width as i8, self.height as i8) {
+        if position == position.wrap(self.width as i8, self.height as i8) {
             Some(position)
         } else {
             None

@@ -469,13 +469,10 @@ impl State for EditorState {
             return None;
         }
 
-        match &app_context.text_input {
-            Some((field, value)) => {
-                if field == "level_code" {
-                    return Some(StateSort::Editor(EditorState::new(value.as_str().into())));
-                }
+        if let Some((field, value)) = &app_context.text_input {
+            if field == "level_code" {
+                return Some(StateSort::Editor(EditorState::new(value.as_str().into())));
             }
-            _ => (),
         }
 
         if self.is_interface_active() {
@@ -632,115 +629,90 @@ impl State for EditorState {
                 _ => (),
             }
         } else if let Some(UIEvent::ButtonClick(value)) = self.no_mage_interface.tick(pointer) {
-            match value {
-                BUTTON_ADD => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        if !self.level.mages.occupied(&position) {
-                            self.level.mages.push(Mage::new(
-                                self.level.mage_index,
-                                Team::Red,
-                                shared::MageSort::Cross,
-                                position,
-                            ));
-                            self.level.mage_index += 1;
-
-                            for _ in 0..40 {
-                                let d = js_sys::Math::random() * std::f64::consts::TAU;
-                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                                self.particle_system.add(Particle::new(
-                                    (position.0 as f64, position.1 as f64),
-                                    (d.cos() * v * 2.0, d.sin() * v),
-                                    (js_sys::Math::random() * 20.0) as u64,
-                                    ParticleSort::Missile,
-                                ));
-                            }
-                        }
-                    }
-                    _ => (),
-                },
-                _ => (),
-            }
-        } else if let Some(UIEvent::ButtonClick(value)) = self.mage_interface.tick(pointer) {
-            match value {
-                BUTTON_TEAM_LEFT => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            selected_mage.team = selected_mage.team.enemy();
-                        }
-                    }
-                    _ => (),
-                },
-                BUTTON_TEAM_RIGHT => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            selected_mage.team = selected_mage.team.enemy();
-                        }
-                    }
-                    _ => (),
-                },
-                BUTTON_SPELL_LEFT => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            *selected_mage = Mage::new(
-                                selected_mage.index,
-                                selected_mage.team,
-                                selected_mage.sort.previous(),
-                                selected_mage.position,
-                            );
-                        }
-                    }
-                    _ => (),
-                },
-                BUTTON_SPELL_RIGHT => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            *selected_mage = Mage::new(
-                                selected_mage.index,
-                                selected_mage.team,
-                                selected_mage.sort.next(),
-                                selected_mage.position,
-                            );
-                        }
-                    }
-                    _ => (),
-                },
-                BUTTON_MANA_LEFT => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            selected_mage.mana -= 1;
-                        }
-                    }
-                    _ => (),
-                },
-                BUTTON_MANA_RIGHT => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            selected_mage.mana += 1;
-                        }
-                    }
-                    _ => (),
-                },
-                BUTTON_DELETE => match self.selection {
-                    EditorSelection::Tile(position) => {
-                        self.level
-                            .mages
-                            .retain(|mage| mage.position != position);
+            if let BUTTON_ADD = value {
+                if let EditorSelection::Tile(position) = self.selection {
+                    if !self.level.mages.occupied(&position) {
+                        self.level.mages.push(Mage::new(
+                            self.level.mage_index,
+                            Team::Red,
+                            shared::MageSort::Cross,
+                            position,
+                        ));
+                        self.level.mage_index += 1;
 
                         for _ in 0..40 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
                             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
                             self.particle_system.add(Particle::new(
-                                (
-                                    position.0 as f64 + d.cos() * 1.25,
-                                    position.1 as f64 + d.sin() * 1.25,
-                                ),
-                                (-d.cos() * v, -d.sin() * v),
+                                (position.0 as f64, position.1 as f64),
+                                (d.cos() * v * 2.0, d.sin() * v),
                                 (js_sys::Math::random() * 20.0) as u64,
                                 ParticleSort::Missile,
                             ));
                         }
                     }
-                    _ => (),
+                }
+            }
+        } else if let Some(UIEvent::ButtonClick(value)) = self.mage_interface.tick(pointer) {
+            match value {
+                BUTTON_TEAM_LEFT => if let EditorSelection::Tile(position) = self.selection {
+                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                        selected_mage.team = selected_mage.team.enemy();
+                    }
+                },
+                BUTTON_TEAM_RIGHT => if let EditorSelection::Tile(position) = self.selection {
+                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                        selected_mage.team = selected_mage.team.enemy();
+                    }
+                },
+                BUTTON_SPELL_LEFT => if let EditorSelection::Tile(position) = self.selection {
+                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                        *selected_mage = Mage::new(
+                            selected_mage.index,
+                            selected_mage.team,
+                            selected_mage.sort.previous(),
+                            selected_mage.position,
+                        );
+                    }
+                },
+                BUTTON_SPELL_RIGHT => if let EditorSelection::Tile(position) = self.selection {
+                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                        *selected_mage = Mage::new(
+                            selected_mage.index,
+                            selected_mage.team,
+                            selected_mage.sort.next(),
+                            selected_mage.position,
+                        );
+                    }
+                },
+                BUTTON_MANA_LEFT => if let EditorSelection::Tile(position) = self.selection {
+                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                        selected_mage.mana -= 1;
+                    }
+                },
+                BUTTON_MANA_RIGHT => if let EditorSelection::Tile(position) = self.selection {
+                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                        selected_mage.mana += 1;
+                    }
+                },
+                BUTTON_DELETE => if let EditorSelection::Tile(position) = self.selection {
+                    self.level
+                        .mages
+                        .retain(|mage| mage.position != position);
+
+                    for _ in 0..40 {
+                        let d = js_sys::Math::random() * std::f64::consts::TAU;
+                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                        self.particle_system.add(Particle::new(
+                            (
+                                position.0 as f64 + d.cos() * 1.25,
+                                position.1 as f64 + d.sin() * 1.25,
+                            ),
+                            (-d.cos() * v, -d.sin() * v),
+                            (js_sys::Math::random() * 20.0) as u64,
+                            ParticleSort::Missile,
+                        ));
+                    }
                 },
                 _ => (),
             }

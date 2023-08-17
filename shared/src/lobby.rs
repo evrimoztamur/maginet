@@ -65,7 +65,7 @@ pub struct Lobby {
 impl Lobby {
     /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
     pub fn new(settings: LobbySettings) -> Lobby {
-        let mut rng = ChaCha8Rng::seed_from_u64(settings.seed as u64);
+        let mut rng = ChaCha8Rng::seed_from_u64(settings.seed);
 
         Lobby {
             game: Game::new(
@@ -143,13 +143,13 @@ impl Lobby {
 
     fn random_loadout(rng: &mut ChaCha8Rng) -> Vec<MageSort> {
         (0..4)
-            .into_iter()
             .map(|_| ((rng.next_u64() % 4) as usize).into())
             .collect::<Vec<MageSort>>()
     }
 
     fn random_team(rng: &mut ChaCha8Rng) -> Team {
-        if true || rng.next_u32() % 2 == 0 {
+        if true {
+            // || rng.next_u32() % 2 == 0
             Team::Red
         } else {
             Team::Blue
@@ -174,16 +174,14 @@ impl Lobby {
             Err(LobbyError("cannot join an active game".to_string()))
         } else if self.players.contains_key(&session_id) {
             Err(LobbyError("already in lobby".to_string()))
+        } else if let Some(player) = self.player_slots.pop_front() {
+            self.players.insert(session_id.clone(), player);
+
+            self.tick();
+
+            Ok(())
         } else {
-            if let Some(player) = self.player_slots.pop_front() {
-                self.players.insert(session_id.clone(), player);
-
-                self.tick();
-
-                Ok(())
-            } else {
-                Err(LobbyError("no available slots in lobby".to_string()))
-            }
+            Err(LobbyError("no available slots in lobby".to_string()))
         }
     }
 
@@ -216,11 +214,8 @@ impl Lobby {
             match self.players.get(&session_id) {
                 Some(player) => {
                     if self.game.turn_for() == player.team {
-                        match message {
-                            Message::Move(Turn(from, to)) => {
-                                self.game.take_move(from, to);
-                            }
-                            _ => (),
+                        if let Message::Move(Turn(from, to)) = message {
+                            self.game.take_move(from, to);
                         }
 
                         Ok(())
@@ -238,11 +233,7 @@ impl Lobby {
     pub fn request_rematch(&mut self, session_id: String) -> Result<bool, LobbyError> {
         if !self.all_ready() {
             Err(LobbyError("game not yet started".to_string()))
-        }
-        // else if !self.finished() {
-        //     Err(LobbyError("game not yet finished".to_string()))
-        // }
-        else {
+        } else {
             match self.players.get_mut(&session_id) {
                 Some(player) => {
                     player.rematch = true;
@@ -255,6 +246,9 @@ impl Lobby {
                 None => Err(LobbyError("player not in lobby".to_string())),
             }
         }
+        // else if !self.finished() {
+        //     Err(LobbyError("game not yet finished".to_string()))
+        // }
     }
 
     /// Makes a fully-reset clone of this [`Lobby`].
@@ -269,18 +263,12 @@ impl Lobby {
 
     /// Determines if the game is local (`true`) or online.
     pub fn is_local(&self) -> bool {
-        match self.settings.lobby_sort {
-            LobbySort::Online(_) => false,
-            _ => true,
-        }
+        !matches!(self.settings.lobby_sort, LobbySort::Online(_))
     }
 
     /// Returns `true` for [`LobbySort::LocalAI`].
     pub fn has_ai(&self) -> bool {
-        match self.settings.lobby_sort {
-            LobbySort::LocalAI => true,
-            _ => false,
-        }
+        matches!(self.settings.lobby_sort, LobbySort::LocalAI)
     }
 
     /// Determines if the given session ID is the one taking its turn.
@@ -360,7 +348,7 @@ impl LobbySort {
     /// Returns the ID of the lobby, if Online.
     pub fn lobby_id(&self) -> Option<u16> {
         match self {
-            LobbySort::Online(id) => Some(id.clone()),
+            LobbySort::Online(id) => Some(*id),
             _ => None,
         }
     }

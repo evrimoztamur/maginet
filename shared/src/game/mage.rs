@@ -120,7 +120,7 @@ impl Mage {
             }
         }
 
-        return moves;
+        moves
     }
 }
 
@@ -144,23 +144,11 @@ pub trait Mages {
 
 impl Mages for Vec<Mage> {
     fn occupant(&self, position: &Position) -> Option<&Mage> {
-        for mage in self.iter() {
-            if mage.position == *position {
-                return Some(mage);
-            }
-        }
-
-        None
+        self.iter().find(|&mage| mage.position == *position)
     }
 
     fn occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
-        for mage in self.iter_mut() {
-            if mage.position == *position {
-                return Some(mage);
-            }
-        }
-
-        None
+        self.iter_mut().find(|mage| mage.position == *position)
     }
 
     fn occupied(&self, position: &Position) -> bool {
@@ -168,23 +156,11 @@ impl Mages for Vec<Mage> {
     }
 
     fn live_occupant(&self, position: &Position) -> Option<&Mage> {
-        for mage in self.iter().filter(|mage| mage.is_alive()) {
-            if mage.position == *position {
-                return Some(mage);
-            }
-        }
-
-        None
+        self.iter().filter(|mage| mage.is_alive()).find(|&mage| mage.position == *position)
     }
 
     fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
-        for mage in self.iter_mut().filter(|mage| mage.is_alive()) {
-            if mage.position == *position {
-                return Some(mage);
-            }
-        }
-
-        None
+        self.iter_mut().filter(|mage| mage.is_alive()).find(|mage| mage.position == *position)
     }
 
     fn live_occupied(&self, position: &Position) -> bool {
@@ -206,14 +182,14 @@ impl Default for Mage {
     }
 }
 
-impl Into<Vec<u8>> for &Mage {
-    fn into(self) -> Vec<u8> {
-        let position_x = self.position.0 as u8;
-        let position_y = self.position.1 as u8;
-        let team = self.team as u8;
+impl From<&Mage> for Vec<u8> {
+    fn from(mage: &Mage) -> Self {
+        let position_x = mage.position.0 as u8;
+        let position_y = mage.position.1 as u8;
+        let team = mage.team as u8;
 
-        let sort = self.sort as u8;
-        let mana: u8 = (&self.mana).into();
+        let sort = mage.sort as u8;
+        let mana: u8 = (&mage.mana).into();
 
         vec![
             (position_x & 0b111) << 5 | (position_y & 0b111) << 2 | team & 0b11,

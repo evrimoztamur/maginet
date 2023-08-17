@@ -58,7 +58,7 @@ async fn create_lobby(
     session_message.lobby_settings.lobby_sort = LobbySort::Online(lobby_id);
     let lobby = Lobby::new(session_message.lobby_settings);
 
-    lobbies.insert(lobby_id.clone(), lobby.clone());
+    lobbies.insert(lobby_id, lobby.clone());
 
     Json(Message::Lobby(lobby))
 }

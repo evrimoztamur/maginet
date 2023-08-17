@@ -401,7 +401,7 @@ impl LobbyState {
                         && self.frames_since_last_move(frame) % 16 < 8
                         && self.last_hits.contains(&mage.position)
                     {
-                        context.set_global_composite_operation(&"lighter")?;
+                        context.set_global_composite_operation("lighter")?;
                     }
 
                     draw_mage(
@@ -803,15 +803,13 @@ impl State for LobbyState {
 
         self.button_menu.tick(&interface_pointer);
 
-        if self.lobby.is_local() {
-            if self.button_undo.tick(&interface_pointer).is_some() {
-                self.lobby.rewind(2);
+        if self.lobby.is_local() && self.button_undo.tick(&interface_pointer).is_some() {
+            self.lobby.rewind(2);
 
-                self.last_move_frame = frame;
-                self.last_hits = Vec::new();
+            self.last_move_frame = frame;
+            self.last_hits = Vec::new();
 
-                self.button_menu.set_selected(false);
-            }
+            self.button_menu.set_selected(false);
         }
 
         if self.is_interface_active() {

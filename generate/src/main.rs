@@ -3,7 +3,6 @@ use shared::{Board, Level, Mage, Team};
 
 fn generate_levels() -> Vec<Level> {
     (0..25)
-        .into_iter()
         .map(|i| {
             let board = Board::new(4, 4).unwrap();
 

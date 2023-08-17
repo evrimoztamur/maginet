@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{Board, Team};
 
 /// Reference to a position on the game board.
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize, Hash)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize, Hash, Default)]
 pub struct Position(pub i8, pub i8);
 
 impl Add for &Position {
@@ -67,8 +67,4 @@ impl RemZero for i8 {
     }
 }
 
-impl Default for Position {
-    fn default() -> Self {
-        Self(Default::default(), Default::default())
-    }
-}
+

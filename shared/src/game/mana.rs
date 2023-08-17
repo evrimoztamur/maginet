@@ -17,10 +17,8 @@ impl Mana {
     }
 
     /// Selects the appropriate [`Mana`] for a given [`MageSort`].
-    pub fn select(mage_sort: MageSort) -> Mana {
-        match mage_sort {
-            _ => Mana::with_max(DEFAULT_MANA),
-        }
+    pub fn select(_mage_sort: MageSort) -> Mana {
+        Mana::with_max(DEFAULT_MANA)
     }
 }
 
@@ -64,9 +62,9 @@ impl PartialOrd<u8> for Mana {
     }
 }
 
-impl Into<u8> for &Mana {
-    fn into(self) -> u8 {
-        (self.0 as u8 & 0b1111) << 4 | self.1 & 0b1111
+impl From<&Mana> for u8 {
+    fn from(mana: &Mana) -> Self {
+        (mana.0  & 0b1111) << 4 | mana.1 & 0b1111
     }
 }
 

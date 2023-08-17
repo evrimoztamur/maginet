@@ -228,29 +228,22 @@ impl App {
         pointer: &Pointer,
         pointer_location: (i32, i32),
     ) -> bool {
-        if pointer_location.0 < 0 {
-            return true;
-        } else if lobby_state.is_interface_active() {
+        if pointer_location.0 < 0 || lobby_state.is_interface_active() {
             return true;
         } else {
             let board_offset = lobby_state.board_offset();
 
-            match (
+            if let (Some(current_tile), Some(last_tile)) = (
                 lobby_state.location_as_position(pointer_location, board_offset, BOARD_SCALE),
                 lobby_state.location_as_position(pointer.location, board_offset, BOARD_SCALE),
             ) {
-                (Some(current_tile), Some(last_tile)) => {
-                    if current_tile == last_tile {
-                        return true;
-                    } else if lobby_state.live_occupied(current_tile) {
-                        return true;
-                    }
+                if current_tile == last_tile || lobby_state.live_occupied(current_tile) {
+                    return true;
                 }
-                _ => (),
             }
         }
 
-        return false;
+        false
     }
 
     pub fn on_touch_start(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {

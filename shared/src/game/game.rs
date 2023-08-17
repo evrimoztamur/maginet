@@ -110,12 +110,10 @@ impl Game {
                 })
                 .sum();
 
-            if mana_diff == 0 {
-                Some(GameResult::Stalemate)
-            } else if mana_diff > 0 {
-                Some(GameResult::Win(Team::Red))
-            } else {
-                Some(GameResult::Win(Team::Blue))
+            match mana_diff.cmp(&0) {
+                std::cmp::Ordering::Less => Some(GameResult::Win(Team::Blue)),
+                std::cmp::Ordering::Equal => Some(GameResult::Stalemate),
+                std::cmp::Ordering::Greater => Some(GameResult::Win(Team::Red)),
             }
         } else {
             None
@@ -197,13 +195,13 @@ impl Game {
             // let position = position.wrap(self.board.width as i8, self.board.height as i8);
 
             if let Some(position) = self.board.validate_position(position) {
-                if !self.mages.occupied(&position) && !(diagonal && !mage.has_diagonals()) {
+                if !(self.mages.occupied(&position) || diagonal && !mage.has_diagonals()) {
                     moves.push((position, dir, diagonal));
                 }
             }
         }
 
-        return moves;
+        moves
     }
 
     fn generate_available_turns(&self) -> Vec<Turn> {
@@ -211,13 +209,12 @@ impl Game {
             .iter()
             .filter(|mage| mage.is_alive() && mage.team == self.turn_for())
             .map(|mage| (mage, self.available_moves(mage)))
-            .map(|(mage, moves)| {
+            .flat_map(|(mage, moves)| {
                 moves
                     .iter()
                     .map(|(to, _, _)| Turn(mage.position, *to))
                     .collect::<Vec<Turn>>()
             })
-            .flatten()
             .collect::<Vec<Turn>>()
     }
 
@@ -254,8 +251,8 @@ impl Game {
                                 (self.board.height) as i8 - 1,
                             );
                         match mage.team {
-                            Team::Red => -centre_dist.length() as isize,
-                            Team::Blue => centre_dist.length() as isize,
+                            Team::Red => -centre_dist.length(),
+                            Team::Blue => centre_dist.length(),
                         }
                     })
                     .sum();
@@ -333,7 +330,7 @@ impl Game {
                             value = value.max(next_value);
                             alpha = alpha.max(value);
 
-                            best_turn = turn.clone();
+                            best_turn = *turn;
                         }
 
                         if value >= beta {
@@ -358,7 +355,7 @@ impl Game {
                             value = value.min(next_value);
                             beta = beta.min(value);
 
-                            best_turn = turn.clone();
+                            best_turn = *turn;
                         }
 
                         if value <= alpha {
@@ -520,7 +517,7 @@ impl Game {
             .iter()
             .map(|position| {
                 (
-                    self.mages.live_occupied_by(&position, mage.team.enemy()),
+                    self.mages.live_occupied_by(position, mage.team.enemy()),
                     *position,
                 )
             })
