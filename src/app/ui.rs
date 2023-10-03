@@ -170,13 +170,7 @@ impl UIElement for ButtonElement {
                 }
             }
             LabelTheme::Disabled => {
-                if self.selected {
-                    &"#005247"
-                } else if self.hovered(pointer) {
-                    &"#005247"
-                } else {
-                    &"#005247"
-                }
+                &"#005247"
             }
         };
 
