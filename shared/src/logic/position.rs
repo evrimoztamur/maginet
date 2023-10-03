@@ -66,5 +66,3 @@ impl RemZero for i8 {
         ((self % rhs) + rhs) % rhs
     }
 }
-
-

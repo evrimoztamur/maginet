@@ -60,7 +60,7 @@ async fn create_lobby(
 
     lobbies.insert(lobby_id, lobby.clone());
 
-    Json(Message::Lobby(lobby))
+    Json(Message::Lobby(Box::new(lobby)))
 }
 
 async fn get_turns_since(
@@ -75,7 +75,7 @@ async fn get_turns_since(
                 lobby.game.turns_since(since).into_iter().cloned().collect();
             Json(Message::Moves(turns_since))
         } else {
-            Json(Message::Lobby(lobby.clone()))
+            Json(Message::Lobby(Box::new(lobby.clone())))
         }
     } else {
         Json(Message::LobbyError(LobbyError(
@@ -88,7 +88,7 @@ async fn get_state(State(state): State<AppState>, Path(id): Path<u16>) -> Json<M
     let lobbies = state.lobbies.lock().unwrap();
 
     match lobbies.get(&id) {
-        Some(lobby) => Json(Message::Lobby(lobby.clone())),
+        Some(lobby) => Json(Message::Lobby(Box::new(lobby.clone()))),
         None => Json(Message::LobbyError(LobbyError(
             "lobby does not exist".to_string(),
         ))),

@@ -2,7 +2,7 @@ use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, LobbyState, State, MenuTeleport};
+use super::{BaseState, LobbyState, MenuTeleport, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,

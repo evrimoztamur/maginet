@@ -2,11 +2,11 @@ use shared::{Board, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{LobbyState, State, MenuState};
+use super::{LobbyState, MenuState, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
-        ParticleSort, StateSort, UIElement, UIEvent, BOARD_SCALE, ParticleSystem,
+        ParticleSort, ParticleSystem, StateSort, UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{draw_board, draw_crosshair, draw_sprite},
     tuple_as,

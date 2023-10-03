@@ -169,9 +169,7 @@ impl UIElement for ButtonElement {
                     &"#006080"
                 }
             }
-            LabelTheme::Disabled => {
-                &"#005247"
-            }
+            LabelTheme::Disabled => &"#005247",
         };
 
         match self.class {

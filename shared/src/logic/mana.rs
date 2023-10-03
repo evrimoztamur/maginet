@@ -64,7 +64,7 @@ impl PartialOrd<u8> for Mana {
 
 impl From<&Mana> for u8 {
     fn from(mana: &Mana) -> Self {
-        (mana.0  & 0b1111) << 4 | mana.1 & 0b1111
+        (mana.0 & 0b1111) << 4 | mana.1 & 0b1111
     }
 }
 

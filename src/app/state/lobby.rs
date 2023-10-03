@@ -14,10 +14,7 @@ use crate::{
         LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
         UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{
-        draw_board, draw_crosshair, draw_mage, draw_mana, draw_sprite,
-        rotation_from_position,
-    },
+    draw::{draw_board, draw_crosshair, draw_mage, draw_mana, draw_sprite, rotation_from_position},
     net::{
         create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
         send_rematch, MessagePool,
@@ -273,7 +270,8 @@ impl LobbyState {
 
             // DRAW particles
 
-            self.particle_system().tick_and_draw(context, atlas, frame)?;
+            self.particle_system()
+                .tick_and_draw(context, atlas, frame)?;
 
             {
                 let board_offset = self.board_offset();
@@ -606,7 +604,7 @@ impl LobbyState {
                     }
                 }
                 Message::Lobby(lobby) => {
-                    self.lobby = lobby.clone();
+                    self.lobby = *lobby.clone();
                     self.board_dirty = true;
 
                     if let Ok(lobby_id) = self.lobby_id() {

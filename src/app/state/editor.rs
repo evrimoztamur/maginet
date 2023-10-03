@@ -8,13 +8,10 @@ use super::{BaseState, PreviewState, State};
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
-        LabelTrim, Particle, ParticleSort, StateSort, ToggleButtonElement, UIElement, UIEvent,
-        BOARD_SCALE, ParticleSystem,
+        LabelTrim, Particle, ParticleSort, ParticleSystem, StateSort, ToggleButtonElement,
+        UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{
-        draw_board, draw_crosshair, draw_mage, draw_mana, draw_spell_pattern,
-        draw_sprite,
-    },
+    draw::{draw_board, draw_crosshair, draw_mage, draw_mana, draw_spell_pattern, draw_sprite},
     tuple_as,
 };
 
@@ -655,65 +652,77 @@ impl State for EditorState {
             }
         } else if let Some(UIEvent::ButtonClick(value)) = self.mage_interface.tick(pointer) {
             match value {
-                BUTTON_TEAM_LEFT => if let EditorSelection::Tile(position) = self.selection {
-                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                        selected_mage.team = selected_mage.team.enemy();
+                BUTTON_TEAM_LEFT => {
+                    if let EditorSelection::Tile(position) = self.selection {
+                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                            selected_mage.team = selected_mage.team.enemy();
+                        }
                     }
-                },
-                BUTTON_TEAM_RIGHT => if let EditorSelection::Tile(position) = self.selection {
-                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                        selected_mage.team = selected_mage.team.enemy();
+                }
+                BUTTON_TEAM_RIGHT => {
+                    if let EditorSelection::Tile(position) = self.selection {
+                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                            selected_mage.team = selected_mage.team.enemy();
+                        }
                     }
-                },
-                BUTTON_SPELL_LEFT => if let EditorSelection::Tile(position) = self.selection {
-                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                        *selected_mage = Mage::new(
-                            selected_mage.index,
-                            selected_mage.team,
-                            selected_mage.sort.previous(),
-                            selected_mage.position,
-                        );
+                }
+                BUTTON_SPELL_LEFT => {
+                    if let EditorSelection::Tile(position) = self.selection {
+                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                            *selected_mage = Mage::new(
+                                selected_mage.index,
+                                selected_mage.team,
+                                selected_mage.sort.previous(),
+                                selected_mage.position,
+                            );
+                        }
                     }
-                },
-                BUTTON_SPELL_RIGHT => if let EditorSelection::Tile(position) = self.selection {
-                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                        *selected_mage = Mage::new(
-                            selected_mage.index,
-                            selected_mage.team,
-                            selected_mage.sort.next(),
-                            selected_mage.position,
-                        );
+                }
+                BUTTON_SPELL_RIGHT => {
+                    if let EditorSelection::Tile(position) = self.selection {
+                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                            *selected_mage = Mage::new(
+                                selected_mage.index,
+                                selected_mage.team,
+                                selected_mage.sort.next(),
+                                selected_mage.position,
+                            );
+                        }
                     }
-                },
-                BUTTON_MANA_LEFT => if let EditorSelection::Tile(position) = self.selection {
-                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                        selected_mage.mana -= 1;
+                }
+                BUTTON_MANA_LEFT => {
+                    if let EditorSelection::Tile(position) = self.selection {
+                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                            selected_mage.mana -= 1;
+                        }
                     }
-                },
-                BUTTON_MANA_RIGHT => if let EditorSelection::Tile(position) = self.selection {
-                    if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                        selected_mage.mana += 1;
+                }
+                BUTTON_MANA_RIGHT => {
+                    if let EditorSelection::Tile(position) = self.selection {
+                        if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
+                            selected_mage.mana += 1;
+                        }
                     }
-                },
-                BUTTON_DELETE => if let EditorSelection::Tile(position) = self.selection {
-                    self.level
-                        .mages
-                        .retain(|mage| mage.position != position);
+                }
+                BUTTON_DELETE => {
+                    if let EditorSelection::Tile(position) = self.selection {
+                        self.level.mages.retain(|mage| mage.position != position);
 
-                    for _ in 0..40 {
-                        let d = js_sys::Math::random() * std::f64::consts::TAU;
-                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                        self.particle_system.add(Particle::new(
-                            (
-                                position.0 as f64 + d.cos() * 1.25,
-                                position.1 as f64 + d.sin() * 1.25,
-                            ),
-                            (-d.cos() * v, -d.sin() * v),
-                            (js_sys::Math::random() * 20.0) as u64,
-                            ParticleSort::Missile,
-                        ));
+                        for _ in 0..40 {
+                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                            self.particle_system.add(Particle::new(
+                                (
+                                    position.0 as f64 + d.cos() * 1.25,
+                                    position.1 as f64 + d.sin() * 1.25,
+                                ),
+                                (-d.cos() * v, -d.sin() * v),
+                                (js_sys::Math::random() * 20.0) as u64,
+                                ParticleSort::Missile,
+                            ));
+                        }
                     }
-                },
+                }
                 _ => (),
             }
         } else if let Some(selected_tile) = self.level.board.location_as_position(

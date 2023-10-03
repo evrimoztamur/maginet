@@ -156,11 +156,15 @@ impl Mages for Vec<Mage> {
     }
 
     fn live_occupant(&self, position: &Position) -> Option<&Mage> {
-        self.iter().filter(|mage| mage.is_alive()).find(|&mage| mage.position == *position)
+        self.iter()
+            .filter(|mage| mage.is_alive())
+            .find(|&mage| mage.position == *position)
     }
 
     fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
-        self.iter_mut().filter(|mage| mage.is_alive()).find(|mage| mage.position == *position)
+        self.iter_mut()
+            .filter(|mage| mage.is_alive())
+            .find(|mage| mage.position == *position)
     }
 
     fn live_occupied(&self, position: &Position) -> bool {
