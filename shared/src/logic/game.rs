@@ -6,7 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Level, Mage, Mages, Position, Team, Turn};
+use crate::{Level, Mage, Mages, Position, Team, Turn};
 
 /// Leaf node for use in search algorithms.
 pub struct TurnLeaf(pub Turn, pub isize);
@@ -44,11 +44,9 @@ pub enum GameResult {
 /// From a given [`Board`] and list of [`Turn`], the exact same [`Game`] must be reached.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Game {
+    level_prototype: Level,
     level: Level,
-    board: Board,
-    mages: Vec<Mage>,
     turns: Vec<Turn>,
-    starting_team: Team,
     last_nominal: usize,
     available_turns: Vec<Turn>,
     can_stalemate: bool,
@@ -57,18 +55,13 @@ pub struct Game {
 impl Game {
     /// Instantiates the [`Game`] `struct` with a given board size (always 8-by-8) and number of mages (always 4)]
     pub fn new(level: &Level, can_stalemate: bool) -> Result<Game, &'static str> {
-        let board = Board::new(level.board.width, level.board.height)?;
-        let mages = level.mages.clone();
-        let starting_team = level.starting_team;
         let turns = Vec::new();
         let last_nominal = 0;
 
         let mut game = Game {
+            level_prototype: level.clone(),
             level: level.clone(),
-            board,
-            mages,
             turns,
-            starting_team,
             last_nominal,
             available_turns: Vec::new(),
             can_stalemate,
@@ -89,7 +82,7 @@ impl Game {
         if self.can_stalemate {
             let gap = self
                 .turns()
-                .saturating_sub(self.last_nominal.max(self.mages.len() * 3));
+                .saturating_sub(self.last_nominal.max(self.level.mages.len() * 3));
             let gap_passed = gap > 8;
 
             (gap_passed, gap)
@@ -101,8 +94,7 @@ impl Game {
     /// Determines if the game is finished.
     pub fn result(&self) -> Option<GameResult> {
         if self.available_turns.is_empty() || self.stalemate().0 {
-            let mana_diff: isize = self
-                .mages
+            let mana_diff: isize = self.level.mages
                 .iter()
                 .map(|mage| match mage.team {
                     Team::Red => mage.mana.0 as isize,
@@ -132,17 +124,17 @@ impl Game {
 
     /// Returns an iterator over all [`Mage`]s.
     pub fn iter_mages(&self) -> std::slice::Iter<Mage> {
-        self.mages.iter()
+        self.level.mages.iter()
     }
 
     /// Returns a reference to a [`Mage`] of a certain index.
     pub fn get_mage(&self, index: usize) -> Option<&Mage> {
-        self.mages.get(index)
+        self.level.mages.get(index)
     }
 
     /// Returns a mutable reference to a [`Mage`] of a certain index.
     pub fn get_mage_mut(&mut self, index: usize) -> Option<&mut Mage> {
-        self.mages.get_mut(index)
+        self.level.mages.get_mut(index)
     }
 
     /// Returns the number of turns since the start of the game, starting from 0.
@@ -163,7 +155,7 @@ impl Game {
             Team::Blue
         };
 
-        if self.starting_team == Team::Red {
+        if self.level.starting_team == Team::Red {
             team
         } else {
             team.enemy()
@@ -172,7 +164,7 @@ impl Game {
 
     /// Returns the [`Team`] which makes the first move.
     pub fn starting_team(&self) -> Team {
-        self.starting_team
+        self.level.starting_team
     }
 
     /// Returns a list of all available [`Position`]s a [`Mage`] can move to, including metadata on the direction and whether or not it's a diagonal.
@@ -192,10 +184,10 @@ impl Game {
 
         for (dir, diagonal) in DIRS {
             let position = &mage.position + &dir;
-            // let position = position.wrap(self.board.width as i8, self.board.height as i8);
+            // let position = position.wrap(self.level.board.width as i8, self.level.board.height as i8);
 
-            if let Some(position) = self.board.validate_position(position) {
-                if !(self.mages.occupied(&position) || diagonal && !mage.has_diagonals()) {
+            if let Some(position) = self.level.board.validate_position(position) {
+                if !(self.level.mages.occupied(&position) || diagonal && !mage.has_diagonals()) {
                     moves.push((position, dir, diagonal));
                 }
             }
@@ -205,7 +197,7 @@ impl Game {
     }
 
     fn generate_available_turns(&self) -> Vec<Turn> {
-        self.mages
+        self.level.mages
             .iter()
             .filter(|mage| mage.is_alive() && mage.team == self.turn_for())
             .map(|mage| (mage, self.available_moves(mage)))
@@ -220,7 +212,7 @@ impl Game {
 
     /// Evaluates the difference in total mana for both teams, where a positive evaluation is in favour of the red team.
     pub fn mana_difference(&self) -> isize {
-        self.mages
+        self.level.mages
             .iter()
             .map(|mage| match mage.team {
                 Team::Red => mage.mana.0 as isize,
@@ -240,15 +232,14 @@ impl Game {
                 GameResult::Stalemate => 0,
             },
             None => {
-                let pos_adv: isize = self
-                    .mages
+                let pos_adv: isize = self.level.mages
                     .iter()
                     .filter(|mage| mage.is_alive())
                     .map(|mage| {
                         let centre_dist = &Position(mage.position.0 * 2, mage.position.1 * 2)
                             - &Position(
-                                (self.board.width) as i8 - 1,
-                                (self.board.height) as i8 - 1,
+                                (self.level.board.width) as i8 - 1,
+                                (self.level.board.height) as i8 - 1,
                             );
                         match mage.team {
                             Team::Red => -centre_dist.length(),
@@ -281,7 +272,7 @@ impl Game {
     /// Returns the best [`Turn`] available and its evaluation.
     pub fn best_turn_auto(&self, seed: u64) -> Option<TurnLeaf> {
         if self.result().is_none() {
-            let alive_mages = self.mages.iter().filter(|mage| mage.is_alive()).count();
+            let alive_mages = self.level.mages.iter().filter(|mage| mage.is_alive()).count();
 
             Some(self.pvs(
                 4 + (2usize.saturating_sub(alive_mages) / 3),
@@ -444,14 +435,14 @@ impl Game {
     /// Executes a [`Turn`], modifying the game state.
     pub fn take_move(&mut self, from: Position, to: Position) -> Option<Vec<Position>> {
         if self.result().is_none() {
-            if let Some(mage) = self.mages.live_occupant(&from) {
+            if let Some(mage) = self.level.mages.live_occupant(&from) {
                 if mage.team == self.turn_for() {
                     let available_moves = self.available_moves(mage);
                     let potential_move = available_moves
                         .iter()
                         .find(|(position, _, _)| *position == to);
 
-                    let mage = self.mages.live_occupant_mut(&from).unwrap();
+                    let mage = self.level.mages.live_occupant_mut(&from).unwrap();
 
                     if let Some((to, _, _)) = potential_move {
                         mage.position = *to;
@@ -477,7 +468,7 @@ impl Game {
     /// Executes a [`Turn`], modifying the game state.
     pub fn try_move(&mut self, from: Position, to: Position) -> bool {
         if self.result().is_none() {
-            if let Some(mage) = self.mages.live_occupant(&from) {
+            if let Some(mage) = self.level.mages.live_occupant(&from) {
                 if mage.team == self.turn_for() {
                     let available_moves = self.available_moves(mage);
                     let potential_move = available_moves
@@ -497,12 +488,12 @@ impl Game {
     pub fn attack(&mut self, at: Position) -> Vec<Position> {
         let mut hits = Vec::new();
 
-        if let Some(active_mage) = self.mages.live_occupant(&at) {
+        if let Some(active_mage) = self.level.mages.live_occupant(&at) {
             let targets = self.targets(active_mage, at);
 
             for (is_enemy, tile) in targets {
                 if is_enemy {
-                    self.mages.live_occupant_mut(&tile).unwrap().mana -= 1;
+                    self.level.mages.live_occupant_mut(&tile).unwrap().mana -= 1;
                     hits.push(tile);
                 }
             }
@@ -513,11 +504,11 @@ impl Game {
 
     /// Returns the list of targets a [`Mage`] can attack to on a certain [`Position`].
     pub fn targets(&self, mage: &Mage, at: Position) -> Vec<(bool, Position)> {
-        mage.targets(&self.board, &at)
+        mage.targets(&self.level.board, &at)
             .iter()
             .map(|position| {
                 (
-                    self.mages.live_occupied_by(position, mage.team.enemy()),
+                    self.level.mages.live_occupied_by(position, mage.team.enemy()),
                     *position,
                 )
             })
@@ -526,7 +517,7 @@ impl Game {
 
     /// Returns the [`Board`]'s size as an `usize` tuple.
     pub fn board_size(&self) -> (usize, usize) {
-        (self.board.width, self.board.height)
+        (self.level.board.width, self.level.board.height)
     }
 
     /// Converts a canvas location to a board [`Position`].
@@ -536,13 +527,13 @@ impl Game {
         offset: (i32, i32),
         scale: (i32, i32),
     ) -> Option<Position> {
-        self.board.location_as_position(location, offset, scale)
+        self.level.board.location_as_position(location, offset, scale)
     }
 
     /// Rewinds the [`Game`] by `delta` turns.
     /// Works via replicating the game from the initial [`Level`] with its [`Turn`] history.
     pub fn rewind(&self, delta: usize) -> Game {
-        let mut rewinded_game = Game::new(&self.level, self.can_stalemate).unwrap();
+        let mut rewinded_game = Game::new(&self.level_prototype, self.can_stalemate).unwrap();
         let turn_toward = self.turns().saturating_sub(delta);
 
         for Turn(from, to) in self.turns.iter().take(turn_toward) {
@@ -555,30 +546,30 @@ impl Game {
 
 impl Mages for Game {
     fn occupant(&self, position: &Position) -> Option<&Mage> {
-        self.mages.occupant(position)
+        self.level.mages.occupant(position)
     }
 
     fn occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
-        self.mages.occupant_mut(position)
+        self.level.mages.occupant_mut(position)
     }
 
     fn occupied(&self, position: &Position) -> bool {
-        self.mages.occupied(position)
+        self.level.mages.occupied(position)
     }
 
     fn live_occupant(&self, position: &Position) -> Option<&Mage> {
-        self.mages.live_occupant(position)
+        self.level.mages.live_occupant(position)
     }
 
     fn live_occupant_mut(&mut self, position: &Position) -> Option<&mut Mage> {
-        self.mages.live_occupant_mut(position)
+        self.level.mages.live_occupant_mut(position)
     }
 
     fn live_occupied(&self, position: &Position) -> bool {
-        self.mages.live_occupied(position)
+        self.level.mages.live_occupied(position)
     }
 
     fn live_occupied_by(&self, position: &Position, team: Team) -> bool {
-        self.mages.live_occupied_by(position, team)
+        self.level.mages.live_occupied_by(position, team)
     }
 }
