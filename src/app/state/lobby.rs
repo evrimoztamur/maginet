@@ -1,8 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use shared::{
-    GameResult, Level, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage,
-    Mages, Message, Position, Team, Turn, TurnLeaf,
+    GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
+    Message, Position, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
@@ -827,15 +827,10 @@ impl State for LobbyState {
                     }
                     BUTTON_LEAVE => match &self.lobby.settings {
                         LobbySettings {
-                            loadout_method: LoadoutMethod::EditorPrefab(mages),
-                            board,
+                            loadout_method: LoadoutMethod::EditorPrefab(level),
                             ..
                         } => {
-                            return Some(StateSort::Editor(EditorState::new(Level::new(
-                                board.clone(),
-                                mages.clone(),
-                                Team::Red,
-                            ))));
+                            return Some(StateSort::Editor(EditorState::new(level.clone())));
                         }
                         _ => return Some(StateSort::MenuMain(MenuState::default())),
                     },

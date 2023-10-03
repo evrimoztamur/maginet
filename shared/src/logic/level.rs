@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use data_encoding::Encoding;
 use data_encoding_macro::new_encoding;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Game, Mage, Team, Turn, TurnLeaf};
+use crate::{Board, Game, Mage, Position, PowerUp, Team, Turn, TurnLeaf};
 
 /// Base 32 (Crockford) encoding for levels.
 pub const BASE32: Encoding = new_encoding! {
@@ -19,13 +21,20 @@ pub struct Level {
     pub mages: Vec<Mage>,
     /// Number of mages.
     pub mage_index: usize,
+    /// Level's power-ups as as [`HashMap<Position, PowerUp>`].
+    pub powerups: HashMap<Position, PowerUp>,
     /// Level's starting [`Team`].
     pub starting_team: Team,
 }
 
 impl Level {
     /// Instantiates a new [`Level`].
-    pub fn new(board: Board, mut mages: Vec<Mage>, starting_team: Team) -> Level {
+    pub fn new(
+        board: Board,
+        mut mages: Vec<Mage>,
+        powerups: HashMap<Position, PowerUp>,
+        starting_team: Team,
+    ) -> Level {
         mages = mages
             .iter_mut()
             .enumerate()
@@ -34,12 +43,19 @@ impl Level {
                 mage.clone()
             })
             .collect();
+
         Level {
             board,
             mage_index: mages.len(),
             mages,
+            powerups,
             starting_team,
         }
+    }
+
+    /// Instantiates a new [`Level`] with default parameters but provided mages.
+    pub fn default_with_mages(mut mages: Vec<Mage>) -> Level {
+        Level::new(Board::default(), mages, HashMap::default(), Team::default())
     }
 
     /// Simulated `n` games and yields results.
@@ -115,7 +131,9 @@ impl From<Vec<u8>> for Level {
                 .map(|chunk| chunk.cloned().collect::<Vec<u8>>().into())
                 .collect();
 
-            Level::new(board, mages, starting_team)
+            todo!("implement serde for `HashMap<Position, PowerUp>``");
+
+            // Level::new(board, mages, starting_team)
         } else {
             Level::default()
         }

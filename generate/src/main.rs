@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use rayon::prelude::*;
 use shared::{Board, Level, Mage, Team};
 
@@ -32,7 +34,7 @@ fn generate_levels() -> Vec<Level> {
                     shared::Position(3, 3),
                 ),
             ];
-            Level::new(board, mages, Team::Red)
+            Level::new(board, mages, HashMap::default(), Team::Red)
         })
         .collect()
 }

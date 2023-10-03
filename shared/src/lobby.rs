@@ -68,91 +68,12 @@ impl Lobby {
         let mut rng = ChaCha8Rng::seed_from_u64(settings.seed);
 
         Lobby {
-            game: Game::new(
-                &Level::new(
-                    Board::new(settings.board.width, settings.board.height).unwrap(),
-                    Lobby::select_loadouts(&settings, &mut rng),
-                    Lobby::random_team(&mut rng),
-                ),
-                settings.can_stalemate,
-            )
-            .expect("game should be instantiable with default values"),
+            game: Game::new(&settings.level(&mut rng), settings.can_stalemate)
+                .expect("game should be instantiable with default values"),
             players: HashMap::new(),
             player_slots: VecDeque::from([Player::new(Team::Red), Player::new(Team::Blue)]),
             ticks: 0,
             settings,
-        }
-    }
-
-    fn generate_loadout_by_sorts(
-        board: &Board,
-        red_mage_sorts: Vec<MageSort>,
-        blue_mage_sorts: Vec<MageSort>,
-    ) -> Vec<Mage> {
-        let mut mages = Vec::with_capacity(red_mage_sorts.len() + blue_mage_sorts.len());
-
-        mages.append(&mut board.place_mages(Team::Red, red_mage_sorts, 0));
-        mages.append(&mut board.place_mages(Team::Blue, blue_mage_sorts, mages.len()));
-
-        mages
-    }
-
-    fn select_loadouts(lobby_settings: &LobbySettings, rng: &mut ChaCha8Rng) -> Vec<Mage> {
-        let mut mages = match &lobby_settings.loadout_method {
-            LoadoutMethod::Default => Self::generate_loadout_by_sorts(
-                lobby_settings.board(),
-                Lobby::default_loadout(),
-                Lobby::default_loadout(),
-            ),
-            LoadoutMethod::Manual => todo!(),
-            LoadoutMethod::Random { symmetric } => {
-                if *symmetric {
-                    let loadout = Lobby::random_loadout(rng);
-
-                    Self::generate_loadout_by_sorts(
-                        lobby_settings.board(),
-                        loadout.clone(),
-                        loadout,
-                    )
-                } else {
-                    Self::generate_loadout_by_sorts(
-                        lobby_settings.board(),
-                        Lobby::random_loadout(rng),
-                        Lobby::random_loadout(rng),
-                    )
-                }
-            }
-            LoadoutMethod::Prefab(mages) | LoadoutMethod::EditorPrefab(mages) => mages.clone(),
-        };
-
-        for (i, mage) in mages.iter_mut().enumerate() {
-            mage.index = i;
-        }
-
-        mages
-    }
-
-    fn default_loadout() -> Vec<MageSort> {
-        vec![
-            MageSort::Diamond,
-            MageSort::Spike,
-            MageSort::Knight,
-            MageSort::Cross,
-        ]
-    }
-
-    fn random_loadout(rng: &mut ChaCha8Rng) -> Vec<MageSort> {
-        (0..4)
-            .map(|_| ((rng.next_u64() % 4) as usize).into())
-            .collect::<Vec<MageSort>>()
-    }
-
-    fn random_team(rng: &mut ChaCha8Rng) -> Team {
-        if true {
-            // || rng.next_u32() % 2 == 0
-            Team::Red
-        } else {
-            Team::Blue
         }
     }
 
@@ -314,22 +235,22 @@ impl Lobby {
 }
 
 /// Loadout methods.
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub enum LoadoutMethod {
     /// Choose the default order.
     #[default]
     Default,
-    /// Choose wizards manually.
-    Manual,
+    /// Default order with board.
+    DefaultBoard(Board),
     /// Choose wizards randomly.
     Random {
         /// Assign random sets to all players, or the same random set to all.
         symmetric: bool,
     },
     /// A pre-fabricated list of mages.
-    Prefab(Vec<Mage>),
+    Prefab(Level),
     /// A pre-fabricated list of mages from the editor.
-    EditorPrefab(Vec<Mage>),
+    EditorPrefab(Level),
 }
 
 /// Loadout methods.
@@ -363,15 +284,72 @@ pub struct LobbySettings {
     pub loadout_method: LoadoutMethod,
     /// Seed for RNG.
     pub seed: u64,
-    /// Board.
-    pub board: Board,
     /// Can stalemate
     pub can_stalemate: bool,
 }
 
 impl LobbySettings {
-    fn board(&self) -> &Board {
-        &self.board
+    fn generate_loadout_by_sorts(
+        board: &Board,
+        red_mage_sorts: Vec<MageSort>,
+        blue_mage_sorts: Vec<MageSort>,
+    ) -> Vec<Mage> {
+        let mut mages = Vec::with_capacity(red_mage_sorts.len() + blue_mage_sorts.len());
+
+        mages.append(&mut board.place_mages(Team::Red, red_mage_sorts, 0));
+        mages.append(&mut board.place_mages(Team::Blue, blue_mage_sorts, mages.len()));
+
+        mages
+    }
+
+    fn default_loadout() -> Vec<MageSort> {
+        vec![
+            MageSort::Diamond,
+            MageSort::Spike,
+            MageSort::Knight,
+            MageSort::Cross,
+        ]
+    }
+
+    fn random_loadout(rng: &mut ChaCha8Rng) -> Vec<MageSort> {
+        (0..4)
+            .map(|_| ((rng.next_u64() % 4) as usize).into())
+            .collect::<Vec<MageSort>>()
+    }
+
+    fn level(&self, rng: &mut ChaCha8Rng) -> Level {
+        match &self.loadout_method {
+            LoadoutMethod::Default => Level::default_with_mages(Self::generate_loadout_by_sorts(
+                &Board::default(),
+                Self::default_loadout(),
+                Self::default_loadout(),
+            )),
+            LoadoutMethod::DefaultBoard(board) => {
+                Level::default_with_mages(Self::generate_loadout_by_sorts(
+                    board,
+                    Self::default_loadout(),
+                    Self::default_loadout(),
+                ))
+            }
+            LoadoutMethod::Random { symmetric } => {
+                if *symmetric {
+                    let loadout = Self::random_loadout(rng);
+
+                    Level::default_with_mages(Self::generate_loadout_by_sorts(
+                        &Board::default(),
+                        loadout.clone(),
+                        loadout,
+                    ))
+                } else {
+                    Level::default_with_mages(Self::generate_loadout_by_sorts(
+                        &Board::default(),
+                        Self::random_loadout(rng),
+                        Self::random_loadout(rng),
+                    ))
+                }
+            }
+            LoadoutMethod::Prefab(level) | LoadoutMethod::EditorPrefab(level) => level.clone(),
+        }
     }
 }
 
@@ -381,7 +359,6 @@ impl Default for LobbySettings {
             lobby_sort: Default::default(),
             loadout_method: Default::default(),
             seed: Default::default(),
-            board: Default::default(),
             can_stalemate: true,
         }
     }

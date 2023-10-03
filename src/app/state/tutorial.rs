@@ -257,9 +257,8 @@ impl Default for TutorialState {
         TutorialState {
             game_state: LobbyState::new(LobbySettings {
                 lobby_sort: LobbySort::LocalAI,
-                loadout_method: LoadoutMethod::Prefab(level.mages),
+                loadout_method: LoadoutMethod::Prefab(level),
                 seed: window().performance().unwrap().now() as u64,
-                board: level.board,
                 can_stalemate: false,
             }),
             tutorial_stage: TutorialStage::Movement,

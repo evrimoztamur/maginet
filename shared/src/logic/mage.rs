@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Mana, Position, Spell, Team};
-
-const DIAGONALS_THRESHOLD: u8 = 1;
+use crate::{Board, Mana, Position, PowerUp, Spell, Team};
 
 /// A [`MageSort`] is the distinct type of the mage, determining its visual appearance and spell.
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
@@ -76,6 +74,8 @@ pub struct Mage {
     pub team: Team,
     /// [`Spell`] of the mage.
     pub spell: Spell,
+    /// [`PowerUp`] of the mage.
+    pub powerup: Option<PowerUp>,
 }
 
 impl PartialEq for Mage {
@@ -94,6 +94,7 @@ impl Mage {
             team,
             mana: Mana::select(sort),
             spell: Spell::select(sort),
+            powerup: None,
         }
     }
 
@@ -104,7 +105,12 @@ impl Mage {
 
     /// Determines if the [`Mage`] has access to the diagonal moves.
     pub fn has_diagonals(&self) -> bool {
-        self.mana <= DIAGONALS_THRESHOLD
+        self.powerup == Some(PowerUp::Diagonal)
+    }
+
+    /// Determines if the [`Mage`] is in defensive mode.
+    pub fn is_defensive(&self) -> bool {
+        self.powerup == Some(PowerUp::Shield)
     }
 
     /// Returns the list of targets a [`Mage`] can attack to on a certain [`Position`].

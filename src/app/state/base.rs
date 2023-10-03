@@ -158,9 +158,8 @@ impl Default for BaseState {
             button_reset,
             preview_state: LobbyState::new(LobbySettings {
                 lobby_sort: LobbySort::Local,
-                loadout_method: LoadoutMethod::Default,
+                loadout_method: LoadoutMethod::DefaultBoard(Board::new(6, 7).unwrap()),
                 seed: window().performance().unwrap().now() as u64,
-                board: Board::new(6, 7).unwrap(),
                 can_stalemate: true,
             }),
         }

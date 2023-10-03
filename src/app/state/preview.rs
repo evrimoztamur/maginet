@@ -1,4 +1,4 @@
-use shared::{Level, LobbySettings, Mage, Team};
+use shared::{Level, LobbySettings, Mage};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
@@ -188,39 +188,26 @@ impl State for PreviewState {
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
                 BUTTON_BACK => {
-                    return Some(StateSort::Editor(EditorState::new(Level::new(
-                        self.level.board.clone(),
-                        self.level.mages.clone(),
-                        Team::Red,
-                    ))));
+                    return Some(StateSort::Editor(EditorState::new(self.level.clone())));
                 }
                 BUTTON_LOCAL => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Local,
-                        loadout_method: shared::LoadoutMethod::EditorPrefab(
-                            self.level.mages.clone(),
-                        ),
-                        board: self.level.board.clone(),
+                        loadout_method: shared::LoadoutMethod::EditorPrefab(self.level.clone()),
                         ..Default::default()
                     })));
                 }
                 BUTTON_VS_AI => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
                         lobby_sort: shared::LobbySort::LocalAI,
-                        loadout_method: shared::LoadoutMethod::EditorPrefab(
-                            self.level.mages.clone(),
-                        ),
-                        board: self.level.board.clone(),
+                        loadout_method: shared::LoadoutMethod::EditorPrefab(self.level.clone()),
                         ..Default::default()
                     })));
                 }
                 BUTTON_ONLINE => {
                     return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Online(0),
-                        loadout_method: shared::LoadoutMethod::EditorPrefab(
-                            self.level.mages.clone(),
-                        ),
-                        board: self.level.board.clone(),
+                        loadout_method: shared::LoadoutMethod::EditorPrefab(self.level.clone()),
                         ..Default::default()
                     })));
                 }
