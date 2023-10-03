@@ -48,13 +48,17 @@ impl Level {
             board,
             mage_index: mages.len(),
             mages,
-            powerups,
+            powerups: HashMap::from([
+                (Position(1, 3), PowerUp::Shield),
+                (Position(2, 3), PowerUp::Beam),
+                (Position(3, 3), PowerUp::Diagonal)
+                ]),
             starting_team,
         }
     }
 
     /// Instantiates a new [`Level`] with default parameters but provided mages.
-    pub fn default_with_mages(mut mages: Vec<Mage>) -> Level {
+    pub fn default_with_mages(mages: Vec<Mage>) -> Level {
         Level::new(Board::default(), mages, HashMap::default(), Team::default())
     }
 

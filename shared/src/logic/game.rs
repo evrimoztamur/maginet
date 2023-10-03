@@ -1,4 +1,4 @@
-use std::ops::Neg;
+use std::{collections::HashMap, ops::Neg};
 
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},
@@ -6,7 +6,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Level, Mage, Mages, Position, Team, Turn};
+use crate::{Level, Mage, Mages, Position, PowerUp, Team, Turn};
 
 /// Leaf node for use in search algorithms.
 pub struct TurnLeaf(pub Turn, pub isize);
@@ -94,7 +94,9 @@ impl Game {
     /// Determines if the game is finished.
     pub fn result(&self) -> Option<GameResult> {
         if self.available_turns.is_empty() || self.stalemate().0 {
-            let mana_diff: isize = self.level.mages
+            let mana_diff: isize = self
+                .level
+                .mages
                 .iter()
                 .map(|mage| match mage.team {
                     Team::Red => mage.mana.0 as isize,
@@ -135,6 +137,11 @@ impl Game {
     /// Returns a mutable reference to a [`Mage`] of a certain index.
     pub fn get_mage_mut(&mut self, index: usize) -> Option<&mut Mage> {
         self.level.mages.get_mut(index)
+    }
+
+    /// Returns an iterator over all [`PowerUp`]s.
+    pub fn powerups(&self) -> &HashMap<Position, PowerUp> {
+        &self.level.powerups
     }
 
     /// Returns the number of turns since the start of the game, starting from 0.
@@ -197,7 +204,8 @@ impl Game {
     }
 
     fn generate_available_turns(&self) -> Vec<Turn> {
-        self.level.mages
+        self.level
+            .mages
             .iter()
             .filter(|mage| mage.is_alive() && mage.team == self.turn_for())
             .map(|mage| (mage, self.available_moves(mage)))
@@ -212,7 +220,8 @@ impl Game {
 
     /// Evaluates the difference in total mana for both teams, where a positive evaluation is in favour of the red team.
     pub fn mana_difference(&self) -> isize {
-        self.level.mages
+        self.level
+            .mages
             .iter()
             .map(|mage| match mage.team {
                 Team::Red => mage.mana.0 as isize,
@@ -232,7 +241,9 @@ impl Game {
                 GameResult::Stalemate => 0,
             },
             None => {
-                let pos_adv: isize = self.level.mages
+                let pos_adv: isize = self
+                    .level
+                    .mages
                     .iter()
                     .filter(|mage| mage.is_alive())
                     .map(|mage| {
@@ -272,7 +283,12 @@ impl Game {
     /// Returns the best [`Turn`] available and its evaluation.
     pub fn best_turn_auto(&self, seed: u64) -> Option<TurnLeaf> {
         if self.result().is_none() {
-            let alive_mages = self.level.mages.iter().filter(|mage| mage.is_alive()).count();
+            let alive_mages = self
+                .level
+                .mages
+                .iter()
+                .filter(|mage| mage.is_alive())
+                .count();
 
             Some(self.pvs(
                 4 + (2usize.saturating_sub(alive_mages) / 3),
@@ -508,7 +524,9 @@ impl Game {
             .iter()
             .map(|position| {
                 (
-                    self.level.mages.live_occupied_by(position, mage.team.enemy()),
+                    self.level
+                        .mages
+                        .live_occupied_by(position, mage.team.enemy()),
                     *position,
                 )
             })
@@ -527,7 +545,9 @@ impl Game {
         offset: (i32, i32),
         scale: (i32, i32),
     ) -> Option<Position> {
-        self.level.board.location_as_position(location, offset, scale)
+        self.level
+            .board
+            .location_as_position(location, offset, scale)
     }
 
     /// Rewinds the [`Game`] by `delta` turns.

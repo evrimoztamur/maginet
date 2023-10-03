@@ -324,13 +324,16 @@ impl LobbySettings {
                 Self::default_loadout(),
                 Self::default_loadout(),
             )),
-            LoadoutMethod::DefaultBoard(board) => {
-                Level::default_with_mages(Self::generate_loadout_by_sorts(
+            LoadoutMethod::DefaultBoard(board) => Level::new(
+                board.clone(),
+                Self::generate_loadout_by_sorts(
                     board,
                     Self::default_loadout(),
                     Self::default_loadout(),
-                ))
-            }
+                ),
+                HashMap::default(),
+                Team::default(),
+            ),
             LoadoutMethod::Random { symmetric } => {
                 if *symmetric {
                     let loadout = Self::random_loadout(rng);

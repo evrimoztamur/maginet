@@ -14,7 +14,10 @@ use crate::{
         LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
         UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{draw_board, draw_crosshair, draw_mage, draw_mana, draw_sprite, rotation_from_position},
+    draw::{
+        draw_board, draw_crosshair, draw_mage, draw_mana, draw_powerup, draw_sprite,
+        rotation_from_position,
+    },
     net::{
         create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
         send_rematch, MessagePool,
@@ -446,6 +449,20 @@ impl LobbyState {
                     context.restore();
                 }
 
+                // DRAW all powerups
+                for (position, powerup) in self.lobby.game.powerups() {
+                    context.save();
+
+                    context.translate(
+                        16.0 + position.0 as f64 * board_scale.0,
+                        16.0 + position.1 as f64 * board_scale.1,
+                    )?;
+                    draw_powerup(context, atlas, powerup, frame)?;
+
+                    context.restore();
+                }
+
+                // DRAW mana bars for all mages
                 for mage in &mage_heap {
                     context.save();
 

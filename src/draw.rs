@@ -1,4 +1,6 @@
-use shared::{GameResult, Mage, Position, Team};
+use std::f64::consts::PI;
+
+use shared::{GameResult, Mage, Position, PowerUp, Team};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
@@ -317,6 +319,63 @@ pub fn draw_spell_pattern(
             position.1 as f64 * 8.0 + 16.0,
         )?;
     }
+
+    Ok(())
+}
+
+pub fn draw_powerup(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlCanvasElement,
+    powerup: &PowerUp,
+    frame: u64,
+) -> Result<(), JsValue> {
+    context.save();
+
+    // draw_sprite(context, atlas, 0.0, 208.0, 32.0, 16.0, -16.0, -4.0)?;
+
+    let sprite = match powerup {
+        PowerUp::Shield => (32.0, 288.0),
+        PowerUp::Beam => (96.0, 288.0),
+        PowerUp::Diagonal => (64.0, 288.0),
+    };
+
+    let t = (frame as f64) / 10.0;
+
+    let bounce = match powerup {
+        PowerUp::Shield => {
+            let q = ((t).sin(), -(t).sin().abs());
+            ((q.0 * 3.0).floor(), (q.1 * 3.0).floor())
+        }
+        PowerUp::Beam => {
+            let q = (
+                (1.0 - (t).sin().abs()) * (t).cos().signum(),
+                (1.0 - (t + PI / 2.0).sin().abs()) * (t + PI / 2.0).cos().signum().min(0.0),
+            );
+            ((q.0 * 3.0).floor(), (q.1 * 3.0).floor())
+        }
+        PowerUp::Diagonal => {
+            let t = t / 2.0;
+            let q = (
+                (1.0 - (t + PI / 4.0).sin().abs()) * (t + PI / 4.0).cos().signum(),
+                (1.0 - (t + PI / 4.0 + PI / 2.0).sin().abs())
+                    * (t + PI / 4.0 + PI / 2.0).cos().signum(),
+            );
+            ((q.0 * 4.0).floor(), (q.1 * 4.0).floor())
+        }
+    };
+
+    draw_sprite(
+        context,
+        atlas,
+        sprite.0,
+        sprite.1,
+        32.0,
+        32.0,
+        -16.0 + bounce.0,
+        -16.0 + bounce.1,
+    )?;
+
+    context.restore();
 
     Ok(())
 }
