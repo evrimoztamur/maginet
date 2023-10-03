@@ -44,6 +44,17 @@ pub enum ParticleSort {
     Diagonals,
     RedWin,
     BlueWin,
+    Shield,
+    Beam,
+}
+impl ParticleSort {
+    pub(crate) fn for_powerup(powerup: &shared::PowerUp) -> ParticleSort {
+        match powerup {
+            shared::PowerUp::Shield => Self::Shield,
+            shared::PowerUp::Beam => Self::Beam,
+            shared::PowerUp::Diagonal => Self::Diagonals,
+        }
+    }
 }
 
 #[derive(Copy, Clone)]

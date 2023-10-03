@@ -463,6 +463,10 @@ impl Game {
                     if let Some((to, _, _)) = potential_move {
                         mage.position = *to;
 
+                        if let Some(powerup) = self.level.powerups.remove(to) {
+                            mage.powerup = Some(powerup);
+                        }
+
                         let attacks = self.attack(*to);
 
                         if !attacks.is_empty() {

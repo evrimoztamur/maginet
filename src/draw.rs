@@ -344,23 +344,22 @@ pub fn draw_powerup(
     let bounce = match powerup {
         PowerUp::Shield => {
             let q = ((t).sin(), -(t).sin().abs());
-            ((q.0 * 3.0).floor(), (q.1 * 3.0).floor())
+            ((q.0 * 3.0).round(), (q.1 * 3.0).round())
         }
         PowerUp::Beam => {
             let q = (
                 (1.0 - (t).sin().abs()) * (t).cos().signum(),
                 (1.0 - (t + PI / 2.0).sin().abs()) * (t + PI / 2.0).cos().signum().min(0.0),
             );
-            ((q.0 * 3.0).floor(), (q.1 * 3.0).floor())
+            ((q.0 * 3.0).round(), (q.1 * 5.0).round())
         }
         PowerUp::Diagonal => {
-            let t = t / 2.0;
+            let t = t + PI / 2.0;
             let q = (
-                (1.0 - (t + PI / 4.0).sin().abs()) * (t + PI / 4.0).cos().signum(),
-                (1.0 - (t + PI / 4.0 + PI / 2.0).sin().abs())
-                    * (t + PI / 4.0 + PI / 2.0).cos().signum(),
+                (1.0 - (t).sin().abs()) * (t).cos().signum(),
+                (1.0 - (t + PI / 2.0).sin().abs()) * (t + PI / 2.0).cos().signum(),
             );
-            ((q.0 * 4.0).floor(), (q.1 * 4.0).floor())
+            ((q.0 * 4.0).round(), (q.1 * 4.0).round())
         }
     };
 
@@ -418,6 +417,8 @@ pub fn draw_particle(
                 ParticleSort::Diagonals => 24.0,
                 ParticleSort::BlueWin => 48.0,
                 ParticleSort::RedWin => 72.0,
+                ParticleSort::Shield => todo!(),
+                ParticleSort::Beam => todo!(),
             }
         },
         56.0,

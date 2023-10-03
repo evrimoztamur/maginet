@@ -384,6 +384,30 @@ impl LobbyState {
             {
                 let game_started = self.lobby.all_ready() | self.lobby.is_local();
 
+                // DRAW all powerups
+                for (position, powerup) in self.lobby.game.powerups() {
+                    context.save();
+
+                    context.translate(
+                        16.0 + position.0 as f64 * board_scale.0,
+                        16.0 + position.1 as f64 * board_scale.1,
+                    )?;
+                    draw_powerup(context, atlas, powerup, frame)?;
+
+                    for _ in 0..1 {
+                        let d = js_sys::Math::random() * std::f64::consts::TAU;
+                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                        self.particle_system.add(Particle::new(
+                            (position.0 as f64, position.1 as f64),
+                            (d.cos() * v, d.sin() * v),
+                            (js_sys::Math::random() * 20.0) as u64,
+                            ParticleSort::for_powerup(powerup),
+                        ));
+                    }
+
+                    context.restore();
+                }
+
                 let mut mage_heap: Vec<&Mage> = self.lobby.game.iter_mages().collect();
                 mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
 
@@ -445,19 +469,6 @@ impl LobbyState {
                             -17.0 - (frame / 6 % 6) as f64,
                         )?;
                     }
-
-                    context.restore();
-                }
-
-                // DRAW all powerups
-                for (position, powerup) in self.lobby.game.powerups() {
-                    context.save();
-
-                    context.translate(
-                        16.0 + position.0 as f64 * board_scale.0,
-                        16.0 + position.1 as f64 * board_scale.1,
-                    )?;
-                    draw_powerup(context, atlas, powerup, frame)?;
 
                     context.restore();
                 }
