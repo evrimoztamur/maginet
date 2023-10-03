@@ -417,8 +417,8 @@ pub fn draw_particle(
                 ParticleSort::Diagonals => 24.0,
                 ParticleSort::BlueWin => 48.0,
                 ParticleSort::RedWin => 72.0,
-                ParticleSort::Shield => todo!(),
-                ParticleSort::Beam => todo!(),
+                ParticleSort::Shield => 96.0,
+                ParticleSort::Beam => 120.0,
             }
         },
         56.0,
