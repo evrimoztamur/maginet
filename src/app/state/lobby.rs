@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f64::consts::TAU, rc::Rc};
 
 use shared::{
     GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
@@ -305,6 +305,28 @@ impl LobbyState {
 
                 // DRAW markers
                 context.save();
+
+                for mage in self.lobby.game.iter_mages() {
+                    if mage.powerup == Some(PowerUp::Shield) {
+                        for (_, position) in self.lobby.game.targets(mage, mage.position) {
+                            match mage.team {
+                                Team::Red => {
+                                    draw_sprite(context, atlas, 32.0, 16.0, 16.0, 16.0, 
+                                        position.0 as f64 * 32.0 + 8.0,
+                                        position.1 as f64 * 32.0 + 8.0)?;
+                                    // draw_crosshair(context, atlas, &position, (32.0, 16.0), 1)?;
+
+                                }
+                                Team::Blue => {
+                                    draw_sprite(context, atlas, 48.0, 16.0, 16.0, 16.0, 
+                                        position.0 as f64 * 32.0 + 8.0,
+                                        position.1 as f64 * 32.0 + 8.0)?;
+                                    // draw_crosshair(context, atlas, &position, (48.0, 16.0), 1)?;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 if let Some(mage) = self.get_active_mage() {
                     let available_moves = self.lobby.game.available_moves(mage);

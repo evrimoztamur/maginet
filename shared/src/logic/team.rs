@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// An `enum` for the teams. Currently there are only two teams, red and blue.
-#[derive(PartialEq, Debug, Serialize, Deserialize, Copy, Clone, Default)]
+#[derive(PartialEq, Eq, Hash, Debug, Serialize, Deserialize, Copy, Clone, Default)]
 pub enum Team {
     /// Red team.
     #[default]
