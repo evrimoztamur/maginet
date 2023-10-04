@@ -1,6 +1,6 @@
 use std::mem;
 
-use shared::{Board, Level, Mage, Mages, Position, Team};
+use shared::{Board, Level, Mage, Mages, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
@@ -11,13 +11,17 @@ use crate::{
         LabelTrim, Particle, ParticleSort, ParticleSystem, StateSort, ToggleButtonElement,
         UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{draw_board, draw_crosshair, draw_mage, draw_mana, draw_spell_pattern, draw_sprite},
+    draw::{
+        draw_board, draw_crosshair, draw_mage, draw_mana, draw_powerup, draw_spell_pattern,
+        draw_sprite,
+    },
     tuple_as,
 };
 
 #[derive(PartialEq)]
 pub enum EditorSelection {
     Mage(Mage),
+    PowerUp(PowerUp),
     Tile(Position),
     None,
 }
@@ -27,6 +31,7 @@ pub struct EditorState {
     interface: Interface,
     menu_interface: Interface,
     mage_interface: Interface,
+    prop_interface: Interface,
     no_mage_interface: Interface,
     board_dirty: bool,
     level: Level,
@@ -51,7 +56,8 @@ const BUTTON_MANA_LEFT: usize = 34;
 const BUTTON_MANA_RIGHT: usize = 35;
 const BUTTON_DELETE: usize = 39;
 
-const BUTTON_ADD: usize = 40;
+const BUTTON_ADD_MAGE: usize = 40;
+const BUTTON_ADD_PROP: usize = 41;
 
 const BUTTON_LOAD: usize = 12;
 const BUTTON_SIMULATE: usize = 50;
@@ -187,25 +193,50 @@ impl EditorState {
         );
 
         let mage_interface = Interface::new(vec![
-            button_team_left.boxed(),
-            button_team_right.boxed(),
+            button_team_left.clone().boxed(),
+            button_team_right.clone().boxed(),
+            button_delete.boxed(),
             button_spell_left.boxed(),
             button_spell_right.boxed(),
             button_mana_left.boxed(),
             button_mana_right.boxed(),
+        ]);
+
+        let button_delete = ButtonElement::new(
+            (260, 80),
+            (32, 20),
+            BUTTON_DELETE,
+            LabelTrim::Round,
+            LabelTheme::Default,
+            crate::app::ContentElement::Sprite((128, 32), (16, 16)),
+        );
+
+        let prop_interface = Interface::new(vec![
+            button_team_left.boxed(),
+            button_team_right.boxed(),
             button_delete.boxed(),
         ]);
 
-        let button_add = ButtonElement::new(
-            (260, 122 - 44),
-            (32, 20),
-            BUTTON_ADD,
+        let button_add_mage = ButtonElement::new(
+            (252, 118 - 14),
+            (48, 20),
+            BUTTON_ADD_MAGE,
             LabelTrim::Glorious,
             LabelTheme::Default,
-            crate::app::ContentElement::Sprite((144, 32), (16, 16)),
+            crate::app::ContentElement::Sprite((160, 16), (16, 16)),
         );
 
-        let no_mage_interface = Interface::new(vec![button_add.boxed()]);
+        let button_add_prop: ButtonElement = ButtonElement::new(
+            (252, 118 + 14),
+            (48, 20),
+            BUTTON_ADD_PROP,
+            LabelTrim::Glorious,
+            LabelTheme::Default,
+            crate::app::ContentElement::Sprite((176, 16), (16, 16)),
+        );
+
+        let no_mage_interface =
+            Interface::new(vec![button_add_mage.boxed(), button_add_prop.boxed()]);
 
         let root_element = Interface::new(vec![
             button_mode_toggle.boxed(),
@@ -263,6 +294,7 @@ impl EditorState {
             button_menu,
             interface: root_element,
             mage_interface,
+            prop_interface,
             menu_interface,
             no_mage_interface,
             level,
@@ -281,6 +313,23 @@ impl EditorState {
 
     pub fn is_interface_active(&self) -> bool {
         self.button_menu.selected()
+    }
+
+    fn sparkle_create(&mut self, position: Position) {
+        for _ in 0..40 {
+            let d = js_sys::Math::random() * std::f64::consts::TAU;
+            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+            self.particle_system.add(Particle::new(
+                (position.0 as f64, position.1 as f64),
+                (d.cos() * v * 2.0, d.sin() * v),
+                (js_sys::Math::random() * 20.0) as u64,
+                ParticleSort::Missile,
+            ));
+        }
+    }
+
+    fn occupied(&self, position: &Position) -> bool {
+        self.level.mages.occupied(position)
     }
 }
 
@@ -342,6 +391,30 @@ impl State for EditorState {
             context.restore();
         }
 
+        // DRAW powerups
+        for (position, powerup) in self.level.powerups.iter() {
+            context.save();
+
+            context.translate(
+                16.0 + position.0 as f64 * board_scale.0,
+                16.0 + position.1 as f64 * board_scale.1,
+            )?;
+            draw_powerup(context, atlas, position, powerup, frame)?;
+
+            for _ in 0..1 {
+                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                self.particle_system.add(Particle::new(
+                    (position.0 as f64, position.1 as f64),
+                    (d.cos() * v, d.sin() * v),
+                    (js_sys::Math::random() * 20.0) as u64,
+                    ParticleSort::for_powerup(powerup),
+                ));
+            }
+
+            context.restore();
+        }
+
         let selected_tile = self.level.board.location_as_position(
             pointer.location,
             (board_offset.0 - 32, board_offset.1),
@@ -392,6 +465,26 @@ impl State for EditorState {
                 draw_mana(interface_context, atlas, mage)?;
                 interface_context.restore();
             }
+            EditorSelection::PowerUp(powerup) => {
+                interface_context.save();
+                interface_context.translate(
+                    (pointer.location.0 as f64).clamp(
+                        board_offset.0 - 16.0,
+                        board_offset.0 - 48.0 + board_scale.0 * self.level.board.width as f64,
+                    ),
+                    (pointer.location.1 as f64).clamp(
+                        board_offset.1 + 16.0,
+                        board_offset.1 - 16.0 + board_scale.1 * self.level.board.height as f64,
+                    ),
+                )?;
+                draw_powerup(interface_context, atlas, &Position(0, 0), powerup, frame)?;
+                interface_context.restore();
+
+                interface_context.save();
+                interface_context.translate(276.0, 40.0)?;
+                draw_powerup(interface_context, atlas, &Position(0, 0), powerup, frame)?;
+                interface_context.restore();
+            }
             EditorSelection::Tile(position) => {
                 draw_crosshair(context, atlas, position, (48.0, 32.0), frame)?;
 
@@ -429,6 +522,14 @@ impl State for EditorState {
                         draw_sprite(interface_context, atlas, 112.0, 16.0, 16.0, 16.0, -8.0, 4.0)?;
                     }
 
+                    interface_context.restore();
+                } else if let Some(powerup) = self.level.powerups.get(position) {
+                    self.prop_interface
+                        .draw(interface_context, atlas, pointer, frame)?;
+
+                    interface_context.save();
+                    interface_context.translate(276.0, 40.0)?;
+                    draw_powerup(interface_context, atlas, &Position(0, 0), powerup, frame)?;
                     interface_context.restore();
                 } else {
                     self.no_mage_interface
@@ -555,6 +656,15 @@ impl State for EditorState {
                         .reduce(|acc, e| acc.max(e))
                         .unwrap_or_default() as usize;
 
+                    let min_width = min_width.max(
+                        self.level
+                            .powerups
+                            .keys()
+                            .max_by(|a, b| a.0.cmp(&b.0))
+                            .map(|pos| pos.0)
+                            .unwrap_or_default() as usize,
+                    );
+
                     if self.level.board.width - 1 <= min_width {
                         for _ in 0..self.level.board.width * 5 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
@@ -593,6 +703,15 @@ impl State for EditorState {
                         .reduce(|acc, e| acc.max(e))
                         .unwrap_or_default() as usize;
 
+                    let min_height = min_height.max(
+                        self.level
+                            .powerups
+                            .keys()
+                            .max_by(|a, b| a.1.cmp(&b.1))
+                            .map(|pos| pos.1)
+                            .unwrap_or_default() as usize,
+                    );
+
                     if self.level.board.height - 1 <= min_height {
                         for _ in 0..self.level.board.height * 5 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
@@ -626,28 +745,29 @@ impl State for EditorState {
                 _ => (),
             }
         } else if let Some(UIEvent::ButtonClick(value)) = self.no_mage_interface.tick(pointer) {
-            if let BUTTON_ADD = value {
-                if let EditorSelection::Tile(position) = self.selection {
-                    if !self.level.mages.occupied(&position) {
-                        self.level.mages.push(Mage::new(
-                            self.level.mage_index,
-                            Team::Red,
-                            shared::MageSort::Cross,
-                            position,
-                        ));
-                        self.level.mage_index += 1;
-
-                        for _ in 0..40 {
-                            let d = js_sys::Math::random() * std::f64::consts::TAU;
-                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                            self.particle_system.add(Particle::new(
-                                (position.0 as f64, position.1 as f64),
-                                (d.cos() * v * 2.0, d.sin() * v),
-                                (js_sys::Math::random() * 20.0) as u64,
-                                ParticleSort::Missile,
+            if let EditorSelection::Tile(position) = self.selection {
+                match value {
+                    BUTTON_ADD_MAGE => {
+                        if !self.occupied(&position) {
+                            self.level.mages.push(Mage::new(
+                                self.level.mage_index,
+                                Team::Red,
+                                shared::MageSort::Cross,
+                                position,
                             ));
+                            self.level.mage_index += 1;
+
+                            self.sparkle_create(position);
                         }
                     }
+                    BUTTON_ADD_PROP => {
+                        if !self.occupied(&position) {
+                            self.level.powerups.insert(position, PowerUp::Diagonal);
+
+                            self.sparkle_create(position);
+                        }
+                    }
+                    _ => (),
                 }
             }
         } else if let Some(UIEvent::ButtonClick(value)) = self.mage_interface.tick(pointer) {
@@ -656,6 +776,10 @@ impl State for EditorState {
                     if let EditorSelection::Tile(position) = self.selection {
                         if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
                             selected_mage.team = selected_mage.team.enemy();
+                        } else if let Some(selected_powerup) =
+                            self.level.powerups.get_mut(&position)
+                        {
+                            *selected_powerup = selected_powerup.next();
                         }
                     }
                 }
@@ -663,6 +787,10 @@ impl State for EditorState {
                     if let EditorSelection::Tile(position) = self.selection {
                         if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
                             selected_mage.team = selected_mage.team.enemy();
+                        } else if let Some(selected_powerup) =
+                            self.level.powerups.get_mut(&position)
+                        {
+                            *selected_powerup = selected_powerup.previous();
                         }
                     }
                 }
@@ -731,16 +859,16 @@ impl State for EditorState {
             BOARD_SCALE,
         ) {
             if pointer.clicked() {
-                for _ in 0..10 {
-                    let d = js_sys::Math::random() * std::f64::consts::TAU;
-                    let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                    self.particle_system.add(Particle::new(
-                        (selected_tile.0 as f64, selected_tile.1 as f64),
-                        (d.cos() * v, d.sin() * v),
-                        (js_sys::Math::random() * 20.0) as u64,
-                        ParticleSort::Missile,
-                    ));
-                }
+                // for _ in 0..10 {
+                //     let d = js_sys::Math::random() * std::f64::consts::TAU;
+                //     let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                //     self.particle_system.add(Particle::new(
+                //         (selected_tile.0 as f64, selected_tile.1 as f64),
+                //         (d.cos() * v, d.sin() * v),
+                //         (js_sys::Math::random() * 20.0) as u64,
+                //         ParticleSort::Missile,
+                //     ));
+                // }
 
                 if let Some(selected_mage) = self.level.mages.occupant(&selected_tile).cloned() {
                     match &mut self.selection {
@@ -764,23 +892,101 @@ impl State for EditorState {
 
                             self.selection = EditorSelection::Mage(selected_mage);
                         }
+                        EditorSelection::PowerUp(powerup) => {
+                            self.level.powerups.insert(selected_tile, *powerup);
+
+                            for _ in 0..40 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particle_system.add(Particle::new(
+                                    (selected_tile.0 as f64, selected_tile.1 as f64),
+                                    (d.cos() * v * 2.0, d.sin() * v),
+                                    (js_sys::Math::random() * 20.0) as u64,
+                                    ParticleSort::Missile,
+                                ));
+                            }
+
+                            self.selection = EditorSelection::Mage(selected_mage);
+                        }
                         _ => self.selection = EditorSelection::Tile(selected_tile),
                     }
-                } else if let EditorSelection::Mage(mut selected_mage) =
-                    mem::replace(&mut self.selection, EditorSelection::Tile(selected_tile))
+                } else if let Some(selected_powerup) =
+                    self.level.powerups.get(&selected_tile).cloned()
                 {
-                    selected_mage.position = selected_tile;
-                    self.level.mages.push(selected_mage);
+                    match &mut self.selection {
+                        EditorSelection::Tile(tile) if *tile == selected_tile => {
+                            self.level.powerups.remove(&selected_tile);
+                            self.selection = EditorSelection::PowerUp(selected_powerup);
+                        }
+                        EditorSelection::PowerUp(powerup) => {
+                            self.level.powerups.insert(selected_tile, *powerup);
 
-                    for _ in 0..40 {
-                        let d = js_sys::Math::random() * std::f64::consts::TAU;
-                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                        self.particle_system.add(Particle::new(
-                            (selected_tile.0 as f64, selected_tile.1 as f64),
-                            (d.cos() * v * 2.0, d.sin() * v),
-                            (js_sys::Math::random() * 20.0) as u64,
-                            ParticleSort::Missile,
-                        ));
+                            for _ in 0..40 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particle_system.add(Particle::new(
+                                    (selected_tile.0 as f64, selected_tile.1 as f64),
+                                    (d.cos() * v * 2.0, d.sin() * v),
+                                    (js_sys::Math::random() * 20.0) as u64,
+                                    ParticleSort::Missile,
+                                ));
+                            }
+
+                            self.selection = EditorSelection::PowerUp(selected_powerup);
+                        }
+                        EditorSelection::Mage(mage) => {
+                            self.level.powerups.remove(&selected_tile);
+                            mage.position = selected_tile;
+                            self.level.mages.push(mage.clone());
+
+                            for _ in 0..40 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particle_system.add(Particle::new(
+                                    (selected_tile.0 as f64, selected_tile.1 as f64),
+                                    (d.cos() * v * 2.0, d.sin() * v),
+                                    (js_sys::Math::random() * 20.0) as u64,
+                                    ParticleSort::Missile,
+                                ));
+                            }
+
+                            self.selection = EditorSelection::PowerUp(selected_powerup);
+                        }
+                        _ => self.selection = EditorSelection::Tile(selected_tile),
+                    }
+                } else {
+                    match mem::replace(&mut self.selection, EditorSelection::Tile(selected_tile)) {
+                        EditorSelection::Mage(mut selected_mage) => {
+                            selected_mage.position = selected_tile;
+                            self.level.mages.push(selected_mage);
+
+                            for _ in 0..40 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particle_system.add(Particle::new(
+                                    (selected_tile.0 as f64, selected_tile.1 as f64),
+                                    (d.cos() * v * 2.0, d.sin() * v),
+                                    (js_sys::Math::random() * 20.0) as u64,
+                                    ParticleSort::Missile,
+                                ));
+                            }
+                        }
+                        EditorSelection::PowerUp(selected_powerup) => {
+                            self.level.powerups.insert(selected_tile, selected_powerup);
+
+                            for _ in 0..40 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particle_system.add(Particle::new(
+                                    (selected_tile.0 as f64, selected_tile.1 as f64),
+                                    (d.cos() * v * 2.0, d.sin() * v),
+                                    (js_sys::Math::random() * 20.0) as u64,
+                                    ParticleSort::Missile,
+                                ));
+                            }
+                        }
+                        EditorSelection::Tile(_) => {}
+                        EditorSelection::None => {}
                     }
                 }
             } else if pointer.alt_clicked() {
@@ -810,6 +1016,7 @@ impl State for EditorState {
                     .mages
                     .retain(|mage| mage.index != selected_mage.index);
             }
+            EditorSelection::PowerUp(powerup) => {}
             EditorSelection::Tile(position) => {
                 *position = self.level.board.clamp_position(*position);
             }

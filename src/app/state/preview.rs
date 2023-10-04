@@ -5,16 +5,17 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 use super::{EditorState, LobbyState, State};
 use crate::{
     app::{
-        Alignment, App, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, StateSort,
-        UIElement, UIEvent, BOARD_SCALE,
+        Alignment, App, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
+        ParticleSort, ParticleSystem, StateSort, UIElement, UIEvent, BOARD_SCALE,
     },
-    draw::{draw_board, draw_mage, draw_mana, draw_sprite},
+    draw::{draw_board, draw_mage, draw_mana, draw_powerup, draw_sprite},
     tuple_as,
 };
 
 pub struct PreviewState {
     interface: Interface,
     level: Level,
+    particle_system: ParticleSystem,
     board_dirty: bool,
 }
 
@@ -69,6 +70,7 @@ impl PreviewState {
         PreviewState {
             interface,
             level,
+            particle_system: ParticleSystem::default(),
             board_dirty: true,
         }
     }
@@ -121,6 +123,34 @@ impl State for PreviewState {
                 draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
 
                 context.translate(board_offset.0 as f64, board_offset.1 as f64)?;
+
+                // DRAW particles
+
+                self.particle_system.tick_and_draw(context, atlas, frame)?;
+
+                // DRAW powerups
+                for (position, powerup) in self.level.powerups.iter() {
+                    context.save();
+
+                    context.translate(
+                        16.0 + position.0 as f64 * board_scale.0,
+                        16.0 + position.1 as f64 * board_scale.1,
+                    )?;
+                    draw_powerup(context, atlas, position, powerup, frame)?;
+
+                    for _ in 0..1 {
+                        let d = js_sys::Math::random() * std::f64::consts::TAU;
+                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                        self.particle_system.add(Particle::new(
+                            (position.0 as f64, position.1 as f64),
+                            (d.cos() * v, d.sin() * v),
+                            (js_sys::Math::random() * 20.0) as u64,
+                            ParticleSort::for_powerup(powerup),
+                        ));
+                    }
+
+                    context.restore();
+                }
 
                 let mut mage_heap: Vec<&Mage> = self.level.mages.iter().collect();
                 mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));

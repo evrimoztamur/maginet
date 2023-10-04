@@ -326,6 +326,7 @@ pub fn draw_spell_pattern(
 pub fn draw_powerup(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,
+    position: &Position,
     powerup: &PowerUp,
     frame: u64,
 ) -> Result<(), JsValue> {
@@ -339,7 +340,7 @@ pub fn draw_powerup(
         PowerUp::Diagonal => (64.0, 288.0),
     };
 
-    let t = (frame as f64) / 10.0;
+    let t = (frame as f64) / 10.0 + position.0 as f64 * 9.0 + position.1 as f64;
 
     let bounce = match powerup {
         PowerUp::Shield => {

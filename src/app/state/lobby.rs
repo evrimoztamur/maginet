@@ -276,7 +276,7 @@ impl LobbyState {
             self.particle_system()
                 .tick_and_draw(context, atlas, frame)?;
 
-            // DRAW all powerups
+            // DRAW powerups
             for (position, powerup) in self.lobby.game.powerups() {
                 context.save();
 
@@ -284,7 +284,7 @@ impl LobbyState {
                     16.0 + position.0 as f64 * board_scale.0,
                     16.0 + position.1 as f64 * board_scale.1,
                 )?;
-                draw_powerup(context, atlas, powerup, frame)?;
+                draw_powerup(context, atlas, position, powerup, frame)?;
 
                 for _ in 0..1 {
                     let d = js_sys::Math::random() * std::f64::consts::TAU;

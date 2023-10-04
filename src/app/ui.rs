@@ -24,12 +24,14 @@ pub trait UIElement {
     ) -> Result<(), JsValue>;
 }
 
+#[derive(Clone)]
 pub enum Alignment {
     // Start,
     Center,
     // End,
 }
 
+#[derive(Clone)]
 pub enum ContentElement {
     Text(String, Alignment),
     Sprite((i32, i32), (i32, i32)),
@@ -70,14 +72,14 @@ impl UIElement for ContentElement {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum LabelTrim {
     Round,
     Glorious,
     Return,
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum LabelTheme {
     Default,
     Action,
@@ -85,6 +87,7 @@ pub enum LabelTheme {
     Disabled,
 }
 
+#[derive(Clone)]
 pub struct ButtonElement {
     position: (i32, i32),
     size: (i32, i32),
@@ -215,6 +218,7 @@ impl UIElement for ButtonElement {
     }
 }
 
+#[derive(Clone)]
 pub struct ConfirmButtonElement {
     button: ButtonElement,
 }
@@ -281,6 +285,7 @@ impl UIElement for ConfirmButtonElement {
     }
 }
 
+#[derive(Clone)]
 pub struct ToggleButtonElement {
     button: ButtonElement,
 }
@@ -338,6 +343,7 @@ impl UIElement for ToggleButtonElement {
     }
 }
 
+#[derive(Clone)]
 pub struct ButtonGroupElement {
     position: (i32, i32),
     buttons: Vec<ButtonElement>,
