@@ -5,7 +5,7 @@ use data_encoding_macro::new_encoding;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{Board, Game, Mage, Position, PowerUp, Team, Turn, TurnLeaf};
+use crate::{vecmap, Board, Game, Mage, Position, PowerUp, Team, Turn, TurnLeaf};
 
 /// Base 32 (Crockford) encoding for levels.
 pub const BASE32: Encoding = new_encoding! {
@@ -22,6 +22,7 @@ pub struct Level {
     /// Number of mages.
     pub mage_index: usize,
     /// Level's power-ups as as [`HashMap<Position, PowerUp>`].
+    #[serde(with = "vecmap")]
     pub powerups: HashMap<Position, PowerUp>,
     /// Level's starting [`Team`].
     pub starting_team: Team,
@@ -52,7 +53,7 @@ impl Level {
                 // (Position(1, 3), PowerUp::Shield),
                 (Position(2, 3), PowerUp::Shield),
                 // (Position(3, 3), PowerUp::Diagonal)
-                ]),
+            ]),
             starting_team,
         }
     }

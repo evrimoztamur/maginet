@@ -5,9 +5,9 @@
 mod lobby;
 mod logic;
 mod net;
-// mod vecmap;
+mod vecmap;
 
 pub use lobby::*;
 pub use logic::*;
 pub use net::*;
-// pub use vecmap::*;
+pub use vecmap::*;
