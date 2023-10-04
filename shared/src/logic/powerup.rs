@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// A [`PowerUp`] is a the distinct type of the powerup.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum PowerUp {
     /// Turns the mage into defensive mode.
     Shield,

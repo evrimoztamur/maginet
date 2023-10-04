@@ -519,22 +519,49 @@ impl Game {
             }
         }
 
+        if let Some(active_mage) = self.level.mages.live_occupant_mut(&at) {
+            if active_mage.powerup == Some(PowerUp::Beam) {
+                // Remove beam after use
+                active_mage.powerup = None;
+            }
+        }
+
         hits
     }
 
     /// Returns the list of targets a [`Mage`] can attack to on a certain [`Position`].
     pub fn targets(&self, mage: &Mage, at: Position) -> Vec<(bool, Position)> {
-        mage.targets(&self.level.board, &at)
-            .iter()
-            .map(|position| {
-                (
-                    self.level
-                        .mages
-                        .live_occupied_by(position, mage.team.enemy()),
-                    *position,
-                )
-            })
-            .collect()
+        if self.powerups().get(&at) == Some(&PowerUp::Beam) // Previewing in target selection
+        || mage.powerup == Some(PowerUp::Beam)
+        // During actual attack
+        {
+            let board_size = self.board_size();
+
+            let x_range = (0..board_size.0).map(|x| Position(x as i8, at.1));
+            let y_range = (0..board_size.1).map(|y| Position(at.0, y as i8));
+
+            x_range
+                .chain(y_range)
+                .map(|position| {
+                    (
+                        self.level.mages.live_occupied(&position) && position != mage.position,
+                        position,
+                    )
+                })
+                .collect()
+        } else {
+            mage.targets(&self.level.board, &at)
+                .iter()
+                .map(|position| {
+                    (
+                        self.level
+                            .mages
+                            .live_occupied_by(position, mage.team.enemy()),
+                        *position,
+                    )
+                })
+                .collect()
+        }
     }
 
     /// Returns the [`Board`]'s size as an `usize` tuple.

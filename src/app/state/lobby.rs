@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use shared::{
     GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
-    Message, Position, Team, Turn, TurnLeaf,
+    Message, Position, PowerUp, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
@@ -276,6 +276,30 @@ impl LobbyState {
             self.particle_system()
                 .tick_and_draw(context, atlas, frame)?;
 
+            // DRAW all powerups
+            for (position, powerup) in self.lobby.game.powerups() {
+                context.save();
+
+                context.translate(
+                    16.0 + position.0 as f64 * board_scale.0,
+                    16.0 + position.1 as f64 * board_scale.1,
+                )?;
+                draw_powerup(context, atlas, powerup, frame)?;
+
+                for _ in 0..1 {
+                    let d = js_sys::Math::random() * std::f64::consts::TAU;
+                    let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                    self.particle_system.add(Particle::new(
+                        (position.0 as f64, position.1 as f64),
+                        (d.cos() * v, d.sin() * v),
+                        (js_sys::Math::random() * 20.0) as u64,
+                        ParticleSort::for_powerup(powerup),
+                    ));
+                }
+
+                context.restore();
+            }
+
             {
                 let board_offset = self.board_offset();
 
@@ -383,30 +407,6 @@ impl LobbyState {
 
             {
                 let game_started = self.lobby.all_ready() | self.lobby.is_local();
-
-                // DRAW all powerups
-                for (position, powerup) in self.lobby.game.powerups() {
-                    context.save();
-
-                    context.translate(
-                        16.0 + position.0 as f64 * board_scale.0,
-                        16.0 + position.1 as f64 * board_scale.1,
-                    )?;
-                    draw_powerup(context, atlas, powerup, frame)?;
-
-                    for _ in 0..1 {
-                        let d = js_sys::Math::random() * std::f64::consts::TAU;
-                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                        self.particle_system.add(Particle::new(
-                            (position.0 as f64, position.1 as f64),
-                            (d.cos() * v, d.sin() * v),
-                            (js_sys::Math::random() * 20.0) as u64,
-                            ParticleSort::for_powerup(powerup),
-                        ));
-                    }
-
-                    context.restore();
-                }
 
                 let mut mage_heap: Vec<&Mage> = self.lobby.game.iter_mages().collect();
                 mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
@@ -624,8 +624,49 @@ impl LobbyState {
                     }
                 }
                 Message::Move(Turn(from, to)) => {
+                    let to_powerup = self.lobby.game.powerups().get(&to).cloned();
+
                     if let Some(move_targets) = self.lobby.game.take_move(*from, *to) {
                         target_positions.append(&mut move_targets.clone());
+
+                        if let Some(moved_mage) = self.lobby.game.occupant(to) {
+                            if to_powerup == Some(PowerUp::Beam) {
+                                let particle_sort = match moved_mage.team {
+                                    Team::Red => ParticleSort::RedWin,
+                                    Team::Blue => ParticleSort::BlueWin,
+                                };
+
+                                for x in 0..self.lobby.game.board_size().0 {
+                                    for _ in 0..40 {
+                                        let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                        let v =
+                                            (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+
+                                        self.particle_system.add(Particle::new(
+                                            (x as f64, to.1 as f64),
+                                            (d.cos() * v * 2.0, d.sin() * v * 0.5),
+                                            (js_sys::Math::random() * 50.0) as u64,
+                                            particle_sort,
+                                        ));
+                                    }
+                                }
+
+                                for y in 0..self.lobby.game.board_size().1 {
+                                    for _ in 0..40 {
+                                        let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                        let v =
+                                            (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+
+                                        self.particle_system.add(Particle::new(
+                                            (to.0 as f64, y as f64),
+                                            (d.cos() * v * 0.5, d.sin() * v * 2.0),
+                                            (js_sys::Math::random() * 50.0) as u64,
+                                            particle_sort,
+                                        ));
+                                    }
+                                }
+                            }
+                        }
 
                         self.last_move_frame = frame;
                         self.last_hits = move_targets;
