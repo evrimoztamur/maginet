@@ -49,11 +49,7 @@ impl Level {
             board,
             mage_index: mages.len(),
             mages,
-            powerups: HashMap::from([
-                // (Position(1, 3), PowerUp::Shield),
-                (Position(2, 3), PowerUp::Shield),
-                // (Position(3, 3), PowerUp::Diagonal)
-            ]),
+            powerups,
             starting_team,
         }
     }
