@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f64::consts::TAU, rc::Rc};
 
 use shared::{
     GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
@@ -306,6 +306,41 @@ impl LobbyState {
                 // DRAW markers
                 context.save();
 
+                for mage in self.lobby.game.iter_mages() {
+                    if mage.is_alive() && mage.is_defensive() {
+                        for (_, position) in self.lobby.game.targets(mage, mage.position) {
+                            match mage.team {
+                                Team::Red => {
+                                    draw_sprite(
+                                        context,
+                                        atlas,
+                                        32.0,
+                                        16.0,
+                                        16.0,
+                                        16.0,
+                                        position.0 as f64 * 32.0 + 8.0,
+                                        position.1 as f64 * 32.0 + 8.0,
+                                    )?;
+                                    // draw_crosshair(context, atlas, &position, (32.0, 16.0), 1)?;
+                                }
+                                Team::Blue => {
+                                    draw_sprite(
+                                        context,
+                                        atlas,
+                                        48.0,
+                                        16.0,
+                                        16.0,
+                                        16.0,
+                                        position.0 as f64 * 32.0 + 8.0,
+                                        position.1 as f64 * 32.0 + 8.0,
+                                    )?;
+                                    // draw_crosshair(context, atlas, &position, (48.0, 16.0), 1)?;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if let Some(mage) = self.get_active_mage() {
                     let available_moves = self.lobby.game.available_moves(mage);
                     for (position, dir, _) in &available_moves {
@@ -441,19 +476,35 @@ impl LobbyState {
 
                     context.restore();
 
-                    if mage.is_alive() && mage.has_diagonals() {
-                        for _ in 0..(frame / 3 % 2) {
-                            let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
-                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                            self.particle_system.add(Particle::new(
-                                (
-                                    mage.position.0 as f64 + d.cos() * 0.4,
-                                    mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
-                                ),
-                                (d.cos() * v, d.sin() * v),
-                                (js_sys::Math::random() * 30.0) as u64,
-                                ParticleSort::Diagonals,
-                            ));
+                    if mage.is_alive() {
+                        if mage.has_diagonals() {
+                            for _ in 0..(frame / 3 % 2) {
+                                let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                                self.particle_system.add(Particle::new(
+                                    (
+                                        mage.position.0 as f64 + d.cos() * 0.4,
+                                        mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
+                                    ),
+                                    (d.cos() * v, d.sin() * v),
+                                    (js_sys::Math::random() * 30.0) as u64,
+                                    ParticleSort::Diagonals,
+                                ));
+                            }
+                        } else if mage.is_defensive() {
+                            for _ in 0..(frame / 3 % 2) {
+                                let d = js_sys::Math::random() * -std::f64::consts::PI * 0.9;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                                self.particle_system.add(Particle::new(
+                                    (
+                                        mage.position.0 as f64 + d.cos() * 0.4,
+                                        mage.position.1 as f64 - 0.15 + d.sin() * 0.4,
+                                    ),
+                                    (d.cos() * v, d.sin() * v),
+                                    (js_sys::Math::random() * 30.0) as u64,
+                                    ParticleSort::Shield,
+                                ));
+                            }
                         }
                     }
 

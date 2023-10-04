@@ -1,4 +1,7 @@
-use std::{collections::HashMap, ops::Neg};
+use std::{
+    collections::{HashMap, HashSet},
+    ops::Neg,
+};
 
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},
@@ -49,6 +52,7 @@ pub struct Game {
     turns: Vec<Turn>,
     last_nominal: usize,
     available_turns: Vec<Turn>,
+    shielded_positions: HashSet<(Position, Team)>,
     can_stalemate: bool,
 }
 
@@ -64,10 +68,12 @@ impl Game {
             turns,
             last_nominal,
             available_turns: Vec::new(),
+            shielded_positions: HashSet::new(),
             can_stalemate,
         };
 
         game.available_turns = game.generate_available_turns();
+        game.shielded_positions = game.generate_shielded_positions();
 
         Ok(game)
     }
@@ -474,7 +480,9 @@ impl Game {
                         }
 
                         self.turns.push(Turn(from, *to));
+
                         self.available_turns = self.generate_available_turns();
+                        self.shielded_positions = self.generate_shielded_positions();
 
                         return Some(attacks);
                     }
@@ -531,7 +539,7 @@ impl Game {
 
     /// Returns the list of targets a [`Mage`] can attack to on a certain [`Position`].
     pub fn targets(&self, mage: &Mage, at: Position) -> Vec<(bool, Position)> {
-        if self.powerups().get(&at) == Some(&PowerUp::Beam) // Previewing in target selection
+        let mut attack_targets: Vec<(bool, Position)> = if self.powerups().get(&at) == Some(&PowerUp::Beam) // Previewing in target selection
         || mage.powerup == Some(PowerUp::Beam)
         // During actual attack
         {
@@ -556,12 +564,19 @@ impl Game {
                     (
                         self.level
                             .mages
-                            .live_occupied_by(position, mage.team.enemy()),
+                            .live_occupied_by(position, mage.team.enemy())
+                            && mage.powerup != Some(PowerUp::Shield),
                         *position,
                     )
                 })
                 .collect()
+        };
+
+        if self.shielded_positions.contains(&(at, mage.team.enemy())) {
+            attack_targets.push((true, at));
         }
+
+        attack_targets
     }
 
     /// Returns the [`Board`]'s size as an `usize` tuple.
@@ -592,6 +607,18 @@ impl Game {
         }
 
         rewinded_game
+    }
+
+    fn generate_shielded_positions(&self) -> HashSet<(Position, Team)> {
+        HashSet::from_iter(
+            self.iter_mages()
+                .filter(|mage| mage.is_alive() && mage.is_defensive())
+                .flat_map(|mage| {
+                    self.targets(mage, mage.position)
+                        .into_iter()
+                        .map(|(_, target)| (target, mage.team))
+                }),
+        )
     }
 }
 
