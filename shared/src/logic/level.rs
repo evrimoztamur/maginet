@@ -5,7 +5,7 @@ use data_encoding_macro::new_encoding;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{vecmap, Board, Game, Mage, Position, PowerUp, Team, Turn, TurnLeaf};
+use crate::{vecmap, Board, Game, Mage, Position, PowerUp, PowerUpEntry, Team, Turn, TurnLeaf};
 
 /// Base 32 (Crockford) encoding for levels.
 pub const BASE32: Encoding = new_encoding! {
@@ -103,9 +103,18 @@ impl From<&Level> for Vec<u8> {
 
         result.push(board_byte);
 
+        result.push(level.mages.len() as u8);
+
         for mage in &level.mages {
             let mut mage_bytes: Vec<u8> = mage.into();
             result.append(&mut mage_bytes);
+        }
+
+        result.push(level.powerups.len() as u8);
+
+        for (position, powerup) in &level.powerups {
+            let mut prop_bytes: Vec<u8> = (&PowerUpEntry(*position, *powerup)).into();
+            result.append(&mut prop_bytes);
         }
 
         result
@@ -114,30 +123,38 @@ impl From<&Level> for Vec<u8> {
 
 impl From<Vec<u8>> for Level {
     fn from(value: Vec<u8>) -> Self {
-        if value.len() % 3 == 1 {
-            let board_byte = value[0];
+        let board_byte = value[0];
 
-            let board_width = ((board_byte >> 5) & 0b111) + 1;
-            let board_height = ((board_byte >> 2) & 0b111) + 1;
+        let board_width = ((board_byte >> 5) & 0b111) + 1;
+        let board_height = ((board_byte >> 2) & 0b111) + 1;
 
-            let board = Board::new(board_width.into(), board_height.into()).unwrap();
+        let board = Board::new(board_width.into(), board_height.into()).unwrap();
 
-            let starting_team = Team::from_index((board_byte & 0b11) as usize);
+        let starting_team = Team::from_index((board_byte & 0b11) as usize);
 
-            let mages: Vec<Mage> = value
-                .iter()
-                .skip(1)
-                .chunks(3)
-                .into_iter()
-                .map(|chunk| chunk.cloned().collect::<Vec<u8>>().into())
-                .collect();
+        let num_mages = value[1];
+        let mages: Vec<Mage> = value
+            .iter()
+            .skip(2)
+            .take(num_mages as usize * 3)
+            .chunks(3)
+            .into_iter()
+            .map(|chunk| chunk.cloned().collect::<Vec<u8>>().into())
+            .collect();
 
-            todo!("implement serde for `HashMap<Position, PowerUp>``");
+        let num_props = value[2 + num_mages as usize * 3];
+        let powerup_entries: Vec<PowerUpEntry> = value
+            .iter()
+            .skip(3 + num_mages as usize * 3)
+            .take(num_props as usize * 2)
+            .chunks(2)
+            .into_iter()
+            .map(|chunk| chunk.cloned().collect::<Vec<u8>>().into())
+            .collect();
 
-            // Level::new(board, mages, starting_team)
-        } else {
-            Level::default()
-        }
+        let powerups: HashMap<Position, PowerUp> = powerup_entries.iter().cloned().collect();
+
+        Level::new(board, mages, powerups, starting_team)
     }
 }
 
