@@ -1016,11 +1016,10 @@ impl State for EditorState {
                     .mages
                     .retain(|mage| mage.index != selected_mage.index);
             }
-            EditorSelection::PowerUp(powerup) => {}
             EditorSelection::Tile(position) => {
                 *position = self.level.board.clamp_position(*position);
             }
-            EditorSelection::None => (),
+            _ => (),
         }
 
         self.button_menu.tick(pointer);

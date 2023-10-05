@@ -1,4 +1,4 @@
-use std::{cell::RefCell, f64::consts::TAU, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use shared::{
     GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
@@ -675,7 +675,7 @@ impl LobbyState {
                     }
                 }
                 Message::Move(Turn(from, to)) => {
-                    let to_powerup = self.lobby.game.powerups().get(&to).cloned();
+                    let to_powerup = self.lobby.game.powerups().get(to).cloned();
 
                     if let Some(move_targets) = self.lobby.game.take_move(*from, *to) {
                         target_positions.append(&mut move_targets.clone());
