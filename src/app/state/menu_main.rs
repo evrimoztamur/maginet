@@ -107,7 +107,7 @@ impl Default for MainMenu {
             BUTTON_ARENA,
             LabelTrim::Glorious,
             LabelTheme::Action,
-            crate::app::ContentElement::Text("Arena".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Campaign".to_string(), Alignment::Center),
         );
 
         let button_skirmish = ButtonElement::new(
