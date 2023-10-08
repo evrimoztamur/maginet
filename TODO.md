@@ -1,10 +1,6 @@
 # TODO
 
 - Arena
-  - Track wins
-    - Record win upon exiting from won state
-  - Lock level if no adjacent wins
-  - Flipping mages when level won (+ medal from Mrmo?)
   - Include tutorial in level select
     - Embed tutorial state transition as fake level
   - 20 arena levels with base rules
@@ -41,6 +37,10 @@
   - Battle/Locked buttons
   - Select levels
   - Enter level and exit at same position back into Arena UI
+  - Track wins
+    - Record win upon exiting from won state
+  - Lock level if no adjacent wins
+  - Flipping mages when level won (+ medal from Mrmo?)
 - Mechanics
   - Powerups
     - Diagonals

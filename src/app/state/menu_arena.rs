@@ -1,13 +1,16 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    f64::consts::{PI, TAU},
+};
 
-use shared::{Board, Level, LobbySettings, Mage, Position, PowerUp};
+use shared::{Board, GameResult, Level, LobbySettings, Mage, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{Game, MainMenu, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
+        Alignment, App, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
         ParticleSort, ParticleSystem, Pointer, StateSort, UIElement, UIEvent,
     },
     draw::{draw_board, draw_mage, draw_powerup, draw_sprite, draw_text_centered},
@@ -19,15 +22,22 @@ enum PreviewEntity {
     PowerUp(PowerUp),
 }
 
+#[derive(PartialEq, Eq)]
+enum PortalStatus {
+    Locked,
+    Unlocked,
+    Won,
+}
+
 struct LevelPortal {
     level: Level,
-    locked: bool,
+    status: PortalStatus,
     title: String,
     preview: [Option<PreviewEntity>; 4],
 }
 
 impl LevelPortal {
-    fn from_level(level: Level, title: String, locked: bool) -> LevelPortal {
+    fn from_level(level: Level, title: String, status: PortalStatus) -> LevelPortal {
         let mut preview = [None, None, None, None];
 
         for mage in &level.mages {
@@ -57,7 +67,7 @@ impl LevelPortal {
         LevelPortal {
             level,
             title,
-            locked,
+            status,
             preview,
         }
     }
@@ -97,8 +107,12 @@ impl LevelPortal {
                     mage,
                     frame,
                     shared::Team::Red,
-                    !self.locked,
-                    None,
+                    self.is_available(),
+                    if self.status == PortalStatus::Won {
+                        Some(GameResult::Win(Team::Red))
+                    } else {
+                        None
+                    },
                 )?,
                 Some(PreviewEntity::PowerUp(powerup)) => {
                     if let Some(particle_sort) = ParticleSort::for_powerup(powerup) {
@@ -127,12 +141,54 @@ impl LevelPortal {
                 }
                 _ => (),
             }
+
             context.restore();
+        }
+
+        if self.status == PortalStatus::Won {
+            let frame = frame + x as u64 * 7 + y as u64 * 13;
+            let bounce = (
+                (frame as f64 * 0.2).sin() * 8.0,
+                (frame as f64 * 0.1).cos() * 8.0,
+            );
+
+            draw_sprite(
+                context,
+                atlas,
+                32.0,
+                320.0,
+                32.0,
+                32.0,
+                16.0 + bounce.0.round(),
+                bounce.1.round(),
+            )?;
+
+            for _ in 0..(frame / 4) % 2 {
+                let d = js_sys::Math::random() * TAU;
+                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                particle_system.add(Particle::new(
+                    (
+                        (x * 3) as f64 + 0.5 + (frame as f64 * 0.2).sin() * 0.5,
+                        (y * 3) as f64 + (frame as f64 * 0.1).cos() * 0.5,
+                    ),
+                    (d.cos() * v, d.sin() * v),
+                    (js_sys::Math::random() * 20.0) as u64,
+                    ParticleSort::Shield,
+                ));
+            }
         }
 
         draw_text_centered(context, atlas, 32.0, 72.0, &self.title)?;
 
         Ok(())
+    }
+
+    fn is_available(&self) -> bool {
+        match self.status {
+            PortalStatus::Locked => false,
+            PortalStatus::Unlocked => true,
+            PortalStatus::Won => true,
+        }
     }
 }
 
@@ -257,10 +313,10 @@ impl State for ArenaMenu {
         let selected_level = self.level_portals.get(&selected_position);
 
         if let Some(portal) = selected_level {
-            if portal.locked {
-                self.button_locked.draw(context, atlas, pointer, frame)?
-            } else {
+            if portal.is_available() {
                 self.button_battle.draw(context, atlas, pointer, frame)?
+            } else {
+                self.button_locked.draw(context, atlas, pointer, frame)?
             }
         }
 
@@ -282,7 +338,7 @@ impl State for ArenaMenu {
             let selected_level = self.level_portals.get(&selected_position);
 
             if let Some(portal) = selected_level {
-                if !portal.locked {
+                if portal.is_available() {
                     return Some(StateSort::Game(Game::new(LobbySettings {
                         lobby_sort: shared::LobbySort::LocalAI,
                         loadout_method: shared::LoadoutMethod::Arena(
@@ -360,13 +416,21 @@ impl Default for ArenaMenu {
 
         level_portals.insert(
             (0, 0),
-            LevelPortal::from_level("hg12g014cm0j800".into(), "Basics I".to_string(), false),
+            LevelPortal::from_level(
+                "hg12g014cm0j800".into(),
+                "Basics I".to_string(),
+                PortalStatus::Unlocked,
+            ),
         );
         // 1v1 basic
 
         level_portals.insert(
             (1, 0),
-            LevelPortal::from_level("e01jg1148m0j8k834g00".into(), "Basics II".to_string(), false),
+            LevelPortal::from_level(
+                "e01jg1148m0j8k834g00".into(),
+                "Basics II".to_string(),
+                PortalStatus::Locked,
+            ),
         );
         // 1v2 basic
 
@@ -375,7 +439,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04900".into(),
                 "Basics III".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
         // 2v2 easy
@@ -385,7 +449,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Basics IV".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -394,7 +458,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Patterns I".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -403,7 +467,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Patterns II".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -412,7 +476,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Patterns III".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -421,7 +485,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Diagonals I".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -430,7 +494,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Diagonals II".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -439,7 +503,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Diagonals III".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -448,7 +512,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Beams I".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -457,7 +521,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Beams II".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -466,7 +530,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Shields I".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -475,7 +539,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Shields II".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
         level_portals.insert(
@@ -483,7 +547,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "hg2280a4d40490008g6g2h02cg12g00".into(),
                 "Challenge I".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
         level_portals.insert(
@@ -491,7 +555,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "hg2680t44m048a028hmg2h04000gr0mc06004".into(),
                 "Challenge II".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -500,7 +564,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Challenge III".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -509,7 +573,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Challenge IV".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -518,7 +582,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Rite I".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -527,7 +591,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Rite II".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -536,7 +600,7 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Rite III".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
 
@@ -545,9 +609,48 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
                 "Ascension".to_string(),
-                true,
+                PortalStatus::Locked,
             ),
         );
+
+        // Update portal locking statuses based on the KV-store.
+
+        for portal in level_portals.values_mut() {
+            let level_code = portal.level.as_code();
+            let level_result = App::kv_get(&level_code);
+
+            if level_result == "win" {
+                portal.status = PortalStatus::Won;
+            }
+        }
+
+        // For each portal with an adjacent won portal, unlock it.
+
+        const DIRS: [(isize, isize); 4] = [(0, -1), (-1, 0), (1, 0), (0, 1)];
+
+        let mut to_unlock = Vec::new();
+
+        for position in level_portals.keys() {
+            for dir in DIRS {
+                let neighbour = level_portals.get(&(position.0 + dir.0, position.1 + dir.1));
+
+                if let Some(neighbour) = neighbour {
+                    if neighbour.status == PortalStatus::Won {
+                        to_unlock.push(*position);
+                    }
+                }
+            }
+        }
+
+        for position in to_unlock {
+            let portal = level_portals.get_mut(&position);
+
+            if let Some(portal) = portal {
+                if portal.status == PortalStatus::Locked {
+                    portal.status = PortalStatus::Unlocked;
+                }
+            }
+        }
 
         ArenaMenu {
             interface: root_element,

@@ -393,6 +393,16 @@ impl App {
 
         Self::save_levels(levels);
     }
+
+    pub fn kv_set(key: &str, value: &str) {
+        storage().and_then(|storage| storage.set_item(key, value).ok());
+    }
+
+    pub fn kv_get(key: &str) -> String {
+        storage()
+            .and_then(|storage| storage.get_item(key).unwrap_or_default())
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Clone, Default)]

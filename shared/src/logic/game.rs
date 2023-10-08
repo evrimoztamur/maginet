@@ -635,6 +635,11 @@ impl Game {
             .mages
             .sort_by(|a, b| a.position.1.cmp(&b.position.1));
     }
+
+    /// Returns the level prototype code.
+    pub fn prototype_code(&self) -> String {
+        self.level_prototype.as_code()
+    }
 }
 
 impl Mages for Game {

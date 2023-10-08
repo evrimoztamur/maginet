@@ -7,10 +7,10 @@ use shared::{
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{Editor, SkirmishMenu, State, ArenaMenu};
+use super::{ArenaMenu, Editor, SkirmishMenu, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
+        Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
         LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
         UIElement, UIEvent, BOARD_SCALE,
     },
@@ -43,6 +43,7 @@ pub struct Game {
     message_closure: Closure<dyn FnMut(JsValue)>,
     board_dirty: bool,
     shake_frame: (u64, usize),
+    recorded_result: bool,
 }
 
 impl Game {
@@ -115,6 +116,7 @@ impl Game {
             message_pool,
             message_closure,
             board_dirty: true,
+            recorded_result: false,
             shake_frame: (0, 0),
         }
     }
@@ -877,6 +879,17 @@ impl State for Game {
 
         if self.lobby.finished() {
             if let Some(GameResult::Win(team)) = self.lobby.game.result() {
+                // Did not record the result in the KV-store yet...
+                if !self.recorded_result {
+                    App::kv_set(
+                        &self.lobby.game.prototype_code(),
+                        match team {
+                            Team::Red => "win",
+                            Team::Blue => "loss",
+                        },
+                    )
+                }
+
                 let board_size = self.lobby().game.board_size();
 
                 let particle_sort = match team {
