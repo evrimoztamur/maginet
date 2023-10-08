@@ -847,6 +847,7 @@ impl State for Editor {
                 BUTTON_DELETE => {
                     if let EditorSelection::Tile(position) = self.selection {
                         self.level.mages.retain(|mage| mage.position != position);
+                        self.level.powerups.remove(&position);
 
                         for _ in 0..40 {
                             let d = js_sys::Math::random() * std::f64::consts::TAU;
@@ -1003,6 +1004,20 @@ impl State for Editor {
                 }
             } else if pointer.alt_clicked() {
                 if let EditorSelection::Mage(_mage) = &self.selection {
+                    for _ in 0..40 {
+                        let d = js_sys::Math::random() * std::f64::consts::TAU;
+                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                        self.particle_system.add(Particle::new(
+                            (
+                                selected_tile.0 as f64 + d.cos() * 1.25,
+                                selected_tile.1 as f64 + d.sin() * 1.25,
+                            ),
+                            (-d.cos() * v, -d.sin() * v),
+                            (js_sys::Math::random() * 20.0) as u64,
+                            ParticleSort::Missile,
+                        ));
+                    }
+                } else if let EditorSelection::PowerUp(_) = &self.selection {
                     for _ in 0..40 {
                         let d = js_sys::Math::random() * std::f64::consts::TAU;
                         let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
