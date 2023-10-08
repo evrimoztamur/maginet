@@ -1,6 +1,4 @@
 # TODO
-- Level/Editor
-    - Select tileset
 - Arena
     - Select levels
     - Enter level and exit at same position back into Arena UI
@@ -41,6 +39,8 @@
         - Plus-beam
         - Defensive mode
         - Rock as obstacle powerup
+- Level/Editor
+    - Select tileset
 
 # SKIP
 

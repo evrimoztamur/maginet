@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use shared::{Level, Mage, Position, PowerUp};
+use shared::{Board, Level, Mage, Position, PowerUp};
 use wasm_bindgen::JsValue;
 use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
@@ -183,7 +183,15 @@ impl State for ArenaMenu {
 
         if self.board_dirty {
             self.board_dirty = false;
-            draw_board(atlas, 256.0, 0.0, 2, 2, 2, 2, (0, 0)).unwrap();
+            draw_board(
+                atlas,
+                256.0,
+                0.0,
+                &Board::unchecked(2, 2, shared::BoardStyle::Grass),
+                2,
+                2,
+            )
+            .unwrap();
         }
 
         let drag_offset = self.drag_offset(pointer);

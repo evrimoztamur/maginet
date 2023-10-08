@@ -55,6 +55,7 @@ const BUTTON_SPELL_RIGHT: usize = 33;
 const BUTTON_MANA_LEFT: usize = 34;
 const BUTTON_MANA_RIGHT: usize = 35;
 const BUTTON_DELETE: usize = 39;
+const BUTTON_BOARD_STYLE: usize = 90;
 
 const BUTTON_ADD_MAGE: usize = 40;
 const BUTTON_ADD_PROP: usize = 41;
@@ -349,17 +350,7 @@ impl State for Editor {
 
         if self.board_dirty {
             self.board_dirty = false;
-            draw_board(
-                atlas,
-                256.0,
-                0.0,
-                self.level.board.width,
-                self.level.board.height,
-                8,
-                8,
-                (0, 0),
-            )
-            .unwrap();
+            draw_board(atlas, 256.0, 0.0, &self.level.board, 8, 8).unwrap();
         }
 
         context.save();
@@ -553,6 +544,20 @@ impl State for Editor {
         if self.is_interface_active() {
             self.menu_interface
                 .draw(interface_context, atlas, pointer, frame)?;
+        }
+
+        if pointer.location.0 >= 244
+            && pointer.location.0 < 308
+            && pointer.location.1 >= 8
+            && pointer.location.1 < 72
+        {
+            if pointer.clicked() {
+                self.level.board.style = self.level.board.style.next();
+                self.board_dirty = true;
+            } else if pointer.alt_clicked() {
+                self.level.board.style = self.level.board.style.previous();
+                self.board_dirty = true;
+            }
         }
 
         Ok(())

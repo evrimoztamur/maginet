@@ -2,6 +2,62 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Mage, MageSort, Position, Team};
 
+/// Style for board.
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub enum BoardStyle {
+    /// Default grassy style.
+    #[default]
+    Grass,
+    /// Teleport style used in teleport rune menu.
+    Teleport,
+    /// Desert style.
+    Desert,
+    /// Fleshy style.
+    Flesh,
+    /// Crusty style.
+    Crust,
+    /// Eldritch style.
+    Eldritch,
+}
+
+impl BoardStyle {
+    /// Returns the sprite offet for the board.
+    pub fn sprite_offset(&self) -> (usize, usize) {
+        match self {
+            BoardStyle::Grass => (0, 0),
+            BoardStyle::Teleport => (0, 64),
+            BoardStyle::Desert => (0, 128),
+            BoardStyle::Flesh => (0, 256),
+            BoardStyle::Crust => (0, 320),
+            BoardStyle::Eldritch => (0, 384),
+        }
+    }
+
+    /// Next style
+    pub fn next(&self) -> BoardStyle {
+        match self {
+            BoardStyle::Grass => BoardStyle::Desert,
+            BoardStyle::Desert => BoardStyle::Flesh,
+            BoardStyle::Flesh => BoardStyle::Crust,
+            BoardStyle::Crust => BoardStyle::Eldritch,
+            BoardStyle::Eldritch => BoardStyle::Grass,
+            BoardStyle::Teleport => BoardStyle::Grass,
+        }
+    }
+
+    /// Previous style
+    pub fn previous(&self) -> BoardStyle {
+        match self {
+            BoardStyle::Grass => BoardStyle::Eldritch,
+            BoardStyle::Desert => BoardStyle::Grass,
+            BoardStyle::Flesh => BoardStyle::Desert,
+            BoardStyle::Crust => BoardStyle::Flesh,
+            BoardStyle::Eldritch => BoardStyle::Crust,
+            BoardStyle::Teleport => BoardStyle::Grass,
+        }
+    }
+}
+
 /// Default size of the game board.
 pub const DEFAULT_BOARD_SIZE: (usize, usize) = (6, 6);
 
@@ -12,6 +68,8 @@ pub struct Board {
     pub width: usize,
     /// Height of the board.
     pub height: usize,
+    /// Style of the board
+    pub style: BoardStyle,
 }
 
 impl Board {
@@ -19,10 +77,38 @@ impl Board {
     /// Restricted to `4..=8` on both axes. Currently always 8-by-8.
     pub fn new(width: usize, height: usize) -> Result<Board, &'static str> {
         match (width, height) {
-            (width, height) if (3..=8).contains(&width) && (3..=8).contains(&height) => {
-                Ok(Board { width, height })
-            }
+            (width, height) if (3..=8).contains(&width) && (3..=8).contains(&height) => Ok(Board {
+                width,
+                height,
+                ..Default::default()
+            }),
             _ => Err("board size does not conform to limits"),
+        }
+    }
+
+    /// Instantiates the [`Board`] `struct` with a certain size.
+    /// Restricted to `4..=8` on both axes. Currently always 8-by-8.
+    pub fn with_style(
+        width: usize,
+        height: usize,
+        style: BoardStyle,
+    ) -> Result<Board, &'static str> {
+        match (width, height) {
+            (width, height) if (3..=8).contains(&width) && (3..=8).contains(&height) => Ok(Board {
+                width,
+                height,
+                style,
+            }),
+            _ => Err("board size does not conform to limits"),
+        }
+    }
+
+    /// Unrestricted for draw calls
+    pub fn unchecked(width: usize, height: usize, style: BoardStyle) -> Board {
+        Board {
+            width,
+            height,
+            style,
         }
     }
 
@@ -93,6 +179,7 @@ impl Default for Board {
         Self {
             width: DEFAULT_BOARD_SIZE.0,
             height: DEFAULT_BOARD_SIZE.1,
+            style: Default::default(),
         }
     }
 }

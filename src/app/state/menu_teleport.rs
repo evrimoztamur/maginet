@@ -1,4 +1,4 @@
-use shared::{Board, LobbySettings, LobbySort};
+use shared::{Board, BoardStyle, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
@@ -17,6 +17,7 @@ pub struct TeleportMenu {
     lobby_id: u16,
     particle_system: ParticleSystem,
     board_dirty: bool,
+    board: Board,
 }
 
 const BOARD_OFFSET: (i32, i32) = ((4 * BOARD_SCALE.0) / 2, (4 * BOARD_SCALE.1) / 2 - 16);
@@ -38,7 +39,7 @@ impl State for TeleportMenu {
 
         if self.board_dirty {
             self.board_dirty = false;
-            draw_board(atlas, 256.0, 0.0, 4, 4, 8, 8, (0, 64)).unwrap();
+            draw_board(atlas, 256.0, 0.0, &self.board, 8, 8).unwrap();
         }
 
         context.save();
@@ -51,12 +52,7 @@ impl State for TeleportMenu {
 
         self.particle_system.tick_and_draw(context, atlas, frame)?;
 
-        let board = Board {
-            width: 4,
-            height: 4,
-        };
-
-        if let Some(selected_tile) = board.location_as_position(
+        if let Some(selected_tile) = self.board.location_as_position(
             pointer.location,
             (BOARD_OFFSET.0, BOARD_OFFSET.1),
             BOARD_SCALE,
@@ -104,12 +100,7 @@ impl State for TeleportMenu {
     ) -> Option<StateSort> {
         let pointer = &app_context.pointer;
 
-        let board = Board {
-            width: 4,
-            height: 4,
-        };
-
-        if let Some(selected_tile) = board.location_as_position(
+        if let Some(selected_tile) = self.board.location_as_position(
             pointer.location,
             (BOARD_OFFSET.0, BOARD_OFFSET.1),
             BOARD_SCALE,
@@ -170,12 +161,14 @@ impl Default for TeleportMenu {
         );
 
         let root_element = Interface::new(vec![button_teleport.boxed(), button_back.boxed()]);
+        let board = Board::with_style(4, 4, BoardStyle::Teleport).unwrap();
 
         TeleportMenu {
             interface: root_element,
             lobby_id: 0,
             particle_system: ParticleSystem::default(),
             board_dirty: true,
+            board,
         }
     }
 }

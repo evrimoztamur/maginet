@@ -9,7 +9,7 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Level, Mage, Mages, Position, PowerUp, Team, Turn};
+use crate::{Board, Level, Mage, Mages, Position, PowerUp, Team, Turn};
 
 /// Leaf node for use in search algorithms.
 pub struct TurnLeaf(pub Turn, pub isize);
@@ -580,6 +580,11 @@ impl Game {
         }
 
         attack_targets
+    }
+
+    /// Returns the [`Board`]'s size as an `usize` tuple.
+    pub fn board(&self) -> &Board {
+        &self.level.board
     }
 
     /// Returns the [`Board`]'s size as an `usize` tuple.

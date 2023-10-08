@@ -99,17 +99,7 @@ impl State for EditorPreview {
 
         if self.board_dirty {
             self.board_dirty = false;
-            draw_board(
-                atlas,
-                256.0,
-                0.0,
-                self.level.board.width,
-                self.level.board.height,
-                8,
-                8,
-                (0, 0),
-            )
-            .unwrap();
+            draw_board(atlas, 256.0, 0.0, &self.level.board, 8, 8).unwrap();
         }
 
         {

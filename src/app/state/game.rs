@@ -1,8 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use shared::{
-    GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings, LobbySort, Mage, Mages,
-    Message, Position, PowerUp, Team, Turn, TurnLeaf,
+    Board, BoardStyle, GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings,
+    LobbySort, Mage, Mages, Message, Position, PowerUp, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
@@ -242,12 +242,20 @@ impl Game {
         let board_scale = tuple_as!(BOARD_SCALE, f64);
         let board_offset = tuple_as!(self.board_offset(), f64);
 
-        let (board_width, board_height) = self.lobby.game.board_size();
+        // let (board_width, board_height) = self.lobby.game.board_size();
 
         if self.board_dirty {
             self.board_dirty = false;
-            draw_board(atlas, 256.0, 0.0, board_width, board_height, 8, 8, (0, 0)).unwrap();
-            draw_board(atlas, 384.0, 256.0, 4, 4, 4, 4, (0, 64)).unwrap();
+            draw_board(atlas, 256.0, 0.0, self.lobby.game.board(), 8, 8).unwrap();
+            draw_board(
+                atlas,
+                384.0,
+                256.0,
+                &Board::with_style(4, 4, BoardStyle::Teleport).unwrap(),
+                4,
+                4,
+            )
+            .unwrap();
         }
 
         // DRAW background layer (board + UI block)

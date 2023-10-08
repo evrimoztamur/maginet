@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use shared::{Level, LobbyError, SessionRequest};
+use shared::{Board, Level, LobbyError, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
     console, CanvasRenderingContext2d, DomRectReadOnly, FocusEvent, HtmlCanvasElement,
@@ -9,8 +9,8 @@ use web_sys::{
 };
 
 use super::{
-    MainMenu, Editor, Game, SkirmishMenu, TeleportMenu, Pointer, EditorPreview,
-    Tutorial, BOARD_SCALE, ArenaMenu,
+    ArenaMenu, Editor, EditorPreview, Game, MainMenu, Pointer, SkirmishMenu, TeleportMenu,
+    Tutorial, BOARD_SCALE,
 };
 use crate::{
     app::State,
@@ -116,8 +116,22 @@ impl App {
 
         if !self.atlas_complete {
             self.atlas_complete = true;
-            draw_board(atlas, 256.0, 256.0, 2, 2, 2, 2, (0, 0))?;
-            draw_board(atlas, 256.0, 320.0, 4, 2, 4, 2, (0, 0))?;
+            draw_board(
+                atlas,
+                256.0,
+                256.0,
+                &Board::unchecked(2, 2, shared::BoardStyle::Grass),
+                2,
+                2,
+            )?;
+            draw_board(
+                atlas,
+                256.0,
+                320.0,
+                &Board::unchecked(4, 2, shared::BoardStyle::Grass),
+                4,
+                2,
+            )?;
         } else {
             result = match &mut self.state_sort {
                 StateSort::SkirmishMenu(state) => {

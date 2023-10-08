@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use shared::{GameResult, Mage, Position, PowerUp, Team};
+use shared::{Board, GameResult, Mage, Position, PowerUp, Team};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
@@ -507,11 +507,9 @@ pub fn draw_board(
     atlas: &HtmlCanvasElement,
     dx: f64,
     dy: f64,
-    width: usize,
-    height: usize,
+    board: &Board,
     clear_width: usize,
     clear_height: usize,
-    sprite_offset: (usize, usize),
 ) -> Result<(), JsValue> {
     let board_scale = tuple_as!(BOARD_SCALE, f64);
 
@@ -530,12 +528,14 @@ pub fn draw_board(
     );
 
     atlas_context.translate(
-        dx + ((clear_width - width) as f64 * board_scale.0) / 2.0,
-        dy + ((clear_height - height) as f64 * board_scale.1) / 2.0,
+        dx + ((clear_width - board.width) as f64 * board_scale.0) / 2.0,
+        dy + ((clear_height - board.height) as f64 * board_scale.1) / 2.0,
     )?;
 
-    for x in 0..width {
-        for y in 0..height {
+    let sprite_offset = board.style.sprite_offset();
+
+    for x in 0..board.width {
+        for y in 0..board.height {
             draw_tile(
                 &atlas_context,
                 atlas,
@@ -549,10 +549,10 @@ pub fn draw_board(
 
     atlas_context.set_global_composite_operation("destination-out")?;
 
-    for x in 0..width {
-        for y in 0..height {
+    for x in 0..board.width {
+        for y in 0..board.height {
             let (edge_l, edge_r, edge_t, edge_b) =
-                (x == 0, x == width - 1, y == 0, y == height - 1);
+                (x == 0, x == board.width - 1, y == 0, y == board.height - 1);
 
             let (dx, dy) = (x as f64 * board_scale.0, y as f64 * board_scale.1);
 
