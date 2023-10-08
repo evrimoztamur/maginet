@@ -22,8 +22,6 @@
         - Hardcode?
 - Tutorial
     - Explain that the staff icon corresponds to the pattern
-    - Hint that you can move diagonally for the final blow
-    - Place the player into a 2v2 mini-battle for them to test their skills after they successfully finish the tutorial
 - Sound
     - Awaiting framk for SFX and music
     - State transitions
@@ -36,9 +34,23 @@
 - Arena
     - Pan/Move and lock onto levels
     - Previewing levels from list of codes/positions
-
 - Mechanics
     - Powerups
         - Diagonals
         - Plus-beam
         - Defensive mode
+
+# SKIP
+
+- Tutorial
+    - Hint that you can move diagonally for the final blow
+    - Place the player into a 2v2 mini-battle for them to test their skills after they successfully finish the tutorial
+- Mechanics
+    - Trial new mechanics
+        - Board shenanigans
+            - Force-shift all mages cardinal directions
+            - Piece modifiers https://nestorgames.com/rulebooks/ESSENTIA_EN.pdf
+        - Piece shenanigans
+            - Promotion
+                - On kill receive diagonals?
+                - On low health turn defensive?
