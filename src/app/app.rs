@@ -10,7 +10,7 @@ use web_sys::{
 
 use super::{
     MainMenu, Editor, Game, SkirmishMenu, TeleportMenu, Pointer, EditorPreview,
-    Tutorial, BOARD_SCALE,
+    Tutorial, BOARD_SCALE, ArenaMenu,
 };
 use crate::{
     app::State,
@@ -31,6 +31,7 @@ impl From<LobbyError> for AppError {
 
 pub enum StateSort {
     MainMenu(MainMenu),
+    ArenaMenu(ArenaMenu),
     SkirmishMenu(SkirmishMenu),
     Game(Game),
     Editor(Editor),
@@ -122,6 +123,9 @@ impl App {
                 StateSort::SkirmishMenu(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
+                StateSort::ArenaMenu(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
                 StateSort::TeleportMenu(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
@@ -168,6 +172,7 @@ impl App {
     pub fn tick(&mut self, text_input: &HtmlInputElement) {
         let next_state = match &mut self.state_sort {
             StateSort::SkirmishMenu(state) => state.tick(text_input, &self.app_context),
+            StateSort::ArenaMenu(state) => state.tick(text_input, &self.app_context),
             StateSort::TeleportMenu(state) => state.tick(text_input, &self.app_context),
             StateSort::Game(state) => state.tick(text_input, &self.app_context),
             StateSort::MainMenu(state) => state.tick(text_input, &self.app_context),

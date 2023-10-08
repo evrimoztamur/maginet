@@ -98,6 +98,19 @@ impl Mage {
         }
     }
 
+    /// Instantiates a [`Mage`] for use within the editor.
+    pub fn editor_new(index: usize, team: Team, sort: MageSort, mana: Mana, position: Position) -> Mage {
+        Mage {
+            index,
+            position,
+            sort,
+            team,
+            mana,
+            spell: Spell::select(sort),
+            powerup: None,
+        }
+    }
+
     /// Determines if the [`Mage`] is alive. A *sleeping* mage has no mana left (`== 0`).
     pub fn is_alive(&self) -> bool {
         self.mana > 0

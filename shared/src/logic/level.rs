@@ -13,7 +13,7 @@ pub const BASE32: Encoding = new_encoding! {
 };
 
 /// [`Level`] is the builder for a [`Game`] instance.
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Level {
     /// Level's [`Board`].
     pub board: Board,
@@ -164,6 +164,29 @@ impl From<&str> for Level {
             decoded.into()
         } else {
             Level::default()
+        }
+    }
+}
+
+impl Clone for Level {
+    fn clone(&self) -> Self {
+        let mages = self
+            .mages
+            .iter()
+            .enumerate()
+            .map(|(i, mage)| {
+                let mut mage = mage.clone();
+                mage.index = i;
+                mage
+            })
+            .collect();
+
+        Self {
+            board: self.board.clone(),
+            mages,
+            mage_index: self.mage_index,
+            powerups: self.powerups.clone(),
+            starting_team: self.starting_team,
         }
     }
 }

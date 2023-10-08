@@ -797,10 +797,11 @@ impl State for Editor {
                 BUTTON_SPELL_LEFT => {
                     if let EditorSelection::Tile(position) = self.selection {
                         if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            *selected_mage = Mage::new(
+                            *selected_mage = Mage::editor_new(
                                 selected_mage.index,
                                 selected_mage.team,
                                 selected_mage.sort.previous(),
+                                selected_mage.mana.clone(),
                                 selected_mage.position,
                             );
                         }
@@ -809,10 +810,11 @@ impl State for Editor {
                 BUTTON_SPELL_RIGHT => {
                     if let EditorSelection::Tile(position) = self.selection {
                         if let Some(selected_mage) = self.level.mages.occupant_mut(&position) {
-                            *selected_mage = Mage::new(
+                            *selected_mage = Mage::editor_new(
                                 selected_mage.index,
                                 selected_mage.team,
                                 selected_mage.sort.next(),
+                                selected_mage.mana.clone(),
                                 selected_mage.position,
                             );
                         }

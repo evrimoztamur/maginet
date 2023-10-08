@@ -6,6 +6,16 @@
     - Link tutorial into arena menu
     - 10 arena levels with base rules
     - Simulation results interface
+    - Level names
+    - Enter level and exit at same position back into Arena UI
+    - Track wins
+        - Record win upon exiting from won state
+    - Lock level if no adjacent wins
+    - Flipping mages when level won (+ medal from Mrmo?)
+- Mechanics
+    - Rock as obstacle
+- Level/Editor
+    - Select tileset
 - Documentation UI
     - Table of contents
     - Text plus rendered image
@@ -20,14 +30,15 @@
         - State requests background music
         - App handles transitions between pieces
         - Fade in-out
-- Mechanics
-    - Trial new mechanics
-        - Board shenanigans
-            - Force-shift all mages cardinal directions
-            - Piece modifiers https://nestorgames.com/rulebooks/ESSENTIA_EN.pdf
-        - Piece shenanigans
-            - Promotion
-                - On kill receive diagonals?
-                - On low health turn defensive?
 
 # DONE
+
+- Arena
+    - Pan/Move and lock onto levels
+    - Previewing levels from list of codes/positions
+
+- Mechanics
+    - Powerups
+        - Diagonals
+        - Plus-beam
+        - Defensive mode

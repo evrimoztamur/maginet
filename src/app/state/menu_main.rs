@@ -2,7 +2,7 @@ use shared::{Board, LoadoutMethod, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{Editor, Game, SkirmishMenu, State, Tutorial};
+use super::{Editor, Game, SkirmishMenu, State, Tutorial, ArenaMenu};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -76,7 +76,7 @@ impl State for MainMenu {
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
                 BUTTON_ARENA => {
-                    return Some(StateSort::SkirmishMenu(SkirmishMenu::default()));
+                    return Some(StateSort::ArenaMenu(ArenaMenu::default()));
                 }
                 BUTTON_EDITOR => {
                     return Some(StateSort::Editor(Editor::default()));
