@@ -251,6 +251,8 @@ pub enum LoadoutMethod {
     Prefab(Level),
     /// A pre-fabricated list of mages from the editor.
     EditorPrefab(Level),
+    /// An Arena level with attached position.
+    Arena(Level, (isize, isize)),
 }
 
 /// Loadout methods.
@@ -351,7 +353,9 @@ impl LobbySettings {
                     ))
                 }
             }
-            LoadoutMethod::Prefab(level) | LoadoutMethod::EditorPrefab(level) => level.clone(),
+            LoadoutMethod::Prefab(level)
+            | LoadoutMethod::EditorPrefab(level)
+            | LoadoutMethod::Arena(level, _) => level.clone(),
         }
     }
 }

@@ -7,7 +7,7 @@ use shared::{
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{Editor, SkirmishMenu, State};
+use super::{Editor, SkirmishMenu, State, ArenaMenu};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -958,6 +958,12 @@ impl State for Game {
                             ..
                         } => {
                             return Some(StateSort::Editor(Editor::new(level.clone())));
+                        }
+                        LobbySettings {
+                            loadout_method: LoadoutMethod::Arena(level, position),
+                            ..
+                        } => {
+                            return Some(StateSort::ArenaMenu(ArenaMenu::at_position(*position)));
                         }
                         _ => return Some(StateSort::SkirmishMenu(SkirmishMenu::default())),
                     },

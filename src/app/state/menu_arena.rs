@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use shared::{Board, Level, Mage, Position, PowerUp};
+use shared::{Board, Level, LobbySettings, Mage, Position, PowerUp};
 use wasm_bindgen::JsValue;
 use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{MainMenu, State};
+use super::{Game, MainMenu, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
@@ -149,6 +149,13 @@ pub struct ArenaMenu {
 }
 
 impl ArenaMenu {
+    pub fn at_position(position: (isize, isize)) -> ArenaMenu {
+        ArenaMenu {
+            pan_offset: (-position.0 as f64 * 96.0, -position.1 as f64 * 96.0),
+            ..Default::default()
+        }
+    }
+
     fn drag_offset(&self, pointer: &Pointer) -> (f64, f64) {
         let pointer_floc = tuple_as!(pointer.location, f64);
 
@@ -268,15 +275,23 @@ impl State for ArenaMenu {
         let pointer = &app_context.pointer;
         let pointer_floc = tuple_as!(pointer.location, f64);
 
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
-            match value {
-                BUTTON_BATTLE => {
-                    return Some(StateSort::MainMenu(MainMenu::default()));
+        if let Some(UIEvent::ButtonClick(BUTTON_BACK)) = self.interface.tick(pointer) {
+            return Some(StateSort::MainMenu(MainMenu::default()));
+        } else if let Some(UIEvent::ButtonClick(BUTTON_BATTLE)) = self.button_battle.tick(pointer) {
+            let selected_position = self.level_position();
+            let selected_level = self.level_portals.get(&selected_position);
+
+            if let Some(portal) = selected_level {
+                if !portal.locked {
+                    return Some(StateSort::Game(Game::new(LobbySettings {
+                        lobby_sort: shared::LobbySort::LocalAI,
+                        loadout_method: shared::LoadoutMethod::Arena(
+                            portal.level.clone(),
+                            selected_position,
+                        ),
+                        ..Default::default()
+                    })));
                 }
-                BUTTON_BACK => {
-                    return Some(StateSort::MainMenu(MainMenu::default()));
-                }
-                _ => (),
             }
         } else if pointer.clicked() {
             self.pan_start = Some(pointer_floc);
@@ -351,7 +366,7 @@ impl Default for ArenaMenu {
 
         level_portals.insert(
             (1, 0),
-            LevelPortal::from_level("e01jg1148m0j8k834g00".into(), "Basics II".to_string(), true),
+            LevelPortal::from_level("e01jg1148m0j8k834g00".into(), "Basics II".to_string(), false),
         );
         // 1v2 basic
 

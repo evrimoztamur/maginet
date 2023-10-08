@@ -1,7 +1,5 @@
 # TODO
 - Arena
-    - Select levels
-    - Enter level and exit at same position back into Arena UI
     - Track wins
         - Record win upon exiting from won state
     - Lock level if no adjacent wins
@@ -12,8 +10,13 @@
         - +5-10 from others
 - Tutorial
     - Explain that the staff icon corresponds to the pattern
-- Disable hotkeys for debugging
-- Simulation results interface
+- Deployment
+    - Disable hotkeys for debugging
+    - Cropped demo ex. multiplayer and only 3-4 levels
+        - Replace itch version
+        - Replace evrim.zone version
+- Editor
+    - Simulation results interface
 - Sound
     - Awaiting framk for SFX and music
     - State transitions
@@ -33,6 +36,8 @@
     - Level names
     - Lock levels
     - Battle/Locked buttons
+    - Select levels
+    - Enter level and exit at same position back into Arena UI
 - Mechanics
     - Powerups
         - Diagonals
