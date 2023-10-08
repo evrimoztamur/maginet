@@ -71,14 +71,14 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     224.0,
-                    &"Click the Red Mage".to_string(),
+                    "Click the Red Mage",
                 )?;
                 draw_text_centered(
                     interface_context,
                     atlas,
                     128.0,
                     240.0,
-                    &"Then pick a square to move to".to_string(),
+                    "Then pick a square to move to",
                 )?;
             }
             TutorialStage::Attacking => {
@@ -99,14 +99,14 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     224.0,
-                    &"You attack when you move".to_string(),
+                    "You attack when you move",
                 )?;
                 draw_text_centered(
                     interface_context,
                     atlas,
                     128.0,
                     240.0,
-                    &"Zap the Blue Mage!".to_string(),
+                    "Zap the Blue Mage!",
                 )?;
             }
             TutorialStage::Charging => {
@@ -127,14 +127,14 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     224.0,
-                    &"Mages Charge when low on mana".to_string(),
+                    "Mages Charge when low on mana",
                 )?;
                 draw_text_centered(
                     interface_context,
                     atlas,
                     128.0,
                     240.0,
-                    &"Charged Mages move to diagonals".to_string(),
+                    "Charged Mages move to diagonals",
                 )?;
             }
             TutorialStage::FinalBlow => {
@@ -154,7 +154,7 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     232.0,
-                    &"Deal the final blow!".to_string(),
+                    "Deal the final blow!",
                 )?;
             }
             TutorialStage::Victory => {
@@ -174,14 +174,14 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     224.0,
-                    &"Congratulations!".to_string(),
+                    "Congratulations!",
                 )?;
                 draw_text_centered(
                     interface_context,
                     atlas,
                     128.0,
                     240.0,
-                    &"You won your first battle".to_string(),
+                    "You won your first battle",
                 )?;
             }
         }

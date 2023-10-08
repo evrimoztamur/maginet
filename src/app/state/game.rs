@@ -443,11 +443,10 @@ impl Game {
             {
                 let game_started = self.lobby.all_ready() | self.lobby.is_local();
 
-                let mut mage_heap: Vec<&Mage> = self.lobby.game.iter_mages().collect();
-                mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
+                self.lobby.game.sort_mages();
 
                 // DRAW mages
-                for mage in &mage_heap {
+                for mage in self.lobby.game.iter_mages() {
                     context.save();
 
                     context.translate(
@@ -525,7 +524,7 @@ impl Game {
                 }
 
                 // DRAW mana bars for all mages
-                for mage in &mage_heap {
+                for mage in self.lobby.game.iter_mages() {
                     context.save();
 
                     context.translate(
@@ -935,9 +934,7 @@ impl State for Game {
                 match value {
                     BUTTON_REMATCH => {
                         if self.lobby.is_local() {
-                            return Some(StateSort::Game(Game::new(
-                                self.lobby.settings.clone(),
-                            )));
+                            return Some(StateSort::Game(Game::new(self.lobby.settings.clone())));
                         } else if let Ok(lobby_id) = self.lobby_id() {
                             let session_id = app_context.session_id.clone().unwrap();
                             let _ = send_rematch(lobby_id, session_id)

@@ -247,10 +247,16 @@ impl Default for ArenaMenu {
         level_portals.insert((0, 0), LevelPortal::from_level("hg12g014cm0j800".into()));
         // 1v1 basic
 
-        level_portals.insert((1, 0), LevelPortal::from_level("e01jg1148m0j8k834g00".into()));
+        level_portals.insert(
+            (1, 0),
+            LevelPortal::from_level("e01jg1148m0j8k834g00".into()),
+        );
         // 1v2 basic
 
-        level_portals.insert((2, 0), LevelPortal::from_level("j0228014cm0j8v804gp04900".into()));
+        level_portals.insert(
+            (2, 0),
+            LevelPortal::from_level("j0228014cm0j8v804gp04900".into()),
+        );
         // 2v2 easy
 
         level_portals.insert(

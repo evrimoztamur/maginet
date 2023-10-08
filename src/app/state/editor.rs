@@ -373,11 +373,10 @@ impl State for Editor {
 
         self.particle_system.tick_and_draw(context, atlas, frame)?;
 
-        let mut mage_heap: Vec<&Mage> = self.level.mages.iter().collect();
-        mage_heap.sort_by(|a, b| a.position.1.cmp(&b.position.1));
+        self.level.mages.sort_by(|a, b| a.position.1.cmp(&b.position.1));
 
         // DRAW mages
-        for mage in mage_heap {
+        for mage in &self.level.mages {
             context.save();
 
             context.translate(

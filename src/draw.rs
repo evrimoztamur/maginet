@@ -56,7 +56,7 @@ fn kerning(char: char) -> (isize, isize) {
     }
 }
 
-pub fn text_length(text: &String) -> isize {
+pub fn text_length(text: &str) -> isize {
     text.chars()
         .map(|char| {
             let kern = kerning(char);
@@ -70,7 +70,7 @@ pub fn draw_text(
     atlas: &HtmlCanvasElement,
     dx: f64,
     dy: f64,
-    text: &String,
+    text: &str,
 ) -> Result<(), JsValue> {
     let mut kerning_acc: isize = 0;
 
@@ -101,7 +101,7 @@ pub fn draw_text_centered(
     atlas: &HtmlCanvasElement,
     dx: f64,
     dy: f64,
-    text: &String,
+    text: &str,
 ) -> Result<(), JsValue> {
     draw_text(
         context,

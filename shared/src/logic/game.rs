@@ -620,6 +620,13 @@ impl Game {
                 }),
         )
     }
+
+    /// Sorts mages based on their Y-coordinates to render closer mages in front.
+    pub fn sort_mages(&mut self) {
+        self.level
+            .mages
+            .sort_by(|a, b| a.position.1.cmp(&b.position.1));
+    }
 }
 
 impl Mages for Game {
