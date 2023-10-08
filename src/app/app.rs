@@ -9,8 +9,8 @@ use web_sys::{
 };
 
 use super::{
-    BaseState, EditorState, LobbyState, MenuState, MenuTeleport, Pointer, PreviewState,
-    TutorialState, BOARD_SCALE,
+    MainMenu, Editor, Game, SkirmishMenu, TeleportMenu, Pointer, EditorPreview,
+    Tutorial, BOARD_SCALE,
 };
 use crate::{
     app::State,
@@ -30,13 +30,13 @@ impl From<LobbyError> for AppError {
 }
 
 pub enum StateSort {
-    Base(BaseState),
-    MenuMain(MenuState),
-    Lobby(LobbyState),
-    Editor(EditorState),
-    MenuTeleport(MenuTeleport),
-    Preview(PreviewState),
-    Tutorial(TutorialState),
+    MainMenu(MainMenu),
+    SkirmishMenu(SkirmishMenu),
+    Game(Game),
+    Editor(Editor),
+    TeleportMenu(TeleportMenu),
+    EditorPreview(EditorPreview),
+    Tutorial(Tutorial),
 }
 
 pub struct AppContext {
@@ -63,7 +63,7 @@ impl App {
                 canvas_settings: canvas_settings.clone(),
                 text_input: None,
             },
-            state_sort: StateSort::Base(BaseState::default()),
+            state_sort: StateSort::MainMenu(MainMenu::default()),
             atlas_complete: false,
         }
     }
@@ -119,22 +119,22 @@ impl App {
             draw_board(atlas, 256.0, 320.0, 4, 2, 4, 2, (0, 0))?;
         } else {
             result = match &mut self.state_sort {
-                StateSort::MenuMain(state) => {
+                StateSort::SkirmishMenu(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::MenuTeleport(state) => {
+                StateSort::TeleportMenu(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::Lobby(state) => {
+                StateSort::Game(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::Base(state) => {
+                StateSort::MainMenu(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
                 StateSort::Editor(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::Preview(state) => {
+                StateSort::EditorPreview(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
                 StateSort::Tutorial(state) => {
@@ -167,12 +167,12 @@ impl App {
 
     pub fn tick(&mut self, text_input: &HtmlInputElement) {
         let next_state = match &mut self.state_sort {
-            StateSort::MenuMain(state) => state.tick(text_input, &self.app_context),
-            StateSort::MenuTeleport(state) => state.tick(text_input, &self.app_context),
-            StateSort::Lobby(state) => state.tick(text_input, &self.app_context),
-            StateSort::Base(state) => state.tick(text_input, &self.app_context),
+            StateSort::SkirmishMenu(state) => state.tick(text_input, &self.app_context),
+            StateSort::TeleportMenu(state) => state.tick(text_input, &self.app_context),
+            StateSort::Game(state) => state.tick(text_input, &self.app_context),
+            StateSort::MainMenu(state) => state.tick(text_input, &self.app_context),
             StateSort::Editor(state) => state.tick(text_input, &self.app_context),
-            StateSort::Preview(state) => state.tick(text_input, &self.app_context),
+            StateSort::EditorPreview(state) => state.tick(text_input, &self.app_context),
             StateSort::Tutorial(state) => state.tick(text_input, &self.app_context),
         };
 
@@ -224,7 +224,7 @@ impl App {
     }
 
     fn lobby_touch(
-        lobby_state: &mut LobbyState,
+        lobby_state: &mut Game,
         pointer: &Pointer,
         pointer_location: (i32, i32),
     ) -> bool {
@@ -255,7 +255,7 @@ impl App {
 
             {
                 match &mut self.state_sort {
-                    StateSort::Lobby(lobby_state) => {
+                    StateSort::Game(lobby_state) => {
                         self.app_context.pointer.button = App::lobby_touch(
                             lobby_state,
                             &self.app_context.pointer,
@@ -317,7 +317,7 @@ impl App {
 
     pub fn on_key_down(&mut self, event: KeyboardEvent) {
         match &mut self.state_sort {
-            StateSort::Lobby(state) => {
+            StateSort::Game(state) => {
                 match event.code().as_str() {
                     "KeyB" => {
                         state.take_best_turn();

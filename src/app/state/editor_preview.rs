@@ -2,7 +2,7 @@ use shared::{Level, LobbySettings, Mage};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{EditorState, LobbyState, State};
+use super::{Editor, Game, State};
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
@@ -12,7 +12,7 @@ use crate::{
     tuple_as,
 };
 
-pub struct PreviewState {
+pub struct EditorPreview {
     interface: Interface,
     level: Level,
     particle_system: ParticleSystem,
@@ -24,8 +24,8 @@ const BUTTON_LOCAL: usize = 1;
 const BUTTON_VS_AI: usize = 2;
 const BUTTON_ONLINE: usize = 3;
 
-impl PreviewState {
-    pub fn new(level: Level) -> PreviewState {
+impl EditorPreview {
+    pub fn new(level: Level) -> EditorPreview {
         let button_back = ButtonElement::new(
             (-60, 118),
             (20, 20),
@@ -67,7 +67,7 @@ impl PreviewState {
             button_online.boxed(),
         ]);
 
-        PreviewState {
+        EditorPreview {
             interface,
             level,
             particle_system: ParticleSystem::default(),
@@ -83,7 +83,7 @@ impl PreviewState {
     }
 }
 
-impl State for PreviewState {
+impl State for EditorPreview {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
@@ -218,24 +218,24 @@ impl State for PreviewState {
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
                 BUTTON_BACK => {
-                    return Some(StateSort::Editor(EditorState::new(self.level.clone())));
+                    return Some(StateSort::Editor(Editor::new(self.level.clone())));
                 }
                 BUTTON_LOCAL => {
-                    return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
+                    return Some(StateSort::Game(Game::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Local,
                         loadout_method: shared::LoadoutMethod::EditorPrefab(self.level.clone()),
                         ..Default::default()
                     })));
                 }
                 BUTTON_VS_AI => {
-                    return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
+                    return Some(StateSort::Game(Game::new(LobbySettings {
                         lobby_sort: shared::LobbySort::LocalAI,
                         loadout_method: shared::LoadoutMethod::EditorPrefab(self.level.clone()),
                         ..Default::default()
                     })));
                 }
                 BUTTON_ONLINE => {
-                    return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
+                    return Some(StateSort::Game(Game::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Online(0),
                         loadout_method: shared::LoadoutMethod::EditorPrefab(self.level.clone()),
                         ..Default::default()
@@ -249,8 +249,8 @@ impl State for PreviewState {
     }
 }
 
-impl Default for PreviewState {
+impl Default for EditorPreview {
     fn default() -> Self {
-        PreviewState::new(App::load_level(0).unwrap_or_default())
+        EditorPreview::new(App::load_level(0).unwrap_or_default())
     }
 }

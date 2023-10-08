@@ -12,7 +12,7 @@ use crate::{
     tuple_as,
 };
 
-pub struct TeleportMenu {
+pub struct MenuArena {
     interface: Interface,
     lobby_id: u16,
     particle_system: ParticleSystem,
@@ -23,7 +23,7 @@ const BOARD_OFFSET: (i32, i32) = ((4 * BOARD_SCALE.0) / 2, (4 * BOARD_SCALE.1) /
 
 const BUTTON_TELEPORT: usize = 20;
 const BUTTON_BACK: usize = 21;
-impl State for TeleportMenu {
+impl State for MenuArena {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
@@ -149,8 +149,8 @@ impl State for TeleportMenu {
     }
 }
 
-impl Default for TeleportMenu {
-    fn default() -> TeleportMenu {
+impl Default for MenuArena {
+    fn default() -> MenuArena {
         let button_teleport = ButtonElement::new(
             (8, 188),
             (96, 24),
@@ -171,7 +171,7 @@ impl Default for TeleportMenu {
 
         let root_element = Interface::new(vec![button_teleport.boxed(), button_back.boxed()]);
 
-        TeleportMenu {
+        MenuArena {
             interface: root_element,
             lobby_id: 0,
             particle_system: ParticleSystem::default(),

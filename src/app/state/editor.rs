@@ -4,7 +4,7 @@ use shared::{Board, Level, Mage, Mages, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, PreviewState, State};
+use super::{MainMenu, EditorPreview, State};
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -26,7 +26,7 @@ pub enum EditorSelection {
     None,
 }
 
-pub struct EditorState {
+pub struct Editor {
     button_menu: ToggleButtonElement,
     interface: Interface,
     menu_interface: Interface,
@@ -64,8 +64,8 @@ const BUTTON_SIMULATE: usize = 50;
 const BUTTON_RESET: usize = 51;
 const BUTTON_LEAVE: usize = 100;
 
-impl EditorState {
-    pub fn new(level: Level) -> EditorState {
+impl Editor {
+    pub fn new(level: Level) -> Editor {
         let button_menu = ToggleButtonElement::new(
             (-60, 118),
             (20, 20),
@@ -290,7 +290,7 @@ impl EditorState {
             button_leave.boxed(),
         ]);
 
-        EditorState {
+        Editor {
             button_menu,
             interface: root_element,
             mage_interface,
@@ -333,7 +333,7 @@ impl EditorState {
     }
 }
 
-impl State for EditorState {
+impl State for Editor {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
@@ -569,7 +569,7 @@ impl State for EditorState {
 
         if let Some((field, value)) = &app_context.text_input {
             if field == "level_code" {
-                return Some(StateSort::Editor(EditorState::new(value.as_str().into())));
+                return Some(StateSort::Editor(Editor::new(value.as_str().into())));
             }
         }
 
@@ -618,10 +618,10 @@ impl State for EditorState {
                         // );
                     }
                     BUTTON_RESET => {
-                        return Some(StateSort::Editor(EditorState::new(Level::default())));
+                        return Some(StateSort::Editor(Editor::new(Level::default())));
                     }
                     BUTTON_LEAVE => {
-                        return Some(StateSort::Base(BaseState::default()));
+                        return Some(StateSort::MainMenu(MainMenu::default()));
                     }
                     _ => (),
                 }
@@ -645,7 +645,7 @@ impl State for EditorState {
                     //     board: self.level.board.clone(),
                     //     ..Default::default()
                     // })));
-                    return Some(StateSort::Preview(PreviewState::new(self.level.clone())));
+                    return Some(StateSort::EditorPreview(EditorPreview::new(self.level.clone())));
                 }
                 BUTTON_WIDTH_MINUS => {
                     let min_width = self
@@ -1028,8 +1028,8 @@ impl State for EditorState {
     }
 }
 
-impl Default for EditorState {
+impl Default for Editor {
     fn default() -> Self {
-        EditorState::new(App::load_level(0).unwrap_or_default())
+        Editor::new(App::load_level(0).unwrap_or_default())
     }
 }

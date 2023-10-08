@@ -7,7 +7,7 @@ use shared::{
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{EditorState, MenuState, State};
+use super::{Editor, SkirmishMenu, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -30,7 +30,7 @@ const BUTTON_LEAVE: usize = 2;
 const BUTTON_MENU: usize = 10;
 const BUTTON_UNDO: usize = 20;
 
-pub struct LobbyState {
+pub struct Game {
     interface: Interface,
     button_menu: ToggleButtonElement,
     button_undo: ButtonElement,
@@ -45,8 +45,8 @@ pub struct LobbyState {
     shake_frame: (u64, usize),
 }
 
-impl LobbyState {
-    pub fn new(lobby_settings: LobbySettings) -> LobbyState {
+impl Game {
+    pub fn new(lobby_settings: LobbySettings) -> Game {
         let message_pool = Rc::new(RefCell::new(MessagePool::new()));
 
         let message_closure = {
@@ -103,7 +103,7 @@ impl LobbyState {
 
         let root_element = Interface::new(vec![button_rematch.boxed(), button_leave.boxed()]);
 
-        LobbyState {
+        Game {
             interface: root_element,
             button_menu,
             button_undo,
@@ -762,7 +762,7 @@ impl LobbyState {
     }
 }
 
-impl State for LobbyState {
+impl State for Game {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
@@ -935,7 +935,7 @@ impl State for LobbyState {
                 match value {
                     BUTTON_REMATCH => {
                         if self.lobby.is_local() {
-                            return Some(StateSort::Lobby(LobbyState::new(
+                            return Some(StateSort::Game(Game::new(
                                 self.lobby.settings.clone(),
                             )));
                         } else if let Ok(lobby_id) = self.lobby_id() {
@@ -950,9 +950,9 @@ impl State for LobbyState {
                             loadout_method: LoadoutMethod::EditorPrefab(level),
                             ..
                         } => {
-                            return Some(StateSort::Editor(EditorState::new(level.clone())));
+                            return Some(StateSort::Editor(Editor::new(level.clone())));
                         }
-                        _ => return Some(StateSort::MenuMain(MenuState::default())),
+                        _ => return Some(StateSort::SkirmishMenu(SkirmishMenu::default())),
                     },
                     _ => (),
                 }

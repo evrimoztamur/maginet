@@ -1,42 +1,29 @@
-use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
+use shared::{Board, LoadoutMethod, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, LobbyState, MenuTeleport, State};
+use super::{Editor, Game, SkirmishMenu, State, Tutorial};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
-        StateSort, UIElement, UIEvent,
+        Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
+        LabelTrim, Pointer, StateSort, UIElement, UIEvent,
     },
-    draw::{draw_mage, draw_mana, draw_sprite},
     window,
 };
 
-pub struct MenuState {
+pub struct MainMenu {
     interface: Interface,
-    sentinel_lobby: Lobby,
-    lobby_settings: LobbySettings,
+    button_reset: ConfirmButtonElement,
+    preview_state: Game,
 }
 
-const BUTTON_LOCAL: usize = 1;
-const BUTTON_VS_AI: usize = 2;
-const BUTTON_ONLINE: usize = 3;
-const BUTTON_DEFAULT: usize = 10;
-const BUTTON_RANDOM: usize = 11;
-const BUTTON_SYMMETRIC_RANDOM: usize = 12;
-// const BUTTON_ROUND_ROBIN: usize = 13;
-const BUTTON_BATTLE: usize = 20;
-const BUTTON_BACK: usize = 21;
-const BUTTON_TELEPORT: usize = 30;
+const BUTTON_ARENA: usize = 20;
+const BUTTON_SKIRMISH: usize = 21;
+const BUTTON_TUTORIAL: usize = 22;
+const BUTTON_EDITOR: usize = 23;
+const BUTTON_RESET: usize = 50;
 
-impl MenuState {
-    fn refresh_lobby(&mut self) {
-        self.lobby_settings.seed = window().performance().unwrap().now() as u64;
-        self.sentinel_lobby = Lobby::new(self.lobby_settings.clone());
-    }
-}
-
-impl State for MenuState {
+impl State for MainMenu {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
@@ -48,50 +35,26 @@ impl State for MenuState {
         let pointer = &app_context.pointer;
 
         context.save();
-        context.translate(16.0, 32.0)?;
-        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
 
-        draw_sprite(context, atlas, 96.0, 64.0, 32.0, 40.0, 16.0, -2.0)?;
-        context.translate(80.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
+        context.translate(-72.0, 0.0)?;
 
-        draw_sprite(context, atlas, 64.0, 64.0, 32.0, 40.0, 26.0, -4.0)?;
-        draw_sprite(context, atlas, 128.0, 104.0, 32.0, 40.0, 6.0, -2.0)?;
-        context.translate(80.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 32.0, 0.0, 0.0)?;
+        self.preview_state.draw_game(
+            context,
+            interface_context,
+            atlas,
+            frame,
+            &Pointer::default(),
+        )?;
 
-        draw_sprite(context, atlas, 32.0, 64.0, 32.0, 40.0, 6.0, -4.0)?;
-        draw_sprite(context, atlas, 0.0, 256.0, 32.0, 40.0, 26.0, -2.0)?;
         context.restore();
-
-        context.save();
-        context.translate(108.0, 112.0)?;
-
-        draw_sprite(context, atlas, 256.0, 320.0, 128.0, 64.0, 0.0, 0.0)?;
-
-        for mage in self.sentinel_lobby.game.iter_mages() {
-            context.save();
-            context.translate(
-                -16.0 + mage.position.0 as f64 * 32.0,
-                15.0 + if mage.team == Team::Red { 0.0 } else { 1.0 } * 32.0,
-            )?;
-            draw_mage(
-                context,
-                atlas,
-                mage,
-                frame,
-                self.sentinel_lobby.game.starting_team(),
-                true,
-                None,
-            )?;
-            draw_mana(context, atlas, mage)?;
-            context.restore();
-        }
 
         self.interface
             .draw(interface_context, atlas, pointer, frame)?;
 
-        context.restore();
+        if self.preview_state.lobby().finished() {
+            self.button_reset
+                .draw(interface_context, atlas, pointer, frame)?;
+        }
 
         Ok(())
     }
@@ -101,168 +64,104 @@ impl State for MenuState {
         _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
+        let frame = app_context.frame;
         let pointer = &app_context.pointer;
+
+        if self.preview_state.frames_since_last_move(frame) > 70 {
+            self.preview_state.take_best_turn_quick();
+        }
+
+        self.preview_state.tick_game(frame, app_context);
 
         if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
-                BUTTON_LOCAL => {
-                    self.lobby_settings.lobby_sort = LobbySort::Local;
+                BUTTON_ARENA => {
+                    return Some(StateSort::SkirmishMenu(SkirmishMenu::default()));
                 }
-                BUTTON_VS_AI => {
-                    self.lobby_settings.lobby_sort = LobbySort::LocalAI;
+                BUTTON_EDITOR => {
+                    return Some(StateSort::Editor(Editor::default()));
                 }
-                BUTTON_ONLINE => {
-                    self.lobby_settings.lobby_sort = LobbySort::Online(0);
+                BUTTON_SKIRMISH => {
+                    return Some(StateSort::SkirmishMenu(SkirmishMenu::default()));
                 }
-                BUTTON_DEFAULT => {
-                    self.lobby_settings.loadout_method = LoadoutMethod::Default;
-                    self.refresh_lobby();
-                }
-                BUTTON_RANDOM => {
-                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: false };
-                    self.refresh_lobby();
-                }
-                BUTTON_SYMMETRIC_RANDOM => {
-                    self.lobby_settings.loadout_method = LoadoutMethod::Random { symmetric: true };
-                    self.refresh_lobby();
-                }
-                BUTTON_BATTLE => {
-                    return Some(StateSort::Lobby(LobbyState::new(
-                        self.lobby_settings.clone(),
-                    )));
-                }
-                BUTTON_TELEPORT => {
-                    return Some(StateSort::MenuTeleport(MenuTeleport::default()));
-                }
-                BUTTON_BACK => {
-                    return Some(StateSort::Base(BaseState::default()));
+                BUTTON_TUTORIAL => {
+                    return Some(StateSort::Tutorial(Tutorial::default()));
                 }
                 _ => (),
             }
+        }
+
+        if self.preview_state.lobby().finished() && self.button_reset.tick(pointer).is_some() {
+            return Some(StateSort::MainMenu(MainMenu::default()));
         }
 
         None
     }
 }
 
-impl Default for MenuState {
-    fn default() -> MenuState {
-        let button_local = ButtonElement::new(
-            (0, 0),
-            (72, 32),
-            BUTTON_LOCAL,
-            LabelTrim::Round,
-            LabelTheme::Default,
-            crate::app::ContentElement::Text("Local".to_string(), Alignment::Center),
-        );
-        let button_vs_ai = ButtonElement::new(
-            (80, 0),
-            (72, 32),
-            BUTTON_VS_AI,
-            LabelTrim::Round,
-            LabelTheme::Default,
-            crate::app::ContentElement::Text("AI".to_string(), Alignment::Center),
-        );
-        let button_online = ButtonElement::new(
-            (160, 0),
-            (72, 32),
-            BUTTON_ONLINE,
-            LabelTrim::Round,
-            LabelTheme::Default,
-            crate::app::ContentElement::Text("Online".to_string(), Alignment::Center),
-        );
-
-        let group_lobby_type = ButtonGroupElement::new(
-            (12, 64),
-            vec![button_local, button_vs_ai, button_online],
-            BUTTON_LOCAL,
-        );
-
-        let button_default = ButtonElement::new(
-            (0, 0),
-            (80, 18),
-            BUTTON_DEFAULT,
-            LabelTrim::Round,
-            LabelTheme::Default,
-            crate::app::ContentElement::Text("Default".to_string(), Alignment::Center),
-        );
-        let button_random = ButtonElement::new(
-            (0, 22),
-            (80, 18),
-            BUTTON_SYMMETRIC_RANDOM,
-            LabelTrim::Round,
-            LabelTheme::Default,
-            crate::app::ContentElement::Text("Random".to_string(), Alignment::Center),
-        );
-
-        let button_symmetric_random = ButtonElement::new(
-            (0, 22 * 2),
-            (80, 18),
-            BUTTON_RANDOM,
-            LabelTrim::Round,
-            LabelTheme::Default,
-            crate::app::ContentElement::Text("Chaos".to_string(), Alignment::Center),
-        );
-
-        // let button_round_robin = ButtonElement::new(
-        //     (0, 22 * 3),
-        //     (80, 18),
-        //     BUTTON_ROUND_ROBIN,
-        //     ButtonTrim::Round,
-        //     ButtonClass::Default,
-        //     crate::app::ContentElement::Text("Draft".to_string(), Alignment::Center),
-        // );
-
-        let group_loadout_type = ButtonGroupElement::new(
-            (16, 112),
-            vec![
-                button_default,
-                button_random,
-                button_symmetric_random,
-                // button_round_robin,
-            ],
-            BUTTON_DEFAULT,
-        );
-
-        let button_battle = ButtonElement::new(
-            (64, 188),
-            (128, 24),
-            BUTTON_BATTLE,
+impl Default for MainMenu {
+    fn default() -> Self {
+        let button_arena = ButtonElement::new(
+            (192, 68),
+            (112, 24),
+            BUTTON_ARENA,
             LabelTrim::Glorious,
             LabelTheme::Action,
-            crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Arena".to_string(), Alignment::Center),
         );
 
-        let button_teleport = ButtonElement::new(
-            (35, 220),
-            (88, 16),
-            BUTTON_TELEPORT,
+        let button_skirmish = ButtonElement::new(
+            (200, 68 + 32),
+            (96, 20),
+            BUTTON_SKIRMISH,
             LabelTrim::Glorious,
             LabelTheme::Default,
-            crate::app::ContentElement::Text("Join".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Skirmish".to_string(), Alignment::Center),
         );
 
-        let button_back = ButtonElement::new(
-            (129, 220),
-            (88, 16),
-            BUTTON_BACK,
-            LabelTrim::Return,
+        let button_editor = ButtonElement::new(
+            (208, 68 + 32 * 2 + 4),
+            (80, 20),
+            BUTTON_EDITOR,
+            LabelTrim::Round,
             LabelTheme::Default,
-            crate::app::ContentElement::Text("Back".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Editor".to_string(), Alignment::Center),
+        );
+
+        let button_tutorial = ButtonElement::new(
+            (208, 68 + 32 * 3),
+            (80, 20),
+            BUTTON_TUTORIAL,
+            LabelTrim::Round,
+            LabelTheme::Default,
+            crate::app::ContentElement::Text("Tutorial".to_string(), Alignment::Center),
         );
 
         let root_element = Interface::new(vec![
-            group_lobby_type.boxed(),
-            group_loadout_type.boxed(),
-            button_battle.boxed(),
-            button_teleport.boxed(),
-            button_back.boxed(),
+            button_arena.boxed(),
+            button_editor.boxed(),
+            button_tutorial.boxed(),
+            button_skirmish.boxed(),
         ]);
 
-        MenuState {
+        let button_reset = ConfirmButtonElement::new(
+            (208 - 164, 64 + 166),
+            (24, 20),
+            BUTTON_RESET,
+            LabelTrim::Round,
+            LabelTheme::Default,
+            crate::app::ContentElement::Sprite((128, 16), (16, 16)),
+        );
+
+        MainMenu {
             interface: root_element,
-            sentinel_lobby: Lobby::new(LobbySettings::default()),
-            lobby_settings: LobbySettings::default(),
+            button_reset,
+            preview_state: Game::new(LobbySettings {
+                lobby_sort: LobbySort::Local,
+                loadout_method: LoadoutMethod::DefaultBoard(Board::new(6, 7).unwrap()),
+                seed: window().performance().unwrap().now() as u64,
+                can_stalemate: true,
+            }),
         }
     }
 }

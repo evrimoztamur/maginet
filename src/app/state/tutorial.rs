@@ -2,7 +2,7 @@ use shared::{GameResult, Level, LoadoutMethod, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{BaseState, LobbyState, State};
+use super::{MainMenu, Game, State};
 use crate::{
     app::{
         Alignment::Center, AppContext, ContentElement::Text, LabelTrim, Particle, ParticleSort,
@@ -21,12 +21,12 @@ enum TutorialStage {
     Victory,
 }
 
-pub struct TutorialState {
-    pub game_state: LobbyState,
+pub struct Tutorial {
+    pub game_state: Game,
     tutorial_stage: TutorialStage,
 }
 
-impl TutorialState {
+impl Tutorial {
     pub fn spark_board(&mut self) {
         let board_size = self.game_state.lobby().game.board_size();
 
@@ -44,7 +44,7 @@ impl TutorialState {
     }
 }
 
-impl State for TutorialState {
+impl State for Tutorial {
     fn draw(
         &mut self,
         context: &CanvasRenderingContext2d,
@@ -243,19 +243,19 @@ impl State for TutorialState {
         let next_state = self.game_state.tick(text_input, app_context);
 
         match next_state {
-            Some(StateSort::Lobby(_)) => Some(StateSort::Tutorial(TutorialState::default())),
-            Some(StateSort::MenuMain(_)) => Some(StateSort::Base(BaseState::default())),
+            Some(StateSort::Game(_)) => Some(StateSort::Tutorial(Tutorial::default())),
+            Some(StateSort::SkirmishMenu(_)) => Some(StateSort::MainMenu(MainMenu::default())),
             _ => next_state,
         }
     }
 }
 
-impl Default for TutorialState {
+impl Default for Tutorial {
     fn default() -> Self {
         let level: Level = "p24g091804j0".into();
 
-        TutorialState {
-            game_state: LobbyState::new(LobbySettings {
+        Tutorial {
+            game_state: Game::new(LobbySettings {
                 lobby_sort: LobbySort::LocalAI,
                 loadout_method: LoadoutMethod::Prefab(level),
                 seed: window().performance().unwrap().now() as u64,
