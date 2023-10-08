@@ -138,21 +138,25 @@ impl State for EditorPreview {
                     )?;
                     draw_powerup(context, atlas, position, powerup, frame)?;
 
-                    for _ in 0..1 {
-                        let d = js_sys::Math::random() * std::f64::consts::TAU;
-                        let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                        self.particle_system.add(Particle::new(
-                            (position.0 as f64, position.1 as f64),
-                            (d.cos() * v, d.sin() * v),
-                            (js_sys::Math::random() * 20.0) as u64,
-                            ParticleSort::for_powerup(powerup),
-                        ));
+                    if let Some(particle_sort) = ParticleSort::for_powerup(powerup) {
+                        for _ in 0..1 {
+                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                            self.particle_system.add(Particle::new(
+                                (position.0 as f64, position.1 as f64),
+                                (d.cos() * v, d.sin() * v),
+                                (js_sys::Math::random() * 20.0) as u64,
+                                particle_sort,
+                            ));
+                        }
                     }
 
                     context.restore();
                 }
 
-                self.level.mages.sort_by(|a, b| a.position.1.cmp(&b.position.1));
+                self.level
+                    .mages
+                    .sort_by(|a, b| a.position.1.cmp(&b.position.1));
 
                 // DRAW mages
                 for mage in &self.level.mages {

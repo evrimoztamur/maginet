@@ -64,6 +64,7 @@ impl State for Tutorial {
                     &app_context.pointer,
                     app_context.frame,
                     &LabelTrim::Glorious,
+                    false,
                 )?;
 
                 draw_text_centered(
@@ -92,6 +93,7 @@ impl State for Tutorial {
                     &app_context.pointer,
                     app_context.frame,
                     &LabelTrim::Glorious,
+                    false,
                 )?;
 
                 draw_text_centered(
@@ -120,6 +122,7 @@ impl State for Tutorial {
                     &app_context.pointer,
                     app_context.frame,
                     &LabelTrim::Glorious,
+                    false,
                 )?;
 
                 draw_text_centered(
@@ -148,6 +151,7 @@ impl State for Tutorial {
                     &app_context.pointer,
                     app_context.frame,
                     &LabelTrim::Glorious,
+                    false,
                 )?;
                 draw_text_centered(
                     interface_context,
@@ -168,6 +172,7 @@ impl State for Tutorial {
                     &app_context.pointer,
                     app_context.frame,
                     &LabelTrim::Glorious,
+                    false,
                 )?;
                 draw_text_centered(
                     interface_context,

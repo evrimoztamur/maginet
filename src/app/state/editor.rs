@@ -4,7 +4,7 @@ use shared::{Board, Level, Mage, Mages, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{MainMenu, EditorPreview, State};
+use super::{EditorPreview, MainMenu, State};
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -373,7 +373,35 @@ impl State for Editor {
 
         self.particle_system.tick_and_draw(context, atlas, frame)?;
 
-        self.level.mages.sort_by(|a, b| a.position.1.cmp(&b.position.1));
+        self.level
+            .mages
+            .sort_by(|a, b| a.position.1.cmp(&b.position.1));
+
+        // DRAW powerups
+        for (position, powerup) in self.level.powerups.iter() {
+            context.save();
+
+            context.translate(
+                16.0 + position.0 as f64 * board_scale.0,
+                16.0 + position.1 as f64 * board_scale.1,
+            )?;
+            draw_powerup(context, atlas, position, powerup, frame)?;
+
+            if let Some(particle_sort) = ParticleSort::for_powerup(powerup) {
+                for _ in 0..1 {
+                    let d = js_sys::Math::random() * std::f64::consts::TAU;
+                    let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
+                    self.particle_system.add(Particle::new(
+                        (position.0 as f64, position.1 as f64),
+                        (d.cos() * v, d.sin() * v),
+                        (js_sys::Math::random() * 20.0) as u64,
+                        particle_sort,
+                    ));
+                }
+            }
+
+            context.restore();
+        }
 
         // DRAW mages
         for mage in &self.level.mages {
@@ -386,30 +414,6 @@ impl State for Editor {
 
             draw_mage(context, atlas, mage, frame, mage.team, true, None)?;
             draw_mana(context, atlas, mage)?;
-
-            context.restore();
-        }
-
-        // DRAW powerups
-        for (position, powerup) in self.level.powerups.iter() {
-            context.save();
-
-            context.translate(
-                16.0 + position.0 as f64 * board_scale.0,
-                16.0 + position.1 as f64 * board_scale.1,
-            )?;
-            draw_powerup(context, atlas, position, powerup, frame)?;
-
-            for _ in 0..1 {
-                let d = js_sys::Math::random() * std::f64::consts::TAU;
-                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
-                self.particle_system.add(Particle::new(
-                    (position.0 as f64, position.1 as f64),
-                    (d.cos() * v, d.sin() * v),
-                    (js_sys::Math::random() * 20.0) as u64,
-                    ParticleSort::for_powerup(powerup),
-                ));
-            }
 
             context.restore();
         }
@@ -644,7 +648,9 @@ impl State for Editor {
                     //     board: self.level.board.clone(),
                     //     ..Default::default()
                     // })));
-                    return Some(StateSort::EditorPreview(EditorPreview::new(self.level.clone())));
+                    return Some(StateSort::EditorPreview(EditorPreview::new(
+                        self.level.clone(),
+                    )));
                 }
                 BUTTON_WIDTH_MINUS => {
                     let min_width = self

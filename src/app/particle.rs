@@ -48,11 +48,12 @@ pub enum ParticleSort {
     Beam,
 }
 impl ParticleSort {
-    pub(crate) fn for_powerup(powerup: &shared::PowerUp) -> ParticleSort {
+    pub(crate) fn for_powerup(powerup: &shared::PowerUp) -> Option<ParticleSort> {
         match powerup {
-            shared::PowerUp::Shield => Self::Shield,
-            shared::PowerUp::Beam => Self::Beam,
-            shared::PowerUp::Diagonal => Self::Diagonals,
+            shared::PowerUp::Shield => Some(Self::Shield),
+            shared::PowerUp::Beam => Some(Self::Beam),
+            shared::PowerUp::Diagonal => Some(Self::Diagonals),
+            shared::PowerUp::Boulder => None,
         }
     }
 }

@@ -13,6 +13,8 @@ pub enum PowerUp {
     Beam,
     /// Gives a mage the ability to move diagonals.
     Diagonal,
+    /// Blocks off the mages' movement.
+    Boulder,
 }
 impl PowerUp {
     /// Returns next [`PowerUp`] in order.
@@ -20,15 +22,17 @@ impl PowerUp {
         match self {
             PowerUp::Shield => PowerUp::Beam,
             PowerUp::Beam => PowerUp::Diagonal,
-            PowerUp::Diagonal => PowerUp::Shield,
+            PowerUp::Diagonal => PowerUp::Boulder,
+            PowerUp::Boulder => PowerUp::Shield,
         }
     }
     /// Returns next [`PowerUp`] in order.
     pub fn previous(&self) -> PowerUp {
         match self {
-            PowerUp::Shield => PowerUp::Diagonal,
+            PowerUp::Shield => PowerUp::Boulder,
             PowerUp::Beam => PowerUp::Shield,
             PowerUp::Diagonal => PowerUp::Beam,
+            PowerUp::Boulder => PowerUp::Diagonal,
         }
     }
 }
@@ -39,7 +43,8 @@ impl From<u8> for PowerUp {
             0 => Self::Shield,
             1 => Self::Beam,
             2 => Self::Diagonal,
-            _ => Self::Diagonal,
+            3 => Self::Boulder,
+            _ => Self::Boulder,
         }
     }
 }
@@ -50,6 +55,7 @@ impl From<PowerUp> for u8 {
             PowerUp::Shield => 0,
             PowerUp::Beam => 1,
             PowerUp::Diagonal => 2,
+            PowerUp::Boulder => 3,
         }
     }
 }

@@ -178,7 +178,6 @@ impl UIElement for ButtonElement {
         match self.class {
             LabelTheme::Disabled => {
                 context.save();
-                context.set_global_composite_operation("xor")?;
                 draw_label(
                     context,
                     atlas,
@@ -189,10 +188,10 @@ impl UIElement for ButtonElement {
                     pointer,
                     frame,
                     &self.trim,
+                    true,
                 )?;
                 context.restore();
             }
-
             _ => draw_label(
                 context,
                 atlas,
@@ -203,6 +202,7 @@ impl UIElement for ButtonElement {
                 pointer,
                 frame,
                 &self.trim,
+                false,
             )?,
         }
 

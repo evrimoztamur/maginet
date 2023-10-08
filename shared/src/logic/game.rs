@@ -200,7 +200,10 @@ impl Game {
             // let position = position.wrap(self.level.board.width as i8, self.level.board.height as i8);
 
             if let Some(position) = self.level.board.validate_position(position) {
-                if !(self.level.mages.occupied(&position) || diagonal && !mage.has_diagonals()) {
+                if !(self.level.mages.occupied(&position)
+                    || diagonal && !mage.has_diagonals()
+                    || self.level.powerups.get(&position) == Some(&PowerUp::Boulder))
+                {
                     moves.push((position, dir, diagonal));
                 }
             }

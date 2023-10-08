@@ -52,6 +52,8 @@ fn kerning(char: char) -> (isize, isize) {
         'c' => (-1, -1),
         'o' => (-1, -1),
         'p' => (-1, 0),
+        ' ' => (-2, -2),
+        'I' => (-1, -2),
         _ => (0, 0),
     }
 }
@@ -336,9 +338,10 @@ pub fn draw_powerup(
     // draw_sprite(context, atlas, 0.0, 208.0, 32.0, 16.0, -16.0, -4.0)?;
 
     let sprite = match powerup {
-        PowerUp::Shield => (32.0, 288.0),
-        PowerUp::Beam => (96.0, 288.0),
-        PowerUp::Diagonal => (64.0, 288.0),
+        PowerUp::Shield => (32.0, 288.0, 32.0, 32.0),
+        PowerUp::Beam => (96.0, 288.0, 32.0, 32.0),
+        PowerUp::Diagonal => (64.0, 288.0, 32.0, 32.0),
+        PowerUp::Boulder => (0.0, 304.0, 32.0, 48.0),
     };
 
     let t = (frame as f64) / 10.0 + position.0 as f64 * 9.0 + position.1 as f64;
@@ -363,6 +366,7 @@ pub fn draw_powerup(
             );
             ((q.0 * 4.0).round(), (q.1 * 4.0).round())
         }
+        PowerUp::Boulder => (0.0, -16.0),
     };
 
     draw_sprite(
@@ -370,8 +374,8 @@ pub fn draw_powerup(
         atlas,
         sprite.0,
         sprite.1,
-        32.0,
-        32.0,
+        sprite.2,
+        sprite.3,
         -16.0 + bounce.0,
         -16.0 + bounce.1,
     )?;
@@ -678,6 +682,7 @@ pub fn draw_label(
     pointer: &Pointer,
     frame: u64,
     trim: &LabelTrim,
+    snip_content: bool,
 ) -> Result<(), JsValue> {
     context.save();
 
@@ -687,6 +692,10 @@ pub fn draw_label(
     context.fill_rect(0.0, 0.0, size.0 as f64, size.1 as f64);
 
     context.translate(size.0 as f64 / 2.0, size.1 as f64 / 2.0)?;
+
+    if snip_content {
+        context.set_global_composite_operation("destination-out")?;
+    }
 
     content.draw(context, atlas, pointer, frame)?;
 
