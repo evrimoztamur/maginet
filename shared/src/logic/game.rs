@@ -137,12 +137,12 @@ impl Game {
 
     /// Returns a reference to a [`Mage`] of a certain index.
     pub fn get_mage(&self, index: usize) -> Option<&Mage> {
-        self.level.mages.get(index)
+        self.level.mages.iter().find(|mage| mage.index == index)
     }
 
     /// Returns a mutable reference to a [`Mage`] of a certain index.
     pub fn get_mage_mut(&mut self, index: usize) -> Option<&mut Mage> {
-        self.level.mages.get_mut(index)
+        self.level.mages.iter_mut().find(|mage| mage.index == index)
     }
 
     /// Returns an iterator over all [`PowerUp`]s.
