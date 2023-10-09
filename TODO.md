@@ -1,8 +1,5 @@
 # TODO
 
-- Arena
-  - 20 arena levels with base rules
-    - +5-10 from others
 - Tutorial
   - Explain that the staff icon corresponds to the pattern
 - Deployment
@@ -38,7 +35,8 @@
   - Track wins
     - Record win upon exiting from won state
   - Lock level if no adjacent wins
-  - Flipping mages when level won (+ medal from Mrmo?)
+  - Flipping mages when level won (+ medal from Mrmo)
+  - 28 arena levels!
 - Mechanics
   - Powerups
     - Diagonals

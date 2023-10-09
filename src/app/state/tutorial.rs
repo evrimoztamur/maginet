@@ -108,7 +108,7 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     240.0,
-                    "The Blue Mage zapped you!",
+                    "Zap the Blue Mage!",
                 )?;
             }
             TutorialStage::Charging => {
@@ -257,7 +257,7 @@ impl State for Tutorial {
 
 impl Default for Tutorial {
     fn default() -> Self {
-        let level: Level = "j012809mdm0k81a809807303801g80r".into();
+        let level: Level = "hg18a09m4g0m81g00c4068035g14r0v008".into();
 
         Tutorial {
             game_state: Game::new(LobbySettings {
