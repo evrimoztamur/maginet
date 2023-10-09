@@ -1,9 +1,12 @@
 # TODO
 
 - Deployment
-  - Replace itch version
-  - Replace evrim.zone version
+  - Demo
+    - Replace itch version
+    - Replace evrim.zone version
+    - Replace Steam version
 - Editor
+  - Incorporate other boulder styles
   - Simulation results interface
   - Serde for level styles
     - Level styles in campaign menu..?
@@ -18,7 +21,7 @@
   - Text plus rendered image
     - Hardcode?
 
-# DONE
+## DONE
 
 - Deployment
   - Disable hotkeys for debugging on deploy version
@@ -46,7 +49,7 @@
   - Select tileset
   - Fix menu state logic
 
-# SKIP
+## SKIP
 
 - Tutorial
   - Hint that you can move diagonally for the final blow
