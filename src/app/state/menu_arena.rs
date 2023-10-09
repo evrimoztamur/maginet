@@ -80,9 +80,9 @@ impl LevelPortal {
         (x, y): (isize, isize),
         frame: u64,
     ) -> Result<(), JsValue> {
-        context.translate(x as f64 * 96.0, y as f64 * 96.0)?;
+        context.translate(x as f64 * 128.0, y as f64 * 128.0)?;
 
-        draw_sprite(context, atlas, 256.0, 0.0, 64.0, 64.0, 0.0, 0.0)?;
+        draw_sprite(context, atlas, 256.0, 0.0, 64.0, 64.0, -32.0, -32.0)?;
 
         Ok(())
     }
@@ -95,11 +95,11 @@ impl LevelPortal {
         (x, y): (isize, isize),
         frame: u64,
     ) -> Result<(), JsValue> {
-        context.translate(x as f64 * 96.0, y as f64 * 96.0)?;
+        context.translate(x as f64 * 128.0 - 16.0, y as f64 * 128.0 - 16.0)?;
 
         for (i, preview) in self.preview.iter().enumerate() {
             context.save();
-            context.translate((i % 2) as f64 * 32.0 + 16.0, (i / 2) as f64 * 32.0 + 16.0)?;
+            context.translate((i % 2) as f64 * 32.0, (i / 2) as f64 * 32.0)?;
             match preview {
                 Some(PreviewEntity::Mage(mage)) => draw_mage(
                     context,
@@ -121,8 +121,8 @@ impl LevelPortal {
                             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
                             particle_system.add(Particle::new(
                                 (
-                                    (i as isize % 2 + x * 3) as f64,
-                                    (i as isize / 2 + y * 3) as f64,
+                                    (i as isize % 2 + x * 4) as f64 - 1.0,
+                                    (i as isize / 2 + y * 4) as f64 - 1.0,
                                 ),
                                 (d.cos() * v, d.sin() * v),
                                 (js_sys::Math::random() * 20.0) as u64,
@@ -159,8 +159,8 @@ impl LevelPortal {
                 320.0,
                 32.0,
                 32.0,
-                16.0 + bounce.0.round(),
-                bounce.1.round(),
+                0.0 + bounce.0.round(),
+                -16.0 + bounce.1.round(),
             )?;
 
             for _ in 0..(frame as i64 / 4) % 2 {
@@ -168,8 +168,8 @@ impl LevelPortal {
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
                 particle_system.add(Particle::new(
                     (
-                        (x * 3) as f64 + 0.5 + (frame as f64 * 0.2).sin() * 0.5,
-                        (y * 3) as f64 + (frame as f64 * 0.1).cos() * 0.5,
+                        (x * 4) as f64 - 0.5 + (frame as f64 * 0.2).sin() * 0.5,
+                        (y * 4) as f64 - 1.0 + (frame as f64 * 0.1).cos() * 0.5,
                     ),
                     (d.cos() * v, d.sin() * v),
                     (js_sys::Math::random() * 20.0) as u64,
@@ -178,7 +178,7 @@ impl LevelPortal {
             }
         }
 
-        draw_text_centered(context, atlas, 32.0, 72.0, &self.title)?;
+        draw_text_centered(context, atlas, 16.0, 60.0, &self.title)?;
 
         Ok(())
     }
@@ -207,7 +207,7 @@ pub struct ArenaMenu {
 impl ArenaMenu {
     pub fn at_position(position: (isize, isize)) -> ArenaMenu {
         ArenaMenu {
-            pan_offset: (-position.0 as f64 * 96.0, -position.1 as f64 * 96.0),
+            pan_offset: (-position.0 as f64 * 128.0, -position.1 as f64 * 128.0),
             ..Default::default()
         }
     }
@@ -224,8 +224,8 @@ impl ArenaMenu {
 
     fn level_position(&self) -> (isize, isize) {
         (
-            (-self.pan_offset.0 / 96.0).round() as isize,
-            (-self.pan_offset.1 / 96.0).round() as isize,
+            (-self.pan_offset.0 / 128.0).round() as isize,
+            (-self.pan_offset.1 / 128.0).round() as isize,
         )
     }
 }
@@ -262,8 +262,8 @@ impl State for ArenaMenu {
         context.save();
 
         context.translate(
-            96.0 + self.pan_offset.0 + drag_offset.0,
-            96.0 + self.pan_offset.1 + drag_offset.1,
+            128.0 + self.pan_offset.0 + drag_offset.0,
+            128.0 + self.pan_offset.1 + drag_offset.1,
         )?;
 
         if self.pan_offset.0 > 0.0 {
@@ -275,9 +275,9 @@ impl State for ArenaMenu {
             self.pan_offset.1 += (pan_target.1 - self.pan_offset.1) * 0.25;
         } else {
             self.pan_offset.0 +=
-                ((self.pan_offset.0 / 96.0).round() * 96.0 - self.pan_offset.0) * 0.25;
+                ((self.pan_offset.0 / 128.0).round() * 128.0 - self.pan_offset.0) * 0.25;
             self.pan_offset.1 +=
-                ((self.pan_offset.1 / 96.0).round() * 96.0 - self.pan_offset.1) * 0.25;
+                ((self.pan_offset.1 / 128.0).round() * 128.0 - self.pan_offset.1) * 0.25;
         }
 
         self.pan_offset.0 = self.pan_offset.0.floor();
@@ -356,15 +356,15 @@ impl State for ArenaMenu {
             let drag_offset = self.drag_offset(pointer);
 
             let lloc = (
-                ((-self.pan_offset.0 + (pointer_floc.0 - 128.0)) / 96.0).round() as isize,
-                ((-self.pan_offset.1 + (pointer_floc.1 - 128.0)) / 96.0).round() as isize,
+                ((-self.pan_offset.0 + (pointer_floc.0 - 128.0)) / 128.0).round() as isize,
+                ((-self.pan_offset.1 + (pointer_floc.1 - 128.0)) / 128.0).round() as isize,
             );
 
             if drag_offset.0.hypot(drag_offset.1) < 3.0 {
                 if self.level_portals.get(&lloc).is_some() {
                     self.pan_target = Some((
-                        -((-self.pan_offset.0 + pointer_floc.0 - 128.0) / 96.0).round() * 96.0,
-                        -((-self.pan_offset.1 + pointer_floc.1 - 128.0) / 96.0).round() * 96.0,
+                        -((-self.pan_offset.0 + pointer_floc.0 - 128.0) / 128.0).round() * 128.0,
+                        -((-self.pan_offset.1 + pointer_floc.1 - 128.0) / 128.0).round() * 128.0,
                     ));
                 }
             } else {
@@ -382,7 +382,7 @@ impl State for ArenaMenu {
 impl Default for ArenaMenu {
     fn default() -> ArenaMenu {
         let button_battle = ButtonElement::new(
-            (64, 180),
+            (64, 192),
             (128, 24),
             BUTTON_BATTLE,
             LabelTrim::Glorious,
@@ -391,7 +391,7 @@ impl Default for ArenaMenu {
         );
 
         let button_locked = ButtonElement::new(
-            (68, 180),
+            (68, 192),
             (120, 24),
             BUTTON_BATTLE,
             LabelTrim::Round,
@@ -400,7 +400,7 @@ impl Default for ArenaMenu {
         );
 
         let button_back = ButtonElement::new(
-            (84, 212),
+            (84, 224),
             (88, 16),
             BUTTON_BACK,
             LabelTrim::Return,
