@@ -1,7 +1,5 @@
 # TODO
 
-- Tutorial
-  - Explain that the staff icon corresponds to the pattern
 - Deployment
   - Disable hotkeys for debugging
   - Cropped demo ex. multiplayer and only 3-4 levels
@@ -51,6 +49,7 @@
 - Tutorial
   - Hint that you can move diagonally for the final blow
   - Place the player into a 2v2 mini-battle for them to test their skills after they successfully finish the tutorial
+  - Explain that the staff icon corresponds to the pattern
 - Mechanics
   - Trial new mechanics
     - Board shenanigans

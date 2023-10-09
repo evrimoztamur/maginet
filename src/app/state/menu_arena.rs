@@ -570,7 +570,7 @@ impl Default for ArenaMenu {
             (7, 2),
             LevelPortal::from_level(
                 "j02280j4500m8t818hpg4h025g06800".into(),
-                "Shields II".to_string(),
+                "Shields III".to_string(),
                 PortalStatus::Locked,
             ),
         );
