@@ -1,14 +1,12 @@
 # TODO
 
 - Deployment
-  - Disable hotkeys for debugging
-  - Cropped demo ex. multiplayer and only 3-4 levels
-    - Replace itch version
-    - Replace evrim.zone version
+  - Replace itch version
+  - Replace evrim.zone version
 - Editor
-    - Simulation results interface
-    - Serde for level styles
-        - Level styles in campaign menu..?
+  - Simulation results interface
+  - Serde for level styles
+    - Level styles in campaign menu..?
 - Sound
   - Awaiting framk for SFX and music
   - State transitions
@@ -22,6 +20,9 @@
 
 # DONE
 
+- Deployment
+  - Disable hotkeys for debugging on deploy version
+  - Cropped demo ex. multiplayer and only 3-4 levels
 - Arena
   - Pan/Move and lock onto levels
   - Previewing levels from list of codes/positions

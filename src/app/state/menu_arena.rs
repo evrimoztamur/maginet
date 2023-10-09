@@ -458,221 +458,223 @@ impl Default for ArenaMenu {
             ),
         );
 
-        level_portals.insert(
-            (3, -1),
-            LevelPortal::from_level(
-                "pg32a0j4gm148t818h602h1g092900j409r06h03".into(),
-                "Patterns I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+        #[cfg(not(feature = "demo"))]
+        {
+            level_portals.insert(
+                (3, -1),
+                LevelPortal::from_level(
+                    "pg32a0j4gm148t818h602h1g092900j409r06h03".into(),
+                    "Patterns I".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (4, -1),
-            LevelPortal::from_level(
-                "pg2620a48m1m8c038ht02h04gg1jr0wg0d406".into(),
-                "Patterns II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (4, -1),
+                LevelPortal::from_level(
+                    "pg2620a48m1m8c038ht02h04gg1jr0wg0d406".into(),
+                    "Patterns II".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (5, -1),
-            LevelPortal::from_level(
-                "pg3220j4g41m8h818gr06h4g052780j400".into(),
-                "Patterns III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (5, -1),
+                LevelPortal::from_level(
+                    "pg3220j4g41m8h818gr06h4g052780j400".into(),
+                    "Patterns III".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (4, 0),
-            LevelPortal::from_level(
-                "h0120124d42480t40e204102".into(),
-                "Diagonals I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (4, 0),
+                LevelPortal::from_level(
+                    "h0120124d42480t40e204102".into(),
+                    "Diagonals I".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (4, 1),
-            LevelPortal::from_level(
-                "f02220t4840m8e018hc06h04a014g0sg0cm04".into(),
-                "Diagonals II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (4, 1),
+                LevelPortal::from_level(
+                    "f02220t4840m8e018hc06h04a014g0sg0cm04".into(),
+                    "Diagonals II".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (4, 2),
-            LevelPortal::from_level(
-                "bg3200240g248h038gcg6h2s0h23t02408r04b02".into(),
-                "Diagonals III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (4, 2),
+                LevelPortal::from_level(
+                    "bg3200240g248h038gcg6h2s0h23t02408r04b02".into(),
+                    "Diagonals III".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (4, 3),
-            LevelPortal::from_level(
-                "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08".into(),
-                "Diagonals IV".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (4, 3),
+                LevelPortal::from_level(
+                    "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08".into(),
+                    "Diagonals IV".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (5, -2),
-            LevelPortal::from_level(
-                "j02620t4441m8c038hr06h055g1g00wg0dj06j01".into(),
-                "Beams I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (5, -2),
+                LevelPortal::from_level(
+                    "j02620t4441m8c038hr06h055g1g00wg0dj06j01".into(),
+                    "Beams I".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (5, -3),
-            LevelPortal::from_level(
-                "eg3020t4c40489818gr02h0m0d2780240gp06a03d00pr08".into(),
-                "Beams II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (5, -3),
+                LevelPortal::from_level(
+                    "eg3020t4c40489818gr02h0m0d2780240gp06a03d00pr08".into(),
+                    "Beams II".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (6, -3),
-            LevelPortal::from_level(
-                "qg22j0t4h41m8d038ja06h04gg13g0mr04j02".into(),
-                "Beams III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (6, -3),
+                LevelPortal::from_level(
+                    "qg22j0t4h41m8d038ja06h04gg13g0mr04j02".into(),
+                    "Beams III".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (5, 2),
-            LevelPortal::from_level(
-                "x01420a4900m81a402204903rg1680r".into(),
-                "Shields I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (5, 2),
+                LevelPortal::from_level(
+                    "x01420a4900m81a402204903rg1680r".into(),
+                    "Shields I".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (6, 2),
-            LevelPortal::from_level(
-                "xg2420a4r40m9b018gp02h06x00080140f406t02gg10".into(),
-                "Shields II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (6, 2),
+                LevelPortal::from_level(
+                    "xg2420a4r40m9b018gp02h06x00080140f406t02gg10".into(),
+                    "Shields II".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (7, 2),
-            LevelPortal::from_level(
-                "j02280j4500m8t818hpg4h025g06800".into(),
-                "Shields III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (7, 2),
+                LevelPortal::from_level(
+                    "j02280j4500m8t818hpg4h025g06800".into(),
+                    "Shields III".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (2, 1),
-            LevelPortal::from_level(
-                "hg2280a4d40490008g6g2h02cg12g00".into(),
-                "Challenge I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (2, 1),
+                LevelPortal::from_level(
+                    "hg2280a4d40490008g6g2h02cg12g00".into(),
+                    "Challenge I".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (3, 1),
-            LevelPortal::from_level(
-                "j012809mdm0k81a809807303801g80r".into(),
-                "Tutorial".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-        level_portals.insert(
-            (6, -1),
-            LevelPortal::from_level(
-                "hg2680t44m048a028hmg2h04000gr0mc06004".into(),
-                "Challenge II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (3, 1),
+                LevelPortal::from_level(
+                    "j012809mdm0k81a809807303801g80r".into(),
+                    "Tutorial".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
+            level_portals.insert(
+                (6, -1),
+                LevelPortal::from_level(
+                    "hg2680t44m048a028hmg2h04000gr0mc06004".into(),
+                    "Challenge II".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (7, -3),
-            LevelPortal::from_level(
-                "q03220t4840m98828gw02h2r0d2bg0j40x804j03dg0k00s80a807200".into(),
-                "Challenge III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (7, -3),
+                LevelPortal::from_level(
+                    "q03220t4840m98828gw02h2r0d2bg0j40x804j03dg0k00s80a807200".into(),
+                    "Challenge III".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (7, 1),
-            LevelPortal::from_level(
-                "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404".into(),
-                "Challenge IV".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (7, 1),
+                LevelPortal::from_level(
+                    "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404".into(),
+                    "Challenge IV".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (7, -2),
-            LevelPortal::from_level(
-                "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g".into(),
-                "Rite I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (7, -2),
+                LevelPortal::from_level(
+                    "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g".into(),
+                    "Rite I".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (7, -1),
-            LevelPortal::from_level(
-                "zg2220t4r4048f008ke06h0chg1pr0wr0b406w03j01qg0340ba06d03gg02g0r".into(),
-                "Rite II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (7, -1),
+                LevelPortal::from_level(
+                    "zg2220t4r4048f008ke06h0chg1pr0wr0b406w03j01qg0340ba06d03gg02g0r".into(),
+                    "Rite II".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (7, 0),
-            LevelPortal::from_level(
-                "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g".into(),
-                "Rite III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (7, 0),
+                LevelPortal::from_level(
+                    "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g".into(),
+                    "Rite III".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (8, 0),
-            LevelPortal::from_level(
-                "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g".into(),
-                "Rite IV".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (8, 0),
+                LevelPortal::from_level(
+                    "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g".into(),
+                    "Rite IV".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (8, -1),
-            LevelPortal::from_level(
-                "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g".into(),
-                "Ascension I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
+            level_portals.insert(
+                (8, -1),
+                LevelPortal::from_level(
+                    "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g".into(),
+                    "Ascension I".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
 
-        level_portals.insert(
-            (9, -1),
-            LevelPortal::from_level(
-                "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03".into(),
-                "Ascension II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
+            level_portals.insert(
+                (9, -1),
+                LevelPortal::from_level(
+                    "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03".into(),
+                    "Ascension II".to_string(),
+                    PortalStatus::Locked,
+                ),
+            );
+        }
 
         // Update portal locking statuses based on the KV-store.
 

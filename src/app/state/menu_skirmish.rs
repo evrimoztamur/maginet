@@ -2,7 +2,7 @@ use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{MainMenu, Game, TeleportMenu, State};
+use super::{Game, MainMenu, State, TeleportMenu};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
@@ -127,9 +127,7 @@ impl State for SkirmishMenu {
                     self.refresh_lobby();
                 }
                 BUTTON_BATTLE => {
-                    return Some(StateSort::Game(Game::new(
-                        self.lobby_settings.clone(),
-                    )));
+                    return Some(StateSort::Game(Game::new(self.lobby_settings.clone())));
                 }
                 BUTTON_TELEPORT => {
                     return Some(StateSort::TeleportMenu(TeleportMenu::default()));
@@ -163,12 +161,24 @@ impl Default for SkirmishMenu {
             LabelTheme::Default,
             crate::app::ContentElement::Text("AI".to_string(), Alignment::Center),
         );
+
+        #[cfg(not(feature = "demo"))]
         let button_online = ButtonElement::new(
             (160, 0),
             (72, 32),
             BUTTON_ONLINE,
             LabelTrim::Round,
             LabelTheme::Default,
+            crate::app::ContentElement::Text("Online".to_string(), Alignment::Center),
+        );
+
+        #[cfg(feature = "demo")]
+        let button_online = ButtonElement::new(
+            (160, 0),
+            (72, 32),
+            BUTTON_ONLINE,
+            LabelTrim::Round,
+            LabelTheme::Disabled,
             crate::app::ContentElement::Text("Online".to_string(), Alignment::Center),
         );
 

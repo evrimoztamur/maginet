@@ -128,7 +128,7 @@ impl ButtonElement {
     }
 
     fn clicked(&self, pointer: &Pointer) -> bool {
-        self.hovered(pointer) && pointer.clicked()
+        self.hovered(pointer) && pointer.clicked() && self.class != LabelTheme::Disabled
     }
 }
 

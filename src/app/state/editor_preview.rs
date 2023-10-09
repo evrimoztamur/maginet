@@ -51,12 +51,25 @@ impl EditorPreview {
             LabelTheme::Default,
             crate::app::ContentElement::Text("AI".to_string(), Alignment::Center),
         );
+
+
+        #[cfg(not(feature = "demo"))]
         let button_online = ButtonElement::new(
             (240, 208),
             (72, 32),
             BUTTON_ONLINE,
             LabelTrim::Round,
             LabelTheme::Default,
+            crate::app::ContentElement::Text("Online".to_string(), Alignment::Center),
+        );
+
+        #[cfg(feature = "demo")]
+        let button_online = ButtonElement::new(
+            (240, 208),
+            (72, 32),
+            BUTTON_ONLINE,
+            LabelTrim::Round,
+            LabelTheme::Disabled,
             crate::app::ContentElement::Text("Online".to_string(), Alignment::Center),
         );
 

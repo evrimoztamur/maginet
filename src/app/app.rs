@@ -334,7 +334,9 @@ impl App {
         Pointer::location_from_real(canvas_settings, (x / 2, y / 2))
     }
 
+    #[allow(clippy::single_match)]
     pub fn on_key_down(&mut self, event: KeyboardEvent) {
+        #[cfg(not(feature = "deploy"))]
         match &mut self.state_sort {
             StateSort::Game(state) => {
                 match event.code().as_str() {
@@ -347,9 +349,6 @@ impl App {
                     _ => (),
                 };
             }
-            StateSort::Editor(_state) => match event.code().as_str() {
-                _ => (),
-            },
             _ => (),
         }
     }
