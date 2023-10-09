@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet, BTreeMap},
+    collections::{BTreeMap, HashMap, HashSet},
     ops::Neg,
 };
 
@@ -567,8 +567,7 @@ impl Game {
                     (
                         self.level
                             .mages
-                            .live_occupied_by(position, mage.team.enemy())
-                            && mage.powerup != Some(PowerUp::Shield),
+                            .live_occupied_by(position, mage.team.enemy()),
                         *position,
                     )
                 })
