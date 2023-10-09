@@ -178,7 +178,12 @@ impl LevelPortal {
             }
         }
 
+        if self.status == PortalStatus::Locked {
+            context.set_global_alpha(0.25);
+        }
+
         draw_text_centered(context, atlas, 16.0, 60.0, &self.title)?;
+        context.set_global_alpha(1.0);
 
         Ok(())
     }

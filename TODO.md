@@ -1,8 +1,6 @@
 # TODO
 
 - Arena
-  - Include tutorial in level select
-    - Embed tutorial state transition as fake level
   - 20 arena levels with base rules
     - +5-10 from others
 - Tutorial
