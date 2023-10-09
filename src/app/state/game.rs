@@ -887,7 +887,9 @@ impl State for Game {
                             Team::Red => "win",
                             Team::Blue => "loss",
                         },
-                    )
+                    );
+
+                    self.recorded_result = true;
                 }
 
                 let board_size = self.lobby().game.board_size();

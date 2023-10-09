@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 
 use serde::{Deserialize, Serialize};
 
@@ -97,7 +97,7 @@ impl From<Vec<u8>> for PowerUpEntry {
     }
 }
 
-impl std::iter::FromIterator<PowerUpEntry> for HashMap<Position, PowerUp> {
+impl std::iter::FromIterator<PowerUpEntry> for BTreeMap<Position, PowerUp> {
     fn from_iter<T: IntoIterator<Item = PowerUpEntry>>(iter: T) -> Self {
         iter.into_iter()
             .map(|PowerUpEntry(position, powerup)| (position, powerup))

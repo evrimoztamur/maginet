@@ -146,7 +146,7 @@ impl LevelPortal {
         }
 
         if self.status == PortalStatus::Won {
-            let frame = frame + x as u64 * 7 + y as u64 * 13;
+            let frame = frame as f64 + x as f64 * 7.0 + y as f64 * 13.0;
             let bounce = (
                 (frame as f64 * 0.2).sin() * 8.0,
                 (frame as f64 * 0.1).cos() * 8.0,
@@ -163,7 +163,7 @@ impl LevelPortal {
                 bounce.1.round(),
             )?;
 
-            for _ in 0..(frame / 4) % 2 {
+            for _ in 0..(frame as i64 / 4) % 2 {
                 let d = js_sys::Math::random() * TAU;
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
                 particle_system.add(Particle::new(
@@ -366,8 +366,6 @@ impl State for ArenaMenu {
                         -((-self.pan_offset.0 + pointer_floc.0 - 128.0) / 96.0).round() * 96.0,
                         -((-self.pan_offset.1 + pointer_floc.1 - 128.0) / 96.0).round() * 96.0,
                     ));
-
-                    console::log_1(&format!("{:?}", self.pan_target).into());
                 }
             } else {
                 self.pan_offset.0 += drag_offset.0;
@@ -547,6 +545,15 @@ impl Default for ArenaMenu {
             LevelPortal::from_level(
                 "hg2280a4d40490008g6g2h02cg12g00".into(),
                 "Challenge I".to_string(),
+                PortalStatus::Locked,
+            ),
+        );
+
+        level_portals.insert(
+            (3, 1),
+            LevelPortal::from_level(
+                "j012809mdm0k81a809807303801g80r".into(),
+                "Tutorial".to_string(),
                 PortalStatus::Locked,
             ),
         );

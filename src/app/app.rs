@@ -381,8 +381,6 @@ impl App {
     pub fn load_level(level_id: usize) -> Option<Level> {
         let levels = Self::load_levels();
 
-        console::log_1(&format!("{levels:?}").into());
-
         levels.get(&level_id).cloned()
     }
 

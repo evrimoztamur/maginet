@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, VecDeque, BTreeMap};
 
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},
@@ -333,7 +333,7 @@ impl LobbySettings {
                     Self::default_loadout(),
                     Self::default_loadout(),
                 ),
-                HashMap::default(),
+                BTreeMap::default(),
                 Team::default(),
             ),
             LoadoutMethod::Random { symmetric } => {

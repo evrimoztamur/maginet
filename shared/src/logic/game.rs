@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, BTreeMap},
     ops::Neg,
 };
 
@@ -146,7 +146,7 @@ impl Game {
     }
 
     /// Returns an iterator over all [`PowerUp`]s.
-    pub fn powerups(&self) -> &HashMap<Position, PowerUp> {
+    pub fn powerups(&self) -> &BTreeMap<Position, PowerUp> {
         &self.level.powerups
     }
 

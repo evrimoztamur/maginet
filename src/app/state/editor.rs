@@ -546,10 +546,10 @@ impl State for Editor {
                 .draw(interface_context, atlas, pointer, frame)?;
         }
 
-        if pointer.location.0 >= 244
-            && pointer.location.0 < 308
-            && pointer.location.1 >= 8
-            && pointer.location.1 < 72
+        if pointer.location.0 >= 244 + 16
+            && pointer.location.0 < 308 - 16
+            && pointer.location.1 >= 8 + 16
+            && pointer.location.1 < 72 - 16
         {
             if pointer.clicked() {
                 self.level.board.style = self.level.board.style.next();

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{Board, Team};
 
 /// Reference to a position on the game board.
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize, Hash, Default)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Serialize, Deserialize, Hash, Default)]
 pub struct Position(pub i8, pub i8);
 
 impl Add for &Position {

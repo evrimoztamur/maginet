@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use data_encoding::Encoding;
 use data_encoding_macro::new_encoding;
@@ -21,9 +21,9 @@ pub struct Level {
     pub mages: Vec<Mage>,
     /// Number of mages.
     pub mage_index: usize,
-    /// Level's power-ups as as [`HashMap<Position, PowerUp>`].
+    /// Level's power-ups as as [`BTreeMap<Position, PowerUp>`].
     #[serde(with = "vecmap")]
-    pub powerups: HashMap<Position, PowerUp>,
+    pub powerups: BTreeMap<Position, PowerUp>,
     /// Level's starting [`Team`].
     pub starting_team: Team,
 }
@@ -33,7 +33,7 @@ impl Level {
     pub fn new(
         board: Board,
         mut mages: Vec<Mage>,
-        powerups: HashMap<Position, PowerUp>,
+        powerups: BTreeMap<Position, PowerUp>,
         starting_team: Team,
     ) -> Level {
         mages = mages
@@ -56,7 +56,7 @@ impl Level {
 
     /// Instantiates a new [`Level`] with default parameters but provided mages.
     pub fn default_with_mages(mages: Vec<Mage>) -> Level {
-        Level::new(Board::default(), mages, HashMap::default(), Team::default())
+        Level::new(Board::default(), mages, BTreeMap::default(), Team::default())
     }
 
     /// Simulated `n` games and yields results.
@@ -152,7 +152,7 @@ impl From<Vec<u8>> for Level {
             .map(|chunk| chunk.cloned().collect::<Vec<u8>>().into())
             .collect();
 
-        let powerups: HashMap<Position, PowerUp> = powerup_entries.iter().cloned().collect();
+        let powerups: BTreeMap<Position, PowerUp> = powerup_entries.iter().cloned().collect();
 
         Level::new(board, mages, powerups, starting_team)
     }

@@ -101,14 +101,14 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     224.0,
-                    "You attack when you move",
+                    "Mages attack when they move",
                 )?;
                 draw_text_centered(
                     interface_context,
                     atlas,
                     128.0,
                     240.0,
-                    "Zap the Blue Mage!",
+                    "The Blue Mage zapped you!",
                 )?;
             }
             TutorialStage::Charging => {
@@ -130,14 +130,14 @@ impl State for Tutorial {
                     atlas,
                     128.0,
                     224.0,
-                    "Mages Charge when low on mana",
+                    "Mages charge with powerups",
                 )?;
                 draw_text_centered(
                     interface_context,
                     atlas,
                     128.0,
                     240.0,
-                    "Charged Mages move to diagonals",
+                    "This one allows you to move diagonally!",
                 )?;
             }
             TutorialStage::FinalBlow => {
@@ -222,12 +222,12 @@ impl State for Tutorial {
                 }
             }
             TutorialStage::Charging => {
-                if self
+                if let Some(enemy_mage) = self
                     .game_state
                     .lobby()
                     .game
                     .iter_mages()
-                    .all(|mage| mage.has_diagonals())
+                    .find(|mage| mage.mana == 1 && mage.team == Team::Blue)
                 {
                     self.tutorial_stage = TutorialStage::FinalBlow;
 
@@ -257,7 +257,7 @@ impl State for Tutorial {
 
 impl Default for Tutorial {
     fn default() -> Self {
-        let level: Level = "p24g091804j0".into();
+        let level: Level = "j012809mdm0k81a809807303801g80r".into();
 
         Tutorial {
             game_state: Game::new(LobbySettings {
