@@ -43,6 +43,7 @@
     - Rock as obstacle powerup
 - Level/Editor
   - Select tileset
+  - Fix menu state logic
 
 # SKIP
 
