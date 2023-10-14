@@ -2,7 +2,7 @@ use shared::{GameResult, Level, LoadoutMethod, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{MainMenu, Game, State};
+use super::{Game, MainMenu, State};
 use crate::{
     app::{
         Alignment::Center, AppContext, ContentElement::Text, LabelTrim, Particle, ParticleSort,
@@ -67,13 +67,7 @@ impl State for Tutorial {
                     false,
                 )?;
 
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    224.0,
-                    "Click the Red Mage",
-                )?;
+                draw_text_centered(interface_context, atlas, 128.0, 224.0, "Click the Red Mage")?;
                 draw_text_centered(
                     interface_context,
                     atlas,
@@ -103,13 +97,7 @@ impl State for Tutorial {
                     224.0,
                     "Mages attack when they move",
                 )?;
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    240.0,
-                    "Zap the Blue Mage!",
-                )?;
+                draw_text_centered(interface_context, atlas, 128.0, 240.0, "Zap the Blue Mage!")?;
             }
             TutorialStage::Charging => {
                 draw_label(
@@ -174,13 +162,7 @@ impl State for Tutorial {
                     &LabelTrim::Glorious,
                     false,
                 )?;
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    224.0,
-                    "Congratulations!",
-                )?;
+                draw_text_centered(interface_context, atlas, 128.0, 224.0, "Congratulations!")?;
                 draw_text_centered(
                     interface_context,
                     atlas,
@@ -222,7 +204,7 @@ impl State for Tutorial {
                 }
             }
             TutorialStage::Charging => {
-                if let Some(enemy_mage) = self
+                if let Some(_enemy_mage) = self
                     .game_state
                     .lobby()
                     .game

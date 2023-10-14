@@ -975,7 +975,7 @@ impl State for Game {
                             return Some(StateSort::Editor(Editor::new(level.clone())));
                         }
                         LobbySettings {
-                            loadout_method: LoadoutMethod::Arena(level, position),
+                            loadout_method: LoadoutMethod::Arena(_, position),
                             ..
                         } => {
                             return Some(StateSort::ArenaMenu(ArenaMenu::at_position(*position)));

@@ -1,11 +1,8 @@
-use std::{
-    collections::HashMap,
-    f64::consts::{PI, TAU},
-};
+use std::{collections::HashMap, f64::consts::TAU};
 
 use shared::{Board, GameResult, Level, LobbySettings, Mage, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{Game, MainMenu, State};
 use crate::{
@@ -57,7 +54,7 @@ impl LevelPortal {
                 preview[dx + dy * 2] = Some(PreviewEntity::PowerUp(*powerup));
             }
 
-            if let Some(PreviewEntity::Mage(mage)) = &preview[dx + dy * 2] {
+            if let Some(PreviewEntity::Mage(_)) = &preview[dx + dy * 2] {
                 if (dx + dy) % 2 == 0 {
                     preview[dx + dy * 2] = Some(PreviewEntity::PowerUp(*powerup));
                 }
@@ -76,9 +73,9 @@ impl LevelPortal {
         &self,
         context: &CanvasRenderingContext2d,
         atlas: &HtmlCanvasElement,
-        particle_system: &mut ParticleSystem,
+        _particle_system: &mut ParticleSystem,
         (x, y): (isize, isize),
-        frame: u64,
+        _frame: u64,
     ) -> Result<(), JsValue> {
         context.translate(x as f64 * 128.0, y as f64 * 128.0)?;
 
@@ -147,10 +144,7 @@ impl LevelPortal {
 
         if self.status == PortalStatus::Won {
             let frame = frame as f64 + x as f64 * 7.0 + y as f64 * 13.0;
-            let bounce = (
-                (frame as f64 * 0.2).sin() * 8.0,
-                (frame as f64 * 0.1).cos() * 8.0,
-            );
+            let bounce = ((frame * 0.2).sin() * 8.0, (frame * 0.1).cos() * 8.0);
 
             draw_sprite(
                 context,
@@ -168,8 +162,8 @@ impl LevelPortal {
                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
                 particle_system.add(Particle::new(
                     (
-                        (x * 4) as f64 - 0.5 + (frame as f64 * 0.2).sin() * 0.5,
-                        (y * 4) as f64 - 1.0 + (frame as f64 * 0.1).cos() * 0.5,
+                        (x * 4) as f64 - 0.5 + (frame * 0.2).sin() * 0.5,
+                        (y * 4) as f64 - 1.0 + (frame * 0.1).cos() * 0.5,
                     ),
                     (d.cos() * v, d.sin() * v),
                     (js_sys::Math::random() * 20.0) as u64,
@@ -306,9 +300,6 @@ impl State for ArenaMenu {
         for (offset, portal) in &self.level_portals {
             context.save();
             portal.draw(context, atlas, &mut self.particle_system, *offset, frame)?;
-
-            if offset == &selected_position {}
-
             context.restore();
         }
 
