@@ -66,12 +66,14 @@ fn start() -> Result<(), JsValue> {
         .unwrap()
         .unwrap();
 
+    let device_pixel_ratio = window().device_pixel_ratio();
+
     let canvas_settings = CanvasSettings::new(
         384 + 16,
         256 + 16,
         256,
         256,
-        2,
+        (2.0 * device_pixel_ratio) as u32,
         window().inner_width().unwrap().as_f64().unwrap()
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
