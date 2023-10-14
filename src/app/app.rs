@@ -330,10 +330,12 @@ impl App {
         x: i32,
         y: i32,
     ) -> (i32, i32) {
-        let x = (x as f64 * (canvas_settings.element_width() as f64 / bound.width())) as i32;
-        let y = (y as f64 * (canvas_settings.element_height() as f64 / bound.height())) as i32;
+        let x = (x as f64 * (canvas_settings.element_width() as f64 / bound.width()))
+            / canvas_settings.canvas_scale;
+        let y = (y as f64 * (canvas_settings.element_height() as f64 / bound.height()))
+            / canvas_settings.canvas_scale;
 
-        Pointer::location_from_real(canvas_settings, (x / 2, y / 2))
+        Pointer::location_from_real(canvas_settings, (x as i32, y as i32))
     }
 
     #[allow(clippy::single_match)]
