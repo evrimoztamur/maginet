@@ -52,7 +52,6 @@ impl EditorPreview {
             crate::app::ContentElement::Text("AI".to_string(), Alignment::Center),
         );
 
-
         #[cfg(not(feature = "demo"))]
         let button_online = ButtonElement::new(
             (240, 208),

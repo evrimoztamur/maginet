@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},

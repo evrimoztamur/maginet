@@ -2,7 +2,7 @@ use shared::{Board, LoadoutMethod, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{Editor, Game, SkirmishMenu, State, Tutorial, ArenaMenu};
+use super::{ArenaMenu, Editor, Game, SkirmishMenu, State, Tutorial};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,

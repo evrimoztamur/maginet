@@ -99,7 +99,13 @@ impl Mage {
     }
 
     /// Instantiates a [`Mage`] for use within the editor.
-    pub fn editor_new(index: usize, team: Team, sort: MageSort, mana: Mana, position: Position) -> Mage {
+    pub fn editor_new(
+        index: usize,
+        team: Team,
+        sort: MageSort,
+        mana: Mana,
+        position: Position,
+    ) -> Mage {
         Mage {
             index,
             position,

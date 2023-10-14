@@ -56,7 +56,12 @@ impl Level {
 
     /// Instantiates a new [`Level`] with default parameters but provided mages.
     pub fn default_with_mages(mages: Vec<Mage>) -> Level {
-        Level::new(Board::default(), mages, BTreeMap::default(), Team::default())
+        Level::new(
+            Board::default(),
+            mages,
+            BTreeMap::default(),
+            Team::default(),
+        )
     }
 
     /// Simulated `n` games and yields results.

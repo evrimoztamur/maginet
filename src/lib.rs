@@ -66,12 +66,14 @@ fn start() -> Result<(), JsValue> {
         .unwrap()
         .unwrap();
 
+    let device_pixel_ratio = window().device_pixel_ratio();
+
     let canvas_settings = CanvasSettings::new(
         384 + 16,
         256 + 16,
         256,
         256,
-        2,
+        2.0 * device_pixel_ratio,
         window().inner_width().unwrap().as_f64().unwrap()
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
@@ -110,7 +112,7 @@ fn start() -> Result<(), JsValue> {
             let (atlas, atlas_context) = init_canvas(&CanvasSettings {
                 canvas_width: atlas_img.width(),
                 canvas_height: atlas_img.height(),
-                canvas_scale: 1,
+                canvas_scale: 1.0,
                 ..Default::default()
             })?;
 

@@ -99,8 +99,10 @@ impl App {
             interface_context.rotate(std::f64::consts::PI / 2.0)?;
         }
 
-        context.scale(2.0, 2.0)?;
-        interface_context.scale(2.0, 2.0)?;
+        let canvas_scale = self.app_context.canvas_settings.canvas_scale as f64;
+
+        context.scale(canvas_scale, canvas_scale)?;
+        interface_context.scale(canvas_scale, canvas_scale)?;
 
         context.translate(
             self.app_context.canvas_settings.padding_x() as f64,
@@ -408,7 +410,7 @@ pub struct CanvasSettings {
     pub interface_height: u32,
     pub canvas_width: u32,
     pub canvas_height: u32,
-    pub canvas_scale: u32,
+    pub canvas_scale: f64,
     pub orientation: bool,
 }
 
@@ -422,17 +424,17 @@ impl CanvasSettings {
 
     pub fn element_width(&self) -> u32 {
         if self.orientation {
-            self.canvas_height * self.canvas_scale
+            (self.canvas_height as f64 * self.canvas_scale) as u32
         } else {
-            self.canvas_width * self.canvas_scale
+            (self.canvas_width as f64 * self.canvas_scale) as u32
         }
     }
 
     pub fn element_height(&self) -> u32 {
         if self.orientation {
-            self.canvas_width * self.canvas_scale
+            (self.canvas_width as f64 * self.canvas_scale) as u32
         } else {
-            self.canvas_height * self.canvas_scale
+            (self.canvas_height as f64 * self.canvas_scale) as u32
         }
     }
 
@@ -453,7 +455,7 @@ impl CanvasSettings {
         canvas_height: u32,
         interface_width: u32,
         interface_height: u32,
-        canvas_scale: u32,
+        canvas_scale: f64,
         orientation: bool,
     ) -> CanvasSettings {
         CanvasSettings {
