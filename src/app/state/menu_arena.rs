@@ -580,7 +580,7 @@ impl Default for ArenaMenu {
             level_portals.insert(
                 (3, 1),
                 LevelPortal::from_level(
-                    "j012809mdm0k81a809807303801g80r".into(),
+                    "hg18a09m4g0m81g00c4068035g14r0v008".into(),
                     "Tutorial".to_string(),
                     PortalStatus::Locked,
                 ),
