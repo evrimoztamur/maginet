@@ -1,12 +1,6 @@
 # TODO
 
-- Deployment
-  - Demo
-    - Replace itch version
-    - Replace evrim.zone version
-    - Replace Steam version
 - Editor
-  - Incorporate other boulder styles
   - Simulation results interface
   - Serde for level styles
     - Level styles in campaign menu..?
@@ -24,8 +18,13 @@
 ## DONE
 
 - Deployment
+  - Fix canvas sizing
   - Disable hotkeys for debugging on deploy version
   - Cropped demo ex. multiplayer and only 3-4 levels
+  - Demo
+    - Replace itch version
+    - Replace evrim.zone version
+    - Replace Steam version
 - Arena
   - Pan/Move and lock onto levels
   - Previewing levels from list of codes/positions
@@ -48,6 +47,7 @@
 - Level/Editor
   - Select tileset
   - Fix menu state logic
+  - Incorporate other boulder styles
 
 ## SKIP
 

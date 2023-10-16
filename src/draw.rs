@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use shared::{Board, GameResult, Mage, Position, PowerUp, Team};
+use shared::{Board, BoulderStyle, GameResult, Mage, Position, PowerUp, Team};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
@@ -341,7 +341,9 @@ pub fn draw_powerup(
         PowerUp::Shield => (32.0, 288.0, 32.0, 32.0),
         PowerUp::Beam => (96.0, 288.0, 32.0, 32.0),
         PowerUp::Diagonal => (64.0, 288.0, 32.0, 32.0),
-        PowerUp::Boulder => (0.0, 304.0, 32.0, 48.0),
+        PowerUp::Boulder(BoulderStyle::Rock) => (0.0, 304.0, 32.0, 48.0),
+        PowerUp::Boulder(BoulderStyle::Pedestal) => (0.0, 352.0, 32.0, 48.0),
+        PowerUp::Boulder(BoulderStyle::Tentacle) => (32.0, 352.0, 32.0, 48.0),
     };
 
     let t = (frame as f64) / 10.0 + position.0 as f64 * 9.0 + position.1 as f64;
@@ -366,7 +368,7 @@ pub fn draw_powerup(
             );
             ((q.0 * 4.0).round(), (q.1 * 4.0).round())
         }
-        PowerUp::Boulder => (0.0, -16.0),
+        PowerUp::Boulder(_) => (0.0, -16.0),
     };
 
     draw_sprite(
@@ -473,15 +475,27 @@ pub fn draw_tile(
         .abs()
             < 1.0
         {
-            draw_sprite(
-                context,
+            // draw_sprite(
+            //     context,
+            //     atlas,
+            //     offset.0 + 8.0,
+            //     offset.1 + 8.0,
+            //     16.0,
+            //     16.0,
+            //     (position.0 as f64 + x as f64 / 2.0) * board_scale.0,
+            //     (position.1 as f64 + y as f64 / 2.0) * board_scale.1,
+            // )?;
+
+            context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
                 atlas,
-                offset.0 + 8.0,
-                offset.1 + 8.0,
-                16.0,
-                16.0,
+                offset.0 + 15.0,
+                offset.1 + 15.0,
+                2.0,
+                2.0,
                 (position.0 as f64 + x as f64 / 2.0) * board_scale.0,
                 (position.1 as f64 + y as f64 / 2.0) * board_scale.1,
+                16.0,
+                16.0,
             )?;
         } else {
             context.save();

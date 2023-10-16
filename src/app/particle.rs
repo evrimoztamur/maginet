@@ -53,7 +53,7 @@ impl ParticleSort {
             shared::PowerUp::Shield => Some(Self::Shield),
             shared::PowerUp::Beam => Some(Self::Beam),
             shared::PowerUp::Diagonal => Some(Self::Diagonals),
-            shared::PowerUp::Boulder => None,
+            shared::PowerUp::Boulder(_) => None,
         }
     }
 }

@@ -4,6 +4,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::Position;
 
+/// Style for a [`PowerUp::Boulder`]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+pub enum BoulderStyle {
+    /// Default rock block.
+    Rock,
+    /// Pedestal block.
+    Pedestal,
+    /// Tentacle lump.
+    Tentacle,
+}
+
 /// A [`PowerUp`] is a the distinct type of the powerup.
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum PowerUp {
@@ -14,25 +25,30 @@ pub enum PowerUp {
     /// Gives a mage the ability to move diagonals.
     Diagonal,
     /// Blocks off the mages' movement.
-    Boulder,
+    Boulder(BoulderStyle),
 }
+
 impl PowerUp {
     /// Returns next [`PowerUp`] in order.
     pub fn next(&self) -> PowerUp {
         match self {
             PowerUp::Shield => PowerUp::Beam,
             PowerUp::Beam => PowerUp::Diagonal,
-            PowerUp::Diagonal => PowerUp::Boulder,
-            PowerUp::Boulder => PowerUp::Shield,
+            PowerUp::Diagonal => PowerUp::Boulder(BoulderStyle::Rock),
+            PowerUp::Boulder(BoulderStyle::Rock) => PowerUp::Boulder(BoulderStyle::Pedestal),
+            PowerUp::Boulder(BoulderStyle::Pedestal) => PowerUp::Boulder(BoulderStyle::Tentacle),
+            PowerUp::Boulder(BoulderStyle::Tentacle) => PowerUp::Shield,
         }
     }
     /// Returns next [`PowerUp`] in order.
     pub fn previous(&self) -> PowerUp {
         match self {
-            PowerUp::Shield => PowerUp::Boulder,
+            PowerUp::Shield => PowerUp::Boulder(BoulderStyle::Tentacle),
             PowerUp::Beam => PowerUp::Shield,
             PowerUp::Diagonal => PowerUp::Beam,
-            PowerUp::Boulder => PowerUp::Diagonal,
+            PowerUp::Boulder(BoulderStyle::Rock) => PowerUp::Diagonal,
+            PowerUp::Boulder(BoulderStyle::Pedestal) => PowerUp::Boulder(BoulderStyle::Rock),
+            PowerUp::Boulder(BoulderStyle::Tentacle) => PowerUp::Boulder(BoulderStyle::Pedestal),
         }
     }
 }
@@ -43,8 +59,10 @@ impl From<u8> for PowerUp {
             0 => Self::Shield,
             1 => Self::Beam,
             2 => Self::Diagonal,
-            3 => Self::Boulder,
-            _ => Self::Boulder,
+            3 => Self::Boulder(BoulderStyle::Rock),
+            4 => Self::Boulder(BoulderStyle::Pedestal),
+            5 => Self::Boulder(BoulderStyle::Tentacle),
+            _ => Self::Boulder(BoulderStyle::Rock),
         }
     }
 }
@@ -55,7 +73,9 @@ impl From<PowerUp> for u8 {
             PowerUp::Shield => 0,
             PowerUp::Beam => 1,
             PowerUp::Diagonal => 2,
-            PowerUp::Boulder => 3,
+            PowerUp::Boulder(BoulderStyle::Rock) => 3,
+            PowerUp::Boulder(BoulderStyle::Pedestal) => 4,
+            PowerUp::Boulder(BoulderStyle::Tentacle) => 5,
         }
     }
 }
