@@ -220,7 +220,9 @@ impl State for EditorPreview {
         let _board_offset = self.board_offset();
         let pointer = &app_context.pointer;
 
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
+        if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
+            app_context.audio_system.play_clip_option(clip_id);
+
             match value {
                 BUTTON_BACK => {
                     return Some(StateSort::Editor(Editor::new(self.level.clone())));

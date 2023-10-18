@@ -5,7 +5,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 use super::{Game, SkirmishMenu, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
+        Alignment, AppContext, ButtonElement, ClipId, Interface, LabelTheme, LabelTrim, Particle,
         ParticleSort, ParticleSystem, StateSort, UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{draw_board, draw_crosshair, draw_sprite},
@@ -121,7 +121,9 @@ impl State for TeleportMenu {
             }
         }
 
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
+        if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
+            app_context.audio_system.play_clip_option(clip_id);
+
             match value {
                 BUTTON_BACK => {
                     return Some(StateSort::SkirmishMenu(SkirmishMenu::default()));

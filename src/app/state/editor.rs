@@ -581,7 +581,9 @@ impl State for Editor {
         }
 
         if self.is_interface_active() {
-            if let Some(UIEvent::ButtonClick(value)) = self.menu_interface.tick(pointer) {
+            if let Some(UIEvent::ButtonClick(value, clip_id)) = self.menu_interface.tick(pointer) {
+                app_context.audio_system.play_clip_option(clip_id);
+
                 match value {
                     BUTTON_LOAD => {
                         text_input.set_value(self.level.as_code().as_str());
@@ -634,124 +636,130 @@ impl State for Editor {
                 }
             }
         } else {
-            match self.interface.tick(pointer) {
-                Some(UIEvent::ButtonClick(BUTTON_SAVE)) => {
-                    App::save_level(0, self.level.clone());
+            if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
+                app_context.audio_system.play_clip_option(clip_id);
 
-                    text_input.set_value(self.level.as_code().as_str());
-                    text_input
-                        .dataset()
-                        .set("field", "save_level_code")
-                        .unwrap();
-                    text_input.focus().unwrap();
-                }
-                Some(UIEvent::ButtonClick(BUTTON_MODE_TOGGLE)) => {
-                    // return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
-                    //     lobby_sort: shared::LobbySort::Local,
-                    //     loadout_method: shared::LoadoutMethod::Prefab(self.level.mages.clone()),
-                    //     board: self.level.board.clone(),
-                    //     ..Default::default()
-                    // })));
-                    return Some(StateSort::EditorPreview(EditorPreview::new(
-                        self.level.clone(),
-                    )));
-                }
-                Some(UIEvent::ButtonClick(BUTTON_WIDTH_MINUS)) => {
-                    let min_width = self
-                        .level
-                        .mages
-                        .iter()
-                        .map(|mage| mage.position.0)
-                        .reduce(|acc, e| acc.max(e))
-                        .unwrap_or_default() as usize;
+                match value {
+                    BUTTON_SAVE => {
+                        App::save_level(0, self.level.clone());
 
-                    let min_width = min_width.max(
-                        self.level
-                            .powerups
-                            .keys()
-                            .max_by(|a, b| a.0.cmp(&b.0))
-                            .map(|pos| pos.0)
-                            .unwrap_or_default() as usize,
-                    );
+                        text_input.set_value(self.level.as_code().as_str());
+                        text_input
+                            .dataset()
+                            .set("field", "save_level_code")
+                            .unwrap();
+                        text_input.focus().unwrap();
+                    }
+                    BUTTON_MODE_TOGGLE => {
+                        // return Some(StateSort::Lobby(LobbyState::new(LobbySettings {
+                        //     lobby_sort: shared::LobbySort::Local,
+                        //     loadout_method: shared::LoadoutMethod::Prefab(self.level.mages.clone()),
+                        //     board: self.level.board.clone(),
+                        //     ..Default::default()
+                        // })));
+                        return Some(StateSort::EditorPreview(EditorPreview::new(
+                            self.level.clone(),
+                        )));
+                    }
+                    BUTTON_WIDTH_MINUS => {
+                        let min_width = self
+                            .level
+                            .mages
+                            .iter()
+                            .map(|mage| mage.position.0)
+                            .reduce(|acc, e| acc.max(e))
+                            .unwrap_or_default() as usize;
 
-                    if self.level.board.width - 1 <= min_width {
-                        for _ in 0..self.level.board.width * 5 {
-                            let d = js_sys::Math::random() * std::f64::consts::TAU;
-                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                            self.particle_system.add(Particle::new(
-                                (
-                                    self.level.board.width as f64 - 0.5,
-                                    js_sys::Math::random() * self.level.board.height as f64 - 0.5,
-                                ),
-                                (-v, d.sin() * v * 0.1),
-                                (js_sys::Math::random() * 40.0) as u64,
-                                ParticleSort::Diagonals,
-                            ));
+                        let min_width = min_width.max(
+                            self.level
+                                .powerups
+                                .keys()
+                                .max_by(|a, b| a.0.cmp(&b.0))
+                                .map(|pos| pos.0)
+                                .unwrap_or_default() as usize,
+                        );
+
+                        if self.level.board.width - 1 <= min_width {
+                            for _ in 0..self.level.board.width * 5 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particle_system.add(Particle::new(
+                                    (
+                                        self.level.board.width as f64 - 0.5,
+                                        js_sys::Math::random() * self.level.board.height as f64
+                                            - 0.5,
+                                    ),
+                                    (-v, d.sin() * v * 0.1),
+                                    (js_sys::Math::random() * 40.0) as u64,
+                                    ParticleSort::Diagonals,
+                                ));
+                            }
+                        } else if let Ok(board) =
+                            Board::new(self.level.board.width - 1, self.level.board.height)
+                        {
+                            self.level.board = board;
+                            self.board_dirty = true;
                         }
-                    } else if let Ok(board) =
-                        Board::new(self.level.board.width - 1, self.level.board.height)
-                    {
-                        self.level.board = board;
-                        self.board_dirty = true;
                     }
-                }
-                Some(UIEvent::ButtonClick(BUTTON_WIDTH_PLUS)) => {
-                    if let Ok(board) =
-                        Board::new(self.level.board.width + 1, self.level.board.height)
-                    {
-                        self.level.board = board;
-                        self.board_dirty = true;
-                    }
-                }
-                Some(UIEvent::ButtonClick(BUTTON_HEIGHT_MINUS)) => {
-                    let min_height = self
-                        .level
-                        .mages
-                        .iter()
-                        .map(|mage| mage.position.1)
-                        .reduce(|acc, e| acc.max(e))
-                        .unwrap_or_default() as usize;
-
-                    let min_height = min_height.max(
-                        self.level
-                            .powerups
-                            .keys()
-                            .max_by(|a, b| a.1.cmp(&b.1))
-                            .map(|pos| pos.1)
-                            .unwrap_or_default() as usize,
-                    );
-
-                    if self.level.board.height - 1 <= min_height {
-                        for _ in 0..self.level.board.height * 5 {
-                            let d = js_sys::Math::random() * std::f64::consts::TAU;
-                            let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                            self.particle_system.add(Particle::new(
-                                (
-                                    js_sys::Math::random() * self.level.board.width as f64 - 0.5,
-                                    self.level.board.height as f64 - 0.5,
-                                ),
-                                (d.cos() * v * 0.1, -v),
-                                (js_sys::Math::random() * 40.0) as u64,
-                                ParticleSort::Diagonals,
-                            ));
+                    BUTTON_WIDTH_PLUS => {
+                        if let Ok(board) =
+                            Board::new(self.level.board.width + 1, self.level.board.height)
+                        {
+                            self.level.board = board;
+                            self.board_dirty = true;
                         }
-                    } else if let Ok(board) =
-                        Board::new(self.level.board.width, self.level.board.height - 1)
-                    {
-                        self.level.board = board;
-                        self.board_dirty = true;
                     }
-                }
-                Some(UIEvent::ButtonClick(BUTTON_HEIGHT_PLUS)) => {
-                    if let Ok(board) =
-                        Board::new(self.level.board.width, self.level.board.height + 1)
-                    {
-                        self.level.board = board;
-                        self.board_dirty = true;
-                    }
-                }
+                    BUTTON_HEIGHT_MINUS => {
+                        let min_height = self
+                            .level
+                            .mages
+                            .iter()
+                            .map(|mage| mage.position.1)
+                            .reduce(|acc, e| acc.max(e))
+                            .unwrap_or_default() as usize;
 
-                _ => (),
+                        let min_height = min_height.max(
+                            self.level
+                                .powerups
+                                .keys()
+                                .max_by(|a, b| a.1.cmp(&b.1))
+                                .map(|pos| pos.1)
+                                .unwrap_or_default() as usize,
+                        );
+
+                        if self.level.board.height - 1 <= min_height {
+                            for _ in 0..self.level.board.height * 5 {
+                                let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                self.particle_system.add(Particle::new(
+                                    (
+                                        js_sys::Math::random() * self.level.board.width as f64
+                                            - 0.5,
+                                        self.level.board.height as f64 - 0.5,
+                                    ),
+                                    (d.cos() * v * 0.1, -v),
+                                    (js_sys::Math::random() * 40.0) as u64,
+                                    ParticleSort::Diagonals,
+                                ));
+                            }
+                        } else if let Ok(board) =
+                            Board::new(self.level.board.width, self.level.board.height - 1)
+                        {
+                            self.level.board = board;
+                            self.board_dirty = true;
+                        }
+                    }
+                    BUTTON_HEIGHT_PLUS => {
+                        if let Ok(board) =
+                            Board::new(self.level.board.width, self.level.board.height + 1)
+                        {
+                            self.level.board = board;
+                            self.board_dirty = true;
+                        }
+                    }
+
+                    _ => (),
+                }
             }
 
             match self.selection {
@@ -759,72 +767,121 @@ impl State for Editor {
                 EditorSelection::PowerUp(_) => (),
                 EditorSelection::Tile(position) => {
                     if self.level.mages.occupant(&position).is_some() {
-                        match self.mage_interface.tick(pointer) {
-                            Some(UIEvent::ButtonClick(BUTTON_TEAM_LEFT)) => {
-                                if let Some(selected_mage) =
-                                    self.level.mages.occupant_mut(&position)
-                                {
-                                    selected_mage.team = selected_mage.team.enemy();
-                                }
-                            }
-                            Some(UIEvent::ButtonClick(BUTTON_TEAM_RIGHT)) => {
-                                if let Some(selected_mage) =
-                                    self.level.mages.occupant_mut(&position)
-                                {
-                                    selected_mage.team = selected_mage.team.enemy();
-                                }
-                            }
-                            Some(UIEvent::ButtonClick(BUTTON_SPELL_LEFT)) => {
-                                if let EditorSelection::Tile(position) = self.selection {
+                        if let Some(UIEvent::ButtonClick(value, clip_id)) =
+                            self.mage_interface.tick(pointer)
+                        {
+                            app_context.audio_system.play_clip_option(clip_id);
+
+                            match value {
+                                BUTTON_TEAM_LEFT => {
                                     if let Some(selected_mage) =
                                         self.level.mages.occupant_mut(&position)
                                     {
-                                        *selected_mage = Mage::editor_new(
-                                            selected_mage.index,
-                                            selected_mage.team,
-                                            selected_mage.sort.previous(),
-                                            selected_mage.mana.clone(),
-                                            selected_mage.position,
-                                        );
+                                        selected_mage.team = selected_mage.team.enemy();
                                     }
                                 }
-                            }
-                            Some(UIEvent::ButtonClick(BUTTON_SPELL_RIGHT)) => {
-                                if let EditorSelection::Tile(position) = self.selection {
+                                BUTTON_TEAM_RIGHT => {
                                     if let Some(selected_mage) =
                                         self.level.mages.occupant_mut(&position)
                                     {
-                                        *selected_mage = Mage::editor_new(
-                                            selected_mage.index,
-                                            selected_mage.team,
-                                            selected_mage.sort.next(),
-                                            selected_mage.mana.clone(),
-                                            selected_mage.position,
-                                        );
+                                        selected_mage.team = selected_mage.team.enemy();
                                     }
                                 }
+                                BUTTON_SPELL_LEFT => {
+                                    if let EditorSelection::Tile(position) = self.selection {
+                                        if let Some(selected_mage) =
+                                            self.level.mages.occupant_mut(&position)
+                                        {
+                                            *selected_mage = Mage::editor_new(
+                                                selected_mage.index,
+                                                selected_mage.team,
+                                                selected_mage.sort.previous(),
+                                                selected_mage.mana.clone(),
+                                                selected_mage.position,
+                                            );
+                                        }
+                                    }
+                                }
+                                BUTTON_SPELL_RIGHT => {
+                                    if let EditorSelection::Tile(position) = self.selection {
+                                        if let Some(selected_mage) =
+                                            self.level.mages.occupant_mut(&position)
+                                        {
+                                            *selected_mage = Mage::editor_new(
+                                                selected_mage.index,
+                                                selected_mage.team,
+                                                selected_mage.sort.next(),
+                                                selected_mage.mana.clone(),
+                                                selected_mage.position,
+                                            );
+                                        }
+                                    }
+                                }
+                                BUTTON_MANA_LEFT => {
+                                    if let EditorSelection::Tile(position) = self.selection {
+                                        if let Some(selected_mage) =
+                                            self.level.mages.occupant_mut(&position)
+                                        {
+                                            selected_mage.mana -= 1;
+                                        }
+                                    }
+                                }
+                                BUTTON_MANA_RIGHT => {
+                                    if let EditorSelection::Tile(position) = self.selection {
+                                        if let Some(selected_mage) =
+                                            self.level.mages.occupant_mut(&position)
+                                        {
+                                            selected_mage.mana += 1;
+                                        }
+                                    }
+                                }
+                                BUTTON_DELETE => {
+                                    if let EditorSelection::Tile(position) = self.selection {
+                                        self.level.mages.retain(|mage| mage.position != position);
+
+                                        for _ in 0..40 {
+                                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                            let v = (js_sys::Math::random()
+                                                + js_sys::Math::random())
+                                                * 0.1;
+                                            self.particle_system.add(Particle::new(
+                                                (
+                                                    position.0 as f64 + d.cos() * 1.25,
+                                                    position.1 as f64 + d.sin() * 1.25,
+                                                ),
+                                                (-d.cos() * v, -d.sin() * v),
+                                                (js_sys::Math::random() * 20.0) as u64,
+                                                ParticleSort::Missile,
+                                            ));
+                                        }
+                                    }
+                                }
+                                _ => (),
                             }
-                            Some(UIEvent::ButtonClick(BUTTON_MANA_LEFT)) => {
-                                if let EditorSelection::Tile(position) = self.selection {
-                                    if let Some(selected_mage) =
-                                        self.level.mages.occupant_mut(&position)
+                        }
+                    } else if self.level.powerups.get(&position).is_some() {
+                        if let Some(UIEvent::ButtonClick(value, clip_id)) =
+                            self.prop_interface.tick(pointer)
+                        {
+                            app_context.audio_system.play_clip_option(clip_id);
+
+                            match value {
+                                BUTTON_TEAM_LEFT => {
+                                    if let Some(selected_powerup) =
+                                        self.level.powerups.get_mut(&position)
                                     {
-                                        selected_mage.mana -= 1;
+                                        *selected_powerup = selected_powerup.next();
                                     }
                                 }
-                            }
-                            Some(UIEvent::ButtonClick(BUTTON_MANA_RIGHT)) => {
-                                if let EditorSelection::Tile(position) = self.selection {
-                                    if let Some(selected_mage) =
-                                        self.level.mages.occupant_mut(&position)
+                                BUTTON_TEAM_RIGHT => {
+                                    if let Some(selected_powerup) =
+                                        self.level.powerups.get_mut(&position)
                                     {
-                                        selected_mage.mana += 1;
+                                        *selected_powerup = selected_powerup.previous();
                                     }
                                 }
-                            }
-                            Some(UIEvent::ButtonClick(BUTTON_DELETE)) => {
-                                if let EditorSelection::Tile(position) = self.selection {
-                                    self.level.mages.retain(|mage| mage.position != position);
+                                BUTTON_DELETE => {
+                                    self.level.powerups.remove(&position);
 
                                     for _ in 0..40 {
                                         let d = js_sys::Math::random() * std::f64::consts::TAU;
@@ -841,47 +898,14 @@ impl State for Editor {
                                         ));
                                     }
                                 }
+                                _ => (),
                             }
-                            _ => (),
                         }
-                    } else if self.level.powerups.get(&position).is_some() {
-                        match self.prop_interface.tick(pointer) {
-                            Some(UIEvent::ButtonClick(BUTTON_TEAM_LEFT)) => {
-                                if let Some(selected_powerup) =
-                                    self.level.powerups.get_mut(&position)
-                                {
-                                    *selected_powerup = selected_powerup.next();
-                                }
-                            }
-                            Some(UIEvent::ButtonClick(BUTTON_TEAM_RIGHT)) => {
-                                if let Some(selected_powerup) =
-                                    self.level.powerups.get_mut(&position)
-                                {
-                                    *selected_powerup = selected_powerup.previous();
-                                }
-                            }
-                            Some(UIEvent::ButtonClick(BUTTON_DELETE)) => {
-                                self.level.powerups.remove(&position);
-
-                                for _ in 0..40 {
-                                    let d = js_sys::Math::random() * std::f64::consts::TAU;
-                                    let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-                                    self.particle_system.add(Particle::new(
-                                        (
-                                            position.0 as f64 + d.cos() * 1.25,
-                                            position.1 as f64 + d.sin() * 1.25,
-                                        ),
-                                        (-d.cos() * v, -d.sin() * v),
-                                        (js_sys::Math::random() * 20.0) as u64,
-                                        ParticleSort::Missile,
-                                    ));
-                                }
-                            }
-                            _ => (),
-                        }
-                    } else if let Some(UIEvent::ButtonClick(value)) =
+                    } else if let Some(UIEvent::ButtonClick(value, clip_id)) =
                         self.no_mage_interface.tick(pointer)
                     {
+                        app_context.audio_system.play_clip_option(clip_id);
+
                         match value {
                             BUTTON_ADD_MAGE => {
                                 if !self.occupied(&position) {

@@ -67,13 +67,15 @@ impl State for MainMenu {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
+        self.preview_state.tick_game(frame, app_context);
+
         if self.preview_state.frames_since_last_move(frame) > 70 {
             self.preview_state.take_best_turn_quick();
         }
 
-        self.preview_state.tick_game(frame, app_context);
+        if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
+            app_context.audio_system.play_clip_option(clip_id);
 
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
             match value {
                 BUTTON_ARENA => {
                     return Some(StateSort::ArenaMenu(ArenaMenu::default()));

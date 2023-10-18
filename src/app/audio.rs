@@ -1,5 +1,6 @@
 use crate::RESOURCE_BASE_URL;
 use js_sys::{ArrayBuffer, Math, Promise, Uint8Array};
+use shared::PowerUp;
 use std::collections::HashMap;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
@@ -100,6 +101,12 @@ impl AudioSystem {
         }
     }
 
+    pub fn play_clip_option(&self, clip_id: Option<ClipId>) {
+        if let Some(clip_id) = clip_id {
+            self.play_clip(clip_id);
+        }
+    }
+
     pub fn play_random_zap(&self, hits: usize) {
         let rand = Math::random();
 
@@ -119,43 +126,147 @@ impl AudioSystem {
         }
     }
 
+    pub fn play_powerup(&self, powerup: PowerUp) {
+        match powerup {
+            PowerUp::Shield => self.play_clip(ClipId::Shield),
+            PowerUp::Beam => self.play_clip(ClipId::Beam),
+            PowerUp::Diagonal => self.play_clip(ClipId::Diagonal),
+            _ => (),
+        }
+    }
+
     pub async fn populate_audio(&mut self) {
-        self.register_audio_clip(
-            ClipId::CrackleI,
-            include_bytes!("../../static/wav/COMBAT_Crackle_1.wav"),
-            1.0,
-        )
-        .await;
-        self.register_audio_clip(
-            ClipId::CrackleII,
-            include_bytes!("../../static/wav/COMBAT_Crackle_2.wav"),
-            1.0,
-        )
-        .await;
-        self.register_audio_clip(
-            ClipId::CrackleIII,
-            include_bytes!("../../static/wav/COMBAT_Crackle_3.wav"),
-            1.0,
-        )
-        .await;
-        self.register_audio_clip(
-            ClipId::ZapI,
-            include_bytes!("../../static/wav/COMBAT_Hit_1.wav"),
-            1.0,
-        )
-        .await;
-        self.register_audio_clip(
-            ClipId::ZapII,
-            include_bytes!("../../static/wav/COMBAT_Hit_2.wav"),
-            1.0,
-        )
-        .await;
-        self.register_audio_clip(
-            ClipId::ZapII,
-            include_bytes!("../../static/wav/COMBAT_Hit_3.wav"),
-            1.0,
-        )
-        .await;
+        {
+            // COMBAT Crackle Implemented
+            self.register_audio_clip(
+                ClipId::CrackleI,
+                include_bytes!("../../static/wav/COMBAT_Crackle_1.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::CrackleII,
+                include_bytes!("../../static/wav/COMBAT_Crackle_2.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::CrackleIII,
+                include_bytes!("../../static/wav/COMBAT_Crackle_3.wav"),
+                1.0,
+            )
+            .await;
+        }
+
+        {
+            // COMBAT Hit Implemented
+            self.register_audio_clip(
+                ClipId::ZapI,
+                include_bytes!("../../static/wav/COMBAT_Hit_1.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::ZapII,
+                include_bytes!("../../static/wav/COMBAT_Hit_2.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::ZapII,
+                include_bytes!("../../static/wav/COMBAT_Hit_3.wav"),
+                1.0,
+            )
+            .await;
+        }
+
+        {
+            // POWERUP Implemented
+            self.register_audio_clip(
+                ClipId::Diagonal,
+                include_bytes!("../../static/wav/POWERUP_Diagonal.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::Beam,
+                include_bytes!("../../static/wav/POWERUP_BigLaser.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::Shield,
+                include_bytes!("../../static/wav/POWERUP_Shield.wav"),
+                1.0,
+            )
+            .await;
+        }
+
+        {
+            // UI Battle Implemented
+            self.register_audio_clip(
+                ClipId::MageDeselect,
+                include_bytes!("../../static/wav/UI_Battle_MageDeSelect.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::MageSelect,
+                include_bytes!("../../static/wav/UI_Battle_MageSelect.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::MageMove,
+                include_bytes!("../../static/wav/UI_Battle_MageMoveToSquare.wav"),
+                1.0,
+            )
+            .await;
+        }
+
+        {
+            // UI Click Implemented
+            self.register_audio_clip(
+                ClipId::ClickBack,
+                include_bytes!("../../static/wav/UI_Click_Back.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::ClickForward,
+                include_bytes!("../../static/wav/UI_Click_Forward.wav"),
+                1.0,
+            )
+            .await;
+        }
+
+        {
+            // UI Level
+            self.register_audio_clip(
+                ClipId::LevelEnter,
+                include_bytes!("../../static/wav/UI_LevelChangeWhoosh.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::LevelSuccess,
+                include_bytes!("../../static/wav/UI_LevelFinish_Success.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::LevelFailure,
+                include_bytes!("../../static/wav/UI_LevelFinish_Failure.wav"),
+                1.0,
+            )
+            .await;
+            self.register_audio_clip(
+                ClipId::StarSparkle,
+                include_bytes!("../../static/wav/UI_LevelCompletedStar_LOOP.wav"),
+                1.0,
+            )
+            .await;
+        }
     }
 }
 

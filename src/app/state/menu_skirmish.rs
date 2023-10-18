@@ -103,7 +103,9 @@ impl State for SkirmishMenu {
     ) -> Option<StateSort> {
         let pointer = &app_context.pointer;
 
-        if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(pointer) {
+        if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
+            app_context.audio_system.play_clip_option(clip_id);
+
             match value {
                 BUTTON_LOCAL => {
                     self.lobby_settings.lobby_sort = LobbySort::Local;

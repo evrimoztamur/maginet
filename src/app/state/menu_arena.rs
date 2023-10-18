@@ -7,8 +7,8 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 use super::{Game, MainMenu, State};
 use crate::{
     app::{
-        Alignment, App, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
-        ParticleSort, ParticleSystem, Pointer, StateSort, UIElement, UIEvent,
+        Alignment, App, AppContext, ButtonElement, ClipId, Interface, LabelTheme, LabelTrim,
+        Particle, ParticleSort, ParticleSystem, Pointer, StateSort, UIElement, UIEvent,
     },
     draw::{draw_board, draw_mage, draw_powerup, draw_sprite, draw_text_centered},
     tuple_as,
@@ -267,23 +267,6 @@ impl State for ArenaMenu {
 
         // context.scale(0.25, 0.25)?;
 
-        if self.pan_offset.0 > 0.0 {
-            self.pan_offset.0 -= self.pan_offset.0 * 0.25;
-        }
-
-        if let Some(pan_target) = self.pan_target {
-            self.pan_offset.0 += (pan_target.0 - self.pan_offset.0) * 0.25;
-            self.pan_offset.1 += (pan_target.1 - self.pan_offset.1) * 0.25;
-        } else {
-            self.pan_offset.0 +=
-                ((self.pan_offset.0 / 128.0).round() * 128.0 - self.pan_offset.0) * 0.25;
-            self.pan_offset.1 +=
-                ((self.pan_offset.1 / 128.0).round() * 128.0 - self.pan_offset.1) * 0.25;
-        }
-
-        self.pan_offset.0 = self.pan_offset.0.floor();
-        self.pan_offset.1 = self.pan_offset.1.floor();
-
         for (offset, portal) in &self.level_portals {
             context.save();
             portal.draw_background(context, atlas, &mut self.particle_system, *offset, frame)?;
@@ -329,9 +312,34 @@ impl State for ArenaMenu {
         let pointer = &app_context.pointer;
         let pointer_floc = tuple_as!(pointer.location, f64);
 
-        if let Some(UIEvent::ButtonClick(BUTTON_BACK)) = self.interface.tick(pointer) {
+        let previous_selected_position = self.level_position();
+
+        if self.pan_offset.0 > 0.0 {
+            self.pan_offset.0 -= self.pan_offset.0 * 0.25;
+        }
+
+        if let Some(pan_target) = self.pan_target {
+            self.pan_offset.0 += (pan_target.0 - self.pan_offset.0) * 0.25;
+            self.pan_offset.1 += (pan_target.1 - self.pan_offset.1) * 0.25;
+        } else {
+            self.pan_offset.0 +=
+                ((self.pan_offset.0 / 128.0).round() * 128.0 - self.pan_offset.0) * 0.25;
+            self.pan_offset.1 +=
+                ((self.pan_offset.1 / 128.0).round() * 128.0 - self.pan_offset.1) * 0.25;
+        }
+
+        self.pan_offset.0 = self.pan_offset.0.floor();
+        self.pan_offset.1 = self.pan_offset.1.floor();
+
+        if let Some(UIEvent::ButtonClick(BUTTON_BACK, clip_id)) = self.interface.tick(pointer) {
+            app_context.audio_system.play_clip_option(clip_id);
+
             return Some(StateSort::MainMenu(MainMenu::default()));
-        } else if let Some(UIEvent::ButtonClick(BUTTON_BATTLE)) = self.button_battle.tick(pointer) {
+        } else if let Some(UIEvent::ButtonClick(BUTTON_BATTLE, clip_id)) =
+            self.button_battle.tick(pointer)
+        {
+            app_context.audio_system.play_clip_option(clip_id);
+
             let selected_position = self.level_position();
             let selected_level = self.level_portals.get(&selected_position);
 
@@ -371,6 +379,18 @@ impl State for ArenaMenu {
             }
 
             self.pan_start = None;
+        }
+
+        let selected_position = self.level_position();
+
+        if selected_position != previous_selected_position {
+            app_context.audio_system.play_clip(ClipId::LevelEnter);
+
+            if let Some(portal) = self.level_portals.get(&selected_position) {
+                if portal.status == PortalStatus::Won {
+                    app_context.audio_system.play_clip(ClipId::StarSparkle);
+                }
+            }
         }
 
         None

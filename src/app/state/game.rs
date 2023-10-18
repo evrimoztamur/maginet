@@ -5,14 +5,14 @@ use shared::{
     LobbySort, Mage, Mages, Message, Position, PowerUp, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{ArenaMenu, Editor, SkirmishMenu, State};
 use crate::{
     app::{
-        Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
-        LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
-        UIElement, UIEvent, BOARD_SCALE,
+        Alignment, App, AppContext, ButtonElement, ClipId, ConfirmButtonElement, Interface,
+        LabelTheme, LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort,
+        ToggleButtonElement, UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{
         draw_board, draw_crosshair, draw_mage, draw_mana, draw_powerup, draw_sprite,
@@ -195,6 +195,17 @@ impl Game {
             } else {
                 None
             }
+        }
+    }
+
+    pub fn deselect_mage(&mut self) {
+        self.active_mage = None;
+    }
+
+    pub fn play_mage_selection_sound(&self, app_context: &AppContext) {
+        match self.active_mage {
+            Some(_) => app_context.audio_system.play_clip(ClipId::MageSelect),
+            None => app_context.audio_system.play_clip(ClipId::MageDeselect),
         }
     }
 
@@ -633,6 +644,10 @@ impl Game {
     }
 
     pub fn tick_game(&mut self, frame: u64, app_context: &AppContext) {
+        if self.last_move_frame == 0 {
+            self.last_move_frame = frame;
+        }
+
         let session_id = &app_context.session_id;
 
         let mut target_positions = Vec::new();
@@ -689,42 +704,50 @@ impl Game {
                     let to_powerup = self.lobby.game.powerups().get(to).cloned();
 
                     if let Some(move_targets) = self.lobby.game.take_move(*from, *to) {
+                        app_context.audio_system.play_clip(ClipId::MageMove);
+
                         target_positions.append(&mut move_targets.clone());
 
                         if let Some(moved_mage) = self.lobby.game.occupant(to) {
-                            if to_powerup == Some(PowerUp::Beam) {
-                                let particle_sort = match moved_mage.team {
-                                    Team::Red => ParticleSort::RedWin,
-                                    Team::Blue => ParticleSort::BlueWin,
-                                };
+                            if let Some(to_powerup) = to_powerup {
+                                app_context.audio_system.play_powerup(to_powerup);
 
-                                for x in 0..self.lobby.game.board_size().0 {
-                                    for _ in 0..40 {
-                                        let d = js_sys::Math::random() * std::f64::consts::TAU;
-                                        let v =
-                                            (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                if to_powerup == PowerUp::Beam {
+                                    let particle_sort = match moved_mage.team {
+                                        Team::Red => ParticleSort::RedWin,
+                                        Team::Blue => ParticleSort::BlueWin,
+                                    };
 
-                                        self.particle_system.add(Particle::new(
-                                            (x as f64, to.1 as f64),
-                                            (d.cos() * v * 2.0, d.sin() * v * 0.5),
-                                            (js_sys::Math::random() * 50.0) as u64,
-                                            particle_sort,
-                                        ));
+                                    for x in 0..self.lobby.game.board_size().0 {
+                                        for _ in 0..40 {
+                                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                            let v = (js_sys::Math::random()
+                                                + js_sys::Math::random())
+                                                * 0.1;
+
+                                            self.particle_system.add(Particle::new(
+                                                (x as f64, to.1 as f64),
+                                                (d.cos() * v * 2.0, d.sin() * v * 0.5),
+                                                (js_sys::Math::random() * 50.0) as u64,
+                                                particle_sort,
+                                            ));
+                                        }
                                     }
-                                }
 
-                                for y in 0..self.lobby.game.board_size().1 {
-                                    for _ in 0..40 {
-                                        let d = js_sys::Math::random() * std::f64::consts::TAU;
-                                        let v =
-                                            (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
+                                    for y in 0..self.lobby.game.board_size().1 {
+                                        for _ in 0..40 {
+                                            let d = js_sys::Math::random() * std::f64::consts::TAU;
+                                            let v = (js_sys::Math::random()
+                                                + js_sys::Math::random())
+                                                * 0.1;
 
-                                        self.particle_system.add(Particle::new(
-                                            (to.0 as f64, y as f64),
-                                            (d.cos() * v * 0.5, d.sin() * v * 2.0),
-                                            (js_sys::Math::random() * 50.0) as u64,
-                                            particle_sort,
-                                        ));
+                                            self.particle_system.add(Particle::new(
+                                                (to.0 as f64, y as f64),
+                                                (d.cos() * v * 0.5, d.sin() * v * 2.0),
+                                                (js_sys::Math::random() * 50.0) as u64,
+                                                particle_sort,
+                                            ));
+                                        }
                                     }
                                 }
                             }
@@ -959,7 +982,11 @@ impl State for Game {
         }
 
         if self.is_interface_active() {
-            if let Some(UIEvent::ButtonClick(value)) = self.interface.tick(&interface_pointer) {
+            if let Some(UIEvent::ButtonClick(value, clip_id)) =
+                self.interface.tick(&interface_pointer)
+            {
+                app_context.audio_system.play_clip_option(clip_id);
+
                 match value {
                     BUTTON_REMATCH => {
                         if self.lobby.is_local() {
@@ -991,7 +1018,7 @@ impl State for Game {
             }
         } else {
             if pointer.alt_clicked() {
-                self.active_mage = None;
+                self.deselect_mage();
             }
 
             if pointer.clicked() {
@@ -1022,9 +1049,11 @@ impl State for Game {
                             self.last_move_frame = frame;
                         } else {
                             self.select_mage_at(session_id.as_ref(), &selected_tile);
+                            self.play_mage_selection_sound(app_context);
                         }
                     } else {
                         self.select_mage_at(session_id.as_ref(), &selected_tile);
+                        self.play_mage_selection_sound(app_context);
                     }
                 }
             }

@@ -1,11 +1,11 @@
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
-use super::Pointer;
+use super::{Pointer, ClipId};
 use crate::draw::{draw_label, draw_sprite, draw_text_centered};
 
 pub enum UIEvent {
-    ButtonClick(usize),
+    ButtonClick(usize, Option<ClipId>),
 }
 
 pub trait UIElement {
@@ -130,6 +130,14 @@ impl ButtonElement {
     fn clicked(&self, pointer: &Pointer) -> bool {
         self.hovered(pointer) && pointer.clicked() && self.class != LabelTheme::Disabled
     }
+
+    fn clip_id(&self) -> Option<ClipId> {
+        match self.trim {
+            LabelTrim::Round => Some(ClipId::ClickForward),
+            LabelTrim::Glorious => Some(ClipId::ClickForward),
+            LabelTrim::Return => Some(ClipId::ClickBack),
+        }
+    }
 }
 
 impl UIElement for ButtonElement {
@@ -211,7 +219,7 @@ impl UIElement for ButtonElement {
 
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
         if self.clicked(pointer) {
-            Some(UIEvent::ButtonClick(self.value))
+            Some(UIEvent::ButtonClick(self.value, self.clip_id()))
         } else {
             None
         }
@@ -270,7 +278,7 @@ impl UIElement for ConfirmButtonElement {
         if pointer.clicked() {
             if self.button.clicked(pointer) {
                 if self.button.selected {
-                    Some(UIEvent::ButtonClick(self.button.value))
+                    Some(UIEvent::ButtonClick(self.button.value, self.button.clip_id()))
                 } else {
                     self.button.selected = true;
                     None
@@ -336,7 +344,7 @@ impl UIElement for ToggleButtonElement {
         if self.button.clicked(pointer) {
             self.toggle();
 
-            Some(UIEvent::ButtonClick(self.button.value))
+            Some(UIEvent::ButtonClick(self.button.value, self.button.clip_id()))
         } else {
             None
         }
