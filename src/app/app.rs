@@ -9,8 +9,8 @@ use web_sys::{
 };
 
 use super::{
-    ArenaMenu, Editor, EditorPreview, Game, MainMenu, Pointer, SkirmishMenu, TeleportMenu,
-    Tutorial, BOARD_SCALE,
+    ArenaMenu, AudioSystem, ClipId, Editor, EditorPreview, Game, MainMenu, Pointer, SkirmishMenu,
+    TeleportMenu, Tutorial, BOARD_SCALE,
 };
 use crate::{
     app::State,
@@ -46,6 +46,7 @@ pub struct AppContext {
     pub frame: u64,
     pub canvas_settings: CanvasSettings,
     pub text_input: Option<(String, String)>,
+    pub audio_system: AudioSystem,
 }
 
 pub struct App {
@@ -55,7 +56,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(canvas_settings: &CanvasSettings) -> App {
+    pub fn new(canvas_settings: &CanvasSettings, audio_system: AudioSystem) -> App {
         App {
             app_context: AppContext {
                 session_id: get_session_id(),
@@ -63,6 +64,7 @@ impl App {
                 frame: 0,
                 canvas_settings: canvas_settings.clone(),
                 text_input: None,
+                audio_system,
             },
             state_sort: StateSort::MainMenu(MainMenu::default()),
             atlas_complete: false,

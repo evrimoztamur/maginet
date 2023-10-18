@@ -765,6 +765,10 @@ impl Game {
 
         if !target_positions.is_empty() {
             self.shake_frame = (frame, target_positions.len());
+
+            app_context
+                .audio_system
+                .play_random_zap(target_positions.len());
         }
     }
 
