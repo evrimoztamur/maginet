@@ -2,14 +2,21 @@ mod app;
 mod draw;
 mod net;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    pin::Pin,
+    rc::Rc,
+    task::{Context, Poll},
+};
 
-use app::{App, CanvasSettings};
+use app::{App, AudioSystem, CanvasSettings};
+use futures::Future;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen_futures::future_to_promise;
 use web_sys::{
-    CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement, HtmlImageElement,
-    HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
+    console, CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement,
+    HtmlImageElement, HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
 };
 
 fn window() -> Window {
@@ -33,9 +40,9 @@ fn storage() -> Option<Storage> {
 }
 
 #[cfg(feature = "deploy")]
-const RESOURCE_BASE_URL: &str = ".";
+pub const RESOURCE_BASE_URL: &str = ".";
 #[cfg(not(feature = "deploy"))]
-const RESOURCE_BASE_URL: &str = "";
+pub const RESOURCE_BASE_URL: &str = "";
 
 fn init_canvas(
     canvas_settings: &CanvasSettings,
@@ -58,7 +65,7 @@ fn init_canvas(
 }
 
 #[wasm_bindgen(start)]
-fn start() -> Result<(), JsValue> {
+async fn start() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
 
     let container_element = document()
@@ -78,21 +85,22 @@ fn start() -> Result<(), JsValue> {
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
 
-    let atlas_img = Rc::new(
-        document()
-            .create_element("img")
-            .unwrap()
-            .dyn_into::<HtmlImageElement>()
-            .unwrap(),
-    );
+    // atlas_img.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
 
-    atlas_img.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
+    let atlas_future = ImageFuture::new(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
+    // let atlas_img = atlas_future.await.unwrap();
+    let atlas_img: Rc<HtmlImageElement> = Rc::new(atlas_future.await.unwrap());
+
+    {
+        let mut audio_system = AudioSystem::default();
+        audio_system.populate_audio().await;
+    }
 
     {
         let atlas_img_a = atlas_img.clone();
         let atlas_img = atlas_img.clone();
 
-        let closure = Closure::<dyn FnMut(_) -> Result<(), JsValue>>::new(move |_: JsValue| {
+        // let closure = Closure::<dyn FnMut(_) -> Result<(), JsValue>>::new(move |_: JsValue| {
             let (canvas, context) = init_canvas(&canvas_settings)?;
             let (interface_canvas, interface_context) = init_canvas(&canvas_settings)?;
 
@@ -117,9 +125,6 @@ fn start() -> Result<(), JsValue> {
             })?;
 
             atlas_context.draw_image_with_html_image_element(&atlas_img, 0.0, 0.0)?;
-            // container_element.append_child(&atlas)?;
-
-            // document().body().unwrap().append_child(&atlas)?;
 
             let app = App::new(&canvas_settings);
 
@@ -312,14 +317,70 @@ fn start() -> Result<(), JsValue> {
                 closure.forget();
             }
 
-            Ok(())
-        });
+            // Ok(())
+        // });
 
-        atlas_img_a.add_event_listener_with_callback("load", closure.as_ref().unchecked_ref())?;
-        closure.forget();
+        // console::log_1(&"!".into());
+        // atlas_img_a.add_event_listener_with_callback("load", closure.as_ref().unchecked_ref())?;
+        // closure.forget();
     }
 
     Ok(())
+}
+
+pub struct ImageFuture {
+    image: Option<HtmlImageElement>,
+    load_failed: Rc<Cell<bool>>,
+}
+
+impl ImageFuture {
+    pub fn new(path: &str) -> Self {
+        let image = HtmlImageElement::new().unwrap();
+        image.set_src(path);
+        ImageFuture {
+            image: Some(image),
+            load_failed: Rc::new(Cell::new(false)),
+        }
+    }
+}
+
+impl Future for ImageFuture {
+    type Output = Result<HtmlImageElement, ()>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match &self.image {
+            Some(image) if image.complete() => {
+                let image = self.image.take().unwrap();
+                let failed = self.load_failed.get();
+
+                if failed {
+                    Poll::Ready(Err(()))
+                } else {
+                    Poll::Ready(Ok(image))
+                }
+            }
+            Some(image) => {
+                let waker = cx.waker().clone();
+                let on_load_closure = Closure::wrap(Box::new(move || {
+                    waker.wake_by_ref();
+                }) as Box<dyn FnMut()>);
+                image.set_onload(Some(on_load_closure.as_ref().unchecked_ref()));
+                on_load_closure.forget();
+
+                let waker = cx.waker().clone();
+                let failed_flag = self.load_failed.clone();
+                let on_error_closure = Closure::wrap(Box::new(move || {
+                    failed_flag.set(true);
+                    waker.wake_by_ref();
+                }) as Box<dyn FnMut()>);
+                image.set_onerror(Some(on_error_closure.as_ref().unchecked_ref()));
+                on_error_closure.forget();
+
+                Poll::Pending
+            }
+            _ => Poll::Ready(Err(())),
+        }
+    }
 }
 
 #[macro_export]
