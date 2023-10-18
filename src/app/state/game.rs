@@ -916,6 +916,11 @@ impl State for Game {
                         },
                     );
 
+                    match team {
+                        Team::Red => app_context.audio_system.play_clip(ClipId::LevelSuccess),
+                        Team::Blue => app_context.audio_system.play_clip(ClipId::LevelFailure),
+                    }
+
                     self.recorded_result = true;
                 }
 
