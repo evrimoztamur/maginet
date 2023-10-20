@@ -74,6 +74,7 @@ canvas {
 img,
 canvas {
     image-rendering: crisp-edges;
+    image-rendering: pixelated;
 }
 
 nav {

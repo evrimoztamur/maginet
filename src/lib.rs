@@ -73,7 +73,7 @@ async fn start() -> Result<(), JsValue> {
         .unwrap()
         .unwrap();
 
-    let device_pixel_ratio = window().device_pixel_ratio();
+    let device_pixel_ratio = window().device_pixel_ratio().max(2.0);
 
     let canvas_settings = CanvasSettings::new(
         384 + 16,
