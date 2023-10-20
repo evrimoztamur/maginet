@@ -9,8 +9,8 @@ use web_sys::{
 };
 
 use super::{
-    ArenaMenu, AudioSystem, ClipId, Editor, EditorPreview, Game, MainMenu, Pointer, SkirmishMenu,
-    TeleportMenu, Tutorial, BOARD_SCALE,
+    ArenaMenu, AudioSystem, ClipId, Editor, EditorPreview, Game, MainMenu, Pointer, SettingsMenu,
+    SkirmishMenu, TeleportMenu, Tutorial, BOARD_SCALE,
 };
 use crate::{
     app::State,
@@ -33,6 +33,7 @@ pub enum StateSort {
     MainMenu(MainMenu),
     ArenaMenu(ArenaMenu),
     SkirmishMenu(SkirmishMenu),
+    SettingsMenu(SettingsMenu),
     Game(Game),
     Editor(Editor),
     TeleportMenu(TeleportMenu),
@@ -162,6 +163,9 @@ impl App {
                 StateSort::Tutorial(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
+                StateSort::SettingsMenu(state) => {
+                    state.draw(context, interface_context, atlas, &self.app_context)
+                }
             };
         }
 
@@ -197,6 +201,18 @@ impl App {
             StateSort::Editor(state) => state.tick(text_input, &self.app_context),
             StateSort::EditorPreview(state) => state.tick(text_input, &self.app_context),
             StateSort::Tutorial(state) => state.tick(text_input, &self.app_context),
+            StateSort::SettingsMenu(state) => {
+                let next_state = state.tick(text_input, &self.app_context);
+
+                self.app_context
+                    .audio_system
+                    .set_music_volume(state.music_volume);
+                self.app_context
+                    .audio_system
+                    .set_clip_volume(state.clip_volume);
+
+                next_state
+            }
         };
 
         if let Some(next_state) = next_state {

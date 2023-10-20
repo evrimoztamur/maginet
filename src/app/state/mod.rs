@@ -7,6 +7,7 @@ mod menu_skirmish;
 mod menu_teleport;
 mod state;
 mod tutorial;
+mod menu_settings;
 
 pub use editor::*;
 pub use editor_preview::*;
@@ -15,5 +16,6 @@ pub use menu_arena::*;
 pub use menu_main::*;
 pub use menu_skirmish::*;
 pub use menu_teleport::*;
+pub use menu_settings::*;
 pub use state::*;
 pub use tutorial::*;

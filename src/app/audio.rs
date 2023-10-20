@@ -1,12 +1,11 @@
-use crate::RESOURCE_BASE_URL;
-use js_sys::{ArrayBuffer, Math, Promise, Uint8Array};
-use shared::PowerUp;
 use std::collections::HashMap;
-use wasm_bindgen::{JsCast, JsValue};
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{
-    console, AudioBuffer, AudioBufferSourceNode, AudioContext, AudioNode, HtmlAudioElement,
-};
+
+use js_sys::{ArrayBuffer, Math, Uint8Array};
+use shared::PowerUp;
+use wasm_bindgen::JsCast;
+use web_sys::{console, AudioBuffer, AudioContext, GainNode};
+
+use super::SettingsMenu;
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ClipId {
@@ -33,22 +32,27 @@ pub enum ClipId {
     MapIncreaseSize,
     MapDecreaseSize,
     StarSparkle,
+    MusicI,
 }
 
 #[derive(Clone, Debug)]
 pub struct AudioClip {
     buffer: AudioBuffer,
-    volume: f64,
+    volume: f32,
 }
 
 #[derive(Clone, Debug)]
 pub struct AudioSystem {
     context: AudioContext,
     audio_clips: HashMap<ClipId, AudioClip>,
+    music_gain: Option<GainNode>,
+    base_volume: f32,
+    music_volume: i8,
+    clip_volume: i8,
 }
 
 impl AudioSystem {
-    pub async fn register_audio_clip(&mut self, clip_id: ClipId, data: &[u8], volume: f64) {
+    pub async fn register_audio_clip(&mut self, clip_id: ClipId, data: &[u8], volume: f32) {
         let promise = self
             .context
             .decode_audio_data(&u8_slice_to_array_buffer(data))
@@ -69,34 +73,41 @@ impl AudioSystem {
         }
     }
 
-    pub fn play_clip(&self, clip_id: ClipId) {
-        console::log_1(&format!("play_clip {:?}", clip_id).into());
-        if let Some(audio_clip) = self.audio_clips.get(&clip_id) {
-            console::log_1(&format!("play_clip audio_clip {:?}", audio_clip).into());
-            // let audio_element = audio_clip.audio_element;
-            // audio_clip.audio_element.set_current_time(0.0);
-            // let _ = audio_clip.audio_element.play();
+    pub fn set_music_volume(&mut self, volume: i8) {
+        self.music_volume = volume;
 
-            // if let Some(buffer_source) = &audio_clip.buffer_source {
-            // } else {
-            //     // audio_clip.audio_promise.
-            // }
+        if let Some(gain_node) = &self.music_gain {
+            gain_node.gain().set_value(self.music_volume());
+        }
+    }
+
+    pub fn music_volume(&self) -> f32 {
+        self.music_volume as f32 / 10.0
+    }
+
+    pub fn set_clip_volume(&mut self, volume: i8) {
+        self.clip_volume = volume;
+    }
+
+    pub fn clip_volume(&self) -> f32 {
+        self.clip_volume as f32 / 10.0
+    }
+
+    pub fn play_clip(&self, clip_id: ClipId) {
+        if let Some(audio_clip) = self.audio_clips.get(&clip_id) {
+            let real_volume = audio_clip.volume * self.base_volume * self.clip_volume();
 
             let buffer_source = self.context.create_buffer_source().unwrap();
             buffer_source.set_buffer(Some(&audio_clip.buffer));
-            // buffer_source
-            //     .connect_with_audio_node(&self.context.destination().into())
-            //     .unwrap();
-
-            // // let _ = buffer_source.start();
 
             let gain_node = self.context.create_gain().unwrap();
-            gain_node.gain().set_value(audio_clip.volume as f32);
+            gain_node.gain().set_value(real_volume);
 
             buffer_source.connect_with_audio_node(&gain_node).unwrap();
             gain_node
                 .connect_with_audio_node(&self.context.destination())
                 .unwrap();
+
             buffer_source.start_with_when(0.0).unwrap();
         }
     }
@@ -104,6 +115,27 @@ impl AudioSystem {
     pub fn play_clip_option(&self, clip_id: Option<ClipId>) {
         if let Some(clip_id) = clip_id {
             self.play_clip(clip_id);
+        }
+    }
+
+    pub fn play_music(&mut self, clip_id: ClipId) {
+        if let Some(audio_clip) = self.audio_clips.get(&clip_id) {
+            let real_volume = audio_clip.volume * self.base_volume * self.music_volume();
+
+            let buffer_source = self.context.create_buffer_source().unwrap();
+            buffer_source.set_buffer(Some(&audio_clip.buffer));
+
+            let gain_node = self.context.create_gain().unwrap();
+            gain_node.gain().set_value(real_volume);
+
+            buffer_source.connect_with_audio_node(&gain_node).unwrap();
+            gain_node
+                .connect_with_audio_node(&self.context.destination())
+                .unwrap();
+
+            buffer_source.start_with_when(0.0).unwrap();
+
+            self.music_gain = Some(gain_node);
         }
     }
 
@@ -218,7 +250,7 @@ impl AudioSystem {
             .await;
             self.register_audio_clip(
                 ClipId::MageMove,
-                include_bytes!("../../static/wav/UI_Battle_MageMoveToSquare.wav"),
+                include_bytes!("../../static/wav/UI_Battle_MageMoveToSquare_2.wav"),
                 1.0,
             )
             .await;
@@ -262,7 +294,16 @@ impl AudioSystem {
             .await;
             self.register_audio_clip(
                 ClipId::StarSparkle,
-                include_bytes!("../../static/wav/UI_LevelCompletedStar_LOOP.wav"),
+                include_bytes!("../../static/wav/UI_LevelCompleteCrystals.wav"),
+                1.0,
+            )
+            .await;
+        }
+
+        {
+            self.register_audio_clip(
+                ClipId::MusicI,
+                include_bytes!("../../static/wav/music_1.mp3"),
                 1.0,
             )
             .await;
@@ -270,19 +311,23 @@ impl AudioSystem {
     }
 }
 
-impl Default for AudioSystem {
-    fn default() -> Self {
-        let mut audio_system = Self {
-            context: AudioContext::new().unwrap(),
-            audio_clips: Default::default(),
-        };
-
-        audio_system
-    }
-}
-
 fn u8_slice_to_array_buffer(u8_slice: &[u8]) -> ArrayBuffer {
     let uint8_array = Uint8Array::new_with_length(u8_slice.len() as u32);
     uint8_array.set(&Uint8Array::from(u8_slice), 0);
     ArrayBuffer::from(uint8_array.buffer())
+}
+
+impl Default for AudioSystem {
+    fn default() -> Self {
+        let (music_volume, clip_volume) = SettingsMenu::load_volume();
+
+        Self {
+            context: AudioContext::new().unwrap(),
+            audio_clips: Default::default(),
+            base_volume: 1.0,
+            music_gain: None,
+            music_volume,
+            clip_volume,
+        }
+    }
 }

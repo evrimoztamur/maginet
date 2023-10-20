@@ -2,7 +2,7 @@ use std::{collections::HashMap, f64::consts::TAU};
 
 use shared::{Board, GameResult, Level, LobbySettings, Mage, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{Game, MainMenu, State};
 use crate::{
@@ -201,14 +201,25 @@ pub struct ArenaMenu {
     pan_start: Option<(f64, f64)>,
     level_portals: HashMap<(isize, isize), LevelPortal>,
     board_dirty: bool,
+    sparkle_due: bool,
 }
 
 impl ArenaMenu {
     pub fn at_position(position: (isize, isize)) -> ArenaMenu {
-        ArenaMenu {
+        let mut arena_menu = ArenaMenu {
             pan_offset: (-position.0 as f64 * 128.0, -position.1 as f64 * 128.0),
             ..Default::default()
-        }
+        };
+
+        let sparkle_due = if let Some(portal) = arena_menu.level_portals.get(&(0, 0)) {
+            portal.status == PortalStatus::Won
+        } else {
+            false
+        };
+
+        arena_menu.sparkle_due = sparkle_due;
+
+        arena_menu
     }
 
     fn drag_offset(&self, pointer: &Pointer) -> (f64, f64) {
@@ -388,9 +399,20 @@ impl State for ArenaMenu {
 
             if let Some(portal) = self.level_portals.get(&selected_position) {
                 if portal.status == PortalStatus::Won {
-                    app_context.audio_system.play_clip(ClipId::StarSparkle);
+                    if let Some(previous_portal) =
+                        self.level_portals.get(&previous_selected_position)
+                    {
+                        if previous_portal.status != PortalStatus::Won {
+                            app_context.audio_system.play_clip(ClipId::StarSparkle);
+                        }
+                    } else {
+                        app_context.audio_system.play_clip(ClipId::StarSparkle);
+                    }
                 }
             }
+        } else if self.sparkle_due {
+            app_context.audio_system.play_clip(ClipId::StarSparkle);
+            self.sparkle_due = false;
         }
 
         None
@@ -726,6 +748,12 @@ impl Default for ArenaMenu {
             }
         }
 
+        let sparkle_due = if let Some(portal) = level_portals.get(&(0, 0)) {
+            portal.status == PortalStatus::Won
+        } else {
+            false
+        };
+
         ArenaMenu {
             interface: root_element,
             button_locked,
@@ -735,6 +763,7 @@ impl Default for ArenaMenu {
             pan_target: None,
             pan_start: None,
             board_dirty: true,
+            sparkle_due,
             level_portals,
         }
     }

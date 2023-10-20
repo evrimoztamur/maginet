@@ -94,6 +94,8 @@ async fn start() -> Result<(), JsValue> {
     let mut audio_system = AudioSystem::default();
     audio_system.populate_audio().await;
 
+    audio_system.play_music(app::ClipId::MusicI);
+
     {
         let atlas_img_a = atlas_img.clone();
         let atlas_img = atlas_img.clone();

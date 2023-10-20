@@ -2,7 +2,7 @@ use shared::{Board, LoadoutMethod, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{ArenaMenu, Editor, Game, SkirmishMenu, State, Tutorial};
+use super::{ArenaMenu, Editor, Game, SkirmishMenu, State, Tutorial, SettingsMenu};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -21,6 +21,7 @@ const BUTTON_ARENA: usize = 20;
 const BUTTON_SKIRMISH: usize = 21;
 const BUTTON_TUTORIAL: usize = 22;
 const BUTTON_EDITOR: usize = 23;
+const BUTTON_SETTINGS: usize = 24;
 const BUTTON_RESET: usize = 50;
 
 impl State for MainMenu {
@@ -89,6 +90,9 @@ impl State for MainMenu {
                 BUTTON_TUTORIAL => {
                     return Some(StateSort::Tutorial(Tutorial::default()));
                 }
+                BUTTON_SETTINGS => {
+                    return Some(StateSort::SettingsMenu(SettingsMenu::default()));
+                }
                 _ => (),
             }
         }
@@ -139,11 +143,21 @@ impl Default for MainMenu {
             crate::app::ContentElement::Text("Tutorial".to_string(), Alignment::Center),
         );
 
+        let button_settings = ButtonElement::new(
+            (208, 68 + 32 * 4 + 4),
+            (80, 20),
+            BUTTON_SETTINGS,
+            LabelTrim::Return,
+            LabelTheme::Default,
+            crate::app::ContentElement::Text("Settings".to_string(), Alignment::Center),
+        );
+
         let root_element = Interface::new(vec![
             button_arena.boxed(),
             button_editor.boxed(),
             button_tutorial.boxed(),
             button_skirmish.boxed(),
+            button_settings.boxed()
         ]);
 
         let button_reset = ConfirmButtonElement::new(
