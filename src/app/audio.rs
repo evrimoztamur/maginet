@@ -133,6 +133,8 @@ impl AudioSystem {
                 .connect_with_audio_node(&self.context.destination())
                 .unwrap();
 
+            buffer_source.set_loop(true);
+
             buffer_source.start_with_when(0.0).unwrap();
 
             self.music_gain = Some(gain_node);
