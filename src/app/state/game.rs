@@ -5,7 +5,7 @@ use shared::{
     LobbySort, Mage, Mages, Message, Position, PowerUp, Team, Turn, TurnLeaf,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{ArenaMenu, Editor, SkirmishMenu, State};
 use crate::{

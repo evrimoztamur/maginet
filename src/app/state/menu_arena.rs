@@ -2,7 +2,7 @@ use std::{collections::HashMap, f64::consts::TAU};
 
 use shared::{Board, GameResult, Level, LobbySettings, Mage, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{Game, MainMenu, State};
 use crate::{

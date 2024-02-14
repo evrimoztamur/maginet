@@ -2,7 +2,7 @@ use shared::{Board, LoadoutMethod, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{ArenaMenu, Editor, Game, SkirmishMenu, State, Tutorial, SettingsMenu};
+use super::{ArenaMenu, Editor, Game, SettingsMenu, SkirmishMenu, State, Tutorial};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
@@ -157,7 +157,7 @@ impl Default for MainMenu {
             button_editor.boxed(),
             button_tutorial.boxed(),
             button_skirmish.boxed(),
-            button_settings.boxed()
+            button_settings.boxed(),
         ]);
 
         let button_reset = ConfirmButtonElement::new(

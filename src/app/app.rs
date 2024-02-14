@@ -9,7 +9,7 @@ use web_sys::{
 };
 
 use super::{
-    ArenaMenu, AudioSystem, ClipId, Editor, EditorPreview, Game, MainMenu, Pointer, SettingsMenu,
+    ArenaMenu, AudioSystem, Editor, EditorPreview, Game, MainMenu, Pointer, SettingsMenu,
     SkirmishMenu, TeleportMenu, Tutorial, BOARD_SCALE,
 };
 use crate::{
@@ -102,7 +102,7 @@ impl App {
             interface_context.rotate(std::f64::consts::PI / 2.0)?;
         }
 
-        let canvas_scale = self.app_context.canvas_settings.canvas_scale as f64;
+        let canvas_scale = self.app_context.canvas_settings.canvas_scale;
 
         context.scale(canvas_scale, canvas_scale)?;
         interface_context.scale(canvas_scale, canvas_scale)?;

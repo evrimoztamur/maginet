@@ -1,15 +1,13 @@
-use shared::{Board, LoadoutMethod, LobbySettings, LobbySort};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{ArenaMenu, Editor, Game, MainMenu, SkirmishMenu, State, Tutorial};
+use super::{MainMenu, State};
 use crate::{
     app::{
-        Alignment, App, AppContext, ButtonElement, ConfirmButtonElement, ContentElement, Interface,
-        LabelTheme, LabelTrim, Pointer, StateSort, UIElement, UIEvent,
+        Alignment, App, AppContext, ButtonElement, ContentElement, Interface, LabelTheme,
+        LabelTrim, StateSort, UIElement, UIEvent,
     },
     draw::{draw_label, draw_sprite, draw_text},
-    window,
 };
 
 pub struct SettingsMenu {
@@ -157,7 +155,7 @@ impl State for SettingsMenu {
         _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
-        let frame = app_context.frame;
+        // let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
         if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {

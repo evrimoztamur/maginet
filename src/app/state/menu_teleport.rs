@@ -5,7 +5,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 use super::{Game, SkirmishMenu, State};
 use crate::{
     app::{
-        Alignment, AppContext, ButtonElement, ClipId, Interface, LabelTheme, LabelTrim, Particle,
+        Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, Particle,
         ParticleSort, ParticleSystem, StateSort, UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{draw_board, draw_crosshair, draw_sprite},

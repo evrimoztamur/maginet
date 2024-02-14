@@ -5,7 +5,9 @@ use data_encoding_macro::new_encoding;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{vecmap, Board, Game, Mage, Position, PowerUp, PowerUpEntry, Team, Turn, TurnLeaf, Mages};
+use crate::{
+    vecmap, Board, Game, Mage, Mages, Position, PowerUp, PowerUpEntry, Team, Turn, TurnLeaf,
+};
 
 /// Base 32 (Crockford) encoding for levels.
 pub const BASE32: Encoding = new_encoding! {
@@ -89,13 +91,10 @@ impl Level {
 
     /// Checks if a tile is blocked.
     pub fn is_blocked(&self, position: &Position) -> bool {
-        if self.mages.occupied(&position) {
+        if self.mages.occupied(position) {
             true
         } else {
-            match self.powerups.get(&position) {
-                Some(PowerUp::Boulder(_)) => true,
-                _ => false,
-            }
+            matches!(self.powerups.get(position), Some(PowerUp::Boulder(_)))
         }
     }
 

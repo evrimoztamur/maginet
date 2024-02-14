@@ -13,10 +13,10 @@ use app::{App, AudioSystem, CanvasSettings};
 use futures::Future;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
-use wasm_bindgen_futures::future_to_promise;
+
 use web_sys::{
-    console, CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement,
-    HtmlImageElement, HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
+    CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement, HtmlImageElement,
+    HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
 };
 
 fn window() -> Window {
@@ -97,10 +97,8 @@ async fn start() -> Result<(), JsValue> {
     audio_system.play_music(app::ClipId::MusicI);
 
     {
-        let atlas_img_a = atlas_img.clone();
         let atlas_img = atlas_img.clone();
 
-        // let closure = Closure::<dyn FnMut(_) -> Result<(), JsValue>>::new(move |_: JsValue| {
         let (canvas, context) = init_canvas(&canvas_settings)?;
         let (interface_canvas, interface_context) = init_canvas(&canvas_settings)?;
 
@@ -300,13 +298,6 @@ async fn start() -> Result<(), JsValue> {
             )?;
             closure.forget();
         }
-
-        // Ok(())
-        // });
-
-        // console::log_1(&"!".into());
-        // atlas_img_a.add_event_listener_with_callback("load", closure.as_ref().unchecked_ref())?;
-        // closure.forget();
     }
 
     Ok(())

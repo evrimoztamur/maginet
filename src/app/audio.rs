@@ -316,7 +316,7 @@ impl AudioSystem {
 fn u8_slice_to_array_buffer(u8_slice: &[u8]) -> ArrayBuffer {
     let uint8_array = Uint8Array::new_with_length(u8_slice.len() as u32);
     uint8_array.set(&Uint8Array::from(u8_slice), 0);
-    ArrayBuffer::from(uint8_array.buffer())
+    uint8_array.buffer()
 }
 
 impl Default for AudioSystem {

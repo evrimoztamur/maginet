@@ -1,7 +1,7 @@
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
-use super::{Pointer, ClipId};
+use super::{ClipId, Pointer};
 use crate::draw::{draw_label, draw_sprite, draw_text_centered};
 
 pub enum UIEvent {
@@ -278,7 +278,10 @@ impl UIElement for ConfirmButtonElement {
         if pointer.clicked() {
             if self.button.clicked(pointer) {
                 if self.button.selected {
-                    Some(UIEvent::ButtonClick(self.button.value, self.button.clip_id()))
+                    Some(UIEvent::ButtonClick(
+                        self.button.value,
+                        self.button.clip_id(),
+                    ))
                 } else {
                     self.button.selected = true;
                     None
@@ -344,7 +347,10 @@ impl UIElement for ToggleButtonElement {
         if self.button.clicked(pointer) {
             self.toggle();
 
-            Some(UIEvent::ButtonClick(self.button.value, self.button.clip_id()))
+            Some(UIEvent::ButtonClick(
+                self.button.value,
+                self.button.clip_id(),
+            ))
         } else {
             None
         }

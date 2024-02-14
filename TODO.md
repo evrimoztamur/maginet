@@ -5,7 +5,6 @@
   - Serde for level styles
     - Level styles in campaign menu..?
 - Sound
-  - Awaiting framk for SFX and music
   - State transitions
     - State requests background music
     - App handles transitions between pieces
