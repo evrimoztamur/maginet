@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
 use serde::{Deserialize, Serialize};
+use serde_json_any_key::*;
 
 use crate::{Lobby, LobbyError, LobbySettings, Turn};
 
@@ -8,11 +12,13 @@ pub enum Message {
     /// Everything's zappin'!
     Ok,
     /// A single [`Turn`].
-    Move(Turn),
+    Turn(Turn),
     /// A list of [`Turn`]s for synchronising observers who may be multiple turns behind.
-    Moves(Vec<Turn>),
+    Turns(Vec<Turn>),
     /// An entire [`Lobby`] state for complete synchronisation.
     Lobby(Box<Lobby>),
+    /// List of lobbies
+    Lobbies(#[serde(with = "any_key_map")] HashMap<u16, Lobby>),
     /// A [`LobbyError`].
     LobbyError(LobbyError),
 }
@@ -38,4 +44,15 @@ pub struct SessionMessage {
 pub struct SessionNewLobby {
     /// A [`Message`] payload.
     pub lobby_settings: LobbySettings,
+}
+
+/// Generates a [`Duration`] for client/server synchronisation and expiry checks.
+/// The result is a UNIX timestamp.
+pub fn timestamp() -> Duration {
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("time went backwards");
+
+    Duration::from_secs_f64(since_the_epoch.as_secs_f64())
 }

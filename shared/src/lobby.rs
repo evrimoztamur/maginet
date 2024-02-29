@@ -1,4 +1,7 @@
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::{
+    collections::{BTreeMap, HashMap, VecDeque},
+    time::Duration,
+};
 
 use rand_chacha::{
     rand_core::{RngCore, SeedableRng},
@@ -8,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
 use crate::Turn;
-use crate::{Board, Game, Level, Mage, MageSort, Message, Team};
+use crate::{timestamp, Board, Game, Level, Mage, MageSort, Message, Team};
 
 /// A identifier for a lobby, shared by the client and the server.
 pub type LobbyID = u16;
@@ -33,13 +36,16 @@ pub struct Player {
     pub team: Team,
     /// Whether the player wants to rematch or not.
     pub rematch: bool,
+    /// [`Duration`] of the latest heartbeat.
+    pub latest_heartbeat: Duration,
 }
 
 impl Player {
-    fn new(team: Team) -> Player {
+    fn new(team: Team, heartbeat: Duration) -> Player {
         Player {
             team,
             rematch: false,
+            latest_heartbeat: heartbeat,
         }
     }
 }
@@ -58,6 +64,7 @@ pub struct Lobby {
     players: HashMap<String, Player>,
     player_slots: VecDeque<Player>,
     ticks: usize,
+    first_heartbeat: Duration,
     /// The [`Lobby`]s sort.
     pub settings: LobbySettings,
 }
@@ -66,13 +73,18 @@ impl Lobby {
     /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
     pub fn new(settings: LobbySettings) -> Lobby {
         let mut rng = ChaCha8Rng::seed_from_u64(settings.seed);
+        let first_heartbeat = timestamp();
 
         Lobby {
             game: Game::new(&settings.level(&mut rng), settings.can_stalemate)
                 .expect("game should be instantiable with default values"),
             players: HashMap::new(),
-            player_slots: VecDeque::from([Player::new(Team::Red), Player::new(Team::Blue)]),
+            player_slots: VecDeque::from([
+                Player::new(Team::Red, Duration::default()),
+                Player::new(Team::Blue, Duration::default()),
+            ]),
             ticks: 0,
+            first_heartbeat,
             settings,
         }
     }
@@ -135,7 +147,7 @@ impl Lobby {
             match self.players.get(&session_id) {
                 Some(player) => {
                     if self.game.turn_for() == player.team {
-                        if let Message::Move(Turn(from, to)) = message {
+                        if let Message::Turn(Turn(from, to)) = message {
                             self.game.take_move(from, to);
                         }
 
@@ -231,6 +243,29 @@ impl Lobby {
         // This is a state-modfying action and in turn must be communicated with the connected clients.
         // Rewinding is currently only available in local lobbies, but take-backs may be implemented.
         self.tick();
+    }
+
+    /// Checks if any [`Player`]s are connected to this [`Lobby`].
+    pub fn any_connected(&self, timestamp: Duration) -> bool {
+        self.players
+            .iter()
+            .any(|(_, player)| timestamp - player.latest_heartbeat < Duration::from_secs(15))
+    }
+
+    /// Returns the latest heartbeat timestamp for this [`Lobby`].
+    pub fn latest_heartbeat(&self) -> Duration {
+        self.players
+            .values()
+            .map(|player| player.latest_heartbeat)
+            .max()
+            .unwrap_or(self.first_heartbeat)
+    }
+
+    /// Updates the latest heartbeat of a connected [`Player`].
+    pub fn beat_heart(&mut self, session_id: String) {
+        if let Some(player) = self.players.get_mut(&session_id) {
+            player.latest_heartbeat = timestamp();
+        }
     }
 }
 

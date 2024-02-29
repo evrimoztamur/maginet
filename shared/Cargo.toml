@@ -12,3 +12,4 @@ data-encoding-macro = "0.1.13"
 itertools = "0.10.5"
 rand_chacha = "0.3.1"
 serde = { version = "1.0.160", features = ["derive"] }
+serde_json_any_key = "2.0.0"

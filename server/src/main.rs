@@ -12,7 +12,8 @@ use axum::{
 };
 use rand::Rng;
 use shared::{
-    Lobby, LobbyError, LobbySort, Message, SessionMessage, SessionNewLobby, SessionRequest, Turn,
+    timestamp, Lobby, LobbyError, LobbySort, Message, SessionMessage, SessionNewLobby,
+    SessionRequest, Turn,
 };
 use tower_http::services::{ServeDir, ServeFile};
 
@@ -30,6 +31,7 @@ async fn main() {
     let app = Router::new()
         .nest_service("/static", ServeDir::new("static"))
         .route_service("/", ServeFile::new("html/game.html"))
+        .route("/lobbies", get(get_lobbies))
         .route("/lobby/create", post(create_lobby))
         .route("/lobby/:id/turns/:since", get(get_turns_since))
         .route("/lobby/:id/act", post(process_inbound))
@@ -45,6 +47,14 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn get_lobbies(State(state): State<AppState>) -> Json<Message> {
+    let mut lobbies = state.lobbies.lock().unwrap();
+
+    lobbies.retain(|_, v| v.any_connected(timestamp()) && v.game.result().is_none());
+
+    Json(Message::Lobbies(lobbies.clone()))
 }
 
 async fn create_lobby(
@@ -65,14 +75,17 @@ async fn create_lobby(
 async fn get_turns_since(
     State(state): State<AppState>,
     Path((id, since)): Path<(u16, usize)>,
+    Json(session_request): Json<SessionRequest>,
 ) -> Json<Message> {
-    let lobbies = state.lobbies.lock().unwrap();
+    let mut lobbies = state.lobbies.lock().unwrap();
 
-    if let Some(lobby) = lobbies.get(&id) {
+    if let Some(lobby) = lobbies.get_mut(&id) {
+        lobby.beat_heart(session_request.session_id);
+
         if lobby.all_ready() {
             let turns_since: Vec<Turn> =
                 lobby.game.turns_since(since).into_iter().cloned().collect();
-            Json(Message::Moves(turns_since))
+            Json(Message::Turns(turns_since))
         } else {
             Json(Message::Lobby(Box::new(lobby.clone())))
         }

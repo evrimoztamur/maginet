@@ -72,8 +72,8 @@ pub fn request_state(lobby_id: LobbyID) -> Request {
     request_url("GET", &format!("{API_URL}/lobby/{lobby_id}/state"))
 }
 
-pub fn request_turns_since(lobby_id: LobbyID, since: usize) -> Request {
-    request_url("GET", &format!("{API_URL}/lobby/{lobby_id}/turns/{since}"))
+pub fn request_turns_since(lobby_id: LobbyID, session_id: String, since: usize) -> Option<Promise> {
+    post_probe(format!("{API_URL}/lobby/{lobby_id}/turns/{since}"), session_id)
 }
 
 pub fn create_new_lobby(lobby_settings: LobbySettings) -> Option<Promise> {

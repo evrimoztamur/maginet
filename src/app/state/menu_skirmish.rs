@@ -1,4 +1,4 @@
-use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
+use shared::{timestamp, LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 

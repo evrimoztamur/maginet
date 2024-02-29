@@ -1,3 +1,5 @@
+# Maginet
+
 ## Getting started
 
 ### Server

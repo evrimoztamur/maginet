@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::Position;
 
-/// A turn is a pair of positions, referring to the tile a mage is moving from and to.
+/// A turn is a pair of [`Position`]s, referring to the tile a mage is moving from and to.
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct Turn(pub Position, pub Position);
 

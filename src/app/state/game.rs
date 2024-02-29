@@ -216,7 +216,7 @@ impl Game {
             .best_turn(3, window().performance().unwrap().now().to_bits());
 
         if let Some(TurnLeaf(turn, _)) = turn {
-            self.message_pool.borrow_mut().push(Message::Move(turn));
+            self.message_pool.borrow_mut().push(Message::Turn(turn));
         }
     }
 
@@ -227,7 +227,7 @@ impl Game {
             .best_turn_auto(window().performance().unwrap().now().to_bits());
 
         if let Some(TurnLeaf(turn, _)) = turn {
-            self.message_pool.borrow_mut().push(Message::Move(turn));
+            self.message_pool.borrow_mut().push(Message::Turn(turn));
         }
     }
 
@@ -662,8 +662,15 @@ impl Game {
                     if self.is_interface_active() {
                         let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
                     } else {
-                        let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
-                            .then(&self.message_closure);
+                        // let _ = fetch(&request_turns_since(lobby_id, self.lobby.game.turns()))
+                        //     .then(&self.message_closure);
+
+                        request_turns_since(
+                            lobby_id,
+                            session_id.clone().unwrap(),
+                            self.lobby.game.turns(),
+                        )
+                        .map(|promise| promise.then(&self.message_closure));
                     }
                 } else if self.lobby.settings.lobby_sort != LobbySort::Online(0) {
                     let _ = fetch(&request_state(lobby_id)).then(&self.message_closure);
@@ -684,13 +691,13 @@ impl Game {
                 .best_turn_auto(window().performance().unwrap().now().to_bits());
 
             if let Some(TurnLeaf(turn, _)) = turn {
-                message_pool.messages.append(&mut vec![Message::Move(turn)]);
+                message_pool.messages.append(&mut vec![Message::Turn(turn)]);
             }
         }
 
         for message in &message_pool.messages {
             match message {
-                Message::Moves(turns) => {
+                Message::Turns(turns) => {
                     for Turn(from, to) in turns {
                         if let Some(move_targets) = self.lobby.game.take_move(*from, *to) {
                             target_positions.append(&mut move_targets.clone());
@@ -700,7 +707,7 @@ impl Game {
                         }
                     }
                 }
-                Message::Move(Turn(from, to)) => {
+                Message::Turn(Turn(from, to)) => {
                     let to_powerup = self.lobby.game.powerups().get(to).cloned();
 
                     if let Some(move_targets) = self.lobby.game.take_move(*from, *to) {
@@ -1040,7 +1047,7 @@ impl State for Game {
                                 send_message(
                                     self.lobby_id().unwrap(),
                                     session_id.clone().unwrap(),
-                                    Message::Move(Turn(from, selected_tile)),
+                                    Message::Turn(Turn(from, selected_tile)),
                                 );
                             }
 
@@ -1048,7 +1055,7 @@ impl State for Game {
 
                             message_pool
                                 .messages
-                                .push(Message::Move(Turn(from, selected_tile)));
+                                .push(Message::Turn(Turn(from, selected_tile)));
 
                             self.active_mage = None;
                             self.last_move_frame = frame;
