@@ -1,4 +1,4 @@
-import init from './pkg/maginet_aee75fc.js';
+import init from './pkg/maginet.js';
 
 async function run() {
     await init();

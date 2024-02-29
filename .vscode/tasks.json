@@ -1,0 +1,57 @@
+{
+    "version": "2.0.0",
+    "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true
+    },
+    "tasks": [
+        {
+            "label": "local-web",
+            "dependsOn": [
+                "server",
+                "build",
+                "frpc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "server",
+            "type": "shell",
+            "command": "watchexec -w server/src -w shared -r -e rs -- cargo run -p server",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "group": "local-web"
+            }
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "watchexec -w src -w shared -r -e rs -- wasm-pack build --target web --debug --out-name maginet --out-dir static/js/pkg",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "group": "local-web"
+            }
+        },
+        {
+            "label": "frpc",
+            "type": "shell",
+            "command": "frpc",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "group": "local-web"
+            }
+        }
+    ]
+}
