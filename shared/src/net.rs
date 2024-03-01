@@ -48,6 +48,7 @@ pub struct SessionNewLobby {
 
 /// Generates a [`Duration`] for client/server synchronisation and expiry checks.
 /// The result is a UNIX timestamp.
+#[cfg(feature = "server")]
 pub fn timestamp() -> Duration {
     let start = SystemTime::now();
     let since_the_epoch = start

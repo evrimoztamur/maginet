@@ -1,3 +1,4 @@
+use core::time;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -33,7 +34,7 @@ async fn main() {
         .route_service("/", ServeFile::new("html/game.html"))
         .route("/lobbies", get(get_lobbies))
         .route("/lobby/create", post(create_lobby))
-        .route("/lobby/:id/turns/:since", get(get_turns_since))
+        .route("/lobby/:id/turns/:since", post(get_turns_since))
         .route("/lobby/:id/act", post(process_inbound))
         .route("/lobby/:id/ready", post(post_ready))
         .route("/lobby/:id/rematch", post(post_rematch))
@@ -52,7 +53,7 @@ async fn main() {
 async fn get_lobbies(State(state): State<AppState>) -> Json<Message> {
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    lobbies.retain(|_, v| v.any_connected(timestamp()) && v.game.result().is_none());
+    lobbies.retain(|_, v| !v.finished());
 
     Json(Message::Lobbies(lobbies.clone()))
 }
@@ -65,7 +66,7 @@ async fn create_lobby(
     let mut lobbies = state.lobbies.lock().unwrap();
 
     session_message.lobby_settings.lobby_sort = LobbySort::Online(lobby_id);
-    let lobby = Lobby::new(session_message.lobby_settings);
+    let lobby = Lobby::new(session_message.lobby_settings, timestamp());
 
     lobbies.insert(lobby_id, lobby.clone());
 
@@ -134,7 +135,12 @@ async fn post_ready(
     let mut lobbies = state.lobbies.lock().unwrap();
 
     Json(match lobbies.get_mut(&id) {
-        Some(lobby) => lobby.join_player(session_request.session_id).into(),
+        Some(lobby) => {
+            let result = lobby.join_player(session_request.session_id.clone()).into();
+            lobby.beat_heart(session_request.session_id);
+
+            result
+        }
         None => Message::LobbyError(LobbyError("lobby does not exist".to_string())),
     })
 }
@@ -151,7 +157,7 @@ async fn post_rematch(
             let result = lobby.request_rematch(session_request.session_id);
 
             if let Ok(true) = result {
-                lobby.remake();
+                lobby.remake(timestamp());
             }
 
             result.into()

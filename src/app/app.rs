@@ -9,8 +9,8 @@ use web_sys::{
 };
 
 use super::{
-    ArenaMenu, AudioSystem, Editor, EditorPreview, Game, MainMenu, Pointer, SettingsMenu,
-    SkirmishMenu, TeleportMenu, Tutorial, BOARD_SCALE,
+    ArenaMenu, AudioSystem, Editor, EditorPreview, Game, LobbyList, MainMenu, Pointer,
+    SettingsMenu, SkirmishMenu, Tutorial, BOARD_SCALE,
 };
 use crate::{
     app::State,
@@ -36,7 +36,7 @@ pub enum StateSort {
     SettingsMenu(SettingsMenu),
     Game(Game),
     Editor(Editor),
-    TeleportMenu(TeleportMenu),
+    LobbyList(LobbyList),
     EditorPreview(EditorPreview),
     Tutorial(Tutorial),
 }
@@ -145,7 +145,7 @@ impl App {
                 StateSort::ArenaMenu(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
-                StateSort::TeleportMenu(state) => {
+                StateSort::LobbyList(state) => {
                     state.draw(context, interface_context, atlas, &self.app_context)
                 }
                 StateSort::Game(state) => {
@@ -195,7 +195,7 @@ impl App {
         let next_state = match &mut self.state_sort {
             StateSort::SkirmishMenu(state) => state.tick(text_input, &self.app_context),
             StateSort::ArenaMenu(state) => state.tick(text_input, &self.app_context),
-            StateSort::TeleportMenu(state) => state.tick(text_input, &self.app_context),
+            StateSort::LobbyList(state) => state.tick(text_input, &self.app_context),
             StateSort::Game(state) => state.tick(text_input, &self.app_context),
             StateSort::MainMenu(state) => state.tick(text_input, &self.app_context),
             StateSort::Editor(state) => state.tick(text_input, &self.app_context),

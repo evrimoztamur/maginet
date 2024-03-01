@@ -1,6 +1,7 @@
 mod editor;
 mod editor_preview;
 mod game;
+mod lobby_list;
 mod menu_arena;
 mod menu_main;
 mod menu_settings;
@@ -12,6 +13,7 @@ mod tutorial;
 pub use editor::*;
 pub use editor_preview::*;
 pub use game::*;
+pub use lobby_list::*;
 pub use menu_arena::*;
 pub use menu_main::*;
 pub use menu_settings::*;

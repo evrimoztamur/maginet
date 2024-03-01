@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "server")]
 use crate::Turn;
-use crate::{timestamp, Board, Game, Level, Mage, MageSort, Message, Team};
+use crate::{Board, Game, Level, Mage, MageSort, Message, Team};
 
 /// A identifier for a lobby, shared by the client and the server.
 pub type LobbyID = u16;
@@ -71,9 +71,8 @@ pub struct Lobby {
 
 impl Lobby {
     /// Instantiates the [`Lobby`] `struct` with a given [`LobbySort`].
-    pub fn new(settings: LobbySettings) -> Lobby {
+    pub fn new(settings: LobbySettings, first_heartbeat: Duration) -> Lobby {
         let mut rng = ChaCha8Rng::seed_from_u64(settings.seed);
-        let first_heartbeat = timestamp();
 
         Lobby {
             game: Game::new(&settings.level(&mut rng), settings.can_stalemate)
@@ -185,8 +184,8 @@ impl Lobby {
     }
 
     /// Makes a fully-reset clone of this [`Lobby`].
-    pub fn remake(&mut self) {
-        *self = Lobby::new(self.settings.clone());
+    pub fn remake(&mut self, first_heartbeat: Duration) {
+        *self = Lobby::new(self.settings.clone(), first_heartbeat);
     }
 
     /// Determines if the game is finished.
@@ -262,10 +261,18 @@ impl Lobby {
     }
 
     /// Updates the latest heartbeat of a connected [`Player`].
+    #[cfg(feature = "server")]
     pub fn beat_heart(&mut self, session_id: String) {
+        use crate::timestamp;
+
         if let Some(player) = self.players.get_mut(&session_id) {
             player.latest_heartbeat = timestamp();
         }
+    }
+
+    /// Returns the first heartbeat of this [`Lobby`].
+    pub fn first_heartbeat(&self) -> Duration {
+        self.first_heartbeat
     }
 }
 

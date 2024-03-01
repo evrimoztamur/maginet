@@ -1,15 +1,13 @@
-use shared::{timestamp, LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
+use shared::{LoadoutMethod, Lobby, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{Game, MainMenu, State, TeleportMenu};
+use super::{Game, LobbyList, MainMenu, State};
 use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
         StateSort, UIElement, UIEvent,
-    },
-    draw::{draw_mage, draw_mana, draw_sprite},
-    window,
+    }, draw::{draw_mage, draw_mana, draw_sprite}, net::client_timestamp, window
 };
 
 pub struct SkirmishMenu {
@@ -32,7 +30,7 @@ const BUTTON_TELEPORT: usize = 30;
 impl SkirmishMenu {
     fn refresh_lobby(&mut self) {
         self.lobby_settings.seed = window().performance().unwrap().now() as u64;
-        self.sentinel_lobby = Lobby::new(self.lobby_settings.clone());
+        self.sentinel_lobby = Lobby::new(self.lobby_settings.clone(), client_timestamp());
     }
 }
 
@@ -132,7 +130,7 @@ impl State for SkirmishMenu {
                     return Some(StateSort::Game(Game::new(self.lobby_settings.clone())));
                 }
                 BUTTON_TELEPORT => {
-                    return Some(StateSort::TeleportMenu(TeleportMenu::default()));
+                    return Some(StateSort::LobbyList(LobbyList::default()));
                 }
                 BUTTON_BACK => {
                     return Some(StateSort::MainMenu(MainMenu::default()));
@@ -251,7 +249,7 @@ impl Default for SkirmishMenu {
             BUTTON_TELEPORT,
             LabelTrim::Glorious,
             LabelTheme::Default,
-            crate::app::ContentElement::Text("Join".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Lobbies".to_string(), Alignment::Center),
         );
 
         let button_back = ButtonElement::new(
@@ -273,7 +271,7 @@ impl Default for SkirmishMenu {
 
         SkirmishMenu {
             interface: root_element,
-            sentinel_lobby: Lobby::new(LobbySettings::default()),
+            sentinel_lobby: Lobby::new(LobbySettings::default(), client_timestamp()),
             lobby_settings: LobbySettings::default(),
         }
     }

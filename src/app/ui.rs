@@ -2,7 +2,7 @@ use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use super::{ClipId, Pointer};
-use crate::draw::{draw_label, draw_sprite, draw_text_centered};
+use crate::draw::{draw_label, draw_sprite, draw_text, draw_text_centered};
 
 pub enum UIEvent {
     ButtonClick(usize, Option<ClipId>),
@@ -26,7 +26,7 @@ pub trait UIElement {
 
 #[derive(Clone)]
 pub enum Alignment {
-    // Start,
+    Start(i32),
     Center,
     // End,
 }
@@ -35,7 +35,7 @@ pub enum Alignment {
 pub enum ContentElement {
     Text(String, Alignment),
     Sprite((i32, i32), (i32, i32)),
-    // List(Vec<ContentElement>),
+    None, // List(Vec<ContentElement>),
 }
 
 impl UIElement for ContentElement {
@@ -53,7 +53,12 @@ impl UIElement for ContentElement {
         context.save();
 
         match self {
-            ContentElement::Text(text, _) => draw_text_centered(context, atlas, 0.0, 0.0, text),
+            ContentElement::Text(text, alignment) => match alignment {
+                Alignment::Center => draw_text_centered(context, atlas, 0.0, 0.0, text),
+                Alignment::Start(width) => {
+                    draw_text(context, atlas, -width as f64 / 2.0 + 8.0, -4.0, text)
+                }
+            },
             ContentElement::Sprite(position, size) => draw_sprite(
                 context,
                 atlas,
@@ -64,6 +69,7 @@ impl UIElement for ContentElement {
                 -size.0 as f64 / 2.0,
                 -size.1 as f64 / 2.0,
             ),
+            _ => Ok(()),
         }?;
 
         context.restore();

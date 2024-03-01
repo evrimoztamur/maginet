@@ -1,5 +1,3 @@
-use std::iter::FromIterator;
-
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Seralizes a map as a vec.

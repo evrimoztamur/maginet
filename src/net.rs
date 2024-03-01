@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use futures::TryFutureExt;
 use js_sys::Promise;
 use shared::{LobbyID, LobbySettings, Message, SessionMessage, SessionNewLobby, SessionRequest};
@@ -5,7 +7,7 @@ use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::{future_to_promise, JsFuture};
 use web_sys::{Request, RequestInit, Response};
 
-use crate::storage;
+use crate::{storage, window};
 
 #[cfg(feature = "deploy")]
 const API_URL: &str = "https://maginet.evrim.zone";
@@ -73,7 +75,14 @@ pub fn request_state(lobby_id: LobbyID) -> Request {
 }
 
 pub fn request_turns_since(lobby_id: LobbyID, session_id: String, since: usize) -> Option<Promise> {
-    post_probe(format!("{API_URL}/lobby/{lobby_id}/turns/{since}"), session_id)
+    post_probe(
+        format!("{API_URL}/lobby/{lobby_id}/turns/{since}"),
+        session_id,
+    )
+}
+
+pub fn request_lobbies() -> Request {
+    request_url("GET", &format!("{API_URL}/lobbies"))
 }
 
 pub fn create_new_lobby(lobby_settings: LobbySettings) -> Option<Promise> {
@@ -156,4 +165,10 @@ pub fn send_message(lobby_id: LobbyID, session_id: String, message: Message) -> 
 
 pub fn get_session_id() -> Option<String> {
     storage().and_then(|storage| storage.get_item("session_id").unwrap_or_default())
+}
+
+pub fn client_timestamp() -> Duration {
+    let since_the_epoch = window().performance().unwrap().now() as u64;
+
+    Duration::from_millis(since_the_epoch)
 }

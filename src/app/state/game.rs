@@ -19,8 +19,7 @@ use crate::{
         rotation_from_position,
     },
     net::{
-        create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready,
-        send_rematch, MessagePool,
+        client_timestamp, create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready, send_rematch, MessagePool
     },
     tuple_as, window,
 };
@@ -108,7 +107,7 @@ impl Game {
             interface: root_element,
             button_menu,
             button_undo,
-            lobby: Lobby::new(lobby_settings),
+            lobby: Lobby::new(lobby_settings, client_timestamp()),
             last_move_frame: 0,
             last_hits: Vec::new(),
             active_mage: None,

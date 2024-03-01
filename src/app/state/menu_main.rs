@@ -122,7 +122,7 @@ impl Default for MainMenu {
             BUTTON_SKIRMISH,
             LabelTrim::Glorious,
             LabelTheme::Default,
-            crate::app::ContentElement::Text("Skirmish".to_string(), Alignment::Center),
+            crate::app::ContentElement::Text("Battle".to_string(), Alignment::Center),
         );
 
         let button_editor = ButtonElement::new(
