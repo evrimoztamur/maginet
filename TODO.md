@@ -1,18 +1,13 @@
 # TODO
 
+- Lobby list UI
+  - Align buttons
+  - Test with many lobbies
+  - Test expiration and timestamps
 - Editor
   - Simulation results interface
   - Serde for level styles
     - Level styles in campaign menu..?
-- Sound
-  - State transitions
-    - State requests background music
-    - App handles transitions between pieces
-    - Fade in-out
-- Documentation UI
-  - Table of contents
-  - Text plus rendered image
-    - Hardcode?
 
 ## DONE
 
@@ -63,3 +58,12 @@
       - Promotion
         - On kill receive diagonals?
         - On low health turn defensive?
+- Sound
+  - State transitions
+    - State requests background music
+    - App handles transitions between pieces
+    - Fade in-out
+- Documentation UI
+  - Table of contents
+  - Text plus rendered image
+    - Hardcode?
