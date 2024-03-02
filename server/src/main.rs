@@ -1,4 +1,3 @@
-use core::time;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -13,8 +12,8 @@ use axum::{
 };
 use rand::Rng;
 use shared::{
-    timestamp, Lobby, LobbyError, LobbySort, Message, SessionMessage, SessionNewLobby,
-    SessionRequest, Turn,
+    timestamp, Lobby, LobbyError, LobbySettings, LobbySort, Message, SessionMessage,
+    SessionNewLobby, SessionRequest, Turn,
 };
 use tower_http::services::{ServeDir, ServeFile};
 
@@ -53,7 +52,19 @@ async fn main() {
 async fn get_lobbies(State(state): State<AppState>) -> Json<Message> {
     let mut lobbies = state.lobbies.lock().unwrap();
 
-    lobbies.retain(|_, v| !v.finished());
+    // let lobby_settings = LobbySettings {
+    //     lobby_sort: shared::LobbySort::Local,
+    //     ..Default::default()
+    // };
+    // let lobby = Lobby::new(lobby_settings, timestamp());
+
+    // let len = lobbies.len() as u16;
+
+    // if len < 5 {
+    //     lobbies.insert(len, lobby.clone());
+    // }
+
+    lobbies.retain(|_, v| v.any_connected(timestamp()) && !v.finished());
 
     Json(Message::Lobbies(lobbies.clone()))
 }
