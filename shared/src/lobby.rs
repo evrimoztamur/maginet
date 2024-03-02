@@ -1,5 +1,6 @@
 use std::{
     collections::{BTreeMap, HashMap, VecDeque},
+    fmt::Display,
     time::Duration,
 };
 
@@ -295,6 +296,27 @@ pub enum LoadoutMethod {
     EditorPrefab(Level),
     /// An Arena level with attached position.
     Arena(Level, (isize, isize)),
+}
+
+impl Display for LoadoutMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            LoadoutMethod::Default => "Default".to_string(),
+            LoadoutMethod::DefaultBoard(board) => {
+                format!("Default ({0} by {1})", &board.width, &board.height)
+            }
+            LoadoutMethod::Random { symmetric } => {
+                if *symmetric {
+                    "Symmetric Random".to_string()
+                } else {
+                    "Chaos".to_string()
+                }
+            }
+            LoadoutMethod::Prefab(_) => "Prefab".to_string(),
+            LoadoutMethod::EditorPrefab(_) => todo!(),
+            LoadoutMethod::Arena(_, _) => todo!(),
+        }.as_str())
+    }
 }
 
 /// Loadout methods.

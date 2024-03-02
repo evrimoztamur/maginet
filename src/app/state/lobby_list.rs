@@ -10,7 +10,7 @@ use crate::{
         Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, StateSort,
         UIElement, UIEvent,
     },
-    draw::{draw_label, draw_text, draw_text_centered},
+    draw::{draw_label, draw_mage, draw_text, draw_text_centered},
     net::{fetch, request_lobbies, MessagePool},
 };
 
@@ -33,7 +33,7 @@ const BUTTON_PAGE_NEXT: usize = 11;
 const BUTTON_ARENA: usize = 20;
 const BUTTON_BACK: usize = 21;
 
-const LOBBY_PAGE_SIZE: usize = 6;
+const LOBBY_PAGE_SIZE: usize = 3;
 
 impl State for LobbyList {
     fn draw(
@@ -58,8 +58,8 @@ impl State for LobbyList {
         draw_text_centered(
             context,
             atlas,
-            384.0 / 2.0,
-            256.0 - 20.0,
+            (384.0 - 96.0) / 2.0,
+            228.0,
             format!("{}", self.lobby_page + 1).as_str(),
         )?;
 
@@ -76,7 +76,7 @@ impl State for LobbyList {
                 atlas,
                 ((384 - 160) / 2, (256 - 64) / 2),
                 (160, 16),
-                "#2a1f00",
+                "#7f00aa",
                 &crate::app::ContentElement::Text(
                     "No lobbies available.".to_string(),
                     Alignment::Center,
@@ -93,7 +93,7 @@ impl State for LobbyList {
                 atlas,
                 ((384 - 240) / 2, (256 - 64) / 2 + 24),
                 (240, 24),
-                "#007f00",
+                "#7f00aa00",
                 &crate::app::ContentElement::Text(
                     "Create a new one to start playing!".to_string(),
                     Alignment::Center,
@@ -106,21 +106,37 @@ impl State for LobbyList {
         } else {
             for (i, (lobby_id, lobby)) in &self.displayed_lobbies {
                 let ir: usize = i - self.lobby_page * LOBBY_PAGE_SIZE;
-                let pointer = pointer.teleport((-(256 - 256) / 2, -(12 + ir as i32 * 48)));
+                let pointer = pointer.teleport((0, -(12 + ir as i32 * 64)));
                 context.save();
-                context.translate((384.0 - 256.0) / 2.0, 12.0 + ir as f64 * 48.0)?;
+                context.translate((384.0 - 256.0) / 2.0, 12.0 + ir as f64 * 64.0)?;
                 draw_label(
                     context,
                     atlas,
                     (0, 15),
-                    (224, 24),
-                    "#2a1f00",
+                    (224, 36),
+                    "#553f55",
                     &crate::app::ContentElement::None,
                     &pointer,
                     frame,
                     &LabelTrim::Round,
                     false,
                 )?;
+
+                context.save();
+
+                context.translate(16.0, 32.0)?;
+
+                for (i, mage) in lobby.game.iter_mages().enumerate() {
+                    if i % 2 == 0 {
+                        context.translate(0.0, 4.0)?;
+                    } else {
+                        context.translate(0.0, -4.0)?;
+                    }
+                    draw_mage(context, atlas, mage, frame, mage.team, true, None)?;
+                    context.translate(20.0, 0.0)?;
+                }
+
+                context.restore();
 
                 if pointer.in_region((-8, 0), (72, 16)) {
                     draw_label(
@@ -153,27 +169,14 @@ impl State for LobbyList {
                     )?;
                 }
 
-                draw_text(context, atlas, 72.0, 4.0, "King of the Hill")?;
+                draw_text(
+                    context,
+                    atlas,
+                    72.0,
+                    4.0,
+                    &format!("{}", lobby.settings.loadout_method),
+                )?;
 
-                context.save();
-                if (i) % 2 == 1 {
-                    context.translate(12.0, 36.0)?;
-                } else {
-                    context.translate(12.0, 32.0)?;
-                }
-
-                // for (j, bug) in lobby.game.iter_bugdata().enumerate() {
-                //     if (j + i) % 2 == 0 {
-                //         context.translate(0.0, 4.0)?;
-                //     } else {
-                //         context.translate(0.0, -4.0)?;
-                //     }
-
-                //     draw_bugdata(context, atlas, bug, i * j + j, false, frame)?;
-                //     context.translate(12.0, 0.0)?;
-                // }
-
-                context.restore();
                 context.restore();
             }
         }
@@ -275,13 +278,14 @@ impl State for LobbyList {
                     .iter()
                     .map(|(i, (key, _lobby))| {
                         // console::log_1(&format!("INTERP {}", key).into());
+                        let ir: usize = i - self.lobby_page * LOBBY_PAGE_SIZE;
                         ButtonElement::new(
-                            (256 - 88, 27 + *i as i32 * 48),
+                            (256 - 44, 44 + ir as i32 * 64),
                             (24, 24),
                             *key as usize,
                             LabelTrim::Return,
                             LabelTheme::Action,
-                            crate::app::ContentElement::Sprite((32, 192), (16, 16)),
+                            crate::app::ContentElement::Sprite((96, 32), (16, 16)),
                         )
                         .boxed()
                     })
@@ -296,8 +300,8 @@ impl State for LobbyList {
 impl Default for LobbyList {
     fn default() -> Self {
         let button_new_lobby = ButtonElement::new(
-            (8, 256 - 32),
-            (112, 24),
+            (35, 220),
+            (88, 16),
             BUTTON_ARENA,
             LabelTrim::Glorious,
             LabelTheme::Action,
@@ -305,7 +309,7 @@ impl Default for LobbyList {
         );
 
         let button_settings: ButtonElement = ButtonElement::new(
-            (256 - 72, 256 - 28),
+            (129, 220),
             (88, 16),
             BUTTON_BACK,
             LabelTrim::Return,
@@ -314,7 +318,7 @@ impl Default for LobbyList {
         );
 
         let button_page_previous: ButtonElement = ButtonElement::new(
-            ((256 - 64) / 2, 256 - 28),
+            ((256 - 160) / 2, 220),
             (20, 16),
             BUTTON_PAGE_PREVIOUS,
             LabelTrim::Round,
@@ -323,7 +327,7 @@ impl Default for LobbyList {
         );
 
         let button_page_next: ButtonElement = ButtonElement::new(
-            ((256 - 64) / 2 + 44, 256 - 28),
+            ((256 - 160) / 2 + 44, 220),
             (20, 16),
             BUTTON_PAGE_NEXT,
             LabelTrim::Round,

@@ -1,9 +1,10 @@
 # TODO
 
 - Lobby list UI
-  - Align buttons
-  - Test with many lobbies
-  - Test expiration and timestamps
+  - Include powerups in preview
+  - Replace teleport sign UI with lobby number
+  - Find lobby button
+  - Profile jank on lobby list load
 - Editor
   - Simulation results interface
   - Serde for level styles
@@ -11,6 +12,10 @@
 
 ## DONE
 
+- Lobby list UI
+  - Test expiration and timestamps
+  - Align buttons
+  - Test with many lobbies
 - Deployment
   - Fix canvas sizing
   - Disable hotkeys for debugging on deploy version
