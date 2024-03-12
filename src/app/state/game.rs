@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
 use shared::{
     Board, BoardStyle, GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings,
@@ -15,11 +15,12 @@ use crate::{
         ToggleButtonElement, UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{
-        draw_board, draw_crosshair, draw_mage, draw_mana, draw_powerup, draw_sprite,
-        rotation_from_position,
+        draw_board, draw_crosshair, draw_label, draw_mage, draw_mana, draw_powerup, draw_sprite,
+        draw_text, rotation_from_position, text_length,
     },
     net::{
-        client_timestamp, create_new_lobby, fetch, request_state, request_turns_since, send_message, send_ready, send_rematch, MessagePool
+        client_timestamp, create_new_lobby, fetch, request_state, request_turns_since,
+        send_message, send_ready, send_rematch, MessagePool,
     },
     tuple_as, window,
 };
@@ -263,9 +264,9 @@ impl Game {
                 atlas,
                 384.0,
                 256.0,
-                &Board::with_style(4, 4, BoardStyle::Teleport).unwrap(),
-                4,
-                4,
+                &Board::with_style(3, 3, BoardStyle::Teleport).unwrap(),
+                3,
+                3,
             )
             .unwrap();
         }
@@ -562,28 +563,41 @@ impl Game {
             context.translate(-board_offset.0, -board_offset.1)?;
 
             if !self.lobby.all_ready() && !self.lobby.is_local() {
-                draw_sprite(context, atlas, 384.0, 256.0, 128.0, 128.0, 64.0, 64.0)?;
+                draw_sprite(context, atlas, 384.0, 256.0, 96.0, 96.0, 80.0, 80.0)?;
 
-                let mut lid = self.lobby_id().unwrap_or(0);
+                let lobby_id = self.lobby_id().unwrap_or(0);
 
-                while lid != 0 {
-                    let tz = lid.trailing_zeros();
-                    let x = tz % 4;
-                    let y = tz / 4;
+                draw_label(
+                    _interface_context,
+                    atlas,
+                    (80 + (96 - 72) / 2, 80 + (96 - 16) / 2),
+                    (72, 16),
+                    "#2a9f55",
+                    &crate::app::ContentElement::Text(format!("{lobby_id}"), Alignment::Center),
+                    &pointer,
+                    frame,
+                    &LabelTrim::Glorious,
+                    false,
+                )?;
 
-                    lid ^= 1 << tz;
+                // while lid != 0 {
+                //     let tz = lid.trailing_zeros();
+                //     let x = tz % 4;
+                //     let y = tz / 4;
 
-                    draw_sprite(
-                        context,
-                        atlas,
-                        96.0,
-                        32.0,
-                        16.0,
-                        16.0,
-                        x as f64 * board_scale.0 + 72.0,
-                        y as f64 * board_scale.1 + 72.0,
-                    )?;
-                }
+                //     lid ^= 1 << tz;
+
+                //     draw_sprite(
+                //         context,
+                //         atlas,
+                //         96.0,
+                //         32.0,
+                //         16.0,
+                //         16.0,
+                //         x as f64 * board_scale.0 + 72.0,
+                //         y as f64 * board_scale.1 + 72.0,
+                //     )?;
+                // }
             }
 
             context.restore();
@@ -878,6 +892,17 @@ impl State for Game {
                         interface_context.restore();
                     }
                 }
+            }
+
+            let session_id = app_context.session_id.as_ref();
+
+            if self.lobby.is_active_player(session_id) {
+                interface_context.translate(
+                    28.0 - self.board_offset().0 as f64 + 128.0,
+                    0.0 - text_length("Your turn") as f64 / 2.0,
+                )?;
+                interface_context.rotate(PI / 2.0)?;
+                draw_text(interface_context, atlas, 0.0, 0.0, "Your turn")?;
             }
 
             interface_context.restore();

@@ -13,7 +13,6 @@ use app::{App, AudioSystem, CanvasSettings};
 use futures::Future;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
-
 use web_sys::{
     CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement, HtmlImageElement,
     HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
@@ -187,10 +186,10 @@ async fn start() -> Result<(), JsValue> {
         {
             let app = app.clone();
             let text_input = text_input_element.clone();
-            let closure = Closure::<dyn FnMut(_)>::new(move |event: FocusEvent| {
+            let closure = Closure::<dyn FnMut(_)>::new(move |_: FocusEvent| {
                 let mut app = app.borrow_mut();
                 let text_input = text_input.borrow();
-                app.on_blur(event, text_input.as_ref());
+                app.on_input_submit(text_input.as_ref());
             });
 
             document()
@@ -279,9 +278,16 @@ async fn start() -> Result<(), JsValue> {
 
         {
             let app = app.clone();
+            let text_input = text_input_element.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
                 let mut app = app.borrow_mut();
-                app.on_key_down(event);
+
+                if event.code() == "Enter" {
+                    let text_input = text_input.borrow();
+                    app.on_input_submit(text_input.as_ref());
+                } else {
+                    app.on_key_down(event);
+                }
             });
             document()
                 .add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;

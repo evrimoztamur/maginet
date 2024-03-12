@@ -228,7 +228,7 @@ impl App {
         self.app_context.session_id = Some(session_id);
     }
 
-    pub fn on_blur(&mut self, _event: FocusEvent, text_input: &HtmlInputElement) {
+    pub fn on_input_submit(&mut self, text_input: &HtmlInputElement) {
         if let Some(field) = text_input.dataset().get("field") {
             self.app_context.text_input = Some((field, text_input.value()));
             text_input.dataset().delete("field");

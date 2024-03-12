@@ -1,13 +1,10 @@
 # TODO
 
-- Lobby list UI
-  - Include powerups in preview
-  - Replace teleport sign UI with lobby number
-  - Find lobby button
-  - Profile jank on lobby list load
+- UX
+  - Player connection status?
 - Editor
   - Simulation results interface
-  - Serde for level styles
+  - serde for level styles
     - Level styles in campaign menu..?
 
 ## DONE
@@ -16,6 +13,12 @@
   - Test expiration and timestamps
   - Align buttons
   - Test with many lobbies
+  - Profile jank on lobby list load (did not exist with two lobbies)
+  - Replace teleport sign UI with lobby number
+  - Find lobby button
+  - Include powerups in preview
+- UX
+  - Clarify which side is you
 - Deployment
   - Fix canvas sizing
   - Disable hotkeys for debugging on deploy version

@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use shared::{Lobby, LobbySettings, LobbySort, Message};
+use shared::{Lobby, LobbySettings, LobbySort, Message, Position};
 use wasm_bindgen::{closure::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
@@ -10,7 +10,7 @@ use crate::{
         Alignment, AppContext, ButtonElement, Interface, LabelTheme, LabelTrim, StateSort,
         UIElement, UIEvent,
     },
-    draw::{draw_label, draw_mage, draw_text, draw_text_centered},
+    draw::{draw_label, draw_mage, draw_powerup, draw_text, draw_text_centered},
     net::{fetch, request_lobbies, MessagePool},
 };
 
@@ -32,6 +32,7 @@ const BUTTON_PAGE_PREVIOUS: usize = 10;
 const BUTTON_PAGE_NEXT: usize = 11;
 const BUTTON_ARENA: usize = 20;
 const BUTTON_BACK: usize = 21;
+const BUTTON_SEARCH: usize = 22;
 
 const LOBBY_PAGE_SIZE: usize = 3;
 
@@ -58,7 +59,7 @@ impl State for LobbyList {
         draw_text_centered(
             context,
             atlas,
-            (384.0 - 96.0) / 2.0,
+            (384.0 - 84.0) / 2.0,
             228.0,
             format!("{}", self.lobby_page + 1).as_str(),
         )?;
@@ -136,6 +137,16 @@ impl State for LobbyList {
                     context.translate(20.0, 0.0)?;
                 }
 
+                for (i, powerup) in lobby.game.powerups().values().enumerate() {
+                    if i % 2 == 0 {
+                        context.translate(0.0, 4.0)?;
+                    } else {
+                        context.translate(0.0, -4.0)?;
+                    }
+                    draw_powerup(context, atlas, &Position::default(), powerup, frame + i as u64 * 7)?;
+                    context.translate(20.0, 0.0)?;
+                }
+
                 context.restore();
 
                 if pointer.in_region((-8, 0), (72, 16)) {
@@ -160,7 +171,7 @@ impl State for LobbyList {
                         "#2a9f55",
                         &crate::app::ContentElement::Text(
                             format!("Lobby {}", i + 1),
-                            Alignment::Start(72),
+                            Alignment::Center,
                         ),
                         &pointer,
                         frame,
@@ -188,22 +199,42 @@ impl State for LobbyList {
 
     fn tick(
         &mut self,
-        _text_input: &HtmlInputElement,
+        text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
+        if text_input.dataset().get("field").is_some() {
+            return None;
+        }
+
+        if let Some((field, value)) = &app_context.text_input {
+            if field == "lobby_code" {
+                if let Ok(lobby_code_input) = value.parse::<u16>() {
+                    if self
+                        .lobbies
+                        .keys()
+                        .find(|lobby_code| **lobby_code == lobby_code_input)
+                        .is_some()
+                    {
+                        return Some(StateSort::Game(Game::new(LobbySettings {
+                            lobby_sort: LobbySort::Online(lobby_code_input as u16),
+                            ..Default::default()
+                        })));
+                    }
+                }
+            }
+        }
+
         if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
             app_context.audio_system.play_clip_option(clip_id);
 
-            if let BUTTON_ARENA = value {
-                // if let Some(session_id) = &app_context.session_id {
-                //     return Some(StateSort::Game(GameState::new(
-                //         LobbySettings::new(LobbySort::Online(0)),
-                //         session_id.clone(),
-                //     )));
-                // }
+            if let BUTTON_SEARCH = value {
+                text_input.set_value("");
+                text_input.set_placeholder("Enter lobby code");
+                text_input.dataset().set("field", "lobby_code").unwrap();
+                text_input.focus().unwrap();
             } else if let BUTTON_PAGE_PREVIOUS = value {
                 self.lobby_page = self.lobby_page.saturating_sub(1);
                 self.lobby_list_dirty = true;
@@ -299,17 +330,17 @@ impl State for LobbyList {
 
 impl Default for LobbyList {
     fn default() -> Self {
-        let button_new_lobby = ButtonElement::new(
-            (35, 220),
-            (88, 16),
-            BUTTON_ARENA,
-            LabelTrim::Glorious,
+        let button_search = ButtonElement::new(
+            ((256 - 160) / 2 - 32, 220 - 2),
+            (28, 20),
+            BUTTON_SEARCH,
+            LabelTrim::Return,
             LabelTheme::Action,
-            crate::app::ContentElement::Text("New Lobby".to_string(), Alignment::Center),
+            crate::app::ContentElement::Sprite((176, 32), (16, 16)),
         );
 
         let button_settings: ButtonElement = ButtonElement::new(
-            (129, 220),
+            (128, 220),
             (88, 16),
             BUTTON_BACK,
             LabelTrim::Return,
@@ -318,7 +349,7 @@ impl Default for LobbyList {
         );
 
         let button_page_previous: ButtonElement = ButtonElement::new(
-            ((256 - 160) / 2, 220),
+            ((256 - 160) / 2 + 6, 220),
             (20, 16),
             BUTTON_PAGE_PREVIOUS,
             LabelTrim::Round,
@@ -327,7 +358,7 @@ impl Default for LobbyList {
         );
 
         let button_page_next: ButtonElement = ButtonElement::new(
-            ((256 - 160) / 2 + 44, 220),
+            ((256 - 160) / 2 + 50, 220),
             (20, 16),
             BUTTON_PAGE_NEXT,
             LabelTrim::Round,
@@ -336,7 +367,7 @@ impl Default for LobbyList {
         );
 
         let interface = Interface::new(vec![
-            // button_new_lobby.boxed(),
+            button_search.boxed(),
             button_settings.boxed(),
             button_page_previous.boxed(),
             button_page_next.boxed(),

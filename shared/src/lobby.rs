@@ -312,8 +312,8 @@ impl Display for LoadoutMethod {
                     "Chaos".to_string()
                 }
             }
-            LoadoutMethod::Prefab(_) => "Prefab".to_string(),
-            LoadoutMethod::EditorPrefab(_) => todo!(),
+            LoadoutMethod::Prefab(_) => "Custom".to_string(),
+            LoadoutMethod::EditorPrefab(_) => "Custom".to_string(),
             LoadoutMethod::Arena(_, _) => todo!(),
         }.as_str())
     }

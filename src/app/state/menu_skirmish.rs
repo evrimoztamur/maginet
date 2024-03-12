@@ -244,7 +244,7 @@ impl Default for SkirmishMenu {
         );
 
         let button_teleport = ButtonElement::new(
-            (35, 220),
+            (36, 220),
             (88, 16),
             BUTTON_TELEPORT,
             LabelTrim::Glorious,
@@ -253,7 +253,7 @@ impl Default for SkirmishMenu {
         );
 
         let button_back = ButtonElement::new(
-            (129, 220),
+            (128, 220),
             (88, 16),
             BUTTON_BACK,
             LabelTrim::Return,
