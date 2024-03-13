@@ -1,6 +1,10 @@
 # TODO
 
-- UX
+- Bugs
+  - Editor prefab online lobbies dont show up
+  - Rematch doesnt allow you to select/move
+  - Close menu after successful rematch
+  - Join/leave indications
   - Player connection status?
 - Editor
   - Simulation results interface
