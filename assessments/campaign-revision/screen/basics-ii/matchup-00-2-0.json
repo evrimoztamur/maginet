@@ -1,0 +1,5886 @@
+{
+  "level": 0,
+  "red": 2,
+  "blue": 0,
+  "games": [
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            1,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 0,
+      "seed": 10714341456608510327,
+      "outcome": "Win",
+      "plies": 11,
+      "red": {
+        "nodes": 17183,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "8": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      },
+      "blue": {
+        "nodes": 129,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "2": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 1,
+      "seed": 8482026049640920918,
+      "outcome": "Win",
+      "plies": 7,
+      "red": {
+        "nodes": 10168,
+        "searches": 4,
+        "fallbacks": 0,
+        "depths": {
+          "8": 4
+        },
+        "stops": {
+          "Depth": 4
+        }
+      },
+      "blue": {
+        "nodes": 62,
+        "searches": 3,
+        "fallbacks": 0,
+        "depths": {
+          "2": 3
+        },
+        "stops": {
+          "Depth": 3
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              4
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              4
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 2,
+      "seed": 6249710642673331509,
+      "outcome": "Win",
+      "plies": 11,
+      "red": {
+        "nodes": 12256,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "8": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      },
+      "blue": {
+        "nodes": 111,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "2": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            1,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              3
+            ]
+          ],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              4
+            ]
+          ],
+          "mana": [
+            1,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 3,
+      "seed": 4017395235705742100,
+      "outcome": "Win",
+      "plies": 21,
+      "red": {
+        "nodes": 19048,
+        "searches": 11,
+        "fallbacks": 0,
+        "depths": {
+          "8": 11
+        },
+        "stops": {
+          "Depth": 11
+        }
+      },
+      "blue": {
+        "nodes": 161,
+        "searches": 10,
+        "fallbacks": 0,
+        "depths": {
+          "2": 10
+        },
+        "stops": {
+          "Depth": 10
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              3
+            ]
+          ],
+          "mana": [
+            1,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 4,
+      "seed": 1785079828738152691,
+      "outcome": "Win",
+      "plies": 11,
+      "red": {
+        "nodes": 13476,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "8": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      },
+      "blue": {
+        "nodes": 108,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "2": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              4
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              4
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 5,
+      "seed": 17999508495480114898,
+      "outcome": "Win",
+      "plies": 7,
+      "red": {
+        "nodes": 13553,
+        "searches": 4,
+        "fallbacks": 0,
+        "depths": {
+          "8": 4
+        },
+        "stops": {
+          "Depth": 4
+        }
+      },
+      "blue": {
+        "nodes": 80,
+        "searches": 3,
+        "fallbacks": 0,
+        "depths": {
+          "2": 3
+        },
+        "stops": {
+          "Depth": 3
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 6,
+      "seed": 15767193088512525489,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 9537,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 7,
+      "seed": 13534877681544936080,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 9688,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 8,
+      "seed": 10126120638639673983,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 10237,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              4
+            ],
+            [
+              0,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              4
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              2
+            ]
+          ],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              4
+            ],
+            [
+              0,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              4
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              4
+            ]
+          ],
+          "mana": [
+            1,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 9,
+      "seed": 7893805231672084574,
+      "outcome": "Win",
+      "plies": 13,
+      "red": {
+        "nodes": 13052,
+        "searches": 7,
+        "fallbacks": 0,
+        "depths": {
+          "8": 7
+        },
+        "stops": {
+          "Depth": 7
+        }
+      },
+      "blue": {
+        "nodes": 116,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "2": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 10,
+      "seed": 5661489824704495165,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 10403,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 11,
+      "seed": 3429174417736905756,
+      "outcome": "Win",
+      "plies": 17,
+      "red": {
+        "nodes": 12078,
+        "searches": 9,
+        "fallbacks": 0,
+        "depths": {
+          "8": 9
+        },
+        "stops": {
+          "Depth": 9
+        }
+      },
+      "blue": {
+        "nodes": 147,
+        "searches": 8,
+        "fallbacks": 0,
+        "depths": {
+          "2": 8
+        },
+        "stops": {
+          "Depth": 8
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 12,
+      "seed": 1196859010769316347,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 10776,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              4
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 13,
+      "seed": 17411287677511278554,
+      "outcome": "Win",
+      "plies": 5,
+      "red": {
+        "nodes": 10695,
+        "searches": 3,
+        "fallbacks": 0,
+        "depths": {
+          "8": 3
+        },
+        "stops": {
+          "Depth": 3
+        }
+      },
+      "blue": {
+        "nodes": 48,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "2": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              4
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 14,
+      "seed": 15178972270543689145,
+      "outcome": "Win",
+      "plies": 9,
+      "red": {
+        "nodes": 15599,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "8": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      },
+      "blue": {
+        "nodes": 98,
+        "searches": 4,
+        "fallbacks": 0,
+        "depths": {
+          "2": 4
+        },
+        "stops": {
+          "Depth": 4
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            2,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              3
+            ]
+          ],
+          "mana": [
+            2,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 15,
+      "seed": 12946656863576099736,
+      "outcome": "Win",
+      "plies": 11,
+      "red": {
+        "nodes": 16022,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "8": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      },
+      "blue": {
+        "nodes": 121,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "2": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              0
+            ],
+            [
+              3,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              0
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              0
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 16,
+      "seed": 11890783092546183015,
+      "outcome": "Win",
+      "plies": 9,
+      "red": {
+        "nodes": 12987,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "8": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      },
+      "blue": {
+        "nodes": 96,
+        "searches": 4,
+        "fallbacks": 0,
+        "depths": {
+          "2": 4
+        },
+        "stops": {
+          "Depth": 4
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 17,
+      "seed": 9658467685578593606,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 10776,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 18,
+      "seed": 7426152278611004197,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 10237,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 19,
+      "seed": 5193836871643414788,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 9688,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 20,
+      "seed": 2961521464675825379,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 9537,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 21,
+      "seed": 729206057708235970,
+      "outcome": "Win",
+      "plies": 5,
+      "red": {
+        "nodes": 9841,
+        "searches": 3,
+        "fallbacks": 0,
+        "depths": {
+          "8": 3
+        },
+        "stops": {
+          "Depth": 3
+        }
+      },
+      "blue": {
+        "nodes": 48,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "2": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 22,
+      "seed": 16943634724450198177,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 10403,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 23,
+      "seed": 14711319317482608768,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 10776,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 24,
+      "seed": 11302562274577346671,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 9537,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              2
+            ]
+          ],
+          "mana": [
+            4,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 25,
+      "seed": 9070246867609757262,
+      "outcome": "Win",
+      "plies": 11,
+      "red": {
+        "nodes": 11274,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "8": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      },
+      "blue": {
+        "nodes": 108,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "2": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            4,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            2,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ]
+          ],
+          "mana": [
+            1,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            3
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              0,
+              2
+            ]
+          ],
+          "mana": [
+            0,
+            3
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 26,
+      "seed": 6837931460642167853,
+      "outcome": "Loss",
+      "plies": 14,
+      "red": {
+        "nodes": 24871,
+        "searches": 7,
+        "fallbacks": 0,
+        "depths": {
+          "8": 7
+        },
+        "stops": {
+          "Depth": 7
+        }
+      },
+      "blue": {
+        "nodes": 232,
+        "searches": 7,
+        "fallbacks": 0,
+        "depths": {
+          "2": 7
+        },
+        "stops": {
+          "Depth": 7
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 27,
+      "seed": 4605616053674578444,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 9537,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "8": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 30,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              4
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              4
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              3
+            ]
+          ],
+          "mana": [
+            3,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 28,
+      "seed": 2373300646706989035,
+      "outcome": "Win",
+      "plies": 11,
+      "red": {
+        "nodes": 14696,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "8": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      },
+      "blue": {
+        "nodes": 113,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "2": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      }
+    },
+    {
+      "replay": [
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            4,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              2,
+              4
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            3,
+            2
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              2,
+              1
+            ]
+          ],
+          "mana": [
+            3,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              1
+            ]
+          ],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            2,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [
+            [
+              1,
+              2
+            ]
+          ],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "team": "Blue",
+          "pickup": null,
+          "damage": [],
+          "mana": [
+            1,
+            1
+          ]
+        },
+        {
+          "turn": [
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "team": "Red",
+          "pickup": null,
+          "damage": [
+            [
+              3,
+              3
+            ]
+          ],
+          "mana": [
+            1,
+            0
+          ]
+        }
+      ],
+      "termination": "NoLegalMoves",
+      "trial": 29,
+      "seed": 140985239739399626,
+      "outcome": "Win",
+      "plies": 11,
+      "red": {
+        "nodes": 14413,
+        "searches": 6,
+        "fallbacks": 0,
+        "depths": {
+          "8": 6
+        },
+        "stops": {
+          "Depth": 6
+        }
+      },
+      "blue": {
+        "nodes": 110,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "2": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      }
+    }
+  ]
+}

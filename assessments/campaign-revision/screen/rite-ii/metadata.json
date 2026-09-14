@@ -1,0 +1,80 @@
+{
+  "config": {
+    "version": 2,
+    "seed_namespace": "zg2220t4r4048f008ke06h0c501k80v409p06w03f008804c0e807602s01x80r",
+    "red_profile": null,
+    "blue_profile": null,
+    "replays": true,
+    "games": 30,
+    "seed": 1,
+    "max_plies": 200,
+    "profiles": [
+      {
+        "difficulty": "Easy",
+        "depth": 2,
+        "nodes": 1000,
+        "weights": [
+          65,
+          25,
+          10
+        ]
+      },
+      {
+        "difficulty": "Normal",
+        "depth": 4,
+        "nodes": 5000,
+        "weights": [
+          80,
+          15,
+          5
+        ]
+      },
+      {
+        "difficulty": "Hard",
+        "depth": 8,
+        "nodes": 20000,
+        "weights": [
+          90,
+          8,
+          2
+        ]
+      }
+    ],
+    "table_capacity": 32768
+  },
+  "catalogue": [
+    {
+      "id": "rite-ii",
+      "name": "Rite II",
+      "code": "p022a0t4gm048b008j606h06901pg0r80am04k00cg00",
+      "position": [
+        10,
+        -1
+      ],
+      "style": "Crust",
+      "demo": false,
+      "tutorial": false
+    }
+  ],
+  "graph": [],
+  "main_route": [
+    "tutorial",
+    "basics-i",
+    "basics-ii",
+    "basics-iii",
+    "basics-iv",
+    "patterns-i",
+    "patterns-ii",
+    "patterns-iii",
+    "diagonals-i",
+    "beams-i",
+    "shields-i",
+    "rite-i",
+    "rite-ii",
+    "rite-iii",
+    "rite-iv",
+    "ascension-i",
+    "ascension-ii"
+  ],
+  "engine": "fnv1a-e9168b4395067652"
+}

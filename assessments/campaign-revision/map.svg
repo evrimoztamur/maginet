@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1820" height="650" viewBox="0 0 1820 650">
+<rect width="100%" height="100%" fill="#072d2d"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#ccc5de"/></marker></defs>
+<text x="24" y="28" fill="white" font-family="sans-serif" font-size="18">Campaign: 36 battle portals; every link joins cardinal neighbours</text>
+<path d="M70,506 L70,454" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M104,420 L156,420" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M224,420 L276,420" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M310,386 L310,334" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M344,300 L396,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M464,300 L516,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M584,300 L636,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M704,300 L756,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M824,300 L876,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M944,300 L996,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1064,300 L1116,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1184,300 L1236,300" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1270,334 L1270,386" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1304,420 L1356,420" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1424,420 L1476,420" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1544,420 L1596,420" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1664,420 L1716,420" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M790,334 L790,386" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M824,420 L876,420" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M910,386 L910,334" fill="none" stroke="#ccc5de" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M910,266 L910,214" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M910,146 L910,94" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M944,60 L996,60" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1030,94 L1030,146" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1030,214 L1030,266" fill="none" stroke="#ccc5de" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1150,334 L1150,386" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1184,420 L1236,420" fill="none" stroke="#ccc5de" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1150,266 L1150,214" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1184,180 L1236,180" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1304,180 L1356,180" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1424,180 L1476,180" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1510,214 L1510,266" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1510,334 L1510,386" fill="none" stroke="#ccc5de" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1030,334 L1030,386" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1030,454 L1030,506" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1064,540 L1116,540" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1184,540 L1236,540" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1304,540 L1356,540" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1424,540 L1476,540" fill="none" stroke="#ccc5de" stroke-width="2"/>
+<path d="M1510,506 L1510,454" fill="none" stroke="#ccc5de" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="38" y="398" width="64" height="44" rx="8" fill="#2f704c" stroke="#ede5ce"/>
+<text x="70" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Basics I</text>
+<rect x="158" y="398" width="64" height="44" rx="8" fill="#2f704c" stroke="#ede5ce"/>
+<text x="190" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Basics II</text>
+<rect x="278" y="398" width="64" height="44" rx="8" fill="#2f704c" stroke="#ede5ce"/>
+<text x="310" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Basics III</text>
+<rect x="278" y="278" width="64" height="44" rx="8" fill="#2f704c" stroke="#ede5ce"/>
+<text x="310" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Basics IV</text>
+<rect x="398" y="278" width="64" height="44" rx="8" fill="#997443" stroke="#ede5ce"/>
+<text x="430" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Patterns I</text>
+<rect x="518" y="278" width="64" height="44" rx="8" fill="#997443" stroke="#ede5ce"/>
+<text x="550" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Patterns II</text>
+<rect x="638" y="278" width="64" height="44" rx="8" fill="#997443" stroke="#ede5ce"/>
+<text x="670" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Patterns III</text>
+<rect x="758" y="278" width="64" height="44" rx="8" fill="#997443" stroke="#ede5ce"/>
+<text x="790" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Diagonals I</text>
+<rect x="758" y="398" width="64" height="44" rx="8" fill="#997443" stroke="#ede5ce"/>
+<text x="790" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Diagonals II</text>
+<rect x="878" y="398" width="64" height="44" rx="8" fill="#a65560" stroke="#ede5ce"/>
+<text x="910" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Diagonals III</text>
+<rect x="878" y="158" width="64" height="44" rx="8" fill="#a65560" stroke="#ede5ce"/>
+<text x="910" y="219" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Diagonals IV</text>
+<rect x="878" y="278" width="64" height="44" rx="8" fill="#a65560" stroke="#ede5ce"/>
+<text x="910" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Beams I</text>
+<rect x="878" y="38" width="64" height="44" rx="8" fill="#a65560" stroke="#ede5ce"/>
+<text x="910" y="99" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Beams II</text>
+<rect x="998" y="38" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1030" y="99" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Beams III</text>
+<rect x="998" y="278" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1030" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Shields I</text>
+<rect x="998" y="398" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1030" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Shields II</text>
+<rect x="998" y="518" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1030" y="579" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Shields III</text>
+<rect x="1118" y="398" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1150" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Challenge I</text>
+<rect x="998" y="158" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1030" y="219" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Challenge II</text>
+<rect x="1118" y="158" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1150" y="219" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Challenge III</text>
+<rect x="1118" y="518" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1150" y="579" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Challenge IV</text>
+<rect x="1238" y="278" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1270" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Rite I</text>
+<rect x="1238" y="398" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1270" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Rite II</text>
+<rect x="1358" y="398" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1390" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Rite III</text>
+<rect x="1478" y="398" width="64" height="44" rx="8" fill="#765296" stroke="#ede5ce"/>
+<text x="1510" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Rite IV</text>
+<rect x="1598" y="398" width="64" height="44" rx="8" fill="#765296" stroke="#ede5ce"/>
+<text x="1630" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Ascension I</text>
+<rect x="1718" y="398" width="64" height="44" rx="8" fill="#765296" stroke="#ede5ce"/>
+<text x="1750" y="459" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Ascension II</text>
+<rect x="1118" y="278" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1150" y="304" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1150" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction I</text>
+<rect x="1238" y="158" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1270" y="184" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1270" y="219" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction II</text>
+<rect x="1358" y="158" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1390" y="184" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1390" y="219" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction III</text>
+<rect x="1478" y="158" width="64" height="44" rx="8" fill="#765296" stroke="#ede5ce"/>
+<text x="1510" y="184" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1510" y="219" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction IV</text>
+<rect x="1478" y="278" width="64" height="44" rx="8" fill="#765296" stroke="#ede5ce"/>
+<text x="1510" y="304" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1510" y="339" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction V</text>
+<rect x="1238" y="518" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1270" y="544" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1270" y="579" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction VI</text>
+<rect x="1358" y="518" width="64" height="44" rx="8" fill="#73605c" stroke="#ede5ce"/>
+<text x="1390" y="544" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1390" y="579" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction VII</text>
+<rect x="1478" y="518" width="64" height="44" rx="8" fill="#765296" stroke="#ede5ce"/>
+<text x="1510" y="544" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13">1v1</text>
+<text x="1510" y="579" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Junction VIII</text>
+<rect x="38" y="518" width="64" height="44" rx="8" fill="#2f704c" stroke="#ede5ce"/>
+<text x="70" y="579" fill="white" text-anchor="middle" font-family="sans-serif" font-size="12">Tutorial</text>
+<text x="24" y="620" fill="white" font-family="sans-serif" font-size="14">Arrowed exits unlock forwards only. Nearby portals without a drawn link do not unlock each other.</text>
+</svg>

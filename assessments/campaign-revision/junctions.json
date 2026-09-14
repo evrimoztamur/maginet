@@ -1,0 +1,74 @@
+[
+  {
+    "id": "junction-i",
+    "name": "Junction I",
+    "code": "d0108124cm23809400",
+    "position": [
+      9,
+      -1
+    ]
+  },
+  {
+    "id": "junction-ii",
+    "name": "Junction II",
+    "code": "9010g0248403809408",
+    "position": [
+      10,
+      -2
+    ]
+  },
+  {
+    "id": "junction-iii",
+    "name": "Junction III",
+    "code": "d01080a4cm0k809404",
+    "position": [
+      11,
+      -2
+    ]
+  },
+  {
+    "id": "junction-iv",
+    "name": "Junction IV",
+    "code": "9g12r1244423809800",
+    "position": [
+      12,
+      -2
+    ]
+  },
+  {
+    "id": "junction-v",
+    "name": "Junction V",
+    "code": "dg10g0j4cm0380h809200",
+    "position": [
+      12,
+      -1
+    ]
+  },
+  {
+    "id": "junction-vi",
+    "name": "Junction VI",
+    "code": "901081248m03809404",
+    "position": [
+      10,
+      1
+    ]
+  },
+  {
+    "id": "junction-vii",
+    "name": "Junction VII",
+    "code": "d012g024840k809400",
+    "position": [
+      11,
+      1
+    ]
+  },
+  {
+    "id": "junction-viii",
+    "name": "Junction VIII",
+    "code": "9g10g0a48m2380h808j02",
+    "position": [
+      12,
+      1
+    ]
+  }
+]

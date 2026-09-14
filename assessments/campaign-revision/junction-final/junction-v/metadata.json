@@ -1,0 +1,81 @@
+{
+  "config": {
+    "version": 2,
+    "seed_namespace": "dg10g0j4cm0380h809200",
+    "red_profile": 1,
+    "blue_profile": 1,
+    "replays": true,
+    "games": 300,
+    "seed": 1,
+    "max_plies": 200,
+    "profiles": [
+      {
+        "difficulty": "Easy",
+        "depth": 2,
+        "nodes": 1000,
+        "weights": [
+          65,
+          25,
+          10
+        ]
+      },
+      {
+        "difficulty": "Normal",
+        "depth": 4,
+        "nodes": 5000,
+        "weights": [
+          80,
+          15,
+          5
+        ]
+      },
+      {
+        "difficulty": "Hard",
+        "depth": 8,
+        "nodes": 20000,
+        "weights": [
+          90,
+          8,
+          2
+        ]
+      }
+    ],
+    "table_capacity": 32768
+  },
+  "catalogue": [
+    {
+      "id": "junction-v",
+      "name": "Junction V",
+      "code": "dg10g0j4cm0380h809200",
+      "position": [
+        12,
+        -1
+      ],
+      "style": "Eldritch",
+      "demo": false,
+      "tutorial": false
+    }
+  ],
+  "graph": [],
+  "main_route": [
+    "tutorial",
+    "basics-i",
+    "basics-ii",
+    "basics-iii",
+    "basics-iv",
+    "patterns-i",
+    "patterns-ii",
+    "patterns-iii",
+    "diagonals-i",
+    "beams-i",
+    "shields-i",
+    "junction-i",
+    "rite-i",
+    "rite-ii",
+    "rite-iii",
+    "rite-iv",
+    "ascension-i",
+    "ascension-ii"
+  ],
+  "engine": "fnv1a-e9168b4395067652"
+}
