@@ -52,7 +52,7 @@ impl State for MainMenu {
         self.interface
             .draw(interface_context, atlas, pointer, frame)?;
 
-        if self.preview_state.lobby().finished() {
+        if self.preview_state.visual_game().result().is_some() {
             self.button_reset
                 .draw(interface_context, atlas, pointer, frame)?;
         }
@@ -97,7 +97,9 @@ impl State for MainMenu {
             }
         }
 
-        if self.preview_state.lobby().finished() && self.button_reset.tick(pointer).is_some() {
+        if self.preview_state.visual_game().result().is_some()
+            && self.button_reset.tick(pointer).is_some()
+        {
             return Some(StateSort::MainMenu(MainMenu::default()));
         }
 

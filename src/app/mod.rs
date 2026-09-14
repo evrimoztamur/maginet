@@ -2,6 +2,7 @@ mod app;
 mod audio;
 mod particle;
 mod pointer;
+mod presentation;
 mod state;
 mod ui;
 

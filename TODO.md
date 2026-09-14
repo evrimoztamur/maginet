@@ -1,5 +1,13 @@
 # TODO
 
+- Solver
+  - Improve AI player algorithms
+  - Create scenario analyser which can assess difficulty of a given level by running Monte Carlo simulations
+  - Validate the player campaign for difficulty/challenge levels
+- iOS/Android
+  - Move to a wgpu/winit based setup
+  - Drag/drop gestures
+  - Use Compound Interest platform
 - Bugs
   - Editor prefab online lobbies dont show up
   - Rematch doesnt allow you to select/move
@@ -12,6 +20,16 @@
     - Level styles in campaign menu..?
 
 ## DONE
+
+- Animations
+  - Decouple visual positions, health, pickups, and turn UI from game state
+  - Queue turn playback and one-shot UI signals
+  - Animate pawns with a gentle 12-pixel lift and sharp landing
+  - Flip attacking sprites for 100 ms, starting 50 ms after missile launch
+  - Accelerating 200 ms magic missiles with fireworks on impact
+  - Fill travelled missile segments each frame with cropped spritesheet-quadrant trails
+  - Animate undo in reverse turn order, restoring health and pickups on landing
+  - Keep tutorial hints and queued online turns consistent with playback
 
 - Lobby list UI
   - Test expiration and timestamps

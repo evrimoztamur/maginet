@@ -28,7 +28,7 @@ pub struct Tutorial {
 
 impl Tutorial {
     pub fn spark_board(&mut self) {
-        let board_size = self.game_state.lobby().game.board_size();
+        let board_size = self.game_state.visual_game().board_size();
 
         for _ in 0..board_size.0 * 8 {
             let d = js_sys::Math::random() * std::f64::consts::TAU;
@@ -182,48 +182,24 @@ impl State for Tutorial {
         text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
-        match self.tutorial_stage {
-            TutorialStage::Movement => {
-                if self.game_state.lobby().game.turns() > 0 {
-                    self.tutorial_stage = TutorialStage::Attacking;
-
-                    self.spark_board();
-                }
-            }
-            TutorialStage::Attacking => {
-                if self
-                    .game_state
-                    .lobby()
-                    .game
-                    .iter_mages()
-                    .any(|mage| mage.has_diagonals())
-                {
-                    self.tutorial_stage = TutorialStage::Charging;
-
-                    self.spark_board();
-                }
-            }
-            TutorialStage::Charging => {
-                if let Some(_enemy_mage) = self
-                    .game_state
-                    .lobby()
-                    .game
-                    .iter_mages()
-                    .find(|mage| mage.mana == 1 && mage.team == Team::Blue)
-                {
-                    self.tutorial_stage = TutorialStage::FinalBlow;
-
-                    self.spark_board();
-                }
-            }
-            _ => {}
-        }
-
-        if self.tutorial_stage != TutorialStage::Victory
-            && self.game_state.lobby().game.result() == Some(GameResult::Win(Team::Red))
+        let game = self.game_state.visual_game();
+        let stage = if game.result() == Some(GameResult::Win(Team::Red)) {
+            TutorialStage::Victory
+        } else if game
+            .iter_mages()
+            .any(|mage| mage.mana == 1 && mage.team == Team::Blue)
         {
-            self.tutorial_stage = TutorialStage::Victory;
+            TutorialStage::FinalBlow
+        } else if game.iter_mages().any(|mage| mage.has_diagonals()) {
+            TutorialStage::Charging
+        } else if game.turns() > 0 {
+            TutorialStage::Attacking
+        } else {
+            TutorialStage::Movement
+        };
 
+        if self.tutorial_stage != stage {
+            self.tutorial_stage = stage;
             self.spark_board();
         }
 

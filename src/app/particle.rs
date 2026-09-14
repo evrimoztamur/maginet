@@ -41,6 +41,7 @@ impl ParticleSystem {
 #[derive(Copy, Clone)]
 pub enum ParticleSort {
     Missile,
+    MissileTrail(u8),
     Diagonals,
     RedWin,
     BlueWin,

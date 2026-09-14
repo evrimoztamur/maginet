@@ -179,7 +179,36 @@ pub fn draw_mage(
     game_started: bool,
     game_result: Option<GameResult>,
 ) -> Result<(), JsValue> {
-    let bounce = (if mage.is_alive() && (mage.team == team && game_started || game_result.is_some())
+    draw_mage_with_motion(
+        context,
+        atlas,
+        mage,
+        frame,
+        team,
+        game_started,
+        game_result,
+        true,
+        0.0,
+        false,
+    )
+}
+
+/// Keep idle motion separate from readiness and health while a turn is playing.
+pub fn draw_mage_with_motion(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlCanvasElement,
+    mage: &Mage,
+    frame: u64,
+    team: Team,
+    game_started: bool,
+    game_result: Option<GameResult>,
+    idle_motion: bool,
+    offset_y: f64,
+    flip_x: bool,
+) -> Result<(), JsValue> {
+    let bounce = (if idle_motion
+        && mage.is_alive()
+        && (mage.team == team && game_started || game_result.is_some())
     {
         -((frame as i64 / 6 + mage.index as i64 / 2) % 4 - 2).abs()
     } else {
@@ -198,7 +227,7 @@ pub fn draw_mage(
         draw_sprite(context, atlas, 0.0, 208.0, 32.0, 16.0, -16.0, -4.0)?;
 
         if let Some(GameResult::Win(team)) = game_result {
-            if team == mage.team {
+            if idle_motion && team == mage.team {
                 context.translate(
                     0.0,
                     ((frame as i64 % 80 - 40).max(0) - 20).abs() as f64 - 20.0,
@@ -212,6 +241,11 @@ pub fn draw_mage(
         context.translate(0.0, 4.0)?;
 
         draw_sprite(context, atlas, 32.0, 208.0, 32.0, 16.0, -16.0, -4.0)?;
+    }
+
+    context.translate(0.0, offset_y)?;
+    if flip_x {
+        context.scale(-1.0, 1.0)?;
     }
 
     let sprite_x = match mage.sort {
@@ -405,6 +439,32 @@ pub fn draw_particle(
     let cycle =
         frame + (particle.position.0 * 16.0) as u64 + (particle.position.1 * 16.0) as u64 + spin;
 
+    if let ParticleSort::MissileTrail(quadrant) = particle.sort {
+        let (qx, qy) = quadrant_to_xy(quadrant);
+        // Crop a 4x4 quadrant from one of the existing 8x8 missile frames.
+        let sprite_x = if cycle % 24 > 16 {
+            16.0
+        } else if cycle % 24 > 8 {
+            8.0
+        } else {
+            0.0
+        };
+        context.set_global_alpha((particle.lifetime as f64 / 6.0).min(1.0));
+        context.rotate(((frame + quadrant as u64) % 4) as f64 * PI / 2.0)?;
+        draw_sprite(
+            context,
+            atlas,
+            sprite_x + qx as f64 * 4.0,
+            56.0 + qy as f64 * 4.0,
+            4.0,
+            4.0,
+            -2.0,
+            -2.0,
+        )?;
+        context.restore();
+        return Ok(());
+    }
+
     context.rotate((spin / 5) as f64 * std::f64::consts::PI / 2.0)?;
     // context.rotate(frame as f64 * 0.1)?;
     draw_sprite(
@@ -421,7 +481,7 @@ pub fn draw_particle(
             }
         } + {
             match particle.sort {
-                ParticleSort::Missile => 0.0,
+                ParticleSort::Missile | ParticleSort::MissileTrail(_) => 0.0,
                 ParticleSort::Diagonals => 24.0,
                 ParticleSort::BlueWin => 48.0,
                 ParticleSort::RedWin => 72.0,
