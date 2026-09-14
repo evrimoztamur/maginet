@@ -19,6 +19,10 @@ fn help_and_actionable_errors() {
         (vec!["campaign", "--seed"], "missing value"),
         (vec!["campaign", "--seed", "-1"], "nonnegative integer"),
         (vec!["campaign", "--unknown"], "unknown option"),
+        (
+            vec!["campaign", "--red-profile", "expert"],
+            "profile must be",
+        ),
         (vec!["campaign", "--code", "abc"], "belongs to analyse"),
     ] {
         let result = run(&args);

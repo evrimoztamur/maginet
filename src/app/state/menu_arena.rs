@@ -6,7 +6,6 @@ use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{tutorial::TUTORIAL_CODE, Game, MainMenu, State, Tutorial};
-const DIRS: [(isize, isize); 4] = [(0, -1), (-1, 0), (1, 0), (0, 1)];
 use crate::{
     app::{
         Alignment, App, AppContext, ButtonElement, ClipId, Interface, LabelTheme, LabelTrim,
@@ -333,7 +332,34 @@ impl State for ArenaMenu {
             128.0 + self.pan_offset.1 + drag_offset.1,
         )?;
 
-        // context.scale(0.25, 0.25)?;
+        let entries = shared::campaign_catalogue(cfg!(feature = "demo"));
+        context.set_stroke_style(&JsValue::from_str("#817b91"));
+        context.set_line_width(3.0);
+        for edge in shared::campaign_connections(&entries) {
+            let a = entries.iter().find(|e| e.id == edge.from).unwrap().position;
+            let b = entries.iter().find(|e| e.id == edge.to).unwrap().position;
+            let (ax, ay, bx, by) = (
+                a.0 as f64 * 128.0,
+                a.1 as f64 * 128.0,
+                b.0 as f64 * 128.0,
+                b.1 as f64 * 128.0,
+            );
+            let length = (bx - ax).hypot(by - ay);
+            let (dx, dy) = ((bx - ax) / length, (by - ay) / length);
+            // Leave room for the title beneath each portal as well as its preview.
+            let start = (44.0 / dx.abs()).min(if dy > 0.0 { 72.0 } else { 44.0 } / dy.abs());
+            let end = (44.0 / dx.abs()).min(if dy < 0.0 { 72.0 } else { 44.0 } / dy.abs());
+            let (ex, ey) = (bx - dx * end, by - dy * end);
+            context.begin_path();
+            context.move_to(ax + dx * start, ay + dy * start);
+            context.line_to(ex, ey);
+            if edge.one_way {
+                context.move_to(ex - dx * 12.0 - dy * 7.0, ey - dy * 12.0 + dx * 7.0);
+                context.line_to(ex, ey);
+                context.line_to(ex - dx * 12.0 + dy * 7.0, ey - dy * 12.0 - dx * 7.0);
+            }
+            context.stroke();
+        }
 
         for (offset, portal) in &self.level_portals {
             context.save();
@@ -533,19 +559,25 @@ fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
 }
 
 fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize), LevelPortal> {
-    let mut level_portals: HashMap<_, _> = shared::campaign_catalogue(cfg!(feature = "demo"))
-        .into_iter()
+    let entries = shared::campaign_catalogue(cfg!(feature = "demo"));
+    let edges = shared::campaign_connections(&entries);
+    let connected = |from, to| {
+        let a = entries.iter().find(|e| e.position == from).unwrap();
+        let b = entries.iter().find(|e| e.position == to).unwrap();
+        shared::campaign_connected(&edges, &a.id, &b.id)
+    };
+    let mut level_portals: HashMap<_, _> = entries
+        .iter()
         .map(|entry| {
             (
                 entry.position,
-                LevelPortal::from_level(entry.level(), entry.name, PortalStatus::Locked),
+                LevelPortal::from_level(entry.level(), entry.name.clone(), PortalStatus::Locked),
             )
         })
         .collect();
 
     let tutorial_done = completed(&Level::from(TUTORIAL_CODE).as_code());
     for (position, portal) in &mut level_portals {
-        portal.level.board.style = shared::campaign_style(position.0);
         portal.status = if (*position == TUTORIAL_POSITION || tutorial_done)
             && completed(&portal.level.as_code())
         {
@@ -562,10 +594,8 @@ fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize),
         .copied()
         .filter(|position| {
             tutorial_done
-                && DIRS.iter().any(|dir| {
-                    level_portals
-                        .get(&(position.0 + dir.0, position.1 + dir.1))
-                        .is_some_and(|neighbour| neighbour.status == PortalStatus::Won)
+                && level_portals.iter().any(|(other, portal)| {
+                    connected(*other, *position) && portal.status == PortalStatus::Won
                 })
         })
         .collect();
@@ -580,11 +610,9 @@ fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize),
         .iter()
         .filter_map(|(position, portal)| {
             (portal.is_available()
-                || DIRS.iter().any(|dir| {
-                    level_portals
-                        .get(&(position.0 + dir.0, position.1 + dir.1))
-                        .is_some_and(LevelPortal::is_available)
-                }))
+                || level_portals
+                    .iter()
+                    .any(|(other, portal)| connected(*other, *position) && portal.is_available()))
             .then_some(*position)
         })
         .collect();
@@ -664,6 +692,36 @@ mod tests {
         assert!(campaign_portals(|code| completed.contains(code))
             .values()
             .all(|portal| portal.status == PortalStatus::Won));
+    }
+
+    #[test]
+    #[cfg(not(feature = "demo"))]
+    fn directed_exits_and_unconnected_neighbours_use_the_graph() {
+        let entries = shared::campaign_catalogue(false);
+        for route in shared::OPTIONAL_ROUTES {
+            let end = entries
+                .iter()
+                .find(|e| e.id == route[route.len() - 2])
+                .unwrap();
+            let destination = entries
+                .iter()
+                .find(|e| e.id == route[route.len() - 1])
+                .unwrap();
+            let tutorial = Level::from(TUTORIAL_CODE).as_code();
+            let portals =
+                campaign_portals(|code| code == tutorial || code == destination.level().as_code());
+            assert!(portals[&end.position].status == PortalStatus::Locked);
+            assert!(!portals[&end.position].title_visible);
+            let portals =
+                campaign_portals(|code| code == tutorial || code == end.level().as_code());
+            assert!(portals[&destination.position].status == PortalStatus::Unlocked);
+        }
+        let rite = entries.iter().find(|e| e.id == "shields-ii").unwrap();
+        let challenge = entries.iter().find(|e| e.id == "challenge-i").unwrap();
+        let portals = campaign_portals(|code| {
+            code == Level::from(TUTORIAL_CODE).as_code() || code == rite.level().as_code()
+        });
+        assert!(portals[&challenge.position].status == PortalStatus::Locked);
     }
 
     #[test]

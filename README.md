@@ -73,7 +73,7 @@ To add an effect, derive its data from the accepted turn and snapshots, sample c
 
 The campaign map starts at the guided Tutorial portal beside Basics I. Complete the tutorial (from the map or main menu) to unlock campaign battles; leaving it unfinished keeps them locked. Saved wins remain completed even after a later loss.
 
-Winning a level unlocks its cardinal neighbours. Available levels keep their names, and locked names are revealed when adjacent to an available level; more distant names read `???`. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by map column. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
+Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Ordinary links work in both directions, while arrowed branch exits never unlock backwards. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. Eight 1v1 junction battles fill the branching corridors, bringing the total to 36 portals. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by map column. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
 
 A fixed top-left star counter shows completed portals over the total, including the tutorial, with the total adapted to the demo build.
 
@@ -145,12 +145,12 @@ The native `generate` executable has explicit `analyse`, `campaign`, and `genera
 
 ```sh
 cargo run --release -p generate -- analyse --code hg12g014cm0j800 --output /tmp/basics-survey
-cargo run --release -p generate -- campaign --output assessments/campaign-seed-1
+cargo run --release -p generate -- campaign --output /tmp/campaign-survey
 cargo run --release -p generate -- campaign --demo --games 100 --output /tmp/demo-survey
 cargo run --release -p generate -- generate
 ```
 
-Analysis defaults to 30 games per matchup, seed 1, a 200-ply safety limit, and at most four Rayon workers. All nine Easy/Normal/Hard player/opponent combinations run for battles. The tutorial runs three player profiles against Easy, with stalemates disabled. Red is the player, Blue the opponent; every scenario retains its starting team. Campaign defaults to all 27 battles plus the tutorial, independently of browser demo features; `--demo` selects four battles plus the tutorial.
+Analysis defaults to 30 games per matchup, seed 1, a 200-ply safety limit, and at most four Rayon workers. All nine Easy/Normal/Hard player/opponent combinations run for battles. The tutorial runs three player profiles against Easy, with stalemates disabled. Red is the player, Blue the opponent; every scenario retains its starting team. Campaign defaults to all 35 battles plus the tutorial, independently of browser demo features; `--demo` selects four battles plus the tutorial.
 
 | Profile | Maximum depth | Nodes per move | Ranked probabilities |
 | --- | ---: | ---: | --- |
@@ -160,15 +160,15 @@ Analysis defaults to 30 games per matchup, seed 1, a 200-ply safety limit, and a
 
 These deterministic node caps are analysis defaults, not equivalents of browser time budgets or guarantees of relative strength. Override `--games`, `--seed`, `--max-plies`, `--easy-nodes`, `--normal-nodes`, `--hard-nodes`, `--workers`, and `--output`. Zero node caps exercise legal fallback; zero maximum plies records nonterminal roots as unresolved. Games and workers must be positive. Malformed level codes fail with an error; valid legacy record ordering is normalized for seed derivation.
 
-`shared/src/campaign.rs` is the UI/analyser catalogue of names, original codes, positions, styles, demo membership, and tutorial identity. Existing saved-progress keys still use `Level::as_code()`. Rite III and Rite IV intentionally remain separate portals with identical scenarios and shared progress. `generate::analysis` exposes agent settings, run configuration, game simulation, telemetry, aggregation, and Wilson intervals. Simulations use the shared authoritative moves, bounded search table, completed-iteration fallback, history seeding, and ranked selection.
+`shared/src/campaign.rs` is the UI/analyser catalogue of stable portal IDs, scenario codes, positions, styles, demo membership, tutorial identity, explicit connections and main/optional routes. Saved-progress keys use `Level::as_code()`. Rite IV now has a distinct scenario and progress key. This is unreleased content; no progress migration is provided. `generate::analysis` exposes agent settings, run configuration, game simulation, telemetry, aggregation, and Wilson intervals. Simulations use the shared authoritative moves, bounded search table, completed-iteration fallback, history seeding, and ranked selection.
 
 Each output directory contains `metadata.json`, one `matchup-LEVEL-RED-BLUE.json` checkpoint per completed matchup, `aggregate.json`, and `report.md`. Indices follow the metadata catalogue/profile order, and trial indices start at zero. Checkpoints are replaced atomically and reports update after each matchup. Repeating the same command resumes completed matchups; partial matchups are rerun. Configuration, catalogue, and engine-source fingerprints must match. Worker count and output path may change because they cannot affect results. Keep metadata with checkpoints, and use a separate output directory for another configuration. Do not run two writers into one directory.
 
 Trial seeds use FNV-1a over the base seed's eight little-endian bytes, the canonical `level.as_code()` bytes, and the trial index's eight little-endian bytes. The same trial seeds are reused across matchups. Each move mixes that seed with ordered game history via `Game::history_seed`. To replay one trial programmatically, call `generate::analysis::simulate` with the recorded configuration, level, stalemate setting, profile indices, and trial index; its returned seed must match the checkpoint. CLI reruns reproduce the full trial range.
 
-Reports distinguish actual rule draws from safety-limit terminations. Red's resolved win rate is wins divided by wins + losses + draws, with a 95% Wilson interval. The possible overall range treats every unresolved game first as a non-win and then as a win. More than 10% unresolved prevents definitive difficulty ranking. Progression flags compare Normal/Normal results across cardinal neighbours moving outward by shortest tutorial distance. A drop of at least 20 percentage points is supported only with disjoint confidence intervals and acceptable unresolved rates; these exploratory comparisons have no multiple-comparison correction.
+Reports distinguish actual rule draws from safety-limit terminations. Red's resolved win rate is wins divided by wins + losses + draws, with a 95% Wilson interval. The possible overall range treats every unresolved game first as a non-win and then as a win. More than 10% unresolved prevents definitive difficulty ranking. Progression flags compare Normal/Normal results in main-route order, with optional routes and shortcuts reported separately. Directed shortest tutorial distances provide context. A drop of at least 20 percentage points is supported only with disjoint confidence intervals and acceptable unresolved rates; these exploratory comparisons have no multiple-comparison correction.
 
-The [initial survey](assessments/campaign-seed-1/report.md) and [interpretation and recommendations](assessments/campaign-seed-1/interpretation.md) cover 246 matchups and 7,380 games. These describe simulated agents, not validated human difficulty. No levels, placements, or progression were rebalanced.
+The [initial survey](assessments/campaign-seed-1/report.md) and [interpretation and recommendations](assessments/campaign-seed-1/interpretation.md) cover 246 matchups and 7,380 games. These describe simulated agents, not validated human difficulty. That original assessment predates the revision and remains immutable.
 
 Verification includes terminal wins/losses/draws, safety limits, both starting teams, powerups, fallback, malformed inputs, statistics, serial/parallel/resumed equality, campaign saves, full/demo membership, and browser campaign navigation. Run:
 
@@ -182,4 +182,32 @@ NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-campaign.cj
 python3 scripts/audit-campaign.py assessments/campaign-seed-1
 ```
 
-The browser check uses the server at `http://127.0.0.1:8000`, `playwright-core`, and Chrome as described above. The audit independently checks matchup coverage, trial seeds, outcome accounting, game lengths, node caps, and aggregate telemetry. Editor analysis UI, human playtesting, and campaign rebalancing remain followups.
+The browser check uses the server at `http://127.0.0.1:8000`, `playwright-core`, and Chrome as described above. The audit independently checks matchup coverage, trial seeds, outcome accounting, game lengths, node caps, and aggregate telemetry. Editor analysis UI and human playtesting remain followups. The campaign revision and its remaining difficulty concerns are documented below.
+
+
+### Campaign revision and paired followups
+
+The [revised assessment](assessments/campaign-revision/report.md) combines 300-trial Normal/Normal followups on eight revised battles and eight new 1v1 junction battles with 30-trial full matrices and explicitly reused untouched baseline cells. The [interpretation](assessments/campaign-revision/interpretation.md) records inspected replays, the additional Patterns I board revision, and persistent inactivity/draw concerns. Win rates are evidence, not acceptance thresholds; human difficulty remains unvalidated.
+
+```sh
+# Independent profile selection; namespace stays fixed when CODE changes.
+cargo run --release -p generate -- analyse --code CODE --games 300 \
+  --red-profile normal --blue-profile normal --seed-namespace ORIGINAL_CANONICAL_CODE \
+  --replays --output /tmp/paired-followup
+# Re-run experiments with current layout metadata in a fresh output root.
+python3 scripts/run-campaign-revision.py screen --output-root /tmp/campaign-followup
+python3 scripts/run-campaign-revision.py original --output-root /tmp/campaign-followup
+python3 scripts/run-campaign-revision.py final --output-root /tmp/campaign-followup
+python3 scripts/run-campaign-revision.py junction-screen --output-root /tmp/campaign-followup
+python3 scripts/run-campaign-revision.py junction-final --output-root /tmp/campaign-followup
+# Regenerate the combined report from the archived, attributed datasets.
+cargo run --quiet -p shared --example campaign_catalogue > assessments/campaign-revision/graph.json
+python3 scripts/report-campaign-revision.py
+NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-campaign-graph.cjs
+```
+
+`--red-profile` and `--blue-profile` independently select `easy`, `normal`, or `hard`. Omitting them retains all matchups; tutorial opponents remain Easy. `--seed-namespace TEXT` explicitly replaces the canonical scenario code in seed derivation. Without it, ordinary analysis seeds are unchanged. `--replays` records every move, acting side, pickup, damage tiles and remaining team mana, plus a termination cause (`NoLegalMoves`, `Inactivity`, or `SafetyLimit`) separate from outcome. Inactivity can award a mana-based win under the existing rules.
+
+Resume validation includes profile selection, seed namespace, replay policy, configuration, scenario catalogue, graph, main route and engine fingerprint. Worker count can change. Final first-30 trials overlap the screen; the report does not count them as independent replications. Original first-30 followups are checked against the immutable survey. The archived mana-only Patterns I candidate is excluded from the final combined matrix.
+
+The earlier battle datasets retain the layout metadata from their execution before the junction additions. Their scenario results remain valid because map coordinates and connections do not affect simulation. Current progression uses `graph.json`, exported from the current shared catalogue. Resume correctly rejects a changed layout; use `--output-root` for fresh experiments instead of rewriting archived metadata. Junction datasets have no baseline counterpart and use their own canonical scenario codes as explicit seed namespaces.

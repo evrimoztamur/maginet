@@ -15,14 +15,18 @@ Usage: generate campaign [--demo] [OPTIONS]
        generate generate
 OPTIONS: --games N (30) --seed N (1) --max-plies N (200)
          --easy-nodes N (1000) --normal-nodes N (5000) --hard-nodes N (20000)
+         --red-profile easy|normal|hard --blue-profile easy|normal|hard
+         --seed-namespace TEXT --replays
          --workers N (at most 4 by default) --output DIR (analysis-output)
-All skill matchups run; tutorial opponents are Easy only, without stalemates.
+By default all skill matchups run; tutorial opponents are Easy only, without stalemates.
 Completed matchups resume automatically only with identical configuration/catalogue.
 No arguments or --help prints this help.";
 #[derive(Serialize, Deserialize)]
 struct Metadata {
     config: RunConfig,
     catalogue: Vec<CampaignEntry>,
+    graph: Vec<shared::CampaignConnection>,
+    main_route: Vec<String>,
     engine: String,
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -75,11 +79,18 @@ pub fn run() -> Result<()> {
             println!("{HELP}");
             return Ok(());
         }
+        if flag == "--replays" {
+            config.replays = true;
+            continue;
+        }
         if flag == "--demo" {
             demo = true;
             continue;
         }
         if ![
+            "--seed-namespace",
+            "--red-profile",
+            "--blue-profile",
             "--code",
             "--output",
             "--games",
@@ -103,6 +114,20 @@ pub fn run() -> Result<()> {
                 .map_err(|_| format!("{flag} requires a nonnegative integer"))
         };
         match flag.as_str() {
+            "--seed-namespace" => config.seed_namespace = Some(value),
+            "--red-profile" | "--blue-profile" => {
+                let profile = match value.as_str() {
+                    "easy" => 0,
+                    "normal" => 1,
+                    "hard" => 2,
+                    _ => return Err("profile must be easy, normal, or hard".into()),
+                };
+                if flag == "--red-profile" {
+                    config.red_profile = Some(profile);
+                } else {
+                    config.blue_profile = Some(profile);
+                }
+            }
             "--code" => code = Some(value),
             "--output" => output = value.into(),
             "--games" => config.games = usize::try_from(number()?)?,
@@ -133,6 +158,7 @@ pub fn run() -> Result<()> {
             .into_iter()
             .find(|e| e.level().as_code() == canonical);
         vec![known.unwrap_or(CampaignEntry {
+            id: "custom".into(),
             name: "Custom scenario".into(),
             code: canonical,
             position: (0, 0),
@@ -158,6 +184,8 @@ pub fn run() -> Result<()> {
     ]
     .join("\n");
     let metadata = Metadata {
+        graph: shared::campaign_connections(&catalogue),
+        main_route: shared::MAIN_ROUTE.iter().map(|s| s.to_string()).collect(),
         config,
         catalogue,
         engine: format!("fnv1a-{:016x}", trial_seed(0, &engine, 0)),
@@ -193,6 +221,11 @@ fn execute(output: &Path, workers: usize, metadata: Metadata) -> Result<()> {
         let scenario = entry.level();
         for red in 0..3 {
             for blue in 0..if entry.tutorial { 1 } else { 3 } {
+                if metadata.config.red_profile.is_some_and(|p| p != red)
+                    || metadata.config.blue_profile.is_some_and(|p| p != blue)
+                {
+                    continue;
+                }
                 let path = output.join(format!("matchup-{level:02}-{red}-{blue}.json"));
                 let matchup = if path.exists() {
                     let saved: Matchup = serde_json::from_slice(&fs::read(&path)?)?;
@@ -202,8 +235,8 @@ fn execute(output: &Path, workers: usize, metadata: Metadata) -> Result<()> {
                         || saved.games.len() != metadata.config.games
                         || saved.games.iter().enumerate().any(|(i, g)| {
                             g.trial != i
-                                || g.seed
-                                    != trial_seed(metadata.config.seed, &scenario.as_code(), i)
+                                || g.seed != metadata.config.trial_seed(&scenario, i)
+                                || (metadata.config.replays && g.replay.len() != g.plies)
                                 || g.plies > metadata.config.max_plies
                                 || g.red.searches + g.blue.searches != g.plies
                         })
@@ -260,16 +293,18 @@ fn distances(entries: &[CampaignEntry]) -> Vec<usize> {
     }
     while let Some(i) = queue.pop_front() {
         for j in 0..entries.len() {
-            if adjacent(&entries[i], &entries[j]) && distances[j] == usize::MAX {
+            if shared::campaign_connected(
+                &shared::campaign_connections(entries),
+                &entries[i].id,
+                &entries[j].id,
+            ) && distances[j] == usize::MAX
+            {
                 distances[j] = distances[i] + 1;
                 queue.push_back(j);
             }
         }
     }
     distances
-}
-fn adjacent(a: &CampaignEntry, b: &CampaignEntry) -> bool {
-    (a.position.0 - b.position.0).abs() + (a.position.1 - b.position.1).abs() == 1
 }
 fn reports(output: &Path, metadata: &Metadata, matchups: &[Matchup]) -> Result<()> {
     use std::fmt::Write;
@@ -286,7 +321,14 @@ fn reports(output: &Path, metadata: &Metadata, matchups: &[Matchup]) -> Result<(
     let expected: usize = metadata
         .catalogue
         .iter()
-        .map(|e| if e.tutorial { 3 } else { 9 })
+        .map(|e| {
+            (0..3)
+                .filter(|r| metadata.config.red_profile.is_none_or(|p| p == *r))
+                .count()
+                * (0..if e.tutorial { 1 } else { 3 })
+                    .filter(|b| metadata.config.blue_profile.is_none_or(|p| p == *b))
+                    .count()
+        })
         .sum();
     let mut md=format!("# Campaign scenario survey\n\nExploratory simulated-agent difficulty; not validated human difficulty. {} / {expected} matchups complete, {} games. Red is the player. Seed {}, {} games per matchup, {}-ply safety limit. Node caps are analysis defaults, not browser time equivalents.\n\nWin rates count draws as resolved non-wins. Cells show resolved Red win % [95% Wilson interval], unresolved count, and possible overall win % range. More than 10% unresolved precludes a definitive ranking. Tutorial uses Easy opponents and disables rule stalemates.\n",summaries.len(),matchups.iter().map(|m|m.games.len()).sum::<usize>(),metadata.config.seed,metadata.config.games,metadata.config.max_plies);
     writeln!(md, "\nEngine `{}`; bounded table capacity {} entries per search.\n\n| Profile | Depth | Nodes/move | Ranked weights |\n|---|---:|---:|---|", metadata.engine, metadata.config.table_capacity)?;
@@ -330,7 +372,8 @@ fn reports(output: &Path, metadata: &Metadata, matchups: &[Matchup]) -> Result<(
                     };
                     write!(
                         md,
-                        " {cell}; U={}; range {:.1}–{:.1}% |",
+                        " {cell}; n={}; U={}; range {:.1}–{:.1}% |",
+                        a.wins + a.losses + a.draws + a.unresolved,
                         a.unresolved,
                         100.0 * a.overall_win_range[0],
                         100.0 * a.overall_win_range[1]
@@ -349,28 +392,51 @@ fn reports(output: &Path, metadata: &Metadata, matchups: &[Matchup]) -> Result<(
             writeln!(md,"\n- {}/{}: W/L/D/U {}/{}/{}/{}; mean {:.1} plies ({}–{}); {} nodes; node saturation {:.1}%; fallbacks {}/{}.",metadata.config.profiles[s.red].difficulty.label(),metadata.config.profiles[s.blue].difficulty.label(),a.wins,a.losses,a.draws,a.unresolved,a.mean_plies,a.min_plies,a.max_plies,a.red.nodes+a.blue.nodes,100.0*saturated as f64/searches.max(1) as f64,a.red.fallbacks+a.blue.fallbacks,searches)?;
         }
     }
-    writeln!(md,"\n## Outward progression candidates\n\nNormal/Normal comparisons across cardinal edges of increasing shortest tutorial distance. A ≥20-point drop is supported only with disjoint intervals and ≤10% unresolved at both ends. These exploratory flags are not corrected for multiple comparisons.\n")?;
-    for (i, a) in metadata.catalogue.iter().enumerate() {
-        for (j, b) in metadata.catalogue.iter().enumerate() {
-            if !adjacent(a, b) || distance[i] >= distance[j] {
+    writeln!(md,"\n## Main-route progression candidates\n\nNormal/Normal comparisons in teaching-route order. Directed shortest tutorial distances are context only. A ≥20-point drop is supported only with disjoint intervals and ≤10% unresolved at both ends. These exploratory flags are not corrected for multiple comparisons.\n")?;
+    for (route_index, route) in std::iter::once(shared::MAIN_ROUTE)
+        .chain(shared::OPTIONAL_ROUTES.iter().copied())
+        .enumerate()
+    {
+        if route_index > 0 {
+            writeln!(
+                md,
+                "\n### Optional route {route_index} (final exit one-way)\n"
+            )?;
+        }
+        for pair in route.windows(2) {
+            let Some(i) = metadata.catalogue.iter().position(|e| e.id == pair[0]) else {
                 continue;
-            }
+            };
+            let Some(j) = metadata.catalogue.iter().position(|e| e.id == pair[1]) else {
+                continue;
+            };
+            let (a, b) = (&metadata.catalogue[i], &metadata.catalogue[j]);
             if let (Some(sa), Some(sb)) = (find(i, 1, 1), find(j, 1, 1)) {
                 if let (Some(pa), Some(pb)) =
                     (sa.stats.resolved_win_rate, sb.stats.resolved_win_rate)
                 {
-                    if pa - pb >= 0.2 - 1e-10 {
+                    {
                         let supported = sa.stats.wilson95.unwrap()[0]
                             > sb.stats.wilson95.unwrap()[1]
-                            && sa.stats.unresolved * 10 <= metadata.config.games
-                            && sb.stats.unresolved * 10 <= metadata.config.games;
+                            && sa.stats.unresolved * 10
+                                <= sa.stats.wins
+                                    + sa.stats.losses
+                                    + sa.stats.draws
+                                    + sa.stats.unresolved
+                            && sb.stats.unresolved * 10
+                                <= sb.stats.wins
+                                    + sb.stats.losses
+                                    + sb.stats.draws
+                                    + sb.stats.unresolved;
                         writeln!(
                             md,
                             "- {} → {}: {:.1}-point drop; {}.",
                             a.name,
                             b.name,
                             100.0 * (pa - pb),
-                            if supported {
+                            if pa - pb < 0.2 - 1e-10 {
+                                "below spike threshold"
+                            } else if supported {
                                 "supported candidate"
                             } else {
                                 "followup candidate"
@@ -416,7 +482,7 @@ fn reports(output: &Path, metadata: &Metadata, matchups: &[Matchup]) -> Result<(
                 metadata.config.profiles[s.red].difficulty.label(),
                 metadata.config.profiles[s.blue].difficulty.label()
             );
-            if a.unresolved * 10 > metadata.config.games {
+            if a.unresolved * 10 > a.wins + a.losses + a.draws + a.unresolved {
                 writeln!(
                     md,
                     "- {label}: frequent unresolved games; extend the safety limit before ranking."
@@ -445,12 +511,16 @@ mod tests {
         let metadata = Metadata {
             config: RunConfig::default(),
             catalogue: vec![all[0].clone(), all[1].clone(), all.last().unwrap().clone()],
+            graph: shared::campaign_connections(&campaign_catalogue(false)),
+            main_route: shared::MAIN_ROUTE.iter().map(|s| s.to_string()).collect(),
             engine: "test".into(),
         };
         assert_eq!(distances(&metadata.catalogue), vec![1, 2, 0]);
         let games = |wins: usize, unresolved: usize| {
             (0..30)
                 .map(|trial| GameResultRecord {
+                    replay: Vec::new(),
+                    termination: String::new(),
                     trial,
                     seed: 0,
                     outcome: if trial < wins {
@@ -496,7 +566,7 @@ mod tests {
                 .lines()
                 .find(|line| line.starts_with("- Basics I → Basics II:"));
             if expected == "absent" {
-                assert!(flag.is_none());
+                assert!(flag.unwrap().contains("below spike threshold"));
             } else {
                 assert!(flag.unwrap().contains(expected));
             }
@@ -511,10 +581,14 @@ mod tests {
         let metadata = || Metadata {
             config: RunConfig {
                 games: 3,
-                max_plies: 3,
+                max_plies: 200,
+                replays: true,
+                seed_namespace: Some("paired-baseline".into()),
                 ..Default::default()
             },
             catalogue: vec![campaign_catalogue(false).remove(0)],
+            graph: shared::campaign_connections(&campaign_catalogue(false)),
+            main_route: shared::MAIN_ROUTE.iter().map(|s| s.to_string()).collect(),
             engine: "test".into(),
         };
         execute(&root.join("serial"), 1, metadata()).unwrap();
@@ -533,6 +607,15 @@ mod tests {
         assert!(execute(&root.join("serial"), 1, changed).is_err());
         let mut changed = metadata();
         changed.catalogue[0].name.push_str(" changed");
+        assert!(execute(&root.join("serial"), 1, changed).is_err());
+        let mut changed = metadata();
+        changed.config.seed_namespace = Some("different-baseline".into());
+        assert!(execute(&root.join("serial"), 1, changed).is_err());
+        let mut changed = metadata();
+        changed.graph[0].one_way = !changed.graph[0].one_way;
+        assert!(execute(&root.join("serial"), 1, changed).is_err());
+        let mut changed = metadata();
+        changed.main_route.swap(0, 1);
         assert!(execute(&root.join("serial"), 1, changed).is_err());
         let checkpoint = root.join("serial/matchup-00-0-0.json");
         let mut value: serde_json::Value =

@@ -13,6 +13,10 @@ pub struct AgentSettings {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RunConfig {
     pub version: u32,
+    pub seed_namespace: Option<String>,
+    pub red_profile: Option<usize>,
+    pub blue_profile: Option<usize>,
+    pub replays: bool,
     pub games: usize,
     pub seed: u64,
     pub max_plies: usize,
@@ -22,7 +26,11 @@ pub struct RunConfig {
 impl Default for RunConfig {
     fn default() -> Self {
         Self {
-            version: 1,
+            version: 2,
+            seed_namespace: None,
+            red_profile: None,
+            blue_profile: None,
+            replays: false,
             games: 30,
             seed: 1,
             max_plies: 200,
@@ -70,12 +78,32 @@ impl Telemetry {
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GameResultRecord {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub replay: Vec<ReplayMove>,
+    pub termination: String,
     pub trial: usize,
     pub seed: u64,
     pub outcome: Outcome,
     pub plies: usize,
     pub red: Telemetry,
     pub blue: Telemetry,
+}
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ReplayMove {
+    pub turn: shared::Turn,
+    pub team: Team,
+    pub pickup: Option<shared::PowerUp>,
+    pub damage: Vec<shared::Position>,
+    pub mana: [u32; 2],
+}
+impl RunConfig {
+    pub fn trial_seed(&self, level: &Level, trial: usize) -> u64 {
+        trial_seed(
+            self.seed,
+            self.seed_namespace.as_deref().unwrap_or(&level.as_code()),
+            trial,
+        )
+    }
 }
 // FNV-1a with explicit byte order: independent of platform, scheduling and matchup.
 pub fn trial_seed(base: u64, code: &str, trial: usize) -> u64 {
@@ -95,9 +123,11 @@ pub fn simulate(
     blue: usize,
     trial: usize,
 ) -> GameResultRecord {
-    let seed = trial_seed(config.seed, &level.as_code(), trial);
+    let seed = config.trial_seed(level, trial);
     let mut game = Game::new(level, stalemates).unwrap();
     let mut record = GameResultRecord {
+        replay: Vec::new(),
+        termination: String::new(),
         trial,
         seed,
         outcome: Outcome::SafetyLimit,
@@ -132,8 +162,31 @@ pub fn simulate(
         let turn = result
             .select(profile.difficulty, move_seed)
             .expect("nonterminal legal move");
-        assert!(game.take_move(turn.0, turn.1).is_some());
+        let team = game.turn_for();
+        let pickup = game.powerups().get(&turn.1).copied();
+        let damage = game.take_move(turn.0, turn.1).expect("legal selected move");
+        if config.replays {
+            let mut mana = [0, 0];
+            for mage in game.iter_mages() {
+                mana[usize::from(mage.team == Team::Blue)] += mage.mana.0 as u32;
+            }
+            record.replay.push(ReplayMove {
+                turn,
+                team,
+                pickup,
+                damage,
+                mana,
+            });
+        }
     }
+    record.termination = if game.legal_turns().is_empty() {
+        "NoLegalMoves"
+    } else if game.stalemate().0 {
+        "Inactivity"
+    } else {
+        "SafetyLimit"
+    }
+    .into();
     record.plies = game.turns();
     record.outcome = match game.result() {
         Some(GameResult::Win(Team::Red)) => Outcome::Win,
@@ -281,6 +334,8 @@ mod tests {
             Outcome::SafetyLimit,
         ] {
             games.push(GameResultRecord {
+                replay: Vec::new(),
+                termination: String::new(),
                 trial: 0,
                 seed: 1,
                 outcome,

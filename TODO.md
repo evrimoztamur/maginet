@@ -87,9 +87,9 @@
   - Enter level and exit at same position back into Arena UI
   - Track wins
     - Record win upon exiting from won state
-  - Lock level if no adjacent wins
+  - Lock level if no explicit incoming connection from a won battle
   - Flipping mages when level won (+ medal from Mrmo)
-  - 28 arena levels!
+  - 36 arena portals, including eight 1v1 junction battles and tutorial
 - Mechanics
   - Powerups
     - Diagonals
@@ -125,3 +125,12 @@
   - Table of contents
   - Text plus rendered image
     - Hardcode?
+
+
+## Campaign revision followups
+
+- Implemented: shared explicit progression graph with cardinal-neighbour links and eight 1v1 junction battles, optional challenge routes, focused powerup introductions, distinct Rite IV, profile selection, paired seed namespaces, deterministic replays, staged assessments and source-attributed combined matrices.
+- Human playtests: verify that each pickup introduction communicates its mechanic and tolerates a novice mistake; automated recovery examples do not validate instruction quality.
+- Investigate remaining inactivity endings in Patterns I, Rite II and Rite IV. Do not describe the draw problem as solved.
+- Check perceived difficulty after the forgiving Basics battles and Shields I. Keep optional challenges demanding.
+- See `assessments/campaign-revision/interpretation.md` for evidence and limitations; preserve the original assessment.
