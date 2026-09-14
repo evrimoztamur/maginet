@@ -1,0 +1,50 @@
+[
+  {
+    "battle": "patterns-i",
+    "id": "close-patterns",
+    "code": "dg30r0j4500m8v048g0g4d2504t6211m00",
+    "selected": false
+  },
+  {
+    "battle": "patterns-i",
+    "id": "narrow-patterns",
+    "code": "d030g0j4500m8t048g0g4d2104t6211m00",
+    "selected": false
+  },
+  {
+    "battle": "rite-ii",
+    "id": "open-crossfire",
+    "code": "dg20r124dg1m80838hgg8h03501480h404",
+    "selected": true
+  },
+  {
+    "battle": "rite-ii",
+    "id": "narrow-crossfire",
+    "code": "d020g124d01m80838hgg8h03501400h404",
+    "selected": false
+  },
+  {
+    "battle": "rite-iv",
+    "id": "contested-center",
+    "code": "dg30r0245g148v048g0g2h210d2621240gm04h024g0mg00",
+    "selected": false
+  },
+  {
+    "battle": "rite-iv",
+    "id": "single-shield",
+    "code": "dg30r0245g148v048g0g2h210d2621240g404s024g0mg00",
+    "selected": false
+  },
+  {
+    "battle": "patterns-i",
+    "id": "close-patterns-even",
+    "code": "dg30r0j4500m8v048g0g4h250526212400",
+    "selected": true
+  },
+  {
+    "battle": "rite-iv",
+    "id": "mobile-capstone",
+    "code": "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00",
+    "selected": true
+  }
+]

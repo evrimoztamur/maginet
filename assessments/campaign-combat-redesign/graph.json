@@ -1,0 +1,700 @@
+{
+  "catalogue": [
+    {
+      "code": "hg12g014cm0j800",
+      "demo": true,
+      "id": "basics-i",
+      "name": "Basics I",
+      "position": [
+        0,
+        0
+      ],
+      "style": "Grass",
+      "tutorial": false
+    },
+    {
+      "code": "e01jg1248m0j8k834g00",
+      "demo": true,
+      "id": "basics-ii",
+      "name": "Basics II",
+      "position": [
+        1,
+        0
+      ],
+      "style": "Grass",
+      "tutorial": false
+    },
+    {
+      "code": "j0228014cm0j8v804gp04900",
+      "demo": true,
+      "id": "basics-iii",
+      "name": "Basics III",
+      "position": [
+        2,
+        0
+      ],
+      "style": "Grass",
+      "tutorial": false
+    },
+    {
+      "code": "j022801mcm0j8v804gp04d06201g00s80dm07403g01g",
+      "demo": true,
+      "id": "basics-iv",
+      "name": "Basics IV",
+      "position": [
+        2,
+        -1
+      ],
+      "style": "Grass",
+      "tutorial": false
+    },
+    {
+      "code": "dg30r0j4500m8v048g0g4h250526212400",
+      "demo": false,
+      "id": "patterns-i",
+      "name": "Patterns I",
+      "position": [
+        3,
+        -1
+      ],
+      "style": "Desert",
+      "tutorial": false
+    },
+    {
+      "code": "pg2620a48m1m8c038ht02h04gg1jr0wg0d406",
+      "demo": false,
+      "id": "patterns-ii",
+      "name": "Patterns II",
+      "position": [
+        4,
+        -1
+      ],
+      "style": "Desert",
+      "tutorial": false
+    },
+    {
+      "code": "pg3220j4g41m8h818gr06h4g052780j400",
+      "demo": false,
+      "id": "patterns-iii",
+      "name": "Patterns III",
+      "position": [
+        5,
+        -1
+      ],
+      "style": "Desert",
+      "tutorial": false
+    },
+    {
+      "code": "d010812ncm23809408",
+      "demo": false,
+      "id": "diagonals-i",
+      "name": "Diagonals I",
+      "position": [
+        6,
+        -1
+      ],
+      "style": "Desert",
+      "tutorial": false
+    },
+    {
+      "code": "f02220t4840m8e018hc06h04a014g0sg0cm04",
+      "demo": false,
+      "id": "diagonals-ii",
+      "name": "Diagonals II",
+      "position": [
+        6,
+        0
+      ],
+      "style": "Desert",
+      "tutorial": false
+    },
+    {
+      "code": "bg3200240g248h038gcg6h2s0h23t02408r04b02",
+      "demo": false,
+      "id": "diagonals-iii",
+      "name": "Diagonals III",
+      "position": [
+        7,
+        0
+      ],
+      "style": "Flesh",
+      "tutorial": false
+    },
+    {
+      "code": "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08",
+      "demo": false,
+      "id": "diagonals-iv",
+      "name": "Diagonals IV",
+      "position": [
+        7,
+        -2
+      ],
+      "style": "Flesh",
+      "tutorial": false
+    },
+    {
+      "code": "hg22r024dg0m81816j2g0d02500pg08",
+      "demo": false,
+      "id": "beams-i",
+      "name": "Beams I",
+      "position": [
+        7,
+        -1
+      ],
+      "style": "Flesh",
+      "tutorial": false
+    },
+    {
+      "code": "eg3020t4c40489818gr02h0m0d2780240gp06a03d00pr08",
+      "demo": false,
+      "id": "beams-ii",
+      "name": "Beams II",
+      "position": [
+        7,
+        -3
+      ],
+      "style": "Flesh",
+      "tutorial": false
+    },
+    {
+      "code": "qg22j0t4h41m8d038ja06h04gg13g0mr04j02",
+      "demo": false,
+      "id": "beams-iii",
+      "name": "Beams III",
+      "position": [
+        8,
+        -3
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "d012g0an840k80h401200",
+      "demo": false,
+      "id": "shields-i",
+      "name": "Shields I",
+      "position": [
+        8,
+        -1
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "xg2420a4r40m9b018gp02h06x00080140f406t02gg10",
+      "demo": false,
+      "id": "shields-ii",
+      "name": "Shields II",
+      "position": [
+        8,
+        0
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "j02280j4500m8t818hpg4h025g06800",
+      "demo": false,
+      "id": "shields-iii",
+      "name": "Shields III",
+      "position": [
+        8,
+        1
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "hg2280a4d40490008g6g2h02cg12g00",
+      "demo": false,
+      "id": "challenge-i",
+      "name": "Challenge I",
+      "position": [
+        9,
+        0
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "hg2680t44m048a028hmg2h04000gr0mc06004",
+      "demo": false,
+      "id": "challenge-ii",
+      "name": "Challenge II",
+      "position": [
+        8,
+        -2
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "q03220t4840m98828gw02h2r0d2bg0j40x804j03dg0k00s80a807200",
+      "demo": false,
+      "id": "challenge-iii",
+      "name": "Challenge III",
+      "position": [
+        9,
+        -2
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404",
+      "demo": false,
+      "id": "challenge-iv",
+      "name": "Challenge IV",
+      "position": [
+        9,
+        1
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g",
+      "demo": false,
+      "id": "rite-i",
+      "name": "Rite I",
+      "position": [
+        10,
+        -1
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "dg20r124dg1m80838hgg8h03501480h404",
+      "demo": false,
+      "id": "rite-ii",
+      "name": "Rite II",
+      "position": [
+        10,
+        0
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g",
+      "demo": false,
+      "id": "rite-iii",
+      "name": "Rite III",
+      "position": [
+        11,
+        0
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00",
+      "demo": false,
+      "id": "rite-iv",
+      "name": "Rite IV",
+      "position": [
+        12,
+        0
+      ],
+      "style": "Eldritch",
+      "tutorial": false
+    },
+    {
+      "code": "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g",
+      "demo": false,
+      "id": "ascension-i",
+      "name": "Ascension I",
+      "position": [
+        13,
+        0
+      ],
+      "style": "Eldritch",
+      "tutorial": false
+    },
+    {
+      "code": "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03",
+      "demo": false,
+      "id": "ascension-ii",
+      "name": "Ascension II",
+      "position": [
+        14,
+        0
+      ],
+      "style": "Eldritch",
+      "tutorial": false
+    },
+    {
+      "code": "d0108124cm23809400",
+      "demo": false,
+      "id": "junction-i",
+      "name": "Junction I",
+      "position": [
+        9,
+        -1
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "9010g0248403809408",
+      "demo": false,
+      "id": "junction-ii",
+      "name": "Junction II",
+      "position": [
+        10,
+        -2
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "d01080a4cm0k809404",
+      "demo": false,
+      "id": "junction-iii",
+      "name": "Junction III",
+      "position": [
+        11,
+        -2
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "9g12r1244423809800",
+      "demo": false,
+      "id": "junction-iv",
+      "name": "Junction IV",
+      "position": [
+        12,
+        -2
+      ],
+      "style": "Eldritch",
+      "tutorial": false
+    },
+    {
+      "code": "dg10g0j4cm0380h809200",
+      "demo": false,
+      "id": "junction-v",
+      "name": "Junction V",
+      "position": [
+        12,
+        -1
+      ],
+      "style": "Eldritch",
+      "tutorial": false
+    },
+    {
+      "code": "901081248m03809404",
+      "demo": false,
+      "id": "junction-vi",
+      "name": "Junction VI",
+      "position": [
+        10,
+        1
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "d012g024840k809400",
+      "demo": false,
+      "id": "junction-vii",
+      "name": "Junction VII",
+      "position": [
+        11,
+        1
+      ],
+      "style": "Crust",
+      "tutorial": false
+    },
+    {
+      "code": "9g10g0a48m2380h808j02",
+      "demo": false,
+      "id": "junction-viii",
+      "name": "Junction VIII",
+      "position": [
+        12,
+        1
+      ],
+      "style": "Eldritch",
+      "tutorial": false
+    },
+    {
+      "code": "hg18a09m4g0m81g00c4068035g14r0v008",
+      "demo": true,
+      "id": "tutorial",
+      "name": "Tutorial",
+      "position": [
+        0,
+        1
+      ],
+      "style": "Grass",
+      "tutorial": true
+    }
+  ],
+  "connections": [
+    {
+      "from": "tutorial",
+      "one_way": false,
+      "to": "basics-i"
+    },
+    {
+      "from": "basics-i",
+      "one_way": false,
+      "to": "basics-ii"
+    },
+    {
+      "from": "basics-ii",
+      "one_way": false,
+      "to": "basics-iii"
+    },
+    {
+      "from": "basics-iii",
+      "one_way": false,
+      "to": "basics-iv"
+    },
+    {
+      "from": "basics-iv",
+      "one_way": false,
+      "to": "patterns-i"
+    },
+    {
+      "from": "patterns-i",
+      "one_way": false,
+      "to": "patterns-ii"
+    },
+    {
+      "from": "patterns-ii",
+      "one_way": false,
+      "to": "patterns-iii"
+    },
+    {
+      "from": "patterns-iii",
+      "one_way": false,
+      "to": "diagonals-i"
+    },
+    {
+      "from": "diagonals-i",
+      "one_way": false,
+      "to": "beams-i"
+    },
+    {
+      "from": "beams-i",
+      "one_way": false,
+      "to": "shields-i"
+    },
+    {
+      "from": "shields-i",
+      "one_way": false,
+      "to": "junction-i"
+    },
+    {
+      "from": "junction-i",
+      "one_way": false,
+      "to": "rite-i"
+    },
+    {
+      "from": "rite-i",
+      "one_way": false,
+      "to": "rite-ii"
+    },
+    {
+      "from": "rite-ii",
+      "one_way": false,
+      "to": "rite-iii"
+    },
+    {
+      "from": "rite-iii",
+      "one_way": false,
+      "to": "rite-iv"
+    },
+    {
+      "from": "rite-iv",
+      "one_way": false,
+      "to": "ascension-i"
+    },
+    {
+      "from": "ascension-i",
+      "one_way": false,
+      "to": "ascension-ii"
+    },
+    {
+      "from": "diagonals-i",
+      "one_way": false,
+      "to": "diagonals-ii"
+    },
+    {
+      "from": "diagonals-ii",
+      "one_way": false,
+      "to": "diagonals-iii"
+    },
+    {
+      "from": "diagonals-iii",
+      "one_way": true,
+      "to": "beams-i"
+    },
+    {
+      "from": "beams-i",
+      "one_way": false,
+      "to": "diagonals-iv"
+    },
+    {
+      "from": "diagonals-iv",
+      "one_way": false,
+      "to": "beams-ii"
+    },
+    {
+      "from": "beams-ii",
+      "one_way": false,
+      "to": "beams-iii"
+    },
+    {
+      "from": "beams-iii",
+      "one_way": false,
+      "to": "challenge-ii"
+    },
+    {
+      "from": "challenge-ii",
+      "one_way": true,
+      "to": "shields-i"
+    },
+    {
+      "from": "junction-i",
+      "one_way": false,
+      "to": "challenge-i"
+    },
+    {
+      "from": "challenge-i",
+      "one_way": true,
+      "to": "rite-ii"
+    },
+    {
+      "from": "junction-i",
+      "one_way": false,
+      "to": "challenge-iii"
+    },
+    {
+      "from": "challenge-iii",
+      "one_way": false,
+      "to": "junction-ii"
+    },
+    {
+      "from": "junction-ii",
+      "one_way": false,
+      "to": "junction-iii"
+    },
+    {
+      "from": "junction-iii",
+      "one_way": false,
+      "to": "junction-iv"
+    },
+    {
+      "from": "junction-iv",
+      "one_way": false,
+      "to": "junction-v"
+    },
+    {
+      "from": "junction-v",
+      "one_way": true,
+      "to": "rite-iv"
+    },
+    {
+      "from": "shields-i",
+      "one_way": false,
+      "to": "shields-ii"
+    },
+    {
+      "from": "shields-ii",
+      "one_way": false,
+      "to": "shields-iii"
+    },
+    {
+      "from": "shields-iii",
+      "one_way": false,
+      "to": "challenge-iv"
+    },
+    {
+      "from": "challenge-iv",
+      "one_way": false,
+      "to": "junction-vi"
+    },
+    {
+      "from": "junction-vi",
+      "one_way": false,
+      "to": "junction-vii"
+    },
+    {
+      "from": "junction-vii",
+      "one_way": false,
+      "to": "junction-viii"
+    },
+    {
+      "from": "junction-viii",
+      "one_way": true,
+      "to": "rite-iv"
+    }
+  ],
+  "main_route": [
+    "tutorial",
+    "basics-i",
+    "basics-ii",
+    "basics-iii",
+    "basics-iv",
+    "patterns-i",
+    "patterns-ii",
+    "patterns-iii",
+    "diagonals-i",
+    "beams-i",
+    "shields-i",
+    "junction-i",
+    "rite-i",
+    "rite-ii",
+    "rite-iii",
+    "rite-iv",
+    "ascension-i",
+    "ascension-ii"
+  ],
+  "optional_routes": [
+    [
+      "diagonals-i",
+      "diagonals-ii",
+      "diagonals-iii",
+      "beams-i"
+    ],
+    [
+      "beams-i",
+      "diagonals-iv",
+      "beams-ii",
+      "beams-iii",
+      "challenge-ii",
+      "shields-i"
+    ],
+    [
+      "shields-i",
+      "junction-i",
+      "challenge-i",
+      "rite-ii"
+    ],
+    [
+      "shields-i",
+      "junction-i",
+      "challenge-iii",
+      "junction-ii",
+      "junction-iii",
+      "junction-iv",
+      "junction-v",
+      "rite-iv"
+    ],
+    [
+      "shields-i",
+      "shields-ii",
+      "shields-iii",
+      "challenge-iv",
+      "junction-vi",
+      "junction-vii",
+      "junction-viii",
+      "rite-iv"
+    ]
+  ]
+}

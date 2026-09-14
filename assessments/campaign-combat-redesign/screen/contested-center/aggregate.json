@@ -1,0 +1,428 @@
+[
+  {
+    "level": 0,
+    "red": 0,
+    "blue": 0,
+    "stats": {
+      "wins": 24,
+      "losses": 6,
+      "draws": 0,
+      "unresolved": 0,
+      "resolved_win_rate": 0.8,
+      "wilson95": [
+        0.6269430358685175,
+        0.9049489282271013
+      ],
+      "overall_win_range": [
+        0.8,
+        0.8
+      ],
+      "mean_plies": 21.933333333333334,
+      "min_plies": 15,
+      "max_plies": 38,
+      "red": {
+        "nodes": 16767,
+        "searches": 340,
+        "fallbacks": 0,
+        "depths": {
+          "2": 340
+        },
+        "stops": {
+          "Depth": 340
+        }
+      },
+      "blue": {
+        "nodes": 14821,
+        "searches": 318,
+        "fallbacks": 0,
+        "depths": {
+          "2": 318
+        },
+        "stops": {
+          "Depth": 318
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 0,
+    "blue": 1,
+    "stats": {
+      "wins": 9,
+      "losses": 21,
+      "draws": 0,
+      "unresolved": 0,
+      "resolved_win_rate": 0.3,
+      "wilson95": [
+        0.16664748268243793,
+        0.47875787458714947
+      ],
+      "overall_win_range": [
+        0.3,
+        0.3
+      ],
+      "mean_plies": 21.833333333333332,
+      "min_plies": 16,
+      "max_plies": 32,
+      "red": {
+        "nodes": 15965,
+        "searches": 333,
+        "fallbacks": 0,
+        "depths": {
+          "2": 333
+        },
+        "stops": {
+          "Depth": 333
+        }
+      },
+      "blue": {
+        "nodes": 231313,
+        "searches": 322,
+        "fallbacks": 0,
+        "depths": {
+          "4": 322
+        },
+        "stops": {
+          "Depth": 322
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 0,
+    "blue": 2,
+    "stats": {
+      "wins": 6,
+      "losses": 21,
+      "draws": 3,
+      "unresolved": 0,
+      "resolved_win_rate": 0.2,
+      "wilson95": [
+        0.0950510717728987,
+        0.3730569641314825
+      ],
+      "overall_win_range": [
+        0.2,
+        0.2
+      ],
+      "mean_plies": 23.033333333333335,
+      "min_plies": 13,
+      "max_plies": 38,
+      "red": {
+        "nodes": 15223,
+        "searches": 349,
+        "fallbacks": 0,
+        "depths": {
+          "2": 349
+        },
+        "stops": {
+          "Depth": 349
+        }
+      },
+      "blue": {
+        "nodes": 3592252,
+        "searches": 342,
+        "fallbacks": 0,
+        "depths": {
+          "5": 21,
+          "6": 74,
+          "7": 50,
+          "8": 197
+        },
+        "stops": {
+          "Depth": 197,
+          "Nodes": 145
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 1,
+    "blue": 0,
+    "stats": {
+      "wins": 28,
+      "losses": 1,
+      "draws": 1,
+      "unresolved": 0,
+      "resolved_win_rate": 0.9333333333333333,
+      "wilson95": [
+        0.7867654163738308,
+        0.9815229762087295
+      ],
+      "overall_win_range": [
+        0.9333333333333333,
+        0.9333333333333333
+      ],
+      "mean_plies": 19.433333333333334,
+      "min_plies": 13,
+      "max_plies": 27,
+      "red": {
+        "nodes": 207026,
+        "searches": 306,
+        "fallbacks": 0,
+        "depths": {
+          "4": 306
+        },
+        "stops": {
+          "Depth": 306
+        }
+      },
+      "blue": {
+        "nodes": 12822,
+        "searches": 277,
+        "fallbacks": 0,
+        "depths": {
+          "2": 277
+        },
+        "stops": {
+          "Depth": 277
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 1,
+    "blue": 1,
+    "stats": {
+      "wins": 24,
+      "losses": 5,
+      "draws": 1,
+      "unresolved": 0,
+      "resolved_win_rate": 0.8,
+      "wilson95": [
+        0.6269430358685175,
+        0.9049489282271013
+      ],
+      "overall_win_range": [
+        0.8,
+        0.8
+      ],
+      "mean_plies": 23.066666666666666,
+      "min_plies": 14,
+      "max_plies": 34,
+      "red": {
+        "nodes": 224082,
+        "searches": 358,
+        "fallbacks": 0,
+        "depths": {
+          "4": 358
+        },
+        "stops": {
+          "Depth": 358
+        }
+      },
+      "blue": {
+        "nodes": 223567,
+        "searches": 334,
+        "fallbacks": 0,
+        "depths": {
+          "4": 334
+        },
+        "stops": {
+          "Depth": 334
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 1,
+    "blue": 2,
+    "stats": {
+      "wins": 12,
+      "losses": 15,
+      "draws": 3,
+      "unresolved": 0,
+      "resolved_win_rate": 0.4,
+      "wilson95": [
+        0.24590628116801852,
+        0.5767963974667752
+      ],
+      "overall_win_range": [
+        0.4,
+        0.4
+      ],
+      "mean_plies": 24.033333333333335,
+      "min_plies": 15,
+      "max_plies": 34,
+      "red": {
+        "nodes": 223857,
+        "searches": 368,
+        "fallbacks": 0,
+        "depths": {
+          "4": 368
+        },
+        "stops": {
+          "Depth": 368
+        }
+      },
+      "blue": {
+        "nodes": 3700031,
+        "searches": 353,
+        "fallbacks": 0,
+        "depths": {
+          "5": 24,
+          "6": 79,
+          "7": 50,
+          "8": 200
+        },
+        "stops": {
+          "Depth": 200,
+          "Nodes": 153
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 2,
+    "blue": 0,
+    "stats": {
+      "wins": 29,
+      "losses": 0,
+      "draws": 1,
+      "unresolved": 0,
+      "resolved_win_rate": 0.9666666666666667,
+      "wilson95": [
+        0.8332960900859082,
+        0.9940914096183874
+      ],
+      "overall_win_range": [
+        0.9666666666666667,
+        0.9666666666666667
+      ],
+      "mean_plies": 23.966666666666665,
+      "min_plies": 15,
+      "max_plies": 43,
+      "red": {
+        "nodes": 4129135,
+        "searches": 374,
+        "fallbacks": 0,
+        "depths": {
+          "6": 92,
+          "7": 69,
+          "8": 213
+        },
+        "stops": {
+          "Depth": 213,
+          "Nodes": 161
+        }
+      },
+      "blue": {
+        "nodes": 13683,
+        "searches": 345,
+        "fallbacks": 0,
+        "depths": {
+          "2": 345
+        },
+        "stops": {
+          "Depth": 345
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 2,
+    "blue": 1,
+    "stats": {
+      "wins": 26,
+      "losses": 1,
+      "draws": 3,
+      "unresolved": 0,
+      "resolved_win_rate": 0.8666666666666667,
+      "wilson95": [
+        0.703186733179637,
+        0.9469034451594526
+      ],
+      "overall_win_range": [
+        0.8666666666666667,
+        0.8666666666666667
+      ],
+      "mean_plies": 24.3,
+      "min_plies": 15,
+      "max_plies": 41,
+      "red": {
+        "nodes": 4080668,
+        "searches": 377,
+        "fallbacks": 0,
+        "depths": {
+          "6": 91,
+          "7": 70,
+          "8": 216
+        },
+        "stops": {
+          "Depth": 216,
+          "Nodes": 161
+        }
+      },
+      "blue": {
+        "nodes": 231532,
+        "searches": 352,
+        "fallbacks": 0,
+        "depths": {
+          "4": 352
+        },
+        "stops": {
+          "Depth": 352
+        }
+      }
+    }
+  },
+  {
+    "level": 0,
+    "red": 2,
+    "blue": 2,
+    "stats": {
+      "wins": 23,
+      "losses": 6,
+      "draws": 1,
+      "unresolved": 0,
+      "resolved_win_rate": 0.7666666666666667,
+      "wilson95": [
+        0.5907167384187784,
+        0.8820761185551049
+      ],
+      "overall_win_range": [
+        0.7666666666666667,
+        0.7666666666666667
+      ],
+      "mean_plies": 25.433333333333334,
+      "min_plies": 18,
+      "max_plies": 43,
+      "red": {
+        "nodes": 4028873,
+        "searches": 393,
+        "fallbacks": 0,
+        "depths": {
+          "6": 91,
+          "7": 69,
+          "8": 233
+        },
+        "stops": {
+          "Depth": 233,
+          "Nodes": 160
+        }
+      },
+      "blue": {
+        "nodes": 3772254,
+        "searches": 370,
+        "fallbacks": 0,
+        "depths": {
+          "5": 17,
+          "6": 87,
+          "7": 43,
+          "8": 223
+        },
+        "stops": {
+          "Depth": 223,
+          "Nodes": 147
+        }
+      }
+    }
+  }
+]

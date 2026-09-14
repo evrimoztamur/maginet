@@ -1,0 +1,81 @@
+{
+  "config": {
+    "version": 2,
+    "seed_namespace": "pg3820a44m2482808jp00h4g0h2380a410000503501k00m40a607803pg00",
+    "red_profile": null,
+    "blue_profile": null,
+    "replays": true,
+    "games": 30,
+    "seed": 1,
+    "max_plies": 200,
+    "profiles": [
+      {
+        "difficulty": "Easy",
+        "depth": 2,
+        "nodes": 1000,
+        "weights": [
+          65,
+          25,
+          10
+        ]
+      },
+      {
+        "difficulty": "Normal",
+        "depth": 4,
+        "nodes": 5000,
+        "weights": [
+          80,
+          15,
+          5
+        ]
+      },
+      {
+        "difficulty": "Hard",
+        "depth": 8,
+        "nodes": 20000,
+        "weights": [
+          90,
+          8,
+          2
+        ]
+      }
+    ],
+    "table_capacity": 32768
+  },
+  "catalogue": [
+    {
+      "id": "custom",
+      "name": "Custom scenario",
+      "code": "dg30r0a45g1m8v048g0g2h210d2621240gj02a028g14g00",
+      "position": [
+        0,
+        0
+      ],
+      "style": "Grass",
+      "demo": false,
+      "tutorial": false
+    }
+  ],
+  "graph": [],
+  "main_route": [
+    "tutorial",
+    "basics-i",
+    "basics-ii",
+    "basics-iii",
+    "basics-iv",
+    "patterns-i",
+    "patterns-ii",
+    "patterns-iii",
+    "diagonals-i",
+    "beams-i",
+    "shields-i",
+    "junction-i",
+    "rite-i",
+    "rite-ii",
+    "rite-iii",
+    "rite-iv",
+    "ascension-i",
+    "ascension-ii"
+  ],
+  "engine": "fnv1a-e9168b4395067652"
+}
