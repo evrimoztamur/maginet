@@ -1,12 +1,11 @@
 use std::{collections::HashMap, f64::consts::TAU};
 
+pub(super) use shared::TUTORIAL_POSITION;
 use shared::{Board, BoardStyle, GameResult, Level, LobbySettings, Mage, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{tutorial::TUTORIAL_CODE, Game, MainMenu, State, Tutorial};
-
-pub(super) const TUTORIAL_POSITION: (isize, isize) = (0, 1);
 const DIRS: [(isize, isize); 4] = [(0, -1), (-1, 0), (1, 0), (0, 1)];
 use crate::{
     app::{
@@ -522,17 +521,6 @@ impl Default for ArenaMenu {
     }
 }
 
-// Board styles are presentation metadata; level codes (and saved progress keys) stay stable.
-fn campaign_style(column: isize) -> BoardStyle {
-    match column {
-        ..=2 => BoardStyle::Grass,
-        3..=4 => BoardStyle::Desert,
-        5 => BoardStyle::Flesh,
-        6..=7 => BoardStyle::Crust,
-        _ => BoardStyle::Eldritch,
-    }
-}
-
 fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
     let index = match style {
         BoardStyle::Grass | BoardStyle::Teleport => 0,
@@ -545,269 +533,19 @@ fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
 }
 
 fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize), LevelPortal> {
-    let mut level_portals = HashMap::new();
-
-    level_portals.insert(
-        (0, 0),
-        LevelPortal::from_level(
-            "hg12g014cm0j800".into(),
-            "Basics I".to_string(),
-            PortalStatus::Locked,
-        ),
-    );
-    // 1v1 basic
-
-    level_portals.insert(
-        (1, 0),
-        LevelPortal::from_level(
-            "e01jg1148m0j8k834g00".into(),
-            "Basics II".to_string(),
-            PortalStatus::Locked,
-        ),
-    );
-    // 1v2 basic
-
-    level_portals.insert(
-        (2, 0),
-        LevelPortal::from_level(
-            "j0228014cm0j8v804gp04900".into(),
-            "Basics III".to_string(),
-            PortalStatus::Locked,
-        ),
-    );
-    // 2v2 easy
-
-    level_portals.insert(
-        (2, -1),
-        LevelPortal::from_level(
-            "j0228014cm0j8v804gp04906201g00s80dm07403g01g".into(),
-            "Basics IV".to_string(),
-            PortalStatus::Locked,
-        ),
-    );
-
-    #[cfg(not(feature = "demo"))]
-    {
-        level_portals.insert(
-            (3, -1),
-            LevelPortal::from_level(
-                "pg32a0j4gm148t818h602h1g092900j409r06h03".into(),
-                "Patterns I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (4, -1),
-            LevelPortal::from_level(
-                "pg2620a48m1m8c038ht02h04gg1jr0wg0d406".into(),
-                "Patterns II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (5, -1),
-            LevelPortal::from_level(
-                "pg3220j4g41m8h818gr06h4g052780j400".into(),
-                "Patterns III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (4, 0),
-            LevelPortal::from_level(
-                "h0120124d42480t40e204102".into(),
-                "Diagonals I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (4, 1),
-            LevelPortal::from_level(
-                "f02220t4840m8e018hc06h04a014g0sg0cm04".into(),
-                "Diagonals II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (4, 2),
-            LevelPortal::from_level(
-                "bg3200240g248h038gcg6h2s0h23t02408r04b02".into(),
-                "Diagonals III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (4, 3),
-            LevelPortal::from_level(
-                "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08".into(),
-                "Diagonals IV".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (5, -2),
-            LevelPortal::from_level(
-                "j02620t4441m8c038hr06h055g1g00wg0dj06j01".into(),
-                "Beams I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (5, -3),
-            LevelPortal::from_level(
-                "eg3020t4c40489818gr02h0m0d2780240gp06a03d00pr08".into(),
-                "Beams II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (6, -3),
-            LevelPortal::from_level(
-                "qg22j0t4h41m8d038ja06h04gg13g0mr04j02".into(),
-                "Beams III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (5, 2),
-            LevelPortal::from_level(
-                "x01420a4900m81a402204903rg1680r".into(),
-                "Shields I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (6, 2),
-            LevelPortal::from_level(
-                "xg2420a4r40m9b018gp02h06x00080140f406t02gg10".into(),
-                "Shields II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (7, 2),
-            LevelPortal::from_level(
-                "j02280j4500m8t818hpg4h025g06800".into(),
-                "Shields III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (2, 1),
-            LevelPortal::from_level(
-                "hg2280a4d40490008g6g2h02cg12g00".into(),
-                "Challenge I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (6, -1),
-            LevelPortal::from_level(
-                "hg2680t44m048a028hmg2h04000gr0mc06004".into(),
-                "Challenge II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (7, -3),
-            LevelPortal::from_level(
-                "q03220t4840m98828gw02h2r0d2bg0j40x804j03dg0k00s80a807200".into(),
-                "Challenge III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (7, 1),
-            LevelPortal::from_level(
-                "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404".into(),
-                "Challenge IV".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (7, -2),
-            LevelPortal::from_level(
-                "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g".into(),
-                "Rite I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (7, -1),
-            LevelPortal::from_level(
-                "zg2220t4r4048f008ke06h0chg1pr0wr0b406w03j01qg0340ba06d03gg02g0r".into(),
-                "Rite II".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (7, 0),
-            LevelPortal::from_level(
-                "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g".into(),
-                "Rite III".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (8, 0),
-            LevelPortal::from_level(
-                "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g".into(),
-                "Rite IV".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-            (8, -1),
-            LevelPortal::from_level(
-                "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g".into(),
-                "Ascension I".to_string(),
-                PortalStatus::Locked,
-            ),
-        );
-
-        level_portals.insert(
-                (9, -1),
-                LevelPortal::from_level(
-                    "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03".into(),
-                    "Ascension II".to_string(),
-                    PortalStatus::Locked,
-                ),
-            );
-    }
-
-    level_portals.insert(
-        TUTORIAL_POSITION,
-        LevelPortal::from_level(
-            TUTORIAL_CODE.into(),
-            "Tutorial".to_string(),
-            PortalStatus::Unlocked,
-        ),
-    );
+    let mut level_portals: HashMap<_, _> = shared::campaign_catalogue(cfg!(feature = "demo"))
+        .into_iter()
+        .map(|entry| {
+            (
+                entry.position,
+                LevelPortal::from_level(entry.level(), entry.name, PortalStatus::Locked),
+            )
+        })
+        .collect();
 
     let tutorial_done = completed(&Level::from(TUTORIAL_CODE).as_code());
     for (position, portal) in &mut level_portals {
-        portal.level.board.style = campaign_style(position.0);
+        portal.level.board.style = shared::campaign_style(position.0);
         portal.status = if (*position == TUTORIAL_POSITION || tutorial_done)
             && completed(&portal.level.as_code())
         {

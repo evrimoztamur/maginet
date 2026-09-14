@@ -1,9 +1,9 @@
 # TODO
 
 - Solver
-  - Improve AI player algorithms
-  - Create scenario analyser which can assess difficulty of a given level by running Monte Carlo simulations
-  - Validate the player campaign for difficulty/challenge levels
+  - Follow up candidate campaign spikes with 300–1,000 paired-seed trials and human playtesting
+  - Investigate draw-heavy Shields I / Rite II and calibrate saturated Hard search budgets
+  - Review whether duplicate Rite III / Rite IV content is intentional (preserve progress until decided)
 - iOS/Android
   - Move to a wgpu/winit based setup
   - Drag/drop gestures
@@ -19,6 +19,21 @@
   - serde for level styles
 
 ## DONE
+
+- Scenario analyser and exploratory campaign assessment
+  - Shared full/demo catalogue, preserving codes, positions, styles, tutorial identity, and saved progress
+  - Native analyse/campaign/generate CLI with deterministic node budgets and bounded parallelism
+  - Fallible code parsing, reproducible trials, incremental checkpoints, and verified resumption
+  - Per-game telemetry, aggregate JSON, Wilson intervals, unresolved bounds, and skill matrices
+  - Full 30-game survey: 246 matchups / 7,380 games, with named followup recommendations in assessments/campaign-seed-1/interpretation.md
+  - Workspace/demo tests, native/Wasm builds, browser campaign smoke check, and independent complete-data audit
+
+- Solver foundation and AI difficulty
+  - Shared iterative alpha-beta search with deterministic evaluation and terminal handling
+  - Bounded transposition cache, ordering, node/deadline limits, and completed root scores
+  - Seeded Easy/Normal/Hard selection and saved settings; tutorial/menu Easy overrides
+  - Worker searches with revision checks, cancellation, and legal failure fallback
+  - Exhaustive comparisons, release benchmarks, and automated browser lifecycle checks
 
 - Pixel-grid rendering
   - Snap final sprite transforms to whole native pixels, including jumps and flips

@@ -19,3 +19,6 @@ pub use powerup::*;
 pub use spell::*;
 pub use team::*;
 pub use turn::*;
+
+mod search;
+pub use search::*;

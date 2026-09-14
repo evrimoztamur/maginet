@@ -14,6 +14,7 @@ pub struct SettingsMenu {
     interface: Interface,
     pub music_volume: i8,
     pub clip_volume: i8,
+    difficulty: shared::Difficulty,
 }
 
 const BUTTON_BACK: usize = 0;
@@ -116,6 +117,9 @@ impl State for SettingsMenu {
             }
         }
 
+        draw_text(context, atlas, 0.0, 144.0, "AI Difficulty")?;
+        draw_text(context, atlas, 64.0, 164.0, self.difficulty.label())?;
+
         context.save();
 
         context.translate(180.0, 28.0)?;
@@ -162,6 +166,10 @@ impl State for SettingsMenu {
             app_context.audio_system.play_clip_option(clip_id);
 
             match value {
+                14 => {
+                    self.difficulty = self.difficulty.next();
+                    App::kv_set("difficulty", self.difficulty.label());
+                }
                 BUTTON_BACK => {
                     return Some(StateSort::MainMenu(MainMenu::default()));
                 }
@@ -237,6 +245,15 @@ impl Default for SettingsMenu {
         );
 
         let interface = Interface::new(vec![
+            ButtonElement::new(
+                (0, 160),
+                (56, 16),
+                14,
+                LabelTrim::Round,
+                LabelTheme::Default,
+                ContentElement::Text("Change".to_string(), Alignment::Center),
+            )
+            .boxed(),
             button_back.boxed(),
             button_music_minus.boxed(),
             button_music_plus.boxed(),
@@ -248,6 +265,7 @@ impl Default for SettingsMenu {
 
         SettingsMenu {
             interface,
+            difficulty: shared::Difficulty::from_preference(&App::kv_get("difficulty")),
             music_volume,
             clip_volume,
         }

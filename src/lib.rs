@@ -1,3 +1,4 @@
+mod ai;
 mod app;
 mod draw;
 mod net;
@@ -46,6 +47,9 @@ pub const RESOURCE_BASE_URL: &str = "";
 #[wasm_bindgen(start)]
 async fn start() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
+    if web_sys::window().is_none() {
+        return Ok(());
+    }
 
     let container_element = document()
         .query_selector("#canvas-container")

@@ -1,8 +1,8 @@
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
 use shared::{
-    Board, BoardStyle, GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID, LobbySettings,
-    LobbySort, Mage, Mages, Message, Position, Team, Turn, TurnLeaf,
+    Board, BoardStyle, Difficulty, GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID,
+    LobbySettings, LobbySort, Mage, Mages, Message, Position, Team, Turn,
 };
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
@@ -23,7 +23,7 @@ use crate::{
         client_timestamp, create_new_lobby, fetch, request_state, request_turns_since,
         send_message, send_ready, send_rematch, MessagePool,
     },
-    tuple_as, window,
+    tuple_as,
 };
 
 const BUTTON_REMATCH: usize = 1;
@@ -32,6 +32,10 @@ const BUTTON_MENU: usize = 10;
 const BUTTON_UNDO: usize = 20;
 
 pub struct Game {
+    ai_pending: Option<crate::ai::Pending>,
+    ai_revision: u32,
+    ai_request: u32,
+    difficulty: Difficulty,
     interface: Interface,
     button_menu: ToggleButtonElement,
     button_undo: ButtonElement,
@@ -112,6 +116,10 @@ impl Game {
 
         let lobby = Lobby::new(lobby_settings, client_timestamp());
         Game {
+            ai_pending: None,
+            ai_revision: 0,
+            ai_request: 0,
+            difficulty: Difficulty::from_preference(&App::kv_get("difficulty")),
             interface: root_element,
             button_menu,
             button_undo,
@@ -225,32 +233,34 @@ impl Game {
         }
     }
 
-    pub fn take_best_turn_quick(&mut self) {
-        if self.presentation.busy() {
-            return;
-        }
-        let turn = self
-            .lobby
-            .game
-            .best_turn(3, window().performance().unwrap().now().to_bits());
-
-        if let Some(TurnLeaf(turn, _)) = turn {
-            self.message_pool.borrow_mut().push(Message::Turn(turn));
-        }
+    pub fn with_easy_ai(mut self) -> Self {
+        self.difficulty = Difficulty::Easy;
+        self
     }
 
-    pub fn take_best_turn(&mut self) {
-        if self.presentation.busy() {
+    fn request_ai(&mut self, difficulty: Difficulty) {
+        if self.presentation.busy()
+            || self.ai_pending.is_some()
+            || self.lobby.game.result().is_some()
+        {
             return;
         }
-        let turn = self
-            .lobby
-            .game
-            .best_turn_auto(window().performance().unwrap().now().to_bits());
+        self.ai_request = self.ai_request.wrapping_add(1);
+        let seed = self.lobby.game.history_seed(self.lobby.settings.seed);
+        self.ai_pending = Some(crate::ai::Pending::new(
+            &self.lobby.game,
+            difficulty,
+            seed,
+            self.ai_request,
+            self.ai_revision,
+        ));
+    }
 
-        if let Some(TurnLeaf(turn, _)) = turn {
-            self.message_pool.borrow_mut().push(Message::Turn(turn));
-        }
+    pub fn take_best_turn_quick(&mut self) {
+        self.request_ai(Difficulty::Easy);
+    }
+    pub fn take_best_turn(&mut self) {
+        self.request_ai(self.difficulty);
     }
 
     pub fn board_offset(&self) -> (i32, i32) {
@@ -696,6 +706,28 @@ impl Game {
 
         let all_ready = self.lobby.all_ready();
 
+        if !self.presentation.busy() {
+            if let Some(turn) = self
+                .ai_pending
+                .as_ref()
+                .and_then(|pending| pending.poll(&self.lobby.game, self.ai_revision))
+            {
+                self.ai_pending = None;
+                if let Some(turn) = turn {
+                    self.message_pool.borrow_mut().push(Message::Turn(turn));
+                }
+            }
+        }
+        if self.lobby.has_ai()
+            && self.lobby.game.turn_for() == Team::Blue
+            && !self.presentation.busy()
+            && frame - self.last_move_frame > 45
+            && !self.lobby.finished()
+            && self.message_pool.borrow().messages.is_empty()
+        {
+            self.request_ai(self.difficulty);
+        }
+
         let mut message_pool = self.message_pool.borrow_mut();
 
         if let Some(lobby_id) = self.lobby.settings.lobby_sort.lobby_id() {
@@ -722,22 +754,6 @@ impl Game {
             }
         }
 
-        if self.lobby.has_ai()
-            && self.lobby.game.turn_for() == Team::Blue
-            && !self.presentation.busy()
-            && frame - self.last_move_frame > 45
-            && !self.lobby.finished()
-        {
-            let turn = self
-                .lobby
-                .game
-                .best_turn_auto(window().performance().unwrap().now().to_bits());
-
-            if let Some(TurnLeaf(turn, _)) = turn {
-                message_pool.messages.append(&mut vec![Message::Turn(turn)]);
-            }
-        }
-
         for message in &message_pool.messages {
             match message {
                 Message::Turns(_) | Message::Turn(_) => {
@@ -749,6 +765,8 @@ impl Game {
                     for turn in turns {
                         let before = self.lobby.game.clone();
                         if let Some(hits) = self.lobby.game.take_move(turn.0, turn.1) {
+                            self.ai_pending = None;
+                            self.ai_revision = self.ai_revision.wrapping_add(1);
                             self.presentation
                                 .enqueue(before, &self.lobby.game, turn, hits, frame);
                             self.active_mage = None;
@@ -759,6 +777,8 @@ impl Game {
                 Message::Lobby(lobby) => {
                     // Readiness-only snapshots must not cancel playback. Replacements do.
                     if !crate::app::presentation::same_history(&self.lobby.game, &lobby.game) {
+                        self.ai_pending = None;
+                        self.ai_revision = self.ai_revision.wrapping_add(1);
                         self.presentation = Presentation::new(&lobby.game);
                         self.particle_system = ParticleSystem::default();
                         self.active_mage = None;
@@ -1035,6 +1055,8 @@ impl State for Game {
         self.button_menu.tick(&interface_pointer);
 
         if self.lobby.is_local() && self.button_undo.tick(&interface_pointer).is_some() {
+            self.ai_pending = None;
+            self.ai_revision = self.ai_revision.wrapping_add(1);
             self.message_pool.borrow_mut().clear();
             self.presentation.rewind(&self.lobby.game, 2, frame);
             self.lobby.rewind(2);

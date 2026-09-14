@@ -31,6 +31,57 @@ pub struct Level {
 }
 
 impl Level {
+    /// Strict, fallible parser for external level codes. Legacy decoding remains unchanged.
+    pub fn parse_code(code: &str) -> Result<Self, String> {
+        let bytes = BASE32
+            .decode(code.as_bytes())
+            .map_err(|e| format!("invalid lowercase Crockford base32 level code: {e}"))?;
+        if bytes.len() < 3 {
+            return Err("level code is truncated (missing header)".into());
+        }
+        let width = (bytes[0] >> 5) + 1;
+        let height = ((bytes[0] >> 2) & 7) + 1;
+        if width < 3 || height < 3 || bytes[0] & 3 > 1 {
+            return Err(
+                "board must be 3–8 tiles wide/high and starting team must be Red or Blue".into(),
+            );
+        }
+        let props = 2 + bytes[1] as usize * 3;
+        if bytes.len() <= props || bytes.len() != props + 1 + bytes[props] as usize * 2 {
+            return Err("level code has truncated records or trailing data".into());
+        }
+        let mut occupied = std::collections::HashSet::new();
+        for mage in bytes[2..props].chunks_exact(3) {
+            let pos = (mage[0] >> 5, (mage[0] >> 2) & 7);
+            if pos.0 >= width
+                || pos.1 >= height
+                || mage[0] & 3 > 1
+                || mage[1] > 4
+                || mage[2] >> 4 > mage[2] & 15
+                || !occupied.insert(pos)
+            {
+                return Err(
+                    "invalid mage position, team, type, mana, or duplicate position".into(),
+                );
+            }
+        }
+        let mut positions = std::collections::HashSet::new();
+        for prop in bytes[props + 1..].chunks_exact(2) {
+            let pos = (prop[0] >> 5, (prop[0] >> 2) & 7);
+            if pos.0 >= width
+                || pos.1 >= height
+                || prop[0] & 3 != 0
+                || prop[1] > 5
+                || !positions.insert(pos)
+                || occupied.contains(&pos)
+            {
+                return Err("invalid or overlapping powerup position/type".into());
+            }
+        }
+        let level: Self = bytes.into();
+        Ok(level)
+    }
+
     /// Instantiates a new [`Level`].
     pub fn new(
         board: Board,

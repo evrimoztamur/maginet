@@ -11,3 +11,6 @@ pub use lobby::*;
 pub use logic::*;
 pub use net::*;
 pub use vecmap::*;
+
+mod campaign;
+pub use campaign::*;

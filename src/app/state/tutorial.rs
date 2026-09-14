@@ -1,10 +1,9 @@
+pub(super) use shared::TUTORIAL_CODE;
 use shared::{GameResult, Level, LoadoutMethod, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{menu_arena::TUTORIAL_POSITION, Game, MainMenu, State};
-
-pub(super) const TUTORIAL_CODE: &str = "hg18a09m4g0m81g00c4068035g14r0v008";
 use crate::{
     app::{
         Alignment::Center, AppContext, ContentElement::Text, LabelTrim, Particle, ParticleSort,
@@ -239,7 +238,8 @@ impl Tutorial {
                 },
                 seed: window().performance().unwrap().now() as u64,
                 can_stalemate: false,
-            }),
+            })
+            .with_easy_ai(),
             tutorial_stage: TutorialStage::Movement,
             campaign,
         }

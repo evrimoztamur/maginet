@@ -39,7 +39,7 @@ fn generate_levels() -> Vec<Level> {
         .collect()
 }
 
-fn main() {
+fn generate() {
     let seed = 1;
     const N: usize = 100;
 
@@ -70,4 +70,12 @@ fn main() {
             println!("{}, {}, {}", level.as_code(), result.0, result.1);
         })
         .count();
+}
+
+mod cli;
+fn main() {
+    if let Err(error) = cli::run() {
+        eprintln!("error: {error}");
+        std::process::exit(2);
+    }
 }

@@ -3,10 +3,6 @@ use std::{
     ops::Neg,
 };
 
-use rand_chacha::{
-    rand_core::{RngCore, SeedableRng},
-    ChaCha8Rng,
-};
 use serde::{Deserialize, Serialize};
 
 use crate::{Board, Level, Mage, Mages, Position, PowerUp, Team, Turn};
@@ -272,186 +268,47 @@ impl Game {
         }
     }
 
-    /// Returns the best [`Turn`] available and its evaluation.
+    /// Return the true best move from the shared iterative search.
     pub fn best_turn(&self, depth: usize, seed: u64) -> Option<TurnLeaf> {
-        if self.result().is_none() {
-            Some(self.alphabeta(
-                depth,
-                isize::MIN + 0xff,
-                isize::MAX - 0xff,
-                &mut ChaCha8Rng::seed_from_u64(seed),
-            ))
-        } else {
-            None
-        }
-    }
-
-    /// Returns the best [`Turn`] available and its evaluation.
-    pub fn best_turn_auto(&self, seed: u64) -> Option<TurnLeaf> {
-        if self.result().is_none() {
-            let alive_mages = self
-                .level
-                .mages
-                .iter()
-                .filter(|mage| mage.is_alive())
-                .count();
-
-            Some(self.pvs(
-                4 + (2usize.saturating_sub(alive_mages) / 3),
-                isize::MIN + 0xff,
-                isize::MAX - 0xff,
-                &mut ChaCha8Rng::seed_from_u64(seed),
-            ))
-        } else {
-            None
-        }
-    }
-
-    /// Returns the best turn based on the evaluation function and [alpha-beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning).
-    pub fn alphabeta(
-        &self,
-        depth: usize,
-        mut alpha: isize,
-        mut beta: isize,
-        rng: &mut ChaCha8Rng,
-    ) -> TurnLeaf {
-        if depth == 0 {
+        let result = self.search(crate::SearchLimits::depth(depth), seed, || false);
+        result.best_move().map(|turn| {
             TurnLeaf(
-                Turn::sentinel(),
-                self.evaluate() + (rng.next_u64() % 8) as isize,
+                turn,
+                result.moves.first().map_or(self.evaluate(), |m| m.score),
             )
-        } else {
-            let mut best_turn = self
-                .available_turns
-                .first()
-                .copied()
-                .unwrap_or(Turn::sentinel());
-
-            match self.turn_for() {
-                Team::Red => {
-                    // Maximizing
-                    let mut value = isize::MIN;
-
-                    for turn in self.available_turns.iter() {
-                        let mut next_game = self.clone();
-                        next_game.take_move(turn.0, turn.1);
-
-                        let TurnLeaf(_, next_value) =
-                            next_game.alphabeta(depth - 1, alpha, beta, rng);
-
-                        if next_value > value {
-                            value = value.max(next_value);
-                            alpha = alpha.max(value);
-
-                            best_turn = *turn;
-                        }
-
-                        if value >= beta {
-                            break;
-                        }
-                    }
-
-                    TurnLeaf(best_turn, value)
-                }
-                Team::Blue => {
-                    // Minimizing
-                    let mut value = isize::MAX;
-
-                    for turn in self.available_turns.iter() {
-                        let mut next_game = self.clone();
-                        next_game.take_move(turn.0, turn.1);
-
-                        let TurnLeaf(_, next_value) =
-                            next_game.alphabeta(depth - 1, alpha, beta, rng);
-
-                        if next_value < value {
-                            value = value.min(next_value);
-                            beta = beta.min(value);
-
-                            best_turn = *turn;
-                        }
-
-                        if value <= alpha {
-                            break;
-                        }
-                    }
-
-                    TurnLeaf(best_turn, value)
-                }
-            }
-        }
+        })
     }
 
-    // function pvs(node, depth, α, β, color) is
+    /// Compatibility search at four plies.
+    pub fn best_turn_auto(&self, seed: u64) -> Option<TurnLeaf> {
+        self.best_turn(4, seed)
+    }
 
-    /// Returns the best turn based on the evaluation function and [principal variation search](https://en.wikipedia.org/wiki/Principal_variation_search).
-    pub fn pvs(
-        &self,
-        depth: usize,
-        mut alpha: isize,
-        beta: isize,
-        rng: &mut ChaCha8Rng,
-    ) -> TurnLeaf {
-        //     if depth = 0 or node is a terminal node then
-        if depth == 0 {
-            //         return color × the heuristic value of node
-            match self.turn_for() {
-                Team::Red => TurnLeaf(
-                    Turn::sentinel(),
-                    self.evaluate() + (rng.next_u64() % 4) as isize,
-                ),
-                Team::Blue => TurnLeaf(
-                    Turn::sentinel(),
-                    -self.evaluate() + (rng.next_u64() % 4) as isize,
-                ),
+    /// Cached candidate turns; terminal positions must be checked before playing.
+    pub fn legal_turns(&self) -> &[Turn] {
+        &self.available_turns
+    }
+
+    // Derived move/shield caches are deterministic functions of level and side to move.
+    pub(crate) fn search_key(&self) -> Vec<u8> {
+        serde_json::to_vec(&(
+            &self.level,
+            self.turn_for(),
+            self.turns.len(),
+            self.last_nominal,
+            self.can_stalemate,
+        ))
+        .unwrap()
+    }
+
+    /// Mix a game seed with the complete ordered turn history.
+    pub fn history_seed(&self, seed: u64) -> u64 {
+        self.turns.iter().fold(seed, |mut seed, turn| {
+            for byte in [turn.0 .0, turn.0 .1, turn.1 .0, turn.1 .1] {
+                seed = (seed ^ byte as u8 as u64).wrapping_mul(0x100000001b3);
             }
-        } else {
-            let mut best_turn = self
-                .available_turns
-                .first()
-                .copied()
-                .unwrap_or(Turn::sentinel());
-
-            //     for each child of node do
-            for (i, turn) in self.available_turns.iter().enumerate() {
-                let mut next_game = self.clone();
-                next_game.take_move(turn.0, turn.1);
-
-                //         if child is first child then
-                //             score := −pvs(child, depth − 1, −β, −α, −color)
-                //         else
-                //             score := −pvs(child, depth − 1, −α − 1, −α, −color) (* search with a null window *)
-                //             if α < score < β then
-                //                 score := −pvs(child, depth − 1, −β, −score, −color) (* if it failed high, do a full re-search *)
-
-                let score = if i == 0 {
-                    -next_game.pvs(depth - 1, -beta, -alpha, rng)
-                } else {
-                    let mut score = -next_game.pvs(depth - 1, -(alpha + 1), -alpha, rng);
-
-                    if score > alpha && score < beta {
-                        score = -next_game.pvs(depth - 1, -beta, -score.1, rng);
-                    }
-
-                    score
-                };
-
-                //         α := max(α, score)
-                if score.1 > alpha {
-                    alpha = score.1;
-                    best_turn = *turn;
-                }
-
-                //         if α ≥ β then
-                if alpha > beta {
-                    //             break (* beta cut-off *)
-                    break;
-                }
-            }
-
-            //     return α
-            TurnLeaf(best_turn, alpha)
-        }
+            seed
+        })
     }
 
     /// Executes a [`Turn`], modifying the game state.
@@ -665,5 +522,25 @@ impl Mages for Game {
 
     fn live_occupied_by(&self, position: &Position, team: Team) -> bool {
         self.level.mages.live_occupied_by(position, team)
+    }
+}
+
+#[cfg(test)]
+mod search_key_tests {
+    use super::*;
+    #[test]
+    fn key_includes_counters_and_rules() {
+        let game = Game::new(&Level::default(), true).unwrap();
+        let key = game.search_key();
+        let mut changed = game.clone();
+        changed.last_nominal += 1;
+        assert_ne!(key, changed.search_key());
+        changed = game.clone();
+        changed.can_stalemate = false;
+        assert_ne!(key, changed.search_key());
+        changed = game.clone();
+        changed.turns.push(Turn::sentinel());
+        changed.turns.push(Turn::sentinel());
+        assert_ne!(key, changed.search_key());
     }
 }
