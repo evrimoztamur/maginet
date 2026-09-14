@@ -1,0 +1,847 @@
+{
+  "level": 0,
+  "red": 1,
+  "blue": 0,
+  "games": [
+    {
+      "trial": 0,
+      "seed": 7458798593208304402,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 213,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 1,
+      "seed": 9691114000175893811,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 234,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 2,
+      "seed": 2994167779273125584,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 3,
+      "seed": 5226483186240714993,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 250,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 4,
+      "seed": 16388060221078662038,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 5,
+      "seed": 173631554336699831,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 6,
+      "seed": 11923429407143483220,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 7,
+      "seed": 14155744814111072629,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 8,
+      "seed": 6870577775239468058,
+      "outcome": "Win",
+      "plies": 5,
+      "red": {
+        "nodes": 294,
+        "searches": 3,
+        "fallbacks": 0,
+        "depths": {
+          "4": 3
+        },
+        "stops": {
+          "Depth": 3
+        }
+      },
+      "blue": {
+        "nodes": 40,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "2": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      }
+    },
+    {
+      "trial": 9,
+      "seed": 9102893182207057467,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 216,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 10,
+      "seed": 2405946961304289240,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 11,
+      "seed": 4638262368271878649,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 12,
+      "seed": 15799839403109825694,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 232,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 13,
+      "seed": 18032154810077415103,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 213,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 14,
+      "seed": 11335208589174646876,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 15,
+      "seed": 13567523996142236285,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 213,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 16,
+      "seed": 8635240229145977090,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 17,
+      "seed": 10867555636113566499,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 213,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 18,
+      "seed": 4170609415210798272,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 216,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 19,
+      "seed": 6402924822178387681,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 20,
+      "seed": 17564501857016334726,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 213,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 21,
+      "seed": 1350073190274372519,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 22,
+      "seed": 13099871043081155908,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 248,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 23,
+      "seed": 15332186450048745317,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 216,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 24,
+      "seed": 8047019411177140746,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 25,
+      "seed": 10279334818144730155,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 26,
+      "seed": 3582388597241961928,
+      "outcome": "Win",
+      "plies": 9,
+      "red": {
+        "nodes": 518,
+        "searches": 5,
+        "fallbacks": 0,
+        "depths": {
+          "4": 5
+        },
+        "stops": {
+          "Depth": 5
+        }
+      },
+      "blue": {
+        "nodes": 68,
+        "searches": 4,
+        "fallbacks": 0,
+        "depths": {
+          "2": 4
+        },
+        "stops": {
+          "Depth": 4
+        }
+      }
+    },
+    {
+      "trial": 27,
+      "seed": 5814704004209551337,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 22,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 28,
+      "seed": 16976281039047498382,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 158,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    },
+    {
+      "trial": 29,
+      "seed": 761852372305536175,
+      "outcome": "Win",
+      "plies": 3,
+      "red": {
+        "nodes": 216,
+        "searches": 2,
+        "fallbacks": 0,
+        "depths": {
+          "4": 2
+        },
+        "stops": {
+          "Depth": 2
+        }
+      },
+      "blue": {
+        "nodes": 23,
+        "searches": 1,
+        "fallbacks": 0,
+        "depths": {
+          "2": 1
+        },
+        "stops": {
+          "Depth": 1
+        }
+      }
+    }
+  ]
+}

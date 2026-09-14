@@ -1,0 +1,849 @@
+{
+  "level": 11,
+  "red": 2,
+  "blue": 2,
+  "games": [
+    {
+      "trial": 0,
+      "seed": 3648693894384899459,
+      "outcome": "Loss",
+      "plies": 44,
+      "red": {
+        "nodes": 160338,
+        "searches": 22,
+        "fallbacks": 0,
+        "depths": {
+          "8": 22
+        },
+        "stops": {
+          "Depth": 22
+        }
+      },
+      "blue": {
+        "nodes": 168270,
+        "searches": 22,
+        "fallbacks": 0,
+        "depths": {
+          "7": 1,
+          "8": 21
+        },
+        "stops": {
+          "Depth": 21,
+          "Nodes": 1
+        }
+      }
+    },
+    {
+      "trial": 1,
+      "seed": 1416378487417310050,
+      "outcome": "Win",
+      "plies": 37,
+      "red": {
+        "nodes": 115436,
+        "searches": 19,
+        "fallbacks": 0,
+        "depths": {
+          "8": 19
+        },
+        "stops": {
+          "Depth": 19
+        }
+      },
+      "blue": {
+        "nodes": 100689,
+        "searches": 18,
+        "fallbacks": 0,
+        "depths": {
+          "8": 18
+        },
+        "stops": {
+          "Depth": 18
+        }
+      }
+    },
+    {
+      "trial": 2,
+      "seed": 17630807154159272257,
+      "outcome": "Loss",
+      "plies": 34,
+      "red": {
+        "nodes": 71463,
+        "searches": 17,
+        "fallbacks": 0,
+        "depths": {
+          "8": 17
+        },
+        "stops": {
+          "Depth": 17
+        }
+      },
+      "blue": {
+        "nodes": 67444,
+        "searches": 17,
+        "fallbacks": 0,
+        "depths": {
+          "8": 17
+        },
+        "stops": {
+          "Depth": 17
+        }
+      }
+    },
+    {
+      "trial": 3,
+      "seed": 15398491747191682848,
+      "outcome": "Win",
+      "plies": 33,
+      "red": {
+        "nodes": 103007,
+        "searches": 17,
+        "fallbacks": 0,
+        "depths": {
+          "8": 17
+        },
+        "stops": {
+          "Depth": 17
+        }
+      },
+      "blue": {
+        "nodes": 99672,
+        "searches": 16,
+        "fallbacks": 0,
+        "depths": {
+          "8": 16
+        },
+        "stops": {
+          "Depth": 16
+        }
+      }
+    },
+    {
+      "trial": 4,
+      "seed": 12577955522255257095,
+      "outcome": "Win",
+      "plies": 25,
+      "red": {
+        "nodes": 89883,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      },
+      "blue": {
+        "nodes": 79905,
+        "searches": 12,
+        "fallbacks": 0,
+        "depths": {
+          "8": 12
+        },
+        "stops": {
+          "Depth": 12
+        }
+      }
+    },
+    {
+      "trial": 5,
+      "seed": 10345640115287667686,
+      "outcome": "Loss",
+      "plies": 30,
+      "red": {
+        "nodes": 96250,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      },
+      "blue": {
+        "nodes": 96750,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      }
+    },
+    {
+      "trial": 6,
+      "seed": 8113324708320078277,
+      "outcome": "Win",
+      "plies": 30,
+      "red": {
+        "nodes": 76951,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      },
+      "blue": {
+        "nodes": 85358,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      }
+    },
+    {
+      "trial": 7,
+      "seed": 5881009301352488868,
+      "outcome": "Win",
+      "plies": 51,
+      "red": {
+        "nodes": 115538,
+        "searches": 26,
+        "fallbacks": 0,
+        "depths": {
+          "8": 26
+        },
+        "stops": {
+          "Depth": 26
+        }
+      },
+      "blue": {
+        "nodes": 105923,
+        "searches": 25,
+        "fallbacks": 0,
+        "depths": {
+          "8": 25
+        },
+        "stops": {
+          "Depth": 25
+        }
+      }
+    },
+    {
+      "trial": 8,
+      "seed": 3060473076416063115,
+      "outcome": "Loss",
+      "plies": 30,
+      "red": {
+        "nodes": 66614,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      },
+      "blue": {
+        "nodes": 68242,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      }
+    },
+    {
+      "trial": 9,
+      "seed": 828157669448473706,
+      "outcome": "Loss",
+      "plies": 31,
+      "red": {
+        "nodes": 89146,
+        "searches": 16,
+        "fallbacks": 0,
+        "depths": {
+          "8": 16
+        },
+        "stops": {
+          "Depth": 16
+        }
+      },
+      "blue": {
+        "nodes": 84061,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      }
+    },
+    {
+      "trial": 10,
+      "seed": 17042586336190435913,
+      "outcome": "Draw",
+      "plies": 29,
+      "red": {
+        "nodes": 83984,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      },
+      "blue": {
+        "nodes": 71059,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      }
+    },
+    {
+      "trial": 11,
+      "seed": 14810270929222846504,
+      "outcome": "Loss",
+      "plies": 56,
+      "red": {
+        "nodes": 154981,
+        "searches": 28,
+        "fallbacks": 0,
+        "depths": {
+          "8": 28
+        },
+        "stops": {
+          "Depth": 28
+        }
+      },
+      "blue": {
+        "nodes": 158669,
+        "searches": 28,
+        "fallbacks": 0,
+        "depths": {
+          "8": 28
+        },
+        "stops": {
+          "Depth": 28
+        }
+      }
+    },
+    {
+      "trial": 12,
+      "seed": 11989734704286420751,
+      "outcome": "Loss",
+      "plies": 24,
+      "red": {
+        "nodes": 75910,
+        "searches": 12,
+        "fallbacks": 0,
+        "depths": {
+          "8": 12
+        },
+        "stops": {
+          "Depth": 12
+        }
+      },
+      "blue": {
+        "nodes": 79150,
+        "searches": 12,
+        "fallbacks": 0,
+        "depths": {
+          "8": 12
+        },
+        "stops": {
+          "Depth": 12
+        }
+      }
+    },
+    {
+      "trial": 13,
+      "seed": 9757419297318831342,
+      "outcome": "Loss",
+      "plies": 30,
+      "red": {
+        "nodes": 83814,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      },
+      "blue": {
+        "nodes": 89226,
+        "searches": 15,
+        "fallbacks": 0,
+        "depths": {
+          "8": 15
+        },
+        "stops": {
+          "Depth": 15
+        }
+      }
+    },
+    {
+      "trial": 14,
+      "seed": 7525103890351241933,
+      "outcome": "Loss",
+      "plies": 38,
+      "red": {
+        "nodes": 117707,
+        "searches": 19,
+        "fallbacks": 0,
+        "depths": {
+          "8": 19
+        },
+        "stops": {
+          "Depth": 19
+        }
+      },
+      "blue": {
+        "nodes": 115594,
+        "searches": 19,
+        "fallbacks": 0,
+        "depths": {
+          "8": 19
+        },
+        "stops": {
+          "Depth": 19
+        }
+      }
+    },
+    {
+      "trial": 15,
+      "seed": 5292788483383652524,
+      "outcome": "Draw",
+      "plies": 38,
+      "red": {
+        "nodes": 103207,
+        "searches": 19,
+        "fallbacks": 0,
+        "depths": {
+          "8": 19
+        },
+        "stops": {
+          "Depth": 19
+        }
+      },
+      "blue": {
+        "nodes": 97740,
+        "searches": 19,
+        "fallbacks": 0,
+        "depths": {
+          "8": 19
+        },
+        "stops": {
+          "Depth": 19
+        }
+      }
+    },
+    {
+      "trial": 16,
+      "seed": 2472252258447226771,
+      "outcome": "Loss",
+      "plies": 26,
+      "red": {
+        "nodes": 66647,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      },
+      "blue": {
+        "nodes": 66574,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      }
+    },
+    {
+      "trial": 17,
+      "seed": 239936851479637362,
+      "outcome": "Loss",
+      "plies": 28,
+      "red": {
+        "nodes": 67066,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      },
+      "blue": {
+        "nodes": 83906,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      }
+    },
+    {
+      "trial": 18,
+      "seed": 16454365518221599569,
+      "outcome": "Loss",
+      "plies": 26,
+      "red": {
+        "nodes": 65719,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      },
+      "blue": {
+        "nodes": 63304,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      }
+    },
+    {
+      "trial": 19,
+      "seed": 14222050111254010160,
+      "outcome": "Loss",
+      "plies": 22,
+      "red": {
+        "nodes": 63694,
+        "searches": 11,
+        "fallbacks": 0,
+        "depths": {
+          "8": 11
+        },
+        "stops": {
+          "Depth": 11
+        }
+      },
+      "blue": {
+        "nodes": 63292,
+        "searches": 11,
+        "fallbacks": 0,
+        "depths": {
+          "8": 11
+        },
+        "stops": {
+          "Depth": 11
+        }
+      }
+    },
+    {
+      "trial": 20,
+      "seed": 11401513886317584407,
+      "outcome": "Loss",
+      "plies": 28,
+      "red": {
+        "nodes": 84958,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      },
+      "blue": {
+        "nodes": 86106,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      }
+    },
+    {
+      "trial": 21,
+      "seed": 9169198479349994998,
+      "outcome": "Loss",
+      "plies": 26,
+      "red": {
+        "nodes": 73156,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      },
+      "blue": {
+        "nodes": 69617,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      }
+    },
+    {
+      "trial": 22,
+      "seed": 6936883072382405589,
+      "outcome": "Loss",
+      "plies": 22,
+      "red": {
+        "nodes": 82245,
+        "searches": 11,
+        "fallbacks": 0,
+        "depths": {
+          "8": 11
+        },
+        "stops": {
+          "Depth": 11
+        }
+      },
+      "blue": {
+        "nodes": 84000,
+        "searches": 11,
+        "fallbacks": 0,
+        "depths": {
+          "8": 11
+        },
+        "stops": {
+          "Depth": 11
+        }
+      }
+    },
+    {
+      "trial": 23,
+      "seed": 4704567665414816180,
+      "outcome": "Loss",
+      "plies": 34,
+      "red": {
+        "nodes": 124638,
+        "searches": 17,
+        "fallbacks": 0,
+        "depths": {
+          "8": 17
+        },
+        "stops": {
+          "Depth": 17
+        }
+      },
+      "blue": {
+        "nodes": 119460,
+        "searches": 17,
+        "fallbacks": 0,
+        "depths": {
+          "8": 17
+        },
+        "stops": {
+          "Depth": 17
+        }
+      }
+    },
+    {
+      "trial": 24,
+      "seed": 1884031440478390427,
+      "outcome": "Win",
+      "plies": 25,
+      "red": {
+        "nodes": 74124,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      },
+      "blue": {
+        "nodes": 64753,
+        "searches": 12,
+        "fallbacks": 0,
+        "depths": {
+          "8": 12
+        },
+        "stops": {
+          "Depth": 12
+        }
+      }
+    },
+    {
+      "trial": 25,
+      "seed": 18098460107220352634,
+      "outcome": "Loss",
+      "plies": 24,
+      "red": {
+        "nodes": 64534,
+        "searches": 12,
+        "fallbacks": 0,
+        "depths": {
+          "8": 12
+        },
+        "stops": {
+          "Depth": 12
+        }
+      },
+      "blue": {
+        "nodes": 65711,
+        "searches": 12,
+        "fallbacks": 0,
+        "depths": {
+          "8": 12
+        },
+        "stops": {
+          "Depth": 12
+        }
+      }
+    },
+    {
+      "trial": 26,
+      "seed": 15866144700252763225,
+      "outcome": "Loss",
+      "plies": 28,
+      "red": {
+        "nodes": 81026,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      },
+      "blue": {
+        "nodes": 90495,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      }
+    },
+    {
+      "trial": 27,
+      "seed": 13633829293285173816,
+      "outcome": "Win",
+      "plies": 41,
+      "red": {
+        "nodes": 107290,
+        "searches": 21,
+        "fallbacks": 0,
+        "depths": {
+          "8": 21
+        },
+        "stops": {
+          "Depth": 21
+        }
+      },
+      "blue": {
+        "nodes": 99185,
+        "searches": 20,
+        "fallbacks": 0,
+        "depths": {
+          "8": 20
+        },
+        "stops": {
+          "Depth": 20
+        }
+      }
+    },
+    {
+      "trial": 28,
+      "seed": 10813293068348748063,
+      "outcome": "Win",
+      "plies": 45,
+      "red": {
+        "nodes": 108229,
+        "searches": 23,
+        "fallbacks": 0,
+        "depths": {
+          "8": 23
+        },
+        "stops": {
+          "Depth": 23
+        }
+      },
+      "blue": {
+        "nodes": 108183,
+        "searches": 22,
+        "fallbacks": 0,
+        "depths": {
+          "8": 22
+        },
+        "stops": {
+          "Depth": 22
+        }
+      }
+    },
+    {
+      "trial": 29,
+      "seed": 8580977661381158654,
+      "outcome": "Win",
+      "plies": 27,
+      "red": {
+        "nodes": 94967,
+        "searches": 14,
+        "fallbacks": 0,
+        "depths": {
+          "8": 14
+        },
+        "stops": {
+          "Depth": 14
+        }
+      },
+      "blue": {
+        "nodes": 84646,
+        "searches": 13,
+        "fallbacks": 0,
+        "depths": {
+          "8": 13
+        },
+        "stops": {
+          "Depth": 13
+        }
+      }
+    }
+  ]
+}
