@@ -12,8 +12,8 @@ pub struct Pointer {
 impl Pointer {
     pub fn new(canvas_settings: &CanvasSettings) -> Pointer {
         let midpoint = (
-            canvas_settings.canvas_width as i32 / 2,
-            canvas_settings.canvas_height as i32 / 2,
+            canvas_settings.element_width() as i32 / 2,
+            canvas_settings.element_height() as i32 / 2,
         );
 
         Pointer {
@@ -59,7 +59,7 @@ impl Pointer {
         let padding = canvas_settings.padding();
 
         if canvas_settings.orientation {
-            (real.1 - padding.0, flip.0 - (real.0 - padding.1))
+            (real.1 - padding.0, flip.0 - 1 - (real.0 - padding.1))
         } else {
             (real.0 - padding.0, real.1 - padding.1)
         }

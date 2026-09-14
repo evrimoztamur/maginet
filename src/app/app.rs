@@ -102,11 +102,6 @@ impl App {
             interface_context.rotate(std::f64::consts::PI / 2.0)?;
         }
 
-        let canvas_scale = self.app_context.canvas_settings.canvas_scale;
-
-        context.scale(canvas_scale, canvas_scale)?;
-        interface_context.scale(canvas_scale, canvas_scale)?;
-
         context.translate(
             self.app_context.canvas_settings.padding_x() as f64,
             self.app_context.canvas_settings.padding_y() as f64,
@@ -252,8 +247,8 @@ impl App {
     }
 
     pub fn on_mouse_move(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
-        let x = event.page_x() - bound.left() as i32;
-        let y = event.page_y() - bound.top() as i32;
+        let x = event.client_x() as f64 - bound.left();
+        let y = event.client_y() as f64 - bound.top();
         let pointer_location =
             App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
 
@@ -287,8 +282,8 @@ impl App {
 
     pub fn on_touch_start(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.page_x() - bound.left() as i32;
-            let y = touch.page_y() - bound.top() as i32;
+            let x = touch.client_x() as f64 - bound.left();
+            let y = touch.client_y() as f64 - bound.top();
             let pointer_location =
                 App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
 
@@ -318,8 +313,8 @@ impl App {
 
     pub fn on_touch_end(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.page_x() - bound.left() as i32;
-            let y = touch.page_y() - bound.top() as i32;
+            let x = touch.client_x() as f64 - bound.left();
+            let y = touch.client_y() as f64 - bound.top();
 
             let pointer_location =
                 App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
@@ -331,8 +326,8 @@ impl App {
 
     pub fn on_touch_move(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.page_x() - bound.left() as i32;
-            let y = touch.page_y() - bound.top() as i32;
+            let x = touch.client_x() as f64 - bound.left();
+            let y = touch.client_y() as f64 - bound.top();
 
             let pointer_location =
                 App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
@@ -345,15 +340,10 @@ impl App {
     fn transform_pointer(
         canvas_settings: &CanvasSettings,
         bound: &DomRectReadOnly,
-        x: i32,
-        y: i32,
+        x: f64,
+        y: f64,
     ) -> (i32, i32) {
-        let x = (x as f64 * (canvas_settings.element_width() as f64 / bound.width()))
-            / canvas_settings.canvas_scale;
-        let y = (y as f64 * (canvas_settings.element_height() as f64 / bound.height()))
-            / canvas_settings.canvas_scale;
-
-        Pointer::location_from_real(canvas_settings, (x as i32, y as i32))
+        canvas_settings.pointer_at((x, y), (bound.width(), bound.height()))
     }
 
     #[allow(clippy::single_match)]
@@ -430,7 +420,6 @@ pub struct CanvasSettings {
     pub interface_height: u32,
     pub canvas_width: u32,
     pub canvas_height: u32,
-    pub canvas_scale: f64,
     pub orientation: bool,
 }
 
@@ -444,18 +433,34 @@ impl CanvasSettings {
 
     pub fn element_width(&self) -> u32 {
         if self.orientation {
-            (self.canvas_height as f64 * self.canvas_scale) as u32
+            self.canvas_height
         } else {
-            (self.canvas_width as f64 * self.canvas_scale) as u32
+            self.canvas_width
         }
     }
 
     pub fn element_height(&self) -> u32 {
         if self.orientation {
-            (self.canvas_width as f64 * self.canvas_scale) as u32
+            self.canvas_width
         } else {
-            (self.canvas_height as f64 * self.canvas_scale) as u32
+            self.canvas_height
         }
+    }
+
+    /// Native pixels occupy whole device-pixel blocks, even at fractional browser DPR.
+    pub fn display_scale(&self, available: (f64, f64), dpr: f64) -> u32 {
+        ((available.0 * dpr / self.element_width() as f64)
+            .min(available.1 * dpr / self.element_height() as f64))
+        .floor()
+        .max(1.0) as u32
+    }
+
+    pub fn pointer_at(&self, position: (f64, f64), displayed_size: (f64, f64)) -> (i32, i32) {
+        let native = (
+            (position.0 * self.element_width() as f64 / displayed_size.0).floor() as i32,
+            (position.1 * self.element_height() as f64 / displayed_size.1).floor() as i32,
+        );
+        Pointer::location_from_real(self, native)
     }
 
     pub fn padding_x(&self) -> u32 {
@@ -475,7 +480,6 @@ impl CanvasSettings {
         canvas_height: u32,
         interface_width: u32,
         interface_height: u32,
-        canvas_scale: f64,
         orientation: bool,
     ) -> CanvasSettings {
         CanvasSettings {
@@ -483,8 +487,71 @@ impl CanvasSettings {
             interface_height,
             canvas_width,
             canvas_height,
-            canvas_scale,
             orientation,
         }
+    }
+}
+
+#[cfg(test)]
+mod canvas_tests {
+    use super::CanvasSettings;
+
+    fn settings(portrait: bool) -> CanvasSettings {
+        CanvasSettings::new(400, 272, 256, 256, portrait)
+    }
+
+    #[test]
+    fn display_scaling_uses_whole_device_pixels_without_changing_native_size() {
+        let settings = settings(false);
+        for dpr in [0.75, 1.0, 1.25, 2.0, 3.0] {
+            let scale = settings.display_scale((1000.0, 600.0), dpr);
+            assert!(scale >= 1);
+            assert!(400.0 * scale as f64 / dpr <= 1000.0);
+            assert!(272.0 * scale as f64 / dpr <= 600.0);
+            assert!(
+                400.0 * (scale + 1) as f64 / dpr > 1000.0
+                    || 272.0 * (scale + 1) as f64 / dpr > 600.0
+            );
+        }
+        assert_eq!(settings.display_scale((450.0, 450.0), 1.0), 1);
+        assert_eq!(
+            (settings.element_width(), settings.element_height()),
+            (400, 272)
+        );
+    }
+
+    #[test]
+    fn pointer_round_trips_board_corners_at_every_display_scale_and_orientation() {
+        for portrait in [false, true] {
+            let settings = settings(portrait);
+            for ratio in [1.0, 2.0, 2.4, 3.0] {
+                let size = (
+                    settings.element_width() as f64 * ratio,
+                    settings.element_height() as f64 * ratio,
+                );
+                for (x, y) in [(0, 0), (255, 0), (0, 255), (255, 255), (128, 128)] {
+                    let native = if portrait {
+                        (263.5 - y as f64, 72.5 + x as f64)
+                    } else {
+                        (72.5 + x as f64, 8.5 + y as f64)
+                    };
+                    assert_eq!(
+                        settings.pointer_at((native.0 * ratio, native.1 * ratio), size),
+                        (x, y)
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn pointer_in_margins_stays_outside_the_board() {
+        let settings = settings(false);
+        assert_eq!(settings.pointer_at((71.9, 8.5), (400.0, 272.0)), (-1, 0));
+        assert_eq!(settings.pointer_at((72.5, 7.9), (400.0, 272.0)), (0, -1));
+        assert_eq!(
+            settings.pointer_at((328.1, 264.1), (400.0, 272.0)),
+            (256, 256)
+        );
     }
 }

@@ -17,9 +17,22 @@
 - Editor
   - Simulation results interface
   - serde for level styles
-    - Level styles in campaign menu..?
 
 ## DONE
+
+- Pixel-grid rendering
+  - Snap final sprite transforms to whole native pixels, including jumps and flips
+  - Render game and UI at native resolution before enlargement
+  - Fit integer device-pixel scaling to the window without smoothing
+  - Keep mouse/touch mapping aligned through scaling and portrait rotation
+
+- Campaign progression
+  - Add a gently bobbing star counter with earned/total stars
+  - Put the guided tutorial at the campaign entrance and require completion
+  - Hide distant locked level names with ???
+  - Use later tilesets in battles and their map portals
+  - Twinkle only when returning from a newly completed level
+  - Preserve completed levels when replaying and losing
 
 - Animations
   - Decouple visual positions, health, pickups, and turn UI from game state

@@ -9,13 +9,13 @@ use std::{
     task::{Context, Poll},
 };
 
-use app::{App, AudioSystem, CanvasSettings};
+use app::{App, AudioSystem, CanvasLayer, CanvasSettings, Renderer};
 use futures::Future;
 use net::{fetch, request_session};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{
-    CanvasRenderingContext2d, Document, DomRect, FocusEvent, HtmlCanvasElement, HtmlImageElement,
-    HtmlInputElement, KeyboardEvent, MouseEvent, Storage, TouchEvent, Window,
+    Document, DomRect, FocusEvent, HtmlImageElement, HtmlInputElement, KeyboardEvent, MouseEvent,
+    Storage, TouchEvent, Window,
 };
 
 fn window() -> Window {
@@ -43,26 +43,6 @@ pub const RESOURCE_BASE_URL: &str = ".";
 #[cfg(not(feature = "deploy"))]
 pub const RESOURCE_BASE_URL: &str = "";
 
-fn init_canvas(
-    canvas_settings: &CanvasSettings,
-) -> Result<(HtmlCanvasElement, CanvasRenderingContext2d), JsValue> {
-    let canvas = document()
-        .create_element("canvas")?
-        .dyn_into::<HtmlCanvasElement>()?;
-
-    canvas.set_width(canvas_settings.element_width());
-    canvas.set_height(canvas_settings.element_height());
-
-    let context = canvas
-        .get_context("2d")?
-        .unwrap()
-        .dyn_into::<CanvasRenderingContext2d>()?;
-
-    context.set_image_smoothing_enabled(false);
-
-    Ok((canvas, context))
-}
-
 #[wasm_bindgen(start)]
 async fn start() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
@@ -72,14 +52,11 @@ async fn start() -> Result<(), JsValue> {
         .unwrap()
         .unwrap();
 
-    let device_pixel_ratio = window().device_pixel_ratio().max(2.0);
-
     let canvas_settings = CanvasSettings::new(
         384 + 16,
         256 + 16,
         256,
         256,
-        2.0 * device_pixel_ratio,
         window().inner_width().unwrap().as_f64().unwrap()
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
@@ -98,10 +75,8 @@ async fn start() -> Result<(), JsValue> {
     {
         let atlas_img = atlas_img.clone();
 
-        let (canvas, context) = init_canvas(&canvas_settings)?;
-        let (interface_canvas, interface_context) = init_canvas(&canvas_settings)?;
-
-        interface_canvas.set_id("interface-canvas");
+        let renderer = Rc::new(Renderer::new(&canvas_settings)?);
+        let canvas = renderer.display.canvas.clone();
 
         let text_input_element = document()
             .query_selector("#text-input")
@@ -112,16 +87,13 @@ async fn start() -> Result<(), JsValue> {
         let text_input_element = Rc::new(RefCell::new(text_input_element));
 
         container_element.append_child(&canvas)?;
-        container_element.append_child(&interface_canvas)?;
+        renderer.resize()?;
 
-        let (atlas, atlas_context) = init_canvas(&CanvasSettings {
-            canvas_width: atlas_img.width(),
-            canvas_height: atlas_img.height(),
-            canvas_scale: 1.0,
-            ..Default::default()
-        })?;
-
-        atlas_context.draw_image_with_html_image_element(&atlas_img, 0.0, 0.0)?;
+        let atlas_layer = CanvasLayer::new(atlas_img.width(), atlas_img.height())?;
+        atlas_layer
+            .context
+            .draw_image_with_html_image_element(&atlas_img, 0.0, 0.0)?;
+        let atlas = atlas_layer.canvas;
 
         let app = App::new(&canvas_settings, audio_system.clone());
 
@@ -142,6 +114,7 @@ async fn start() -> Result<(), JsValue> {
         {
             let app = app.clone();
             let text_input = text_input_element.clone();
+            let renderer = renderer.clone();
 
             {
                 let app = app.borrow();
@@ -157,7 +130,7 @@ async fn start() -> Result<(), JsValue> {
 
                 {
                     app.tick(&text_input);
-                    app.draw(&context, &interface_context, &atlas).unwrap();
+                    renderer.draw(&mut app, &atlas).unwrap();
                 }
 
                 request_animation_frame(f.borrow().as_ref().unwrap());
@@ -175,7 +148,9 @@ async fn start() -> Result<(), JsValue> {
         {
             let canvas = canvas.clone();
             let bound = bound.clone();
+            let renderer = renderer.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
+                renderer.resize().unwrap();
                 bound.replace(Some(canvas.get_bounding_client_rect()));
             });
             window()

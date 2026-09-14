@@ -48,6 +48,7 @@ pub struct Game {
     board_dirty: bool,
     shake_frame: (u64, usize),
     recorded_result: bool,
+    newly_won: bool,
     result_menu_at: Option<u64>,
 }
 
@@ -126,6 +127,7 @@ impl Game {
             message_closure,
             board_dirty: true,
             recorded_result: false,
+            newly_won: false,
             result_menu_at: None,
             shake_frame: (0, 0),
         }
@@ -763,6 +765,7 @@ impl Game {
                         self.shake_frame = (0, 0);
                         self.last_hits.clear();
                         self.recorded_result = false;
+                        self.newly_won = false;
                         self.result_menu_at = None;
                         self.button_menu.set_selected(false);
                     }
@@ -958,13 +961,13 @@ impl State for Game {
             if let Some(GameResult::Win(team)) = self.lobby.game.result() {
                 // Did not record the result in the KV-store yet...
                 if !self.recorded_result {
-                    App::kv_set(
-                        &self.lobby.game.prototype_code(),
-                        match team {
-                            Team::Red => "win",
-                            Team::Blue => "loss",
-                        },
-                    );
+                    let code = self.lobby.game.prototype_code();
+                    let already_won = App::kv_get(&code) == "win";
+                    self.newly_won = team == Team::Red && !already_won;
+                    // Completion is permanent, including when replaying the tutorial.
+                    if !already_won {
+                        App::kv_set(&code, if team == Team::Red { "win" } else { "loss" });
+                    }
 
                     match team {
                         Team::Red => app_context.audio_system.play_clip(ClipId::LevelSuccess),
@@ -1038,6 +1041,7 @@ impl State for Game {
             self.shake_frame = (0, 0);
             self.active_mage = None;
             self.recorded_result = false;
+            self.newly_won = false;
             self.result_menu_at = None;
 
             self.last_move_frame = frame;
@@ -1074,7 +1078,10 @@ impl State for Game {
                             loadout_method: LoadoutMethod::Arena(_, position),
                             ..
                         } => {
-                            return Some(StateSort::ArenaMenu(ArenaMenu::at_position(*position)));
+                            return Some(StateSort::ArenaMenu(ArenaMenu::at_position(
+                                *position,
+                                self.newly_won && !self.presentation.busy(),
+                            )));
                         }
                         _ => return Some(StateSort::SkirmishMenu(SkirmishMenu::default())),
                     },

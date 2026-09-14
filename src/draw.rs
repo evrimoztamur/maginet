@@ -35,11 +35,63 @@ pub fn draw_sprite(
     dx: f64,
     dy: f64,
 ) -> Result<(), JsValue> {
-    context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-        atlas, sx, sy, sw, sh, dx, dy, sw, sh,
-    )?;
+    draw_sprite_scaled(context, atlas, sx, sy, sw, sh, dx, dy, sw, sh)
+}
 
-    Ok(())
+/// Snap after all parent transforms, so panning, jumping, and flips cannot move sprite
+/// edges off the native pixel grid. Restore the caller's unsnapped animation transform.
+fn draw_sprite_scaled(
+    context: &CanvasRenderingContext2d,
+    atlas: &HtmlCanvasElement,
+    sx: f64,
+    sy: f64,
+    sw: f64,
+    sh: f64,
+    dx: f64,
+    dy: f64,
+    dw: f64,
+    dh: f64,
+) -> Result<(), JsValue> {
+    let matrix = context.get_transform()?;
+    let [a, b, c, d, x, y] = sprite_transform(
+        [
+            matrix.a(),
+            matrix.b(),
+            matrix.c(),
+            matrix.d(),
+            matrix.e(),
+            matrix.f(),
+        ],
+        dx,
+        dy,
+    );
+    context.save();
+    let result = (|| {
+        context.set_transform(a, b, c, d, x, y)?;
+        context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+            atlas, sx, sy, sw, sh, 0.0, 0.0, dw, dh,
+        )
+    })();
+    context.restore();
+    result
+}
+
+fn sprite_transform(matrix: [f64; 6], dx: f64, dy: f64) -> [f64; 6] {
+    let [mut a, mut b, mut c, mut d, e, f] = matrix;
+    // Quarter turns contain tiny sine/cosine errors; remove those too.
+    for axis in [&mut a, &mut b, &mut c, &mut d] {
+        if (*axis - axis.round()).abs() < 1e-9 {
+            *axis = axis.round();
+        }
+    }
+    [
+        a,
+        b,
+        c,
+        d,
+        (a * dx + c * dy + e).round(),
+        (b * dx + d * dy + f).round(),
+    ]
 }
 
 fn kerning(char: char) -> (isize, isize) {
@@ -256,34 +308,23 @@ pub fn draw_mage_with_motion(
         shared::MageSort::Plus => 128.0,
     };
 
-    match mage.team {
-        Team::Red => context
-            .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-                atlas,
-                sprite_x,
-                64.0 + sleeping_offset.0,
-                32.0,
-                sleeping_offset.1,
-                -19.0,
-                -28.0 + bounce + 40.0 - sleeping_offset.1,
-                32.0,
-                sleeping_offset.1,
-            )?,
+    let sprite_y = match mage.team {
+        Team::Red => 64.0 + sleeping_offset.0,
         Team::Blue => {
             context.scale(-1.0, 1.0)?;
-            context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-                atlas,
-                sprite_x,
-                64.0 + sleeping_offset.1 + sleeping_offset.0,
-                32.0,
-                sleeping_offset.1,
-                -19.0,
-                -28.0 + bounce + 40.0 - sleeping_offset.1,
-                32.0,
-                sleeping_offset.1,
-            )?
+            64.0 + sleeping_offset.1 + sleeping_offset.0
         }
-    }
+    };
+    draw_sprite(
+        context,
+        atlas,
+        sprite_x,
+        sprite_y,
+        32.0,
+        sleeping_offset.1,
+        -19.0,
+        -28.0 + bounce + 40.0 - sleeping_offset.1,
+    )?;
 
     context.restore();
 
@@ -546,7 +587,8 @@ pub fn draw_tile(
             //     (position.1 as f64 + y as f64 / 2.0) * board_scale.1,
             // )?;
 
-            context.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+            draw_sprite_scaled(
+                context,
                 atlas,
                 offset.0 + 15.0,
                 offset.1 + 15.0,
@@ -840,4 +882,35 @@ pub fn draw_label(
     context.restore();
 
     Ok(())
+}
+
+#[cfg(test)]
+mod sprite_tests {
+    use super::sprite_transform;
+
+    #[test]
+    fn snap_combined_animation_and_local_offsets_not_each_one_separately() {
+        assert_eq!(
+            sprite_transform([1.0, 0.0, 0.0, 1.0, 10.4, 20.4], 0.4, -0.8),
+            [1.0, 0.0, 0.0, 1.0, 11.0, 20.0]
+        );
+    }
+
+    #[test]
+    fn rotated_and_flipped_sprite_corners_stay_on_whole_pixels() {
+        for matrix in [
+            [1.0, 0.0, 0.0, 1.0, 40.25, 70.75],
+            [-1.0, 0.0, 0.0, 1.0, 40.25, 70.75],
+            [6.123e-17, 1.0, -1.0, 6.123e-17, 40.25, 70.75],
+            [0.0, -1.0, -1.0, 0.0, -40.25, -70.75],
+        ] {
+            let [a, b, c, d, e, f] = sprite_transform(matrix, -19.0, -28.4);
+            for (x, y) in [(0.0, 0.0), (32.0, 0.0), (0.0, 40.0), (32.0, 40.0)] {
+                assert_eq!((a * x + c * y + e).fract(), 0.0);
+                assert_eq!((b * x + d * y + f).fract(), 0.0);
+            }
+            assert!((e - (matrix[0] * -19.0 + matrix[2] * -28.4 + matrix[4])).abs() <= 0.5);
+            assert!((f - (matrix[1] * -19.0 + matrix[3] * -28.4 + matrix[5])).abs() <= 0.5);
+        }
+    }
 }

@@ -34,7 +34,8 @@ Build against the production API by adding `-- --features deploy` to the `wasm-p
 | `shared/src/logic/` | Deterministic rules: boards, levels, mages, spells, powerups, turns, results, and AI search. No rendering or animation timing. |
 | `shared/src/lobby.rs`, `shared/src/net.rs` | Lobby lifecycle and serialized messages shared by client and server. |
 | `src/lib.rs` | Browser setup, assets, input listeners, and animation loop. |
-| `src/app/app.rs` | App state dispatch, canvas layout, input, and browser storage. |
+| `src/app/app.rs` | App state dispatch, logical canvas layout, input, and browser storage. |
+| `src/app/render.rs` | Native-resolution game/UI buffers and integer nearest-neighbour display scaling. |
 | `src/app/state/` | Game, tutorial, editor, and menus; each implements `State::tick` and `State::draw`. |
 | `src/app/presentation.rs` | Client-only turn playback, sampled sprite positions, and one-shot UI signals. |
 | `src/app/particle.rs`, `src/app/audio.rs`, `src/app/ui.rs` | Particle effects, sound, and small UI components. |
@@ -46,6 +47,12 @@ Build against the production API by adding `-- --features deploy` to the `wasm-p
 | `TODO.md` | Followup work, completed items, and deliberately skipped ideas. |
 
 Start with `shared/src/logic/game.rs` for mechanics and `src/app/state/game.rs` for the playable screen. A `Turn(from, to)` is the command: `take_move` validates it, applies movement/pickup/attacks, and returns hit tiles. The same rules support local play, AI, and server replication.
+
+## Pixel grid
+
+The board occupies a native 256×256 play area inside a 400×272 frame that preserves the surrounding menus and controls. Game and interface layers render into offscreen canvases at that native resolution; the atlas retains its original resolution. `Renderer` composites those layers onto one display canvas with nearest-neighbour scaling. Logical drawing never scales with device-pixel ratio. All sprite blits snap their final transformed origin to whole native pixels (including mage bodies and scaled tiles), and normalize quarter-turn rounding errors. Animation state stays continuous; only raster placement is snapped.
+
+Display scale is a whole number of device pixels per native pixel, fitted to the window with room for navigation. Resizing changes only presentation size, and mouse/touch coordinates map from the displayed bounds back to the native grid. Portrait orientation rotates at native resolution before enlargement. Keep new graphics on this grid; do not draw effects directly on the enlarged display canvas or let CSS rescale it independently.
 
 ## Animation and UI flow
 
@@ -61,6 +68,16 @@ Each transition has two phases, measured using the app's elapsed-time clock (60 
 Gameplay input and AI wait for playback to finish; menus and undo remain available. Tutorial progression reads the presented game. Undo rewinds the rules immediately and queues the inverse snapshots after any playback already in progress. Each undone move glides back in reverse turn order, restoring health and pickups on landing without replaying attacks. Replacement lobby snapshots discard playback and particles. Readiness-only lobby updates preserve playback by comparing deterministic game history. Full game replacements snap to their authoritative state; ordinary turn messages animate.
 
 To add an effect, derive its data from the accepted turn and snapshots, sample continuous visuals from time, and use a signal for one-shot effects. Keep timing out of `shared/`; do not add sleeps, browser callbacks per piece, or a second rules engine. Timing constants live together in `presentation.rs`.
+
+## Campaign progression
+
+The campaign map starts at the guided Tutorial portal beside Basics I. Complete the tutorial (from the map or main menu) to unlock campaign battles; leaving it unfinished keeps them locked. Saved wins remain completed even after a later loss.
+
+Winning a level unlocks its cardinal neighbours. Available levels keep their names, and locked names are revealed when adjacent to an available level; more distant names read `???`. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by map column. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
+
+A fixed top-left star counter shows completed portals over the total, including the tutorial, with the total adapted to the demo build.
+
+The completion twinkle plays once when returning to the map from a newly won level. Selecting completed levels, opening the map, and replaying an existing win do not retrigger it. The guided tutorial returns to its portal when entered from the campaign, including after a rematch.
 
 ## Way of working
 

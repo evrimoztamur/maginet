@@ -165,8 +165,10 @@ a {
     overflow: hidden;
 }
 
-#interface-canvas {
-    position: absolute;
+#game-canvas {
+    /* Renderer fits whole device-pixel blocks; CSS must not rescale them again. */
+    max-width: none;
+    max-height: none;
 }
 
 #text-input {

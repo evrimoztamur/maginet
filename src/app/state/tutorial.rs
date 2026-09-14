@@ -2,7 +2,9 @@ use shared::{GameResult, Level, LoadoutMethod, LobbySettings, LobbySort, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{Game, MainMenu, State};
+use super::{menu_arena::TUTORIAL_POSITION, Game, MainMenu, State};
+
+pub(super) const TUTORIAL_CODE: &str = "hg18a09m4g0m81g00c4068035g14r0v008";
 use crate::{
     app::{
         Alignment::Center, AppContext, ContentElement::Text, LabelTrim, Particle, ParticleSort,
@@ -24,6 +26,7 @@ enum TutorialStage {
 pub struct Tutorial {
     pub game_state: Game,
     tutorial_stage: TutorialStage,
+    campaign: bool,
 }
 
 impl Tutorial {
@@ -206,7 +209,7 @@ impl State for Tutorial {
         let next_state = self.game_state.tick(text_input, app_context);
 
         match next_state {
-            Some(StateSort::Game(_)) => Some(StateSort::Tutorial(Tutorial::default())),
+            Some(StateSort::Game(_)) => Some(StateSort::Tutorial(Tutorial::new(self.campaign))),
             Some(StateSort::SkirmishMenu(_)) => Some(StateSort::MainMenu(MainMenu::default())),
             _ => next_state,
         }
@@ -215,16 +218,30 @@ impl State for Tutorial {
 
 impl Default for Tutorial {
     fn default() -> Self {
-        let level: Level = "hg18a09m4g0m81g00c4068035g14r0v008".into();
+        Self::new(false)
+    }
+}
 
+impl Tutorial {
+    pub fn campaign() -> Self {
+        Self::new(true)
+    }
+
+    fn new(campaign: bool) -> Self {
+        let level: Level = TUTORIAL_CODE.into();
         Tutorial {
             game_state: Game::new(LobbySettings {
                 lobby_sort: LobbySort::LocalAI,
-                loadout_method: LoadoutMethod::Prefab(level),
+                loadout_method: if campaign {
+                    LoadoutMethod::Arena(level, TUTORIAL_POSITION)
+                } else {
+                    LoadoutMethod::Prefab(level)
+                },
                 seed: window().performance().unwrap().now() as u64,
                 can_stalemate: false,
             }),
             tutorial_stage: TutorialStage::Movement,
+            campaign,
         }
     }
 }

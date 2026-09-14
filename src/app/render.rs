@@ -1,0 +1,107 @@
+//! Rasterize at native resolution, then enlarge complete pixels for display.
+use wasm_bindgen::{JsCast, JsValue};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+
+use super::{App, CanvasSettings};
+use crate::{document, window};
+
+pub struct CanvasLayer {
+    pub canvas: HtmlCanvasElement,
+    pub context: CanvasRenderingContext2d,
+}
+
+impl CanvasLayer {
+    pub fn new(width: u32, height: u32) -> Result<Self, JsValue> {
+        let canvas = document()
+            .create_element("canvas")?
+            .dyn_into::<HtmlCanvasElement>()?;
+        canvas.set_width(width);
+        canvas.set_height(height);
+        let context = canvas
+            .get_context("2d")?
+            .unwrap()
+            .dyn_into::<CanvasRenderingContext2d>()?;
+        context.set_image_smoothing_enabled(false);
+        Ok(Self { canvas, context })
+    }
+}
+
+pub struct Renderer {
+    pub display: CanvasLayer,
+    game: CanvasLayer,
+    interface: CanvasLayer,
+    settings: CanvasSettings,
+}
+
+impl Renderer {
+    pub fn new(settings: &CanvasSettings) -> Result<Self, JsValue> {
+        let (width, height) = (settings.element_width(), settings.element_height());
+        let display = CanvasLayer::new(width, height)?;
+        display.canvas.set_id("game-canvas");
+        Ok(Self {
+            display,
+            game: CanvasLayer::new(width, height)?,
+            interface: CanvasLayer::new(width, height)?,
+            settings: settings.clone(),
+        })
+    }
+
+    pub fn resize(&self) -> Result<(), JsValue> {
+        let window = window();
+        let dpr = window.device_pixel_ratio().max(0.1);
+        let nav_height = document()
+            .query_selector("nav")?
+            .map_or(0.0, |nav| nav.get_bounding_client_rect().height());
+        let available = (
+            window.inner_width()?.as_f64().unwrap(),
+            (window.inner_height()?.as_f64().unwrap() - nav_height - 16.0).max(1.0),
+        );
+        let scale = self.settings.display_scale(available, dpr);
+        let width = self.settings.element_width() * scale;
+        let height = self.settings.element_height() * scale;
+        self.display.canvas.set_width(width);
+        self.display.canvas.set_height(height);
+        // Resizing resets context state, including image smoothing.
+        self.display.context.set_image_smoothing_enabled(false);
+        self.display
+            .canvas
+            .style()
+            .set_property("width", &format!("{}px", width as f64 / dpr))?;
+        self.display
+            .canvas
+            .style()
+            .set_property("height", &format!("{}px", height as f64 / dpr))?;
+        // Centered flex layout can otherwise place the entire canvas on half a device pixel.
+        self.display
+            .canvas
+            .style()
+            .set_property("transform", "none")?;
+        let bounds = self.display.canvas.get_bounding_client_rect();
+        let dx = (bounds.left() * dpr).round() / dpr - bounds.left();
+        let dy = (bounds.top() * dpr).round() / dpr - bounds.top();
+        self.display
+            .canvas
+            .style()
+            .set_property("transform", &format!("translate({dx}px, {dy}px)"))?;
+        Ok(())
+    }
+
+    pub fn draw(&self, app: &mut App, atlas: &HtmlCanvasElement) -> Result<(), JsValue> {
+        app.draw(&self.game.context, &self.interface.context, atlas)?;
+        let width = self.display.canvas.width() as f64;
+        let height = self.display.canvas.height() as f64;
+        self.display.context.clear_rect(0.0, 0.0, width, height);
+        for layer in [&self.game, &self.interface] {
+            self.display
+                .context
+                .draw_image_with_html_canvas_element_and_dw_and_dh(
+                    &layer.canvas,
+                    0.0,
+                    0.0,
+                    width,
+                    height,
+                )?;
+        }
+        Ok(())
+    }
+}
