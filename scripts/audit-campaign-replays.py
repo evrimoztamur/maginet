@@ -1,8 +1,9 @@
 """Independently audit recorded move order, hit accounting, and team mana (stdlib)."""
 import json
+import sys
 from pathlib import Path
 
-root = Path('assessments/campaign-revision')
+root = Path(sys.argv[1] if len(sys.argv) > 1 else 'assessments/campaign-revision')
 checked = 0
 for path in root.glob('*/*/matchup-*.json'):
     metadata = json.loads((path.parent / 'metadata.json').read_text())

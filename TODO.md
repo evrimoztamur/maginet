@@ -131,6 +131,6 @@
 
 - Implemented: shared explicit progression graph with cardinal-neighbour links and eight 1v1 junction battles, optional challenge routes, focused powerup introductions, distinct Rite IV, profile selection, paired seed namespaces, deterministic replays, staged assessments and source-attributed combined matrices.
 - Human playtests: verify that each pickup introduction communicates its mechanic and tolerates a novice mistake; automated recovery examples do not validate instruction quality.
-- Investigate remaining inactivity endings in Patterns I, Rite II and Rite IV. Do not describe the draw problem as solved.
+- Combat redesign completed for Patterns I, Rite II and Rite IV: inactivity endings fell to 51/19/49 per 300 Normal/Normal games. Human-test the remaining retreat loops and immobilization endings; see assessments/campaign-combat-redesign/interpretation.md.
 - Check perceived difficulty after the forgiving Basics battles and Shields I. Keep optional challenges demanding.
 - See `assessments/campaign-revision/interpretation.md` for evidence and limitations; preserve the original assessment.

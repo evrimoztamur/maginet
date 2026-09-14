@@ -200,9 +200,8 @@ python3 scripts/run-campaign-revision.py original --output-root /tmp/campaign-fo
 python3 scripts/run-campaign-revision.py final --output-root /tmp/campaign-followup
 python3 scripts/run-campaign-revision.py junction-screen --output-root /tmp/campaign-followup
 python3 scripts/run-campaign-revision.py junction-final --output-root /tmp/campaign-followup
-# Regenerate the combined report from the archived, attributed datasets.
-cargo run --quiet -p shared --example campaign_catalogue > assessments/campaign-revision/graph.json
-python3 scripts/report-campaign-revision.py
+# Inspect the current graph without rewriting archived metadata.
+cargo run --quiet -p shared --example campaign_catalogue > /tmp/current-campaign-graph.json
 NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-campaign-graph.cjs
 ```
 
@@ -211,3 +210,20 @@ NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-campaign-gr
 Resume validation includes profile selection, seed namespace, replay policy, configuration, scenario catalogue, graph, main route and engine fingerprint. Worker count can change. Final first-30 trials overlap the screen; the report does not count them as independent replications. Original first-30 followups are checked against the immutable survey. The archived mana-only Patterns I candidate is excluded from the final combined matrix.
 
 The earlier battle datasets retain the layout metadata from their execution before the junction additions. Their scenario results remain valid because map coordinates and connections do not affect simulation. Current progression uses `graph.json`, exported from the current shared catalogue. Resume correctly rejects a changed layout; use `--output-root` for fresh experiments instead of rewriting archived metadata. Junction datasets have no baseline counterpart and use their own canonical scenario codes as explicit seed namespaces.
+
+
+### Combat redesign followup
+
+Patterns I, Rite II and Rite IV now use open 4×4 boards with revised formations and pickup choices. The [latest assessment](assessments/campaign-combat-redesign/report.md) includes eight candidate screens, three paired 300-trial followups, and the current 318-cell campaign matrix. [Replay findings and limitations](assessments/campaign-combat-redesign/interpretation.md) distinguish elimination, immobilization and inactivity endings. Inactivity fell from 125/176/137 to 51/19/49 games out of 300 respectively; it is reduced, not eliminated. The cardinal map and all other battles are unchanged.
+
+```sh
+# Reproduce in fresh directories; archived candidate identity is preserved.
+cargo build --release -p generate
+python3 scripts/run-combat-redesign.py screen --output-root /tmp/combat-followup
+python3 scripts/run-combat-redesign.py final --output-root /tmp/combat-followup
+python3 scripts/report-combat-redesign.py
+python3 scripts/audit-campaign-replays.py assessments/campaign-combat-redesign
+NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-combat-redesign.cjs
+```
+
+The graph browser check exports the live shared catalogue so that changed scenario progress keys are actually exercised. Earlier assessment datasets and their layout metadata remain immutable; current combined matrices explicitly attribute every reused result.

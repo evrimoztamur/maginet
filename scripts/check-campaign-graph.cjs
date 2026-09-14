@@ -1,7 +1,7 @@
 // Uses the shared catalogue export; observe actual canvas labels and connection strokes.
 const {chromium}=require('playwright-core');
 const assert=require('assert/strict');
-const graph=require('../assessments/campaign-revision/graph.json');
+const graph=JSON.parse(require('child_process').execFileSync('cargo',['run','--quiet','-p','shared','--example','campaign_catalogue'],{encoding:'utf8',stdio:['ignore','pipe','inherit']}));
 const canonical=code=>{
  const alphabet='0123456789abcdefghjkmnpqrstvwxyz';
  let bits=[...code].map(c=>alphabet.indexOf(c).toString(2).padStart(5,'0')).join('');
