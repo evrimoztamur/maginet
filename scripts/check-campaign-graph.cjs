@@ -65,13 +65,14 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   for(const [from,to] of directions)if(['tutorial',won].includes(from))availableIds.add(to);
   const known=new Set(availableIds);
   for(const [from,to] of directions)if(availableIds.has(from))known.add(to);
-  const expected=directions.filter(([from])=>known.has(from)).map(([from,to])=>{
+  const completed=new Set(['tutorial',won]);
+  const expected=graph.connections.map(e=>[e.from,e.to]).filter(([from,to])=>known.has(from)&&!completed.has(from)&&!completed.has(to)).map(([from,to])=>{
    const a=graph.catalogue.find(e=>e.id===from).position,b=graph.catalogue.find(e=>e.id===to).position;
    const dx=b[0]-a[0],dy=b[1]-a[1],distance=dy>0?72:dy<0?40:48;
    return {x:a[0]*128+dx*distance,y:a[1]*128+dy*distance,dx,dy};
   });
   const arrows=await page.evaluate(()=>arrowContext.movementArrows);
-  assert.equal(arrows.length,expected.length,'arrows only at known outgoing portals');
+  assert.equal(arrows.length,expected.length,'one forward arrow per link, with no arrows at completed portals');
   assert.equal(await page.evaluate(()=>paths.length),0,'old drawn arrowheads removed');
   const offset={x:arrows[0].x-expected[0].x+3*expected[0].dx,y:arrows[0].y-expected[0].y+3*expected[0].dy};
   arrows.forEach((a,i)=>{

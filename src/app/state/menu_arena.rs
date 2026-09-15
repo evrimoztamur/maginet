@@ -336,30 +336,33 @@ impl State for ArenaMenu {
         for edge in shared::campaign_connections(&entries) {
             let a = entries.iter().find(|e| e.id == edge.from).unwrap().position;
             let b = entries.iter().find(|e| e.id == edge.to).unwrap().position;
-            for (from, to) in std::iter::once((a, b)).chain((!edge.one_way).then_some((b, a))) {
-                if !self.level_portals[&from].title_visible {
-                    continue;
-                }
-                let direction = Position((to.0 - from.0) as i8, (to.1 - from.1) as i8);
-                // The label below a portal needs more clearance than its other sides.
-                let distance = if direction.1 > 0 {
-                    72.0
-                } else if direction.1 < 0 {
-                    40.0
-                } else {
-                    48.0
-                };
-                context.save();
-                context.translate(
-                    from.0 as f64 * 128.0 + direction.0 as f64 * distance,
-                    from.1 as f64 * 128.0 + direction.1 as f64 * distance,
-                )?;
-                context.rotate(rotation_from_position(direction) as f64 * TAU / 8.0)?;
-                // Same atlas sprite and three-frame nudge as a cardinal movement hint.
-                context.translate((frame / 10 % 3) as f64 - 4.0, 0.0)?;
-                draw_sprite(context, atlas, 0.0, 32.0, 16.0, 16.0, -8.0, -8.0)?;
-                context.restore();
+            let (from, to) = (a, b);
+            // Arrows guide forward progression; replay/backtracking stays available.
+            if !self.level_portals[&from].title_visible
+                || self.level_portals[&from].status == PortalStatus::Won
+                || self.level_portals[&to].status == PortalStatus::Won
+            {
+                continue;
             }
+            let direction = Position((to.0 - from.0) as i8, (to.1 - from.1) as i8);
+            // The label below a portal needs more clearance than its other sides.
+            let distance = if direction.1 > 0 {
+                72.0
+            } else if direction.1 < 0 {
+                40.0
+            } else {
+                48.0
+            };
+            context.save();
+            context.translate(
+                from.0 as f64 * 128.0 + direction.0 as f64 * distance,
+                from.1 as f64 * 128.0 + direction.1 as f64 * distance,
+            )?;
+            context.rotate(rotation_from_position(direction) as f64 * TAU / 8.0)?;
+            // Same atlas sprite and three-frame nudge as a cardinal movement hint.
+            context.translate((frame / 10 % 3) as f64 - 4.0, 0.0)?;
+            draw_sprite(context, atlas, 0.0, 32.0, 16.0, 16.0, -8.0, -8.0)?;
+            context.restore();
         }
 
         for (offset, portal) in &self.level_portals {
