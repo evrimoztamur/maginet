@@ -52,6 +52,37 @@ final class GameUITests: XCTestCase {
         XCTAssertTrue(app.alerts.staticTexts["Unlock Full Game"].exists)
         app.alerts.buttons["Dismiss"].tap()
     }
+    func testTutorialDraggingInBothOrientations() {
+        let app = XCUIApplication()
+        for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight] {
+            app.terminate()
+            XCUIDevice.shared.orientation = orientation
+            app.launch()
+            XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 15))
+            Thread.sleep(forTimeInterval: 1.2)
+            tap(app, x: 248, y: 174) // Tutorial
+            // Outside-board return, then a legal move using the same selected mage.
+            drag(app, from: (96, 112), to: (32, 112))
+            attachScreen("Invalid drop \(orientation.rawValue)")
+            drag(app, from: (96, 112), to: (128, 112))
+            attachScreen("Drag landing \(orientation.rawValue)")
+            // Tap confirmation still works after a drag and the AI's reply.
+            Thread.sleep(forTimeInterval: 1.5)
+            tap(app, x: 128, y: 112)
+            tap(app, x: 128, y: 80)
+            tap(app, x: 128, y: 80)
+            Thread.sleep(forTimeInterval: 0.6)
+            attachScreen("Tap after drag \(orientation.rawValue)")
+        }
+    }
+
+    private func attachScreen(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     private func drag(_ app: XCUIApplication, from: (Double, Double), to: (Double, Double)) {
         let frame = app.webViews.firstMatch.frame
         let scale = frame.height / 272

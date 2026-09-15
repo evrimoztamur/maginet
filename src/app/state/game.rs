@@ -10,7 +10,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 use super::{ArenaMenu, Editor, SkirmishMenu, State};
 use crate::{
     app::{
-        presentation::{Presentation, Signal},
+        presentation::{DragLanding, Presentation, Signal},
         Alignment, App, AppContext, ButtonElement, ClipId, ConfirmButtonElement, LabelTheme,
         LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
         UIElement, UIEvent, BOARD_SCALE,
@@ -31,6 +31,39 @@ const BUTTON_LEAVE: usize = 2;
 const BUTTON_MENU: usize = 10;
 const BUTTON_UNDO: usize = 20;
 
+struct MageDrag {
+    index: usize,
+    origin: Position,
+    press: (i32, i32),
+    ground: (f64, f64),
+    started: Option<u64>,
+}
+
+impl MageDrag {
+    fn update(&mut self, location: (i32, i32), frame: u64) {
+        let dx = location.0 - self.press.0;
+        let dy = location.1 - self.press.1;
+        if dx as i64 * dx as i64 + dy as i64 * dy as i64 > 16 {
+            self.started.get_or_insert(frame);
+        }
+        self.ground = (
+            self.origin.0 as f64 + dx as f64 / BOARD_SCALE.0 as f64,
+            self.origin.1 as f64 + dy as f64 / BOARD_SCALE.1 as f64,
+        );
+    }
+
+    fn landing(&self, frame: u64) -> DragLanding {
+        DragLanding {
+            ground: self.ground,
+            offset_y: -12.0
+                + (frame.saturating_sub(self.started.unwrap_or(frame)) as f64
+                    * std::f64::consts::TAU
+                    / 60.0)
+                    .sin(),
+        }
+    }
+}
+
 pub struct Game {
     ai_pending: Option<crate::ai::Pending>,
     ai_revision: u32,
@@ -47,6 +80,8 @@ pub struct Game {
     last_move_frame: u64,
     last_hits: Vec<Position>,
     active_mage: Option<usize>,
+    drag: Option<MageDrag>,
+    local_landing: Option<(Turn, DragLanding)>,
     particle_system: ParticleSystem,
     message_pool: Rc<RefCell<MessagePool>>,
     message_closure: Closure<dyn FnMut(JsValue)>,
@@ -134,6 +169,8 @@ impl Game {
             last_move_frame: 0,
             last_hits: Vec::new(),
             active_mage: None,
+            drag: None,
+            local_landing: None,
             particle_system: ParticleSystem::default(),
             message_pool,
             message_closure,
@@ -143,6 +180,124 @@ impl Game {
             result_menu_at: None,
             shake_frame: (0, 0),
         }
+    }
+
+    fn pending_game_change(&self, session: Option<&String>) -> bool {
+        self.message_pool
+            .borrow()
+            .messages
+            .iter()
+            .any(|message| match message {
+                Message::Turn(_) => true,
+                Message::Turns(turns) => !turns.is_empty(),
+                Message::Lobby(lobby) => {
+                    !crate::app::presentation::same_history(&self.lobby.game, &lobby.game)
+                        || !lobby.is_active_player(session)
+                }
+                _ => false,
+            })
+    }
+
+    fn submit_turn(&mut self, turn: Turn, landing: Option<DragLanding>, app: &AppContext) -> bool {
+        if self.presentation.busy()
+            || self.lobby.finished()
+            || self.is_interface_active()
+            || self.pending_game_change(app.session_id.as_ref())
+            || !self.lobby.is_active_player(app.session_id.as_ref())
+            || !self.lobby.game.try_move(turn.0, turn.1)
+        {
+            return false;
+        }
+        if !self.lobby.is_local() {
+            if let Some(session) = &app.session_id {
+                send_message(
+                    self.lobby_id().unwrap(),
+                    session.clone(),
+                    Message::Turn(turn),
+                );
+            }
+        }
+        self.local_landing = landing.map(|pose| (turn, pose));
+        self.message_pool
+            .borrow_mut()
+            .messages
+            .push(Message::Turn(turn));
+        self.active_mage = None;
+        self.last_move_frame = app.frame;
+        true
+    }
+
+    fn drag_input(&mut self, app: &AppContext) -> bool {
+        use crate::app::pointer::GestureEvent;
+        let mut consumed = self.drag.as_ref().is_some_and(|d| d.started.is_some());
+        // A queued server update must be applied before another local action is accepted.
+        if self.presentation.busy()
+            || self.lobby.finished()
+            || self.is_interface_active()
+            || !self.lobby.is_active_player(app.session_id.as_ref())
+            || self.pending_game_change(app.session_id.as_ref())
+        {
+            self.drag = None;
+            return consumed;
+        }
+        for event in &app.pointer.gestures {
+            match *event {
+                GestureEvent::Cancel => {
+                    self.drag = None;
+                    consumed = true;
+                }
+                GestureEvent::Press(press) => {
+                    self.drag = None;
+                    if let Some(tile) =
+                        self.location_as_position(press, self.board_offset(), BOARD_SCALE)
+                    {
+                        if let Some(mage) = self.lobby.game.live_occupant(&tile) {
+                            if mage.team == self.lobby.game.turn_for() {
+                                self.drag = Some(MageDrag {
+                                    index: mage.index,
+                                    origin: tile,
+                                    press,
+                                    ground: (tile.0 as f64, tile.1 as f64),
+                                    started: None,
+                                });
+                            }
+                        }
+                    }
+                }
+                GestureEvent::Move(location) => {
+                    if let Some(drag) = &mut self.drag {
+                        drag.update(location, app.frame);
+                        if drag.started.is_some() {
+                            self.active_mage = Some(drag.index);
+                            consumed = true;
+                        }
+                    }
+                }
+                GestureEvent::Release(location) => {
+                    if let Some(mut drag) = self.drag.take() {
+                        drag.update(location, app.frame);
+                        if drag.started.is_some() {
+                            consumed = true;
+                            self.active_mage = Some(drag.index);
+                            let pose = drag.landing(app.frame);
+                            let tile = Position(
+                                (pose.ground.0 + 0.5).floor() as i8,
+                                (pose.ground.1 + 0.5).floor() as i8,
+                            );
+                            if self
+                                .lobby
+                                .game
+                                .live_occupant(&drag.origin)
+                                .is_some_and(|m| m.index == drag.index)
+                            {
+                                self.submit_turn(Turn(drag.origin, tile), Some(pose), app);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        consumed
     }
 
     pub fn particle_system(&mut self) -> &mut ParticleSystem {
@@ -359,7 +514,22 @@ impl Game {
                 context.restore();
             }
 
-            let visual_mages = self.presentation.mages(frame);
+            let mut visual_mages = self.presentation.mages(frame);
+            let dragging = self.drag.as_ref().filter(|d| d.started.is_some());
+            if let Some(drag) = dragging {
+                for (mage, position) in &mut visual_mages {
+                    if mage.index == drag.index {
+                        *position = drag.ground;
+                    }
+                }
+                visual_mages.sort_by_key(|(mage, _)| mage.index == drag.index);
+            }
+            let preview_location = dragging.map_or(pointer.location, |d| {
+                (
+                    (board_offset.0 + (d.ground.0 + 0.5) * board_scale.0).floor() as i32,
+                    (board_offset.1 + (d.ground.1 + 0.5) * board_scale.1).floor() as i32,
+                )
+            });
             {
                 let board_offset = self.board_offset();
 
@@ -428,7 +598,7 @@ impl Game {
                     }
 
                     if let Some(selected_tile) = self.presentation.game().location_as_position(
-                        pointer.location,
+                        preview_location,
                         board_offset,
                         BOARD_SCALE,
                     ) {
@@ -470,13 +640,13 @@ impl Game {
                 }
 
                 if let Some(selected_tile) = self.presentation.game().location_as_position(
-                    pointer.location,
+                    preview_location,
                     board_offset,
                     BOARD_SCALE,
                 ) {
                     if let Some(occupant) = self.presentation.game().live_occupant(&selected_tile) {
                         if let Some(selected_tile) = self.presentation.game().location_as_position(
-                            pointer.location,
+                            preview_location,
                             board_offset,
                             BOARD_SCALE,
                         ) {
@@ -507,7 +677,11 @@ impl Game {
 
                 // DRAW mages
                 for (mage, position) in &visual_mages {
-                    let pose = self.presentation.pose(mage.index, frame);
+                    let mut pose = self.presentation.pose(mage.index, frame);
+                    let is_dragged = dragging.is_some_and(|d| d.index == mage.index);
+                    if is_dragged {
+                        pose.offset_y = dragging.unwrap().landing(frame).offset_y;
+                    }
                     context.save();
 
                     context.translate(
@@ -532,7 +706,7 @@ impl Game {
                         self.presentation.game().turn_for(),
                         game_started,
                         self.presentation.game().result(),
-                        !self.presentation.busy(),
+                        !self.presentation.busy() && !is_dragged,
                         pose.offset_y,
                         pose.flip_x,
                     )?;
@@ -591,7 +765,11 @@ impl Game {
 
                 // DRAW mana bars for all mages
                 for (mage, position) in &visual_mages {
-                    let pose = self.presentation.pose(mage.index, frame);
+                    let mut pose = self.presentation.pose(mage.index, frame);
+                    let is_dragged = dragging.is_some_and(|d| d.index == mage.index);
+                    if is_dragged {
+                        pose.offset_y = dragging.unwrap().landing(frame).offset_y;
+                    }
                     context.save();
 
                     context.translate(
@@ -771,8 +949,18 @@ impl Game {
                         if let Some(hits) = self.lobby.game.take_move(turn.0, turn.1) {
                             self.ai_pending = None;
                             self.ai_revision = self.ai_revision.wrapping_add(1);
-                            self.presentation
-                                .enqueue(before, &self.lobby.game, turn, hits, frame);
+                            self.drag = None;
+                            let landing = self.local_landing.take().and_then(|(expected, pose)| {
+                                (expected.0 == turn.0 && expected.1 == turn.1).then_some(pose)
+                            });
+                            self.presentation.enqueue_landing(
+                                before,
+                                &self.lobby.game,
+                                turn,
+                                hits,
+                                frame,
+                                landing,
+                            );
                             self.active_mage = None;
                             self.last_move_frame = frame;
                         }
@@ -783,6 +971,8 @@ impl Game {
                     if !crate::app::presentation::same_history(&self.lobby.game, &lobby.game) {
                         self.ai_pending = None;
                         self.ai_revision = self.ai_revision.wrapping_add(1);
+                        self.drag = None;
+                        self.local_landing = None;
                         self.presentation = Presentation::new(&lobby.game);
                         self.particle_system = ParticleSystem::default();
                         self.active_mage = None;
@@ -977,12 +1167,16 @@ impl State for Game {
         _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
+        let consumed_drag = self.drag_input(app_context);
+        let filtered_pointer = app_context.pointer.without_clicks();
         let board_offset = self.board_offset();
         let frame = app_context.frame;
-        let pointer = &app_context.pointer;
+        let pointer = if consumed_drag {
+            &filtered_pointer
+        } else {
+            &app_context.pointer
+        };
         let session_id = &app_context.session_id;
-
-        let message_pool = self.message_pool.clone();
 
         if self.result_menu_at.is_some_and(|at| frame >= at) {
             self.button_menu.set_selected(true);
@@ -1075,6 +1269,8 @@ impl State for Game {
         self.button_menu.tick(&interface_pointer);
 
         if self.lobby.is_local() && self.button_undo.tick(&interface_pointer).is_some() {
+            self.drag = None;
+            self.local_landing = None;
             self.ai_pending = None;
             self.ai_revision = self.ai_revision.wrapping_add(1);
             self.message_pool.borrow_mut().clear();
@@ -1093,6 +1289,7 @@ impl State for Game {
         }
 
         if self.is_interface_active() {
+            self.drag = None;
             let rematch_event = self.button_rematch.tick(&interface_pointer);
             if let Some(UIEvent::ButtonClick(value, clip_id)) =
                 self.button_leave.tick(&interface_pointer).or(rematch_event)
@@ -1148,22 +1345,7 @@ impl State for Game {
                         let from = active_mage.position;
 
                         if self.lobby.game.try_move(from, selected_tile) {
-                            if !self.lobby.is_local() && session_id.is_some() {
-                                send_message(
-                                    self.lobby_id().unwrap(),
-                                    session_id.clone().unwrap(),
-                                    Message::Turn(Turn(from, selected_tile)),
-                                );
-                            }
-
-                            let mut message_pool = message_pool.borrow_mut();
-
-                            message_pool
-                                .messages
-                                .push(Message::Turn(Turn(from, selected_tile)));
-
-                            self.active_mage = None;
-                            self.last_move_frame = frame;
+                            self.submit_turn(Turn(from, selected_tile), None, app_context);
                         } else {
                             self.select_mage_at(session_id.as_ref(), &selected_tile);
                             self.play_mage_selection_sound(app_context);
@@ -1179,5 +1361,33 @@ impl State for Game {
         self.tick_game(frame, app_context);
 
         None
+    }
+}
+
+#[cfg(test)]
+mod drag_tests {
+    use super::*;
+
+    #[test]
+    fn threshold_grab_offset_and_float_are_stable() {
+        let mut drag = MageDrag {
+            index: 0,
+            origin: Position(2, 3),
+            press: (77, 110),
+            ground: (2.0, 3.0),
+            started: None,
+        };
+        drag.update((81, 110), 10);
+        assert_eq!(drag.started, None);
+        drag.update((81, 111), 11);
+        assert_eq!(drag.started, Some(11));
+        drag.update((109, 142), 12);
+        assert_eq!(drag.ground, (3.0, 4.0));
+        drag.update((77, 110), 13);
+        assert_eq!(drag.started, Some(11)); // Crossing back never becomes a tap.
+        assert_eq!(drag.ground, (2.0, 3.0));
+        assert_eq!(drag.landing(11).offset_y, -12.0);
+        assert_eq!(drag.landing(26).offset_y, -11.0);
+        assert_eq!(drag.landing(56).offset_y, -13.0);
     }
 }

@@ -152,7 +152,18 @@ async fn start() -> Result<(), JsValue> {
 
         session_closure.forget();
 
-        for event_name in ["touchcancel", "maginet-background"] {
+        {
+            let app = app.clone();
+            let closure = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+                app.borrow_mut().on_touch_cancel(event);
+            });
+            document().add_event_listener_with_callback(
+                "touchcancel",
+                closure.as_ref().unchecked_ref(),
+            )?;
+            closure.forget();
+        }
+        for event_name in ["maginet-background", "visibilitychange"] {
             let app = app.clone();
             let closure = Closure::<dyn FnMut(JsValue)>::new(move |_| {
                 app.borrow_mut().cancel_input();
@@ -168,6 +179,14 @@ async fn start() -> Result<(), JsValue> {
             });
             window()
                 .add_event_listener_with_callback(event_name, closure.as_ref().unchecked_ref())?;
+            closure.forget();
+        }
+        {
+            let app = app.clone();
+            let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
+                app.borrow_mut().cancel_input();
+            });
+            window().add_event_listener_with_callback("blur", closure.as_ref().unchecked_ref())?;
             closure.forget();
         }
         let canvas = Rc::new(canvas);
@@ -206,10 +225,13 @@ async fn start() -> Result<(), JsValue> {
 
         {
             let app = app.clone();
+            let bound = bound.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
                 if !cfg!(feature = "ios") {
-                    app.on_mouse_down(event);
+                    if let Some(bound) = bound.borrow().as_deref() {
+                        app.on_mouse_down(bound, event);
+                    }
                 }
             });
             document()
@@ -219,10 +241,13 @@ async fn start() -> Result<(), JsValue> {
 
         {
             let app = app.clone();
+            let bound = bound.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
                 if !cfg!(feature = "ios") {
-                    app.on_mouse_up(event);
+                    if let Some(bound) = bound.borrow().as_deref() {
+                        app.on_mouse_up(bound, event);
+                    }
                 }
             });
             document()

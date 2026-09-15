@@ -226,10 +226,10 @@ impl App {
 
     pub fn resize_ios(&mut self) {
         self.app_context.canvas_settings.update_ios();
-        self.app_context.pointer = Pointer::new(&self.app_context.canvas_settings);
+        self.app_context.pointer.cancel();
     }
     pub fn cancel_input(&mut self) {
-        self.app_context.pointer = Pointer::new(&self.app_context.canvas_settings);
+        self.app_context.pointer.cancel();
         self.app_context.audio_system.suspend();
     }
     pub fn session_id(&self) -> Option<&String> {
@@ -247,7 +247,19 @@ impl App {
         }
     }
 
-    pub fn on_mouse_down(&mut self, event: MouseEvent) {
+    pub fn on_mouse_down(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
+        if self.app_context.pointer.active_touch.is_some()
+            || window().performance().unwrap().now() < self.app_context.pointer.suppress_mouse_until
+        {
+            return;
+        }
+        self.track_mouse(bound, &event);
+        if event.button() == 0 {
+            self.app_context
+                .pointer
+                .press(self.app_context.pointer.location);
+            self.app_context.pointer.pending_click = true;
+        }
         match event.button() {
             0 => self.app_context.pointer.button = true,
             2 => self.app_context.pointer.alt_button = true,
@@ -255,7 +267,18 @@ impl App {
         }
     }
 
-    pub fn on_mouse_up(&mut self, event: MouseEvent) {
+    pub fn on_mouse_up(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
+        if self.app_context.pointer.active_touch.is_some()
+            || window().performance().unwrap().now() < self.app_context.pointer.suppress_mouse_until
+        {
+            return;
+        }
+        self.track_mouse(bound, &event);
+        if event.button() == 0 {
+            self.app_context
+                .pointer
+                .release(self.app_context.pointer.location);
+        }
         match event.button() {
             0 => self.app_context.pointer.button = false,
             2 => self.app_context.pointer.alt_button = false,
@@ -264,14 +287,20 @@ impl App {
     }
 
     pub fn on_mouse_move(&mut self, bound: &DomRectReadOnly, event: MouseEvent) {
+        if self.app_context.pointer.active_touch.is_some()
+            || window().performance().unwrap().now() < self.app_context.pointer.suppress_mouse_until
+        {
+            return;
+        }
+        self.track_mouse(bound, &event);
+        event.prevent_default();
+    }
+
+    fn track_mouse(&mut self, bound: &DomRectReadOnly, event: &MouseEvent) {
         let x = event.client_x() as f64 - bound.left();
         let y = event.client_y() as f64 - bound.top();
-        let pointer_location =
-            App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
-
-        self.app_context.pointer.location = pointer_location;
-
-        event.prevent_default();
+        let location = App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
+        self.app_context.pointer.move_to(location);
     }
 
     fn lobby_touch(
@@ -284,11 +313,17 @@ impl App {
         } else {
             let board_offset = lobby_state.board_offset();
 
+            if lobby_state
+                .location_as_position(pointer_location, board_offset, BOARD_SCALE)
+                .is_some_and(|tile| lobby_state.live_occupied(tile))
+            {
+                return true;
+            }
             if let (Some(current_tile), Some(last_tile)) = (
                 lobby_state.location_as_position(pointer_location, board_offset, BOARD_SCALE),
                 lobby_state.location_as_position(pointer.location, board_offset, BOARD_SCALE),
             ) {
-                if current_tile == last_tile || lobby_state.live_occupied(current_tile) {
+                if current_tile == last_tile {
                     return true;
                 }
             }
@@ -298,7 +333,15 @@ impl App {
     }
 
     pub fn on_touch_start(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
-        if let Some(touch) = event.target_touches().item(0) {
+        if self.app_context.pointer.active_touch.is_some() {
+            return;
+        }
+        if let Some(touch) = event.changed_touches().item(0) {
+            if !self.app_context.pointer.begin_touch(touch.identifier()) {
+                return;
+            }
+            self.app_context.pointer.suppress_mouse_until =
+                window().performance().unwrap().now() + 1000.0;
             let x = touch.client_x() as f64 - bound.left();
             let y = touch.client_y() as f64 - bound.top();
             let pointer_location =
@@ -324,36 +367,49 @@ impl App {
                 };
             }
 
-            self.app_context.pointer.location = pointer_location;
-            if cfg!(feature = "ios") {
-                self.app_context.pointer.pending_click = self.app_context.pointer.button;
-            }
+            self.app_context.pointer.press(pointer_location);
+            self.app_context.pointer.pending_click = self.app_context.pointer.button;
+        }
+    }
+
+    pub fn on_touch_cancel(&mut self, event: TouchEvent) {
+        if self.matching_touch(&event).is_some() {
+            self.app_context.pointer.cancel();
         }
     }
 
     pub fn on_touch_end(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
-        if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.client_x() as f64 - bound.left();
-            let y = touch.client_y() as f64 - bound.top();
-
-            let pointer_location =
-                App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
-            self.app_context.pointer.location = pointer_location;
+        if let Some(touch) = self.matching_touch(&event) {
+            let location = App::transform_pointer(
+                &self.app_context.canvas_settings,
+                bound,
+                touch.client_x() as f64 - bound.left(),
+                touch.client_y() as f64 - bound.top(),
+            );
+            self.app_context.pointer.release(location);
+            self.app_context.pointer.suppress_mouse_until =
+                window().performance().unwrap().now() + 1000.0;
         }
+    }
 
-        self.app_context.pointer.button = false;
+    fn matching_touch(&self, event: &TouchEvent) -> Option<web_sys::Touch> {
+        self.app_context.pointer.active_touch?;
+        let touches = event.changed_touches();
+        (0..touches.length())
+            .filter_map(|i| touches.item(i))
+            .find(|touch| self.app_context.pointer.accepts_touch(touch.identifier()))
     }
 
     pub fn on_touch_move(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
-        if let Some(touch) = event.target_touches().item(0) {
-            let x = touch.client_x() as f64 - bound.left();
-            let y = touch.client_y() as f64 - bound.top();
-
-            let pointer_location =
-                App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
-            self.app_context.pointer.location = pointer_location;
+        if let Some(touch) = self.matching_touch(&event) {
+            let location = App::transform_pointer(
+                &self.app_context.canvas_settings,
+                bound,
+                touch.client_x() as f64 - bound.left(),
+                touch.client_y() as f64 - bound.top(),
+            );
+            self.app_context.pointer.move_to(location);
         }
-
         event.prevent_default();
     }
 
@@ -584,7 +640,11 @@ mod canvas_tests {
 
     #[test]
     fn pointer_round_trips_board_corners_at_every_display_scale_and_orientation() {
-        for portrait in [false, true] {
+        // iOS rotates the native view; only web uses a rotated canvas in portrait.
+        for portrait in [false, true]
+            .into_iter()
+            .filter(|portrait| !cfg!(feature = "ios") || !portrait)
+        {
             let settings = settings(portrait);
             for ratio in [1.0, 2.0, 2.4, 3.0] {
                 let size = (

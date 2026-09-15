@@ -58,3 +58,28 @@ Build/test output contains existing Rust unused-code warnings and Apple's simula
 - iPhone 17 Pro simulator: all 6 native, StoreKit, WebView and UI tests passed. WebView regression checks the source raster dimensions, identity transform, disabled smoothing, selection/callout styles, and background.
 - Monolith II: all 3 WebView/UI tests passed with the new build, including campaign-boundary navigation, editor keyboard, online purchase entry, and both orientations. Captured screen images show clean board edges. The updated app was relaunched after testing.
 - iPhone 16e simulator: all 3 selected WebView/UI tests passed. After correcting the background to the canvas container color, the targeted WebView test passed again on iPhone 17 Pro and Monolith II, verifying rgb(0, 42, 42).
+
+## Mage drag-and-drop (2026-09-15)
+
+- Added mouse/touch dragging to the shared battle/tutorial controller, with a 4-logical-pixel threshold, preserved grab offset, jump-height float, following shadow, and an eight-frame local landing. Invalid drops preserve selection and history. Network turn messages remain unchanged.
+- Rust workspace: 55 tests passed. The client has 30 tests, also passing with the `ios` feature. New tests cover gesture retention, cancellation, touch identity, threshold/bob, landing continuity, and one-shot pickup/impact sequencing. The coordinate round-trip test now tests canvas rotation only on web; iOS rotates the native landscape view.
+- `scripts/check-drag.cjs`: Chrome mouse and synthetic touch checks cover tutorial and local battles, exact shadow tracking, lift, one sprite, invalid/outside/UI drops, landing continuity, undo and taps, selecting another mage, touch confirmation, multiple fingers, matching cancellation, short gestures, duplicate mouse suppression, backgrounding, resize, and lost focus. It holds AI replies for deterministic position assertions; the native runs exercise the tutorial's real AI.
+- `scripts/check-drag-online.cjs`: two controlled browser clients use a disposable local server. Checks verify no history or request on invalid drops, exactly one ordinary `Turn` on valid drops, a held drag surviving empty polling responses, cancellation on a remote turn, and cancellation on replacement history after rematch. No production service or persistent match data is used.
+- iPhone 17 Pro and iPhone 16e simulators, plus Monolith II: `testTutorialDraggingInBothOrientations` passed, exercising outside-board return, valid dragging, and touch confirmation afterward in both landscape orientations. Screenshots are retained in the Xcode results. Physical-device landing screenshots were inspected in both orientations. The WebView startup/worker/raster check also passed on iPhone 17 Pro and Monolith II.
+- Release iOS Wasm assets rebuilt with wasm-bindgen 0.2.91. No commits or publication.
+
+Browser regression scripts require `playwright-core` and a Chrome executable (`CHROME_PATH` can override the default). Serve a non-iOS, non-deploy web build from the repository and set `DRAG_URL` if needed (default: `http://127.0.0.1:8789/html/game.html`). The online script builds the local Rust server and removes its temporary directory when finished.
+
+```sh
+node scripts/check-drag.cjs
+node scripts/check-drag-online.cjs
+```
+
+Native drag test selector:
+
+```sh
+xcodebuild -project ios/Maginet.xcodeproj -scheme Maginet \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -derivedDataPath ios/build test \
+  -only-testing:MaginetUITests/GameUITests/testTutorialDraggingInBothOrientations
+```

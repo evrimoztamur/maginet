@@ -3,6 +3,13 @@ use std::collections::VecDeque;
 
 use shared::{Game, Mage, Mages, Position, PowerUp, Turn};
 
+#[derive(Clone, Copy, Debug)]
+pub struct DragLanding {
+    pub ground: (f64, f64),
+    pub offset_y: f64,
+}
+
+pub const LANDING_FRAMES: u64 = 8;
 pub const MOVE_FRAMES: u64 = 18;
 pub const MISSILE_FRAMES: u64 = 12;
 const MISSILE_LEAD_FRAMES: u64 = 3; // Launch 50 ms before landing.
@@ -23,23 +30,32 @@ struct Transition {
     start: u64,
     mage_index: usize,
     reverse: bool,
+    landing: Option<DragLanding>,
 }
 
 impl Transition {
+    fn move_frames(&self) -> u64 {
+        if self.landing.is_some() {
+            LANDING_FRAMES
+        } else {
+            MOVE_FRAMES
+        }
+    }
+
     fn launch(&self) -> u64 {
-        self.start + MOVE_FRAMES - MISSILE_LEAD_FRAMES
+        self.start + self.move_frames() - MISSILE_LEAD_FRAMES
     }
 
     fn end(&self) -> u64 {
         if self.hits.is_empty() {
-            self.start + MOVE_FRAMES
+            self.start + self.move_frames()
         } else {
             self.launch() + MISSILE_FRAMES
         }
     }
 
     fn progress(&self, frame: u64) -> f64 {
-        (frame.saturating_sub(self.start) as f64 / MOVE_FRAMES as f64).min(1.0)
+        (frame.saturating_sub(self.start) as f64 / self.move_frames() as f64).min(1.0)
     }
 
     fn source(&self, target: Position) -> Position {
@@ -102,6 +118,18 @@ impl Presentation {
         hits: Vec<Position>,
         frame: u64,
     ) {
+        self.enqueue_landing(before, after, turn, hits, frame, None);
+    }
+
+    pub fn enqueue_landing(
+        &mut self,
+        before: Game,
+        after: &Game,
+        turn: Turn,
+        hits: Vec<Position>,
+        frame: u64,
+        landing: Option<DragLanding>,
+    ) {
         let earliest = self
             .sampled_at
             .map_or(frame, |previous| frame.max(previous + 1));
@@ -113,6 +141,7 @@ impl Presentation {
         self.queue.push_back(Transition {
             mage_index,
             reverse: false,
+            landing,
             before,
             after: after.clone(),
             turn,
@@ -145,6 +174,7 @@ impl Presentation {
                 start,
                 mage_index,
                 reverse: true,
+                landing: None,
             });
             before = after;
         }
@@ -158,7 +188,7 @@ impl Presentation {
             if crossed(t.start) {
                 signals.push(Signal::Move);
             }
-            if !t.reverse && crossed(t.start + MOVE_FRAMES) {
+            if !t.reverse && crossed(t.start + t.move_frames()) {
                 if let Some(powerup) = t.before.powerups().get(&t.turn.1) {
                     signals.push(Signal::Pickup(*powerup));
                 }
@@ -188,7 +218,14 @@ impl Presentation {
                     if t.mage_index == mage.index {
                         let progress = t.progress(frame);
                         let smooth = progress * progress * (3.0 - 2.0 * progress);
-                        position = lerp(t.turn.0, t.turn.1, smooth);
+                        position = if let Some(landing) = t.landing {
+                            (
+                                landing.ground.0 + (t.turn.1 .0 as f64 - landing.ground.0) * smooth,
+                                landing.ground.1 + (t.turn.1 .1 as f64 - landing.ground.1) * smooth,
+                            )
+                        } else {
+                            lerp(t.turn.0, t.turn.1, smooth)
+                        };
                         if progress == 1.0 {
                             visual.position = t.turn.1;
                             visual.powerup = t.after.get_mage(mage.index).unwrap().powerup;
@@ -212,7 +249,9 @@ impl Presentation {
         if mover.index == index {
             let p = t.progress(frame);
             // Rise gently for most of the move, then accelerate sharply into the landing.
-            pose.offset_y = if p < 0.75 {
+            pose.offset_y = if let Some(landing) = t.landing {
+                landing.offset_y * (1.0 - p * p)
+            } else if p < 0.75 {
                 let rise = p / 0.75;
                 -12.0 * rise * rise * (3.0 - 2.0 * rise)
             } else {
@@ -357,6 +396,63 @@ mod tests {
         let before = game.clone();
         let hits = game.take_move(turn.0, turn.1).unwrap();
         presentation.enqueue(before, game, turn, hits, frame);
+    }
+
+    #[test]
+    fn drag_lands_from_release_and_fires_each_effect_once() {
+        let mut game = game(Some(PowerUp::Diagonal), false);
+        let mut visual = Presentation::new(&game);
+        let turn = Turn(Position(0, 0), Position(1, 0));
+        let before = game.clone();
+        assert!(!game.try_move(turn.0, Position(-1, 0)));
+        assert_eq!(game.turns(), 0);
+        let hits = game.take_move(turn.0, turn.1).unwrap();
+        visual.enqueue_landing(
+            before,
+            &game,
+            turn,
+            hits,
+            100,
+            Some(DragLanding {
+                ground: (0.9, 0.1),
+                offset_y: -11.5,
+            }),
+        );
+        assert_eq!(game.turns(), 1);
+        let mover = |v: &Presentation, f| {
+            v.mages(f)
+                .into_iter()
+                .find(|(m, _)| m.index == 0)
+                .unwrap()
+                .1
+        };
+        assert_eq!(mover(&visual, 100), (0.9, 0.1));
+        assert_eq!(
+            visual
+                .mages(100)
+                .iter()
+                .filter(|(m, _)| m.index == 0)
+                .count(),
+            1
+        );
+        assert_eq!(visual.pose(0, 100).offset_y, -11.5);
+        assert!(mover(&visual, 104).0 > 0.9);
+        assert_eq!(mover(&visual, 108), (1.0, 0.0));
+        assert_eq!(visual.pose(0, 108).offset_y, 0.0);
+        assert!(visual.missiles(104).is_empty());
+        assert_eq!(visual.missiles(105).len(), 1);
+        assert_eq!(
+            visual.advance(108),
+            vec![Signal::Move, Signal::Pickup(PowerUp::Diagonal)]
+        );
+        assert!(visual.pose(0, 108).flip_x);
+        assert!(visual.advance(108).is_empty());
+        assert_eq!(
+            visual.advance(117),
+            vec![Signal::Impact(vec![Position(3, 0)])]
+        );
+        assert!(!visual.busy());
+        assert!(visual.advance(118).is_empty());
     }
 
     #[test]
