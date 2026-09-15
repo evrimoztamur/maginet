@@ -73,7 +73,7 @@ To add an effect, derive its data from the accepted turn and snapshots, sample c
 
 The campaign map starts at the guided Tutorial portal beside Basics I. Complete the tutorial (from the map or main menu) to unlock campaign battles; leaving it unfinished keeps them locked. Saved wins remain completed even after a later loss.
 
-Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route beside revealed, uncompleted portals. Connections touching completed portals have no arrows. Ordinary links work in both directions; one-way branch exits never unlock backwards. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. Eight 1v1 junction battles fill the branching corridors, bringing the total to 36 portals. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by map column. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
+Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route only from playable, uncompleted portals; revealed-but-locked portals have no arrows. Connections touching completed portals have no arrows. Ordinary links work in both directions; one-way branch exits never unlock backwards. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. Eight 1v1 junction battles fill the branching corridors, bringing the total to 36 portals. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by map column. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
 
 A fixed top-left star counter shows completed portals over the total, including the tutorial, with the total adapted to the demo build.
 
@@ -227,3 +227,10 @@ NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-combat-rede
 ```
 
 The graph browser check exports the live shared catalogue so that changed scenario progress keys are actually exercised. Earlier assessment datasets and their layout metadata remain immutable; current combined matrices explicitly attribute every reused result.
+
+
+### Exploration layout
+
+The campaign now has one wide loop returning from Challenge III through Junctions II–VII into Rite IV, enclosing three empty grid cells. Four optional paths end without reconnecting: Diagonals II–III, Diagonals IV → Beams II–III → Challenge II, Shields II–III → Challenge IV, and Challenge I → Junction VIII (entered from Rite II). They remain reachable and replayable; only their former return links are removed.
+
+All 36 portals and battle codes are retained, with 36 cardinal-neighbour connections. No extra filler battles or skipped cells were added. The main teaching route remains intact, and the wide loop still bypasses Rites I–III. No pair of physically adjacent portals is now separated by an absent connection, which keeps the layout visually unambiguous. The tutorial-plus-Basics demo is unchanged. Assessment graphs are historical snapshots; live UI and new analyser runs use the current shared catalogue.

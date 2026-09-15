@@ -338,8 +338,7 @@ impl State for ArenaMenu {
             let b = entries.iter().find(|e| e.id == edge.to).unwrap().position;
             let (from, to) = (a, b);
             // Arrows guide forward progression; replay/backtracking stays available.
-            if !self.level_portals[&from].title_visible
-                || self.level_portals[&from].status == PortalStatus::Won
+            if self.level_portals[&from].status != PortalStatus::Unlocked
                 || self.level_portals[&to].status == PortalStatus::Won
             {
                 continue;
@@ -702,7 +701,10 @@ mod tests {
     #[cfg(not(feature = "demo"))]
     fn directed_exits_and_unconnected_neighbours_use_the_graph() {
         let entries = shared::campaign_catalogue(false);
-        for route in shared::OPTIONAL_ROUTES {
+        for route in shared::OPTIONAL_ROUTES
+            .iter()
+            .filter(|route| shared::MAIN_ROUTE.contains(route.last().unwrap()))
+        {
             let end = entries
                 .iter()
                 .find(|e| e.id == route[route.len() - 2])

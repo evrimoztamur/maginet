@@ -400,7 +400,12 @@ fn reports(output: &Path, metadata: &Metadata, matchups: &[Matchup]) -> Result<(
         if route_index > 0 {
             writeln!(
                 md,
-                "\n### Optional route {route_index} (final exit one-way)\n"
+                "\n### Optional route {route_index} ({})\n",
+                if shared::MAIN_ROUTE.contains(route.last().unwrap()) {
+                    "one-way return"
+                } else {
+                    "dead end"
+                }
             )?;
         }
         for pair in route.windows(2) {

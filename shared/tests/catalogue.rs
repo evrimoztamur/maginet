@@ -48,7 +48,7 @@ fn teaching_prerequisites_are_cut_vertices() {
     use std::collections::HashSet;
     let entries = campaign_catalogue(false);
     let edges = campaign_connections(&entries);
-    assert_eq!(edges.len(), 40);
+    assert_eq!(edges.len(), 36);
     assert_eq!(
         entries.iter().map(|e| &e.id).collect::<HashSet<_>>().len(),
         36
@@ -111,7 +111,10 @@ fn teaching_prerequisites_are_cut_vertices() {
     for branch in OPTIONAL_ROUTES {
         let pair = &branch[branch.len() - 2..];
         assert!(campaign_connected(&edges, pair[0], pair[1]));
-        assert!(!campaign_connected(&edges, pair[1], pair[0]));
+        assert_eq!(
+            campaign_connected(&edges, pair[1], pair[0]),
+            !MAIN_ROUTE.contains(&pair[1])
+        );
     }
     assert!(!campaign_connected(&edges, "patterns-iii", "diagonals-ii"));
     let demo = campaign_catalogue(true);
@@ -185,34 +188,30 @@ fn every_connection_is_a_cardinal_neighbour_and_junctions_are_unique_duels() {
         );
         assert!(!entry.demo);
     }
-    let expected: &[&[&str]] = &[
-        &["diagonals-i", "diagonals-ii", "diagonals-iii", "beams-i"],
-        &[
-            "beams-i",
-            "diagonals-iv",
-            "beams-ii",
-            "beams-iii",
-            "challenge-ii",
-            "shields-i",
-        ],
-        &["shields-i", "challenge-i", "rite-ii"],
-        &["shields-i", "challenge-iii", "rite-iv"],
-        &[
-            "shields-i",
-            "shields-ii",
-            "shields-iii",
-            "challenge-iv",
-            "rite-iv",
-        ],
-    ];
-    for (route, expected) in OPTIONAL_ROUTES.iter().zip(expected) {
-        assert_eq!(
-            route
-                .iter()
-                .copied()
-                .filter(|id| !id.starts_with("junction-"))
-                .collect::<Vec<_>>(),
-            *expected
-        );
+    // The loop has an empty interior, and side branches do not touch accidentally.
+    let occupied: std::collections::HashSet<_> = entries.iter().map(|e| e.position).collect();
+    for x in 10..=12 {
+        assert!(!occupied.contains(&(x, -2)));
+    }
+    assert_eq!(
+        OPTIONAL_ROUTES
+            .iter()
+            .filter(|r| MAIN_ROUTE.contains(r.last().unwrap()))
+            .count(),
+        1
+    );
+    for a in &entries {
+        for b in &entries {
+            if (a.position.0 - b.position.0).abs() + (a.position.1 - b.position.1).abs() == 1 {
+                let edges = campaign_connections(&entries);
+                assert!(
+                    campaign_connected(&edges, &a.id, &b.id)
+                        || campaign_connected(&edges, &b.id, &a.id),
+                    "unconnected neighbours crowd {} and {}",
+                    a.id,
+                    b.id
+                );
+            }
+        }
     }
 }

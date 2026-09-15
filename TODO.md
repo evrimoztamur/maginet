@@ -134,3 +134,5 @@
 - Combat redesign completed for Patterns I, Rite II and Rite IV: inactivity endings fell to 51/19/49 per 300 Normal/Normal games. Human-test the remaining retreat loops and immobilization endings; see assessments/campaign-combat-redesign/interpretation.md.
 - Check perceived difficulty after the forgiving Basics battles and Shields I. Keep optional challenges demanding.
 - See `assessments/campaign-revision/interpretation.md` for evidence and limitations; preserve the original assessment.
+
+- Exploration layout: one wider Rite IV loop and four reachable dead-end paths; arrows originate only at playable, uncompleted battles. Human-test map discoverability and navigation.

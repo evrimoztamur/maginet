@@ -118,18 +118,18 @@ pub const MAIN_ROUTE: &[&str] = &[
     "ascension-i",
     "ascension-ii",
 ];
-/// Optional routes: entrance, battles, and destination. Only the final edge is one-way.
+/// Optional routes, including their entrance. Only routes rejoining the main route
+/// have a one-way final exit; the others are explorable dead ends.
 pub const OPTIONAL_ROUTES: &[&[&str]] = &[
-    &["diagonals-i", "diagonals-ii", "diagonals-iii", "beams-i"],
+    &["diagonals-i", "diagonals-ii", "diagonals-iii"],
     &[
         "beams-i",
         "diagonals-iv",
         "beams-ii",
         "beams-iii",
         "challenge-ii",
-        "shields-i",
     ],
-    &["shields-i", "junction-i", "challenge-i", "rite-ii"],
+    &["rite-ii", "challenge-i", "junction-viii"],
     &[
         "shields-i",
         "junction-i",
@@ -138,18 +138,11 @@ pub const OPTIONAL_ROUTES: &[&[&str]] = &[
         "junction-iii",
         "junction-iv",
         "junction-v",
-        "rite-iv",
-    ],
-    &[
-        "shields-i",
-        "shields-ii",
-        "shields-iii",
-        "challenge-iv",
         "junction-vi",
         "junction-vii",
-        "junction-viii",
         "rite-iv",
     ],
+    &["shields-i", "shields-ii", "shields-iii", "challenge-iv"],
 ];
 /// An explicit connection. Ordinary connections can be followed in either direction.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -172,7 +165,7 @@ pub fn campaign_connections(entries: &[CampaignEntry]) -> Vec<CampaignConnection
                 let edge = CampaignConnection {
                     from: pair[0].into(),
                     to: pair[1].into(),
-                    one_way: branch && i == route.len() - 2,
+                    one_way: branch && i == route.len() - 2 && MAIN_ROUTE.contains(&pair[1]),
                 };
                 if !edges.contains(&edge) {
                     edges.push(edge);
@@ -193,23 +186,31 @@ fn portal_position(name: &str, original: (isize, isize)) -> (isize, isize) {
         "Diagonals I" => (6, -1),
         "Beams I" => (7, -1),
         "Shields I" => (8, -1),
+        "Junction I" => (9, -1),
         "Rite I" => (10, -1),
-        "Rite II" => (10, 0),
-        "Rite III" => (11, 0),
-        "Rite IV" => (12, 0),
-        "Ascension I" => (13, 0),
-        "Ascension II" => (14, 0),
+        "Rite II" => (11, -1),
+        "Rite III" => (12, -1),
+        "Rite IV" => (13, -1),
+        "Ascension I" => (14, -1),
+        "Ascension II" => (15, -1),
         "Diagonals II" => (6, 0),
-        "Diagonals III" => (7, 0),
+        "Diagonals III" => (6, 1),
         "Diagonals IV" => (7, -2),
         "Beams II" => (7, -3),
-        "Beams III" => (8, -3),
-        "Challenge II" => (8, -2),
-        "Challenge I" => (9, 0),
+        "Beams III" => (7, -4),
+        "Challenge II" => (7, -5),
+        "Challenge I" => (11, 0),
+        "Junction VIII" => (11, 1),
         "Challenge III" => (9, -2),
+        "Junction II" => (9, -3),
+        "Junction III" => (10, -3),
+        "Junction IV" => (11, -3),
+        "Junction V" => (12, -3),
+        "Junction VI" => (13, -3),
+        "Junction VII" => (13, -2),
         "Shields II" => (8, 0),
         "Shields III" => (8, 1),
-        "Challenge IV" => (9, 1),
+        "Challenge IV" => (8, 2),
         _ => original,
     }
 }

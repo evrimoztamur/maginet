@@ -16,15 +16,16 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
  const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
  for(const [won,target,available] of [
   ['diagonals-i','diagonals-ii',true],
-  ['diagonals-iii','beams-i',true],
+  ['diagonals-iii','beams-i',false],
   ['beams-i','diagonals-iii',false],
   ['shields-i','junction-i',true],
   ['junction-i','challenge-iii',true],
   ['challenge-iii','junction-ii',true],
-  ['junction-v','rite-iv',true],
-  ['rite-iv','junction-v',false],
-  ['junction-viii','rite-iv',true],
-  ['rite-iv','junction-viii',false],
+  ['junction-vii','rite-iv',true],
+  ['rite-iv','junction-vii',false],
+  ['rite-ii','challenge-i',true],
+  ['challenge-i','junction-viii',true],
+  ['junction-viii','rite-iv',false],
   ['shields-ii','challenge-i',false],
  ]) {
   const page=await browser.newPage({viewport:{width:1000,height:700}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -66,13 +67,13 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   const known=new Set(availableIds);
   for(const [from,to] of directions)if(availableIds.has(from))known.add(to);
   const completed=new Set(['tutorial',won]);
-  const expected=graph.connections.map(e=>[e.from,e.to]).filter(([from,to])=>known.has(from)&&!completed.has(from)&&!completed.has(to)).map(([from,to])=>{
+  const expected=graph.connections.map(e=>[e.from,e.to]).filter(([from,to])=>availableIds.has(from)&&!completed.has(from)&&!completed.has(to)).map(([from,to])=>{
    const a=graph.catalogue.find(e=>e.id===from).position,b=graph.catalogue.find(e=>e.id===to).position;
    const dx=b[0]-a[0],dy=b[1]-a[1],distance=dy>0?72:dy<0?40:48;
    return {x:a[0]*128+dx*distance,y:a[1]*128+dy*distance,dx,dy};
   });
   const arrows=await page.evaluate(()=>arrowContext.movementArrows);
-  assert.equal(arrows.length,expected.length,'one forward arrow per link, with no arrows at completed portals');
+  assert.equal(arrows.length,expected.length,'arrows only from playable uncompleted portals, never revealed-but-locked portals');
   assert.equal(await page.evaluate(()=>paths.length),0,'old drawn arrowheads removed');
   const offset={x:arrows[0].x-expected[0].x+3*expected[0].dx,y:arrows[0].y-expected[0].y+3*expected[0].dy};
   arrows.forEach((a,i)=>{
@@ -86,5 +87,5 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   if(!available){await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);assert((await page.evaluate(()=>glyphs.join(''))).includes('Locked'));}
   assert.deepEqual(errors,[]);await page.close();
  }
- await browser.close();console.log('movement sprites, known-level visibility, loop entrances and blocked reverse unlocks passed');
+ await browser.close();console.log('playable-only arrows, detached side paths, wide-loop return and blocked reverse unlocks passed');
 })().catch(e=>{console.error(e);process.exit(1)});
