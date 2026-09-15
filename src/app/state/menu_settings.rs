@@ -358,7 +358,7 @@ impl Default for SettingsMenu {
             interface = Interface::new(vec![
                 interface.boxed(),
                 ButtonElement::new(
-                    (160, 196),
+                    (160, 180),
                     (144, 16),
                     99,
                     LabelTrim::Round,

@@ -2,7 +2,7 @@ use super::*;
 use crate::app::{pointer::GestureEvent, ClipId, Particle, ParticleSort, ParticleSystem};
 
 const CENTER: (f64, f64) = (296.0, 36.0);
-const CLICK_WINDOW: u64 = 45;
+const CLICK_WINDOW: u64 = 180; // Allow time to read each countdown step.
 
 #[derive(Default)]
 struct Spring {
@@ -38,9 +38,9 @@ impl ClickSequence {
             return false;
         }
         self.expire(frame);
-        self.first.get_or_insert(frame);
+        self.first = Some(frame);
         self.count += 1;
-        if self.count == 3 {
+        if self.count == 4 {
             self.count = 0;
             self.first = None;
             self.cooldown_until = frame + 90;
@@ -171,17 +171,31 @@ impl ResetStar {
         {
             "Campaign reset"
         } else if self.clicks.count == 1 {
-            "2 more clicks"
+            "3 clicks to reset!"
         } else if self.clicks.count == 2 {
-            "1 more click"
-        } else if self.hovered(&app.pointer) {
-            "Reset campaign"
+            "2 clicks to reset!"
+        } else if self.clicks.count == 3 {
+            "1 click to reset!"
         } else {
             ""
         };
-        draw_text(context, atlas, 180.0, 184.0, text)?;
-        if self.hovered(&app.pointer) && self.clicks.count == 0 && text == "Reset campaign" {
-            draw_text(context, atlas, 180.0, 196.0, "Click star 3x")?;
+        if !text.is_empty() {
+            let width = crate::draw::text_length(text) as i32 + 12;
+            let settings = &app.canvas_settings;
+            let right = settings.interface_width as i32 + settings.padding_x() as i32 - 6;
+            let x = (CENTER.0 as i32 - width / 2).min(right - width);
+            draw_label(
+                context,
+                atlas,
+                (x, CENTER.1 as i32 + 22),
+                (width, 16),
+                "#001515",
+                &ContentElement::Text(text.into(), Alignment::Center),
+                &app.pointer,
+                app.frame,
+                &LabelTrim::Round,
+                false,
+            )?;
         }
         Ok(())
     }
@@ -218,16 +232,17 @@ pub(super) fn reset_campaign_progress() -> Result<(), JsValue> {
 mod tests {
     use super::*;
     #[test]
-    fn triple_click_is_timed_and_fires_once() {
+    fn fourth_click_is_timed_and_fires_once() {
         let mut clicks = ClickSequence::default();
         assert!(!clicks.click(10));
         assert!(!clicks.click(20));
-        assert!(!clicks.click(60)); // Earlier clicks expired.
-        assert!(!clicks.click(65));
-        assert!(clicks.click(70));
-        assert!(!clicks.click(71));
-        assert!(!clicks.click(72));
-        assert!(!clicks.click(73));
+        assert!(!clicks.click(210)); // Earlier clicks expired.
+        assert!(!clicks.click(220));
+        assert!(!clicks.click(230));
+        assert!(clicks.click(240));
+        assert!(!clicks.click(241));
+        assert!(!clicks.click(242));
+        assert!(!clicks.click(243));
         assert_eq!(clicks.count, 0);
     }
     #[test]
