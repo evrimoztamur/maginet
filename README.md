@@ -29,6 +29,20 @@ watchexec -w src -w shared -r -e rs -- wasm-pack build --target web --debug --ou
 
 Build against the production API by adding `-- --features deploy` to the `wasm-pack` command. `deploy` also disables development hotkeys. `demo` gates demo content. Building does not publish the game. Generated Wasm packages and `target/` are ignored; edit the Rust sources rather than generated JavaScript.
 
+### Update the iPhone app
+
+Run from the repository root. Connect and unlock the phone to install and launch:
+
+```sh
+./deploy-ios.sh                       # Release build only
+./deploy-ios.sh YOUR_DEVICE_ID        # Build, install, and launch by device ID
+./deploy-ios.sh My iPhone             # Or use an exact device name
+```
+
+Use `xcrun devicectl list devices` to find a phone’s identifier. Both hardware UDIDs and CoreDevice identifiers are accepted; ambiguous names are rejected. The script rebuilds the bundled Wasm assets before Xcode and installs the pinned wasm-bindgen CLI into ignored `ios/build-tools/` when needed. Set `WASM_BINDGEN` to use an existing installation.
+
+The default configuration is `Release`; use `CONFIGURATION=Debug` for a debug build. Select your signing team in Xcode or pass `DEVELOPMENT_TEAM=YOUR_TEAM_ID ./deploy-ios.sh YOUR_DEVICE_ID`. Device identifiers and signing teams are supplied locally, never hard-coded in the script. See [the iOS README](ios/README.md) for prerequisites and StoreKit testing. App Store updates require a new archive and upload.
+
 ## Where things live
 
 | Path | Responsibility |

@@ -23,6 +23,10 @@ xcodegen generate --spec ios/project.yml
 
 For release, regenerate assets, select a real-device destination and your distribution team, and use Product → Archive. The default Debug Run scheme selects the local StoreKit configuration. Disable that configuration when testing production sandbox products. No release has been published by this implementation.
 
+## Command-line device updates
+
+From the repository root, run `./deploy-ios.sh` for a Release device build, or `./deploy-ios.sh <device-id>` to build, install, and launch on a connected iPhone. Exact device names also work: `./deploy-ios.sh My iPhone`. The script rebuilds game assets and manages the pinned wasm-bindgen CLI. See [the root README](../README.md#update-the-iphone-app) for overrides.
+
 ## App icon
 
 The AppIcon asset catalog uses the existing `static/png/appicon.png` artwork, scaled to an opaque 1024×1024 PNG with nearest-neighbor sampling. Transparent icon pixels use a dark backing (`#160e22`). Xcode generates the iPhone icon sizes from that source; `ASSETCATALOG_COMPILER_APPICON_NAME` selects it in both build configurations.

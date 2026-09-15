@@ -70,21 +70,22 @@ impl State for SkirmishMenu {
 
         draw_sprite(context, atlas, 256.0, 320.0, 128.0, 64.0, 0.0, 0.0)?;
 
-        context.set_stroke_style(&JsValue::from_str(match self.lobby_settings.player_team {
-            Team::Red => "#ef786b",
-            Team::Blue => "#78afff",
-        }));
-        context.set_line_width(2.0);
-        context.stroke_rect(
-            0.0,
-            if self.lobby_settings.player_team == Team::Red {
-                0.0
-            } else {
-                32.0
-            },
-            128.0,
+        let selected_red = self.lobby_settings.player_team == Team::Red;
+        let bounce = (frame as f64 / 10.0).sin().abs() * 4.0;
+        context.save();
+        context.translate(144.0 - bounce, if selected_red { 16.0 } else { 48.0 })?;
+        context.rotate(std::f64::consts::FRAC_PI_2)?;
+        draw_sprite(
+            context,
+            atlas,
+            if selected_red { 96.0 } else { 128.0 },
+            256.0,
             32.0,
-        );
+            32.0,
+            -16.0,
+            -16.0,
+        )?;
+        context.restore();
 
         for mage in self.sentinel_lobby.game.iter_mages() {
             context.save();
@@ -97,7 +98,7 @@ impl State for SkirmishMenu {
                 atlas,
                 mage,
                 frame,
-                self.sentinel_lobby.game.starting_team(),
+                self.lobby_settings.player_team,
                 true,
                 None,
             )?;
@@ -122,6 +123,7 @@ impl State for SkirmishMenu {
 
         if pointer.clicked() {
             let (x, y) = pointer.location;
+            // The two tile rows are the selection targets.
             if (108..236).contains(&x) && (112..176).contains(&y) {
                 self.lobby_settings.player_team = if y < 144 { Team::Red } else { Team::Blue };
             }

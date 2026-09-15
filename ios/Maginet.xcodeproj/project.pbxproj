@@ -40,9 +40,9 @@
 		2BC7F6A4B48BE0CD41A6E6A0 /* MaginetTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MaginetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		30873D10AABE30F8F38C1548 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		51152EB0FA9230CC1622CF28 /* MaginetUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MaginetUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		6B4F839D543319F74B014766 /* Maginet.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Maginet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B4F839D543319F74B014766 /* Maginet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maginet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		778D5D1CE91EEA2E99742B84 /* WebTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebTests.swift; sourceTree = "<group>"; };
-		8A6D6CDEBC2A4225C9EFD5CB /* FullGame.storekit */ = {isa = PBXFileReference; path = FullGame.storekit; sourceTree = "<group>"; };
+		8A6D6CDEBC2A4225C9EFD5CB /* FullGame.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = FullGame.storekit; sourceTree = "<group>"; };
 		9964ADF80FE95B0A2D7BEBE5 /* LocalServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalServer.swift; sourceTree = "<group>"; };
 		AA0DF90D7D2AFA458EB80DD0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ABF25932A867A3014C1E07F8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -451,6 +451,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = CCHS7A8LHS;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Maginet/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -468,6 +469,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = CCHS7A8LHS;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Maginet/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

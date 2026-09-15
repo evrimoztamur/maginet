@@ -207,3 +207,9 @@ a {
     height: auto;
     color: #F94E6D;
 }
+
+.privacy-support {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    margin-top: 4px;
+}

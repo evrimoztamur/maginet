@@ -13,7 +13,7 @@
 - The existing Maginet icon is now included as an opaque 1024×1024 AppIcon source. Device and simulator asset-catalog builds pass; the installed iPhone bundle selects AppIcon.
 - `git diff --check` passed. Generated assets, build output, signing user data, and overview PNGs are ignored. No commits or publication.
 
-## Physical iPhone — Monolith II (iPhone 15)
+## Physical iPhone (iPhone 15)
 
 **All three selected physical-device tests passed on iOS 26.6.1.** The updated app, including the existing Maginet icon, is installed and a successful standalone launch was confirmed.
 
@@ -31,9 +31,9 @@ Rerun these checks with:
 
 ```sh
 xcodebuild -project ios/Maginet.xcodeproj -scheme Maginet \
-  -destination 'platform=iOS,id=00008120-000E0C122272201E' \
+  -destination 'platform=iOS,id=YOUR_DEVICE_ID' \
   -derivedDataPath ios/build-device -allowProvisioningUpdates \
-  DEVELOPMENT_TEAM=CCHS7A8LHS test \
+  DEVELOPMENT_TEAM=YOUR_TEAM_ID test \
   -only-testing:MaginetTests/WebTests -only-testing:MaginetUITests
 ```
 
@@ -56,8 +56,8 @@ Build/test output contains existing Rust unused-code warnings and Apple's simula
 - Page and native shell backgrounds now match the web canvas container (#002a2a). Web content disables selection and touch callouts; native code entry remains usable.
 - Workspace tests: 51 passed. Compile-time demo tests: 23 passed. iOS Wasm assets rebuilt successfully.
 - iPhone 17 Pro simulator: all 6 native, StoreKit, WebView and UI tests passed. WebView regression checks the source raster dimensions, identity transform, disabled smoothing, selection/callout styles, and background.
-- Monolith II: all 3 WebView/UI tests passed with the new build, including campaign-boundary navigation, editor keyboard, online purchase entry, and both orientations. Captured screen images show clean board edges. The updated app was relaunched after testing.
-- iPhone 16e simulator: all 3 selected WebView/UI tests passed. After correcting the background to the canvas container color, the targeted WebView test passed again on iPhone 17 Pro and Monolith II, verifying rgb(0, 42, 42).
+- Physical iPhone: all 3 WebView/UI tests passed with the new build, including campaign-boundary navigation, editor keyboard, online purchase entry, and both orientations. Captured screen images show clean board edges. The updated app was relaunched after testing.
+- iPhone 16e simulator: all 3 selected WebView/UI tests passed. After correcting the background to the canvas container color, the targeted WebView test passed again on iPhone 17 Pro and the physical iPhone, verifying rgb(0, 42, 42).
 
 ## Mage drag-and-drop (2026-09-15)
 
@@ -65,7 +65,7 @@ Build/test output contains existing Rust unused-code warnings and Apple's simula
 - Rust workspace: 55 tests passed. The client has 30 tests, also passing with the `ios` feature. New tests cover gesture retention, cancellation, touch identity, threshold/bob, landing continuity, and one-shot pickup/impact sequencing. The coordinate round-trip test now tests canvas rotation only on web; iOS rotates the native landscape view.
 - `scripts/check-drag.cjs`: Chrome mouse and synthetic touch checks cover tutorial and local battles, exact shadow tracking, lift, one sprite, invalid/outside/UI drops, landing continuity, undo and taps, selecting another mage, touch confirmation, multiple fingers, matching cancellation, short gestures, duplicate mouse suppression, backgrounding, resize, and lost focus. It holds AI replies for deterministic position assertions; the native runs exercise the tutorial's real AI.
 - `scripts/check-drag-online.cjs`: two controlled browser clients use a disposable local server. Checks verify no history or request on invalid drops, exactly one ordinary `Turn` on valid drops, a held drag surviving empty polling responses, cancellation on a remote turn, and cancellation on replacement history after rematch. No production service or persistent match data is used.
-- iPhone 17 Pro and iPhone 16e simulators, plus Monolith II: `testTutorialDraggingInBothOrientations` passed, exercising outside-board return, valid dragging, and touch confirmation afterward in both landscape orientations. Screenshots are retained in the Xcode results. Physical-device landing screenshots were inspected in both orientations. The WebView startup/worker/raster check also passed on iPhone 17 Pro and Monolith II.
+- iPhone 17 Pro and iPhone 16e simulators, plus the physical iPhone: `testTutorialDraggingInBothOrientations` passed, exercising outside-board return, valid dragging, and touch confirmation afterward in both landscape orientations. Screenshots are retained in the Xcode results. Physical-device landing screenshots were inspected in both orientations. The WebView startup/worker/raster check also passed on iPhone 17 Pro and the physical iPhone.
 - Release iOS Wasm assets rebuilt with wasm-bindgen 0.2.91. No commits or publication.
 
 Browser regression scripts require `playwright-core` and a Chrome executable (`CHROME_PATH` can override the default). Serve a non-iOS, non-deploy web build from the repository and set `DRAG_URL` if needed (default: `http://127.0.0.1:8789/html/game.html`). The online script builds the local Rust server and removes its temporary directory when finished.
