@@ -37,6 +37,10 @@ impl Pointer {
         }
     }
 
+    pub fn is_touch(&self) -> bool {
+        self.touch_cursor
+    }
+
     pub fn accepts_touch(&self, identifier: i32) -> bool {
         self.active_touch == Some(identifier)
     }

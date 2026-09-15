@@ -83,3 +83,15 @@ xcodebuild -project ios/Maginet.xcodeproj -scheme Maginet \
   -derivedDataPath ios/build test \
   -only-testing:MaginetUITests/GameUITests/testTutorialDraggingInBothOrientations
 ```
+
+## Purchase verification diagnostics
+
+- iPhone 17 Pro simulator / iOS 26.2: five Store tests pass, including a direct `Product.purchase()` check that ownership is published immediately and survives foreground refresh and restore.
+- A simulated invalid signature reproduces a recorded purchase that cannot unlock. Purchase and restore now report the verification error; clearing the simulated failure allows restore to recover ownership. Unverified transactions never grant access.
+- Physical iPhone 15 / iOS 26.6.1: reproduced the purchase failure under an active Xcode StoreKit test session. The purchase returns a verified non-consumable and publishes ownership immediately, but a subsequent refresh returns an empty entitlement sequence and clears ownership. `Transaction.latest(for:)`, `Transaction.all`, and the product-specific entitlement query also return no transaction, while `SKTestSession.allTransactions()` contains the purchase. Restore sometimes delivers a verified update, but recovery is inconsistent.
+- The initial device Store suite failed (11 assertions across four purchase tests). The user also reproduced the brief unlock followed by relocking in an interactive Xcode Run.
+- Fixed by caching verified permanent ownership in the native, device-only Keychain. An empty StoreKit result no longer removes a verified purchase. Verified refunds remove both live and cached ownership. Release and Debug records are isolated; unit tests use separate accounts. Settings derives its button from live ownership each frame, showing a disabled “Full Version!” after purchase.
+- Physical iPhone 15 / iOS 26.6.1: all seven native tests pass after the fix. Coverage includes immediate purchase notification, foreground refresh, restore, ownership loaded synchronously from a new Keychain-cache instance, refund invalidation, unverified-purchase rejection and recovery, bundled rendering/worker execution, and ownership propagation to the live WebView through foreground refresh and reload.
+- StoreKit history itself still returns empty on this phone. Cached verified ownership prevents relocking; restoring on a clean installation without a native record still depends on StoreKit delivering a verified transaction. Refunds take effect when StoreKit supplies verified revocation information.
+
+- Final purchase-fix validation: all seven native tests also pass on the iPhone 17 Pro / iOS 26.2 simulator with signing enabled. An unsigned simulator run failed the two Keychain recovery assertions with `errSecMissingEntitlement`; the documented test command now keeps signing enabled. The Release device build succeeds, and the rebuilt app is running on the connected iPhone through Xcode.

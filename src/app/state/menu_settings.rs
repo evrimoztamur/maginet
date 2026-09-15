@@ -1,11 +1,13 @@
+mod reset_star;
+use reset_star::{reset_campaign_progress, ResetStar};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
 use super::{MainMenu, State};
 use crate::{
     app::{
-        Alignment, App, AppContext, ButtonElement, ContentElement, Interface, LabelTheme,
-        LabelTrim, StateSort, UIElement, UIEvent,
+        Alignment, App, AppContext, ButtonElement, ButtonGroupElement, ContentElement, Interface,
+        LabelTheme, LabelTrim, StateSort, UIElement, UIEvent,
     },
     draw::{draw_label, draw_sprite, draw_text},
 };
@@ -15,6 +17,7 @@ pub struct SettingsMenu {
     pub music_volume: i8,
     pub clip_volume: i8,
     difficulty: shared::Difficulty,
+    reset_star: ResetStar,
 }
 
 const BUTTON_BACK: usize = 0;
@@ -22,8 +25,38 @@ const BUTTON_MUSIC_MINUS: usize = 10;
 const BUTTON_MUSIC_PLUS: usize = 11;
 const BUTTON_SOUND_MINUS: usize = 12;
 const BUTTON_SOUND_PLUS: usize = 13;
+const BUTTON_CONTROLS_ON: usize = 20;
+const BUTTON_CONTROLS_OFF: usize = 21;
 
 impl SettingsMenu {
+    pub(crate) fn onscreen_controls_enabled() -> bool {
+        App::kv_get("onscreen_controls") != "off"
+    }
+
+    fn purchase_button() -> ButtonElement {
+        let owned = !crate::access::demo();
+        ButtonElement::new(
+            (0, 216),
+            (144, 16),
+            98,
+            LabelTrim::Round,
+            if owned {
+                LabelTheme::Disabled
+            } else {
+                LabelTheme::Action
+            },
+            ContentElement::Text(
+                if owned {
+                    "Full Version!"
+                } else {
+                    "Unlock Full Game"
+                }
+                .into(),
+                Alignment::Center,
+            ),
+        )
+    }
+
     fn save_volume(&self) {
         App::kv_set("music_volume", self.music_volume.to_string().as_str());
         App::kv_set("clip_volume", self.clip_volume.to_string().as_str());
@@ -120,6 +153,8 @@ impl State for SettingsMenu {
         draw_text(context, atlas, 0.0, 144.0, "AI Difficulty")?;
         draw_text(context, atlas, 64.0, 164.0, self.difficulty.label())?;
 
+        draw_text(context, atlas, 0.0, 184.0, "On-screen controls")?;
+
         context.save();
 
         context.translate(180.0, 28.0)?;
@@ -150,7 +185,12 @@ impl State for SettingsMenu {
 
         self.interface
             .draw(interface_context, atlas, pointer, frame)?;
+        if cfg!(feature = "ios") {
+            Self::purchase_button().draw(interface_context, atlas, pointer, frame)?;
+        }
 
+        self.reset_star
+            .draw(interface_context, atlas, app_context)?;
         Ok(())
     }
 
@@ -159,13 +199,34 @@ impl State for SettingsMenu {
         _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
+        if self.reset_star.tick(app_context) {
+            self.reset_star
+                .complete(app_context, reset_campaign_progress().is_ok());
+        }
         // let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
-        if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
+        let event = self.interface.tick(pointer).or_else(|| {
+            if cfg!(feature = "ios") {
+                Self::purchase_button().tick(pointer)
+            } else {
+                None
+            }
+        });
+        if let Some(UIEvent::ButtonClick(value, clip_id)) = event {
             app_context.audio_system.play_clip_option(clip_id);
 
             match value {
+                BUTTON_CONTROLS_ON | BUTTON_CONTROLS_OFF => {
+                    App::kv_set(
+                        "onscreen_controls",
+                        if value == BUTTON_CONTROLS_ON {
+                            "on"
+                        } else {
+                            "off"
+                        },
+                    );
+                }
                 98 => crate::access::purchase("purchase"),
                 99 => crate::access::purchase("restore"),
                 14 => {
@@ -202,7 +263,7 @@ impl State for SettingsMenu {
 impl Default for SettingsMenu {
     fn default() -> Self {
         let button_back = ButtonElement::new(
-            (84, 224),
+            (84, 240),
             (88, 16),
             BUTTON_BACK,
             LabelTrim::Return,
@@ -246,7 +307,37 @@ impl Default for SettingsMenu {
             crate::app::ContentElement::Sprite((80, 24), (8, 8)),
         );
 
+        let controls_value = if Self::onscreen_controls_enabled() {
+            BUTTON_CONTROLS_ON
+        } else {
+            BUTTON_CONTROLS_OFF
+        };
+        let mut controls = ButtonGroupElement::new(
+            (0, 196),
+            vec![
+                ButtonElement::new(
+                    (0, 0),
+                    (64, 16),
+                    BUTTON_CONTROLS_ON,
+                    LabelTrim::Round,
+                    LabelTheme::Default,
+                    ContentElement::Text("On".into(), Alignment::Center),
+                ),
+                ButtonElement::new(
+                    (68, 0),
+                    (64, 16),
+                    BUTTON_CONTROLS_OFF,
+                    LabelTrim::Round,
+                    LabelTheme::Default,
+                    ContentElement::Text("Off".into(), Alignment::Center),
+                ),
+            ],
+            controls_value,
+        );
+        controls.select_group_value(controls_value);
+
         let mut interface = Interface::new(vec![
+            controls.boxed(),
             ButtonElement::new(
                 (0, 160),
                 (56, 16),
@@ -267,16 +358,7 @@ impl Default for SettingsMenu {
             interface = Interface::new(vec![
                 interface.boxed(),
                 ButtonElement::new(
-                    (0, 188),
-                    (144, 16),
-                    98,
-                    LabelTrim::Round,
-                    LabelTheme::Action,
-                    ContentElement::Text("Unlock Full Game".into(), Alignment::Center),
-                )
-                .boxed(),
-                ButtonElement::new(
-                    (160, 188),
+                    (160, 216),
                     (144, 16),
                     99,
                     LabelTrim::Round,
@@ -290,6 +372,7 @@ impl Default for SettingsMenu {
 
         SettingsMenu {
             interface,
+            reset_star: ResetStar::default(),
             difficulty: shared::Difficulty::from_preference(&App::kv_get("difficulty")),
             music_volume,
             clip_volume,

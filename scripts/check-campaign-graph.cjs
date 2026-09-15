@@ -114,7 +114,7 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
     assert.equal(level.board.width,4);assert.equal(level.board.height,4);
     assert.equal(level.board.style,'Grass');assert.equal(level.mages.length,8);
     trials.push(request.seed);
-    if(trial===0){await click(-16,107);await click(128,116);}
+    if(trial===0){await click(-16,107);await click(128,116);await click(128,116);}
    }
    assert.notEqual(trials[0],trials[1],'Chaos rematch receives a fresh seed');
   }

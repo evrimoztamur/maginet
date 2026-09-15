@@ -200,3 +200,34 @@ fn every_connection_is_a_cardinal_neighbour_without_filler_or_accidental_contact
         }
     }
 }
+
+#[test]
+fn tutorial_teaches_cardinal_movement_and_basics_keep_the_original_short_puzzles() {
+    let entries = shared::campaign_catalogue(false);
+    let tutorial = entries.iter().find(|e| e.tutorial).unwrap().level();
+    assert_eq!(tutorial.as_code(), shared::TUTORIAL_CODE);
+    assert_eq!(tutorial.powerups.len(), 4);
+    assert!(tutorial
+        .powerups
+        .values()
+        .all(|p| matches!(p, shared::PowerUp::Boulder(_))));
+    assert!(tutorial.mages.iter().all(|m| !m.has_diagonals()));
+    for (id, original) in [
+        ("basics-i", "hg12g014cm0j800"),
+        ("basics-ii", "e01jg1148m0j8k834g00"),
+        ("basics-iii", "j0228014cm0j8v804gp04900"),
+    ] {
+        let level = entries.iter().find(|e| e.id == id).unwrap().level();
+        assert_eq!(level.as_code(), original);
+        assert!(level.powerups.is_empty());
+    }
+    assert_eq!(
+        shared::campaign_progress_aliases(shared::TUTORIAL_CODE),
+        &["hg18a09m4g0m81g00c4068035g14r0v008"]
+    );
+    assert_eq!(
+        shared::campaign_progress_aliases("e01jg1148m0j8k834g00"),
+        &["e01jg1248m0j8k834g00"]
+    );
+    assert!(shared::campaign_progress_aliases("onscreen_controls").is_empty());
+}

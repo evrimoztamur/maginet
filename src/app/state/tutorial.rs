@@ -17,7 +17,6 @@ use crate::{
 enum TutorialStage {
     Movement,
     Attacking,
-    Charging,
     FinalBlow,
     Victory,
 }
@@ -54,12 +53,23 @@ impl State for Tutorial {
         atlas: &HtmlCanvasElement,
         app_context: &AppContext,
     ) -> Result<(), JsValue> {
+        interface_context.save();
+        if Game::touch_enabled(app_context) {
+            interface_context.translate(0.0, -192.0)?;
+        }
         match self.tutorial_stage {
             TutorialStage::Movement => {
                 draw_label(
                     context,
                     atlas,
-                    (80, 24),
+                    (
+                        80,
+                        if Game::touch_enabled(app_context) {
+                            8
+                        } else {
+                            24
+                        },
+                    ),
                     (96, 16),
                     "#557F55",
                     &Text("Movement".to_string(), Center),
@@ -69,20 +79,41 @@ impl State for Tutorial {
                     false,
                 )?;
 
-                draw_text_centered(interface_context, atlas, 128.0, 224.0, "Click the Red Mage")?;
+                draw_text_centered(
+                    interface_context,
+                    atlas,
+                    128.0,
+                    224.0,
+                    if Game::touch_enabled(app_context) {
+                        "Tap the Red Mage"
+                    } else {
+                        "Click the Red Mage"
+                    },
+                )?;
                 draw_text_centered(
                     interface_context,
                     atlas,
                     128.0,
                     240.0,
-                    "Then pick a square to move to",
+                    if Game::touch_enabled(app_context) {
+                        "Tap a square twice to move"
+                    } else {
+                        "Then pick a square to move to"
+                    },
                 )?;
             }
             TutorialStage::Attacking => {
                 draw_label(
                     context,
                     atlas,
-                    (80, 24),
+                    (
+                        80,
+                        if Game::touch_enabled(app_context) {
+                            8
+                        } else {
+                            24
+                        },
+                    ),
                     (96, 16),
                     "#557F55",
                     &Text("Attacking".to_string(), Center),
@@ -101,40 +132,18 @@ impl State for Tutorial {
                 )?;
                 draw_text_centered(interface_context, atlas, 128.0, 240.0, "Zap the Blue Mage!")?;
             }
-            TutorialStage::Charging => {
-                draw_label(
-                    context,
-                    atlas,
-                    (80, 24),
-                    (96, 16),
-                    "#557F55",
-                    &Text("Charging".to_string(), Center),
-                    &app_context.pointer,
-                    app_context.frame,
-                    &LabelTrim::Glorious,
-                    false,
-                )?;
-
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    224.0,
-                    "Mages charge with powerups",
-                )?;
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    240.0,
-                    "This one allows you to move diagonally!",
-                )?;
-            }
             TutorialStage::FinalBlow => {
                 draw_label(
                     context,
                     atlas,
-                    (80, 24),
+                    (
+                        80,
+                        if Game::touch_enabled(app_context) {
+                            8
+                        } else {
+                            24
+                        },
+                    ),
                     (96, 16),
                     "#557F55",
                     &Text("Final Blow".to_string(), Center),
@@ -155,7 +164,14 @@ impl State for Tutorial {
                 draw_label(
                     context,
                     atlas,
-                    (80, 24),
+                    (
+                        80,
+                        if Game::touch_enabled(app_context) {
+                            8
+                        } else {
+                            24
+                        },
+                    ),
                     (96, 16),
                     "#557F55",
                     &Text("Victory!".to_string(), Center),
@@ -175,6 +191,7 @@ impl State for Tutorial {
             }
         }
 
+        interface_context.restore();
         self.game_state
             .draw(context, interface_context, atlas, app_context)
     }
@@ -192,8 +209,6 @@ impl State for Tutorial {
             .any(|mage| mage.mana == 1 && mage.team == Team::Blue)
         {
             TutorialStage::FinalBlow
-        } else if game.iter_mages().any(|mage| mage.has_diagonals()) {
-            TutorialStage::Charging
         } else if game.turns() > 0 {
             TutorialStage::Attacking
         } else {

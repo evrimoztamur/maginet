@@ -12,6 +12,12 @@ const assert = require('node:assert/strict');
    // Keep the tutorial's AI from moving while we inspect the local action.
    window.Worker=class {postMessage() {} terminate() {}};
    const draw=CanvasRenderingContext2D.prototype.drawImage;
+   const fill=CanvasRenderingContext2D.prototype.fillRect;
+   const interfaces=new WeakSet();
+   CanvasRenderingContext2D.prototype.fillRect=function(...a) {
+     if(this.fillStyle==='#001515' || this.fillStyle==='#001f1f') interfaces.add(this);
+     return fill.apply(this,a);
+   };
    const raf=window.requestAnimationFrame;
    window.sprites={shadows:[],red:[]}; window.samples=[];
    window.requestAnimationFrame=f=>raf.call(window,t=>{
@@ -20,6 +26,7 @@ const assert = require('node:assert/strict');
    });
    CanvasRenderingContext2D.prototype.drawImage=function(source,...a) {
      const t=this.getTransform();
+     if(interfaces.has(this)) return draw.call(this,source,...a); // Ignore interface roster portraits.
      if(a[1]===208 && a[2]===32 && a[0]===0) window.sprites.shadows.push([t.e+16,t.f+4]);
      if(a[1]===64 && a[2]===32 && a[3]===40) window.sprites.red.push([t.e+19*t.a,t.f+28]);
      return draw.call(this,source,...a);

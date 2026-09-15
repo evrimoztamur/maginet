@@ -31,6 +31,15 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
      if(p.endsWith('/act'))client.actions.push(r.request().postDataJSON());
      await r.fulfill({json:result});
    });
+   await page.addInitScript(()=>{
+     const draw=CanvasRenderingContext2D.prototype.drawImage,raf=window.requestAnimationFrame;
+     window.selectionMarkers=[];
+     window.requestAnimationFrame=f=>raf.call(window,t=>{window.selectionMarkers=[];f(t)});
+     CanvasRenderingContext2D.prototype.drawImage=function(source,...a){
+       if(a[0]===72 && a[1]===0 && a[2]===8 && a[3]===5) window.selectionMarkers.push(this.getTransform().e+3);
+       return draw.call(this,source,...a);
+     };
+   });
    await page.goto(process.env.DRAG_URL || 'http://127.0.0.1:8789/html/game.html');await page.waitForSelector('#game-canvas');
    const box=await page.locator('#game-canvas').boundingBox();
    client.point=(x,y)=>({x:box.x+(x+72)*box.width/400,y:box.y+(y+8)*box.height/272});
@@ -60,12 +69,14 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
  await red.page.mouse.up();await delay(1400);
  assert.deepEqual((await state()).game.turns,[turn]);assert.equal(red.actions.length,1);
  assert.deepEqual(red.actions[0].message,{Turn:turn},'landing data stays client-only');
+ assert.equal(await red.page.evaluate(()=>selectionMarkers.length),0,'selection clears during the opponent turn');
  lobby=await state();const reply=lobby.game.available_turns[0];
  // A remotely submitted turn arriving while this client drags cancels the local gesture.
  await dragStart(blue,reply);
  assert.equal(await api(`/lobby/${code}/act`,{session_id:blue.session,message:{Turn:reply}}),'Ok');
  await delay(1400);await blue.page.mouse.up();await delay(100);
  assert.equal((await state()).game.turns.length,2);assert.equal(blue.actions.length,0);
+ assert.deepEqual(await red.page.evaluate(()=>selectionMarkers),[72+(8-board.width)*16+turn[1][0]*32+16],'last mage is reselected when the next turn is ready');
  // Replace history during another drag via the existing Lobby message path.
  lobby=await state();const next=lobby.game.available_turns[0];await dragStart(red,next);
  for(const c of clients)await api(`/lobby/${code}/rematch`,{session_id:c.session});

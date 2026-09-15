@@ -1,8 +1,45 @@
 import XCTest
 import WebKit
+import StoreKitTest
 @testable import Maginet
 
 @MainActor final class WebTests: XCTestCase {
+    func testPurchaseBridgeSurvivesForegroundAndReload() async throws {
+        let session = try SKTestSession(configurationFileNamed: "FullGame")
+        session.resetToDefaultState()
+        session.disableDialogs = true
+        session.clearTransactions()
+        defer { session.resetToDefaultState(); session.clearTransactions() }
+        let controller = try XCTUnwrap((UIApplication.shared.delegate as? AppDelegate)?.window?.rootViewController)
+        let web = try XCTUnwrap(controller.view.subviews.compactMap { $0 as? WKWebView }.first)
+        let transaction = try await session.buyProduct(identifier: Store.productID)
+        try await waitForAccess(true, in: web)
+        NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+        for _ in 0..<10 {
+            try await Task.sleep(for: .milliseconds(100))
+            let owned = try await web.callAsyncJavaScript(Self.accessQuery, arguments: [:], in: nil, contentWorld: .page) as? Bool
+            XCTAssertEqual(owned, true, "Foreground refresh must not relock the live game")
+        }
+        web.reload()
+        try await waitForAccess(true, in: web)
+        try session.refundTransaction(identifier: UInt(transaction.id))
+        try await waitForAccess(false, in: web)
+    }
+
+    private static let accessQuery = """
+        const url = performance.getEntriesByType('resource').find(e => e.name.endsWith('/ios-access.js'))?.name;
+        if (!url) return null;
+        return (await import(url)).owned();
+        """
+    private func waitForAccess(_ expected: Bool, in web: WKWebView) async throws {
+        for _ in 0..<100 {
+            let owned = try? await web.callAsyncJavaScript(Self.accessQuery, arguments: [:], in: nil, contentWorld: .page) as? Bool
+            if owned == expected { return }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTFail("The live game did not receive ownership=\(expected)")
+    }
+
     func testBundledCanvasAndWorker() async throws {
         let controller = try XCTUnwrap((UIApplication.shared.delegate as? AppDelegate)?.window?.rootViewController)
         let web = try XCTUnwrap(controller.view.subviews.compactMap { $0 as? WKWebView }.first)

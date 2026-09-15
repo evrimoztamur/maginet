@@ -12,7 +12,7 @@ const assert = require('assert/strict');
       window.jobs=[];
       window.Worker=class {constructor(){jobs.push(this)}postMessage(request){this.request=request}terminate(){this.terminated=true}};
     },completed);
-    await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});
+    await page.goto(process.env.DRAG_URL || 'http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});
     await page.waitForSelector('#game-canvas');
     await page.waitForFunction(()=>jobs.length>0);
     const box=await page.locator('#game-canvas').boundingBox();
@@ -30,6 +30,7 @@ const assert = require('assert/strict');
     assert.equal(request.difficulty,completed?'Hard':'Easy');
     const snapshot=JSON.parse(request.snapshot);
     assert.equal(snapshot.can_stalemate,completed);
+    if(!completed) assert.ok(snapshot.level.powerups.every(([,powerup])=>powerup!=='Diagonal'),'mandatory tutorial has no diagonal pickups');
     assert.deepEqual(errors,[]);
     await page.close();
   }

@@ -1,5 +1,9 @@
+mod mobile;
+mod selection;
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
+use mobile::*;
+use selection::SelectionMemory;
 use shared::{
     Board, BoardStyle, Difficulty, GameResult, LoadoutMethod, Lobby, LobbyError, LobbyID,
     LobbySettings, LobbySort, Mage, Mages, Message, Position, Team, Turn,
@@ -73,7 +77,7 @@ pub struct Game {
     ai_revision: u32,
     ai_request: u32,
     difficulty: Difficulty,
-    button_rematch: ButtonElement,
+    button_rematch: ConfirmButtonElement,
     button_leave: ConfirmButtonElement,
     button_menu: ToggleButtonElement,
     button_undo: ButtonElement,
@@ -84,7 +88,11 @@ pub struct Game {
     last_move_frame: u64,
     last_hits: Vec<Position>,
     active_mage: Option<usize>,
+    selection_memory: SelectionMemory,
     drag: Option<MageDrag>,
+    destination: Option<Position>,
+    mobile_press: Option<(MobileHit, (i32, i32))>,
+    mobile_roster: RefCell<Vec<RosterSlot>>,
     local_landing: Option<(Turn, DragLanding)>,
     particle_system: ParticleSystem,
     message_pool: Rc<RefCell<MessagePool>>,
@@ -132,7 +140,7 @@ impl Game {
             crate::app::ContentElement::Sprite((144, 16), (16, 16)),
         );
 
-        let button_rematch = ButtonElement::new(
+        let button_rematch = ConfirmButtonElement::new(
             (-44, -24),
             (88, 24),
             BUTTON_REMATCH,
@@ -169,7 +177,11 @@ impl Game {
             last_move_frame: 0,
             last_hits: Vec::new(),
             active_mage: None,
+            selection_memory: SelectionMemory::default(),
             drag: None,
+            destination: None,
+            mobile_press: None,
+            mobile_roster: RefCell::new(Vec::new()),
             local_landing: None,
             particle_system: ParticleSystem::default(),
             message_pool,
@@ -217,17 +229,25 @@ impl Game {
                 );
             }
         }
+        if let Some(mage) = self.lobby.game.live_occupant(&turn.0) {
+            self.selection_memory.remember(mage);
+        }
         self.local_landing = landing.map(|pose| (turn, pose));
         self.message_pool
             .borrow_mut()
             .messages
             .push(Message::Turn(turn));
         self.active_mage = None;
+        self.destination = None;
+        self.mobile_press = None;
         self.last_move_frame = app.frame;
         true
     }
 
     fn drag_input(&mut self, app: &AppContext) -> bool {
+        if app.pointer.is_touch() {
+            return self.mobile_input(app);
+        }
         use crate::app::pointer::GestureEvent;
         let mut consumed = self.drag.as_ref().is_some_and(|d| d.started.is_some());
         // A queued server update must be applied before another local action is accepted.
@@ -238,6 +258,8 @@ impl Game {
             || self.pending_game_change(app.session_id.as_ref())
         {
             self.drag = None;
+            self.destination = None;
+            self.mobile_press = None;
             return consumed;
         }
         for event in &app.pointer.gestures {
@@ -339,10 +361,6 @@ impl Game {
         }
     }
 
-    pub fn live_occupied(&self, position: Position) -> bool {
-        self.lobby.game.live_occupied(&position)
-    }
-
     fn is_mage_active(&self, mage: &Mage) -> bool {
         match self.active_mage {
             Some(active_mage) => active_mage == mage.index,
@@ -361,7 +379,11 @@ impl Game {
     }
 
     pub fn select_mage_at(&mut self, session_id: Option<&String>, selected_tile: &Position) {
-        if !self.presentation.busy() && self.lobby.is_active_player(session_id) {
+        self.destination = None;
+        if !self.presentation.busy()
+            && !self.lobby.finished()
+            && self.lobby.is_active_player(session_id)
+        {
             self.active_mage = if let Some(occupant) = self.lobby.game.live_occupant(selected_tile)
             {
                 if occupant.team == self.lobby.game.turn_for() {
@@ -377,6 +399,8 @@ impl Game {
 
     pub fn deselect_mage(&mut self) {
         self.active_mage = None;
+        self.destination = None;
+        self.mobile_press = None;
     }
 
     pub fn play_mage_selection_sound(&self, app_context: &AppContext) {
@@ -428,6 +452,62 @@ impl Game {
 
     pub fn frames_since_last_move(&self, frame: u64) -> u64 {
         frame.saturating_sub(self.last_move_frame)
+    }
+
+    fn mage_pose(&self, index: usize, frame: u64) -> (crate::app::presentation::MagePose, bool) {
+        let mut pose = self.presentation.pose(index, frame);
+        let drag = self
+            .drag
+            .as_ref()
+            .filter(|d| d.index == index && d.started.is_some());
+        if let Some(drag) = drag {
+            pose.offset_y = drag.landing(frame).offset_y;
+        }
+        (pose, drag.is_some())
+    }
+
+    // Board and roster use the same sprite, playback pose, hit flash, and selection marker.
+    fn draw_mage_visual(
+        &self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlCanvasElement,
+        mage: &Mage,
+        frame: u64,
+    ) -> Result<(), JsValue> {
+        let (pose, dragged) = self.mage_pose(mage.index, frame);
+        context.save();
+        if frame.saturating_sub(self.last_impact_frame) < 32
+            && frame.saturating_sub(self.last_impact_frame) % 16 < 8
+            && self.last_hits.contains(&mage.position)
+        {
+            context.set_global_composite_operation("lighter")?;
+        }
+        draw_mage_with_motion(
+            context,
+            atlas,
+            mage,
+            frame,
+            self.presentation.game().turn_for(),
+            self.lobby.all_ready() || self.lobby.is_local(),
+            self.presentation.game().result(),
+            !self.presentation.busy() && !dragged,
+            pose.offset_y,
+            pose.flip_x,
+        )?;
+        context.restore();
+        if self.is_mage_active(mage) {
+            draw_sprite(
+                context,
+                atlas,
+                72.0,
+                0.0,
+                8.0,
+                5.0,
+                -3.0,
+                pose.offset_y - 17.0 - (frame / 6 % 6) as f64,
+            )?;
+        }
+        Ok(())
     }
 
     pub fn draw_game(
@@ -532,7 +612,21 @@ impl Game {
                 }
                 visual_mages.sort_by_key(|(mage, _)| mage.index == drag.index);
             }
-            let preview_location = dragging.map_or(pointer.location, |d| {
+            let persistent_location = self
+                .destination
+                .map(|p| {
+                    let p = view.tile(p);
+                    (
+                        board_offset.0 as i32 + p.0 as i32 * 32 + 16,
+                        board_offset.1 as i32 + p.1 as i32 * 32 + 16,
+                    )
+                })
+                .unwrap_or(if pointer.is_touch() {
+                    (-1000, -1000)
+                } else {
+                    pointer.location
+                });
+            let preview_location = dragging.map_or(persistent_location, |d| {
                 let ground = view.point(d.ground);
                 (
                     (board_offset.0 + (ground.0 + 0.5) * board_scale.0).floor() as i32,
@@ -582,8 +676,8 @@ impl Game {
                 }
 
                 if let Some(mage) = self.get_active_mage() {
-                    let available_moves = self.presentation.game().available_moves(mage);
-                    for (position, dir, _) in &available_moves {
+                    let available_moves = destinations(self.presentation.game(), mage);
+                    for (position, dir, targets) in &available_moves {
                         let position = view.tile(*position);
                         let ri = rotation_from_position(view.direction(*dir));
                         let is_diagonal = ri % 2 == 1;
@@ -593,18 +687,10 @@ impl Game {
                             (position.1 as f64 + 0.5) * board_scale.1,
                         )?;
                         context.rotate((ri / 2) as f64 * std::f64::consts::PI / 2.0)?;
-                        let bop = (frame / 10 % 3) as f64;
+                        let damage = targets.iter().any(|(hit, _)| *hit);
+                        let bop = (frame / 10 % 3) as f64 + if damage { 6.0 } else { 0.0 };
                         context.translate(bop - 4.0, if is_diagonal { bop - 4.0 } else { 0.0 })?;
-                        draw_sprite(
-                            context,
-                            atlas,
-                            if is_diagonal { 16.0 } else { 0.0 },
-                            32.0,
-                            16.0,
-                            16.0,
-                            -8.0,
-                            -8.0,
-                        )?;
+                        movement_arrow(context, atlas, is_diagonal, damage)?;
                         context.restore();
                     }
 
@@ -615,8 +701,11 @@ impl Game {
                             .iter()
                             .any(|(position, _, _)| position == &selected_tile)
                         {
-                            for (enemy_occupied, position) in
-                                &self.presentation.game().targets(mage, selected_tile)
+                            for (enemy_occupied, position) in &available_moves
+                                .iter()
+                                .find(|(p, _, _)| *p == selected_tile)
+                                .unwrap()
+                                .2
                             {
                                 let position = &view.tile(*position);
                                 if *enemy_occupied {
@@ -686,15 +775,9 @@ impl Game {
             }
 
             {
-                let game_started = self.lobby.all_ready() | self.lobby.is_local();
-
                 // DRAW mages
                 for (mage, position) in &visual_mages {
-                    let mut pose = self.presentation.pose(mage.index, frame);
-                    let is_dragged = dragging.is_some_and(|d| d.index == mage.index);
-                    if is_dragged {
-                        pose.offset_y = dragging.unwrap().landing(frame).offset_y;
-                    }
+                    let (pose, _) = self.mage_pose(mage.index, frame);
                     context.save();
 
                     context.translate(
@@ -702,29 +785,7 @@ impl Game {
                         16.0 + view.point(*position).1 * board_scale.1,
                     )?;
 
-                    context.save();
-
-                    if frame.saturating_sub(self.last_impact_frame) < 32
-                        && frame.saturating_sub(self.last_impact_frame) % 16 < 8
-                        && self.last_hits.contains(&mage.position)
-                    {
-                        context.set_global_composite_operation("lighter")?;
-                    }
-
-                    draw_mage_with_motion(
-                        context,
-                        atlas,
-                        mage,
-                        frame,
-                        self.presentation.game().turn_for(),
-                        game_started,
-                        self.presentation.game().result(),
-                        !self.presentation.busy() && !is_dragged,
-                        pose.offset_y,
-                        pose.flip_x,
-                    )?;
-
-                    context.restore();
+                    self.draw_mage_visual(context, atlas, mage, frame)?;
 
                     if mage.is_alive() {
                         if mage.has_diagonals() {
@@ -774,29 +835,12 @@ impl Game {
                         }
                     }
 
-                    if self.is_mage_active(mage) {
-                        draw_sprite(
-                            context,
-                            atlas,
-                            72.0,
-                            0.0,
-                            8.0,
-                            5.0,
-                            -3.0,
-                            -17.0 - (frame / 6 % 6) as f64,
-                        )?;
-                    }
-
                     context.restore();
                 }
 
                 // DRAW mana bars for all mages
                 for (mage, position) in &visual_mages {
-                    let mut pose = self.presentation.pose(mage.index, frame);
-                    let is_dragged = dragging.is_some_and(|d| d.index == mage.index);
-                    if is_dragged {
-                        pose.offset_y = dragging.unwrap().landing(frame).offset_y;
-                    }
+                    let (pose, _) = self.mage_pose(mage.index, frame);
                     context.save();
 
                     context.translate(
@@ -987,6 +1031,13 @@ impl Game {
                     for turn in turns {
                         let before = self.lobby.game.clone();
                         if let Some(hits) = self.lobby.game.take_move(turn.0, turn.1) {
+                            if let Some(mage) = self
+                                .active_mage
+                                .and_then(|index| before.get_mage(index))
+                                .filter(|mage| mage.team == before.turn_for())
+                            {
+                                self.selection_memory.remember(mage);
+                            }
                             self.ai_pending = None;
                             self.ai_revision = self.ai_revision.wrapping_add(1);
                             self.drag = None;
@@ -1002,6 +1053,8 @@ impl Game {
                                 landing,
                             );
                             self.active_mage = None;
+                            self.destination = None;
+                            self.mobile_press = None;
                             self.last_move_frame = frame;
                         }
                     }
@@ -1013,9 +1066,12 @@ impl Game {
                         self.ai_revision = self.ai_revision.wrapping_add(1);
                         self.drag = None;
                         self.local_landing = None;
+                        self.selection_memory = SelectionMemory::default();
                         self.presentation = Presentation::new(&lobby.game);
                         self.particle_system = ParticleSystem::default();
                         self.active_mage = None;
+                        self.destination = None;
+                        self.mobile_press = None;
                         self.shake_frame = (0, 0);
                         self.last_hits.clear();
                         self.recorded_result = false;
@@ -1090,6 +1146,19 @@ impl Game {
         }
     }
 
+    fn configure_result_buttons(&mut self) {
+        let campaign_win = self.lobby.settings.lobby_sort == LobbySort::LocalAI
+            && matches!(
+                self.lobby.settings.loadout_method,
+                LoadoutMethod::Arena(..) | LoadoutMethod::ArenaChaos(..)
+            )
+            && !self.presentation.busy()
+            && self.presentation.game().result() == Some(GameResult::Win(Team::Red));
+        self.button_leave
+            .set_text(if campaign_win { "Continue" } else { "Leave" });
+        self.button_leave.set_confirmation_required(!campaign_win);
+    }
+
     pub fn is_interface_active(&self) -> bool {
         self.button_menu.selected()
     }
@@ -1106,7 +1175,9 @@ impl State for Game {
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
 
+        self.configure_result_buttons();
         self.draw_game(context, interface_context, atlas, frame, pointer)?;
+        self.draw_mobile(interface_context, atlas, app_context)?;
 
         {
             let interface_pointer =
@@ -1127,15 +1198,6 @@ impl State for Game {
             }
 
             if self.is_interface_active() {
-                let campaign_win = self.lobby.settings.lobby_sort == LobbySort::LocalAI
-                    && matches!(
-                        self.lobby.settings.loadout_method,
-                        LoadoutMethod::Arena(..) | LoadoutMethod::ArenaChaos(..)
-                    )
-                    && !self.presentation.busy()
-                    && self.presentation.game().result() == Some(GameResult::Win(Team::Red));
-                self.button_leave
-                    .set_text(if campaign_win { "Continue" } else { "Leave" });
                 self.button_rematch
                     .draw(interface_context, atlas, &interface_pointer, frame)?;
                 self.button_leave
@@ -1212,12 +1274,22 @@ impl State for Game {
     ) -> Option<StateSort> {
         let consumed_drag = self.drag_input(app_context);
         let filtered_pointer = app_context.pointer.without_clicks();
+        let mut released_pointer = app_context.pointer.clone();
+        if app_context.pointer.is_touch()
+            && app_context
+                .pointer
+                .gestures
+                .iter()
+                .any(|e| matches!(e, crate::app::pointer::GestureEvent::Release(_)))
+        {
+            released_pointer.pending_click = true;
+        }
         let board_offset = self.board_offset();
         let frame = app_context.frame;
         let pointer = if consumed_drag {
             &filtered_pointer
         } else {
-            &app_context.pointer
+            &released_pointer
         };
         let session_id = &app_context.session_id;
 
@@ -1329,8 +1401,11 @@ impl State for Game {
             self.message_pool.borrow_mut().clear();
             self.presentation.rewind(&self.lobby.game, 2, frame);
             self.lobby.rewind(2);
+            self.selection_memory.suppress_turn(self.lobby.game.turns());
             self.shake_frame = (0, 0);
             self.active_mage = None;
+            self.destination = None;
+            self.mobile_press = None;
             self.recorded_result = false;
             self.newly_won = false;
             self.result_menu_at = None;
@@ -1341,8 +1416,11 @@ impl State for Game {
             self.button_menu.set_selected(false);
         }
 
+        self.configure_result_buttons();
         if self.is_interface_active() {
             self.drag = None;
+            self.destination = None;
+            self.mobile_press = None;
             let rematch_event = self.button_rematch.tick(&interface_pointer);
             if let Some(UIEvent::ButtonClick(value, clip_id)) =
                 self.button_leave.tick(&interface_pointer).or(rematch_event)
@@ -1384,6 +1462,8 @@ impl State for Game {
                 }
             }
         } else {
+            self.button_rematch.cancel_confirmation();
+            self.button_leave.cancel_confirmation();
             if pointer.alt_clicked() {
                 self.deselect_mage();
             }
@@ -1410,6 +1490,19 @@ impl State for Game {
         }
 
         self.tick_game(frame, app_context);
+        if !self.presentation.busy()
+            && !self.lobby.finished()
+            && !self.is_interface_active()
+            && !self.pending_game_change(session_id.as_ref())
+            && self.lobby.is_active_player(session_id.as_ref())
+        {
+            if let Some(index) = self.selection_memory.restore(&self.lobby.game) {
+                if self.active_mage.is_none() {
+                    self.active_mage = Some(index);
+                    self.destination = None;
+                }
+            }
+        }
 
         None
     }

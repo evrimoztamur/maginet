@@ -92,6 +92,7 @@ pub enum LabelTrim {
 #[derive(Clone, PartialEq)]
 pub enum LabelTheme {
     Default,
+    Attack,
     Action,
     Bright,
     Disabled,
@@ -190,6 +191,15 @@ impl UIElement for ButtonElement {
                     &"#006080"
                 }
             }
+            LabelTheme::Attack => {
+                if self.selected {
+                    &"#005878"
+                } else if self.hovered(pointer) {
+                    &"#004c6c"
+                } else {
+                    &"#003e60"
+                }
+            }
             LabelTheme::Disabled => &"#005247",
         };
 
@@ -239,9 +249,21 @@ impl UIElement for ButtonElement {
 #[derive(Clone)]
 pub struct ConfirmButtonElement {
     button: ButtonElement,
+    confirmation_required: bool,
 }
 
 impl ConfirmButtonElement {
+    pub fn cancel_confirmation(&mut self) {
+        self.button.selected = false;
+    }
+
+    pub fn set_confirmation_required(&mut self, required: bool) {
+        if self.confirmation_required != required {
+            self.cancel_confirmation();
+            self.confirmation_required = required;
+        }
+    }
+
     pub fn set_text(&mut self, label: &str) {
         if let ContentElement::Text(text, _) = &mut self.button.content {
             label.clone_into(text);
@@ -257,6 +279,7 @@ impl ConfirmButtonElement {
         content: ContentElement,
     ) -> ConfirmButtonElement {
         ConfirmButtonElement {
+            confirmation_required: true,
             button: ButtonElement::new(position, size, value, trim, class, content),
         }
     }
@@ -291,9 +314,18 @@ impl UIElement for ConfirmButtonElement {
     }
 
     fn tick(&mut self, pointer: &Pointer) -> Option<UIEvent> {
+        if pointer
+            .gestures
+            .iter()
+            .any(|e| matches!(e, super::pointer::GestureEvent::Cancel))
+        {
+            self.cancel_confirmation();
+            return None;
+        }
         if pointer.clicked() {
             if self.button.clicked(pointer) {
-                if self.button.selected {
+                if !self.confirmation_required || self.button.selected {
+                    self.cancel_confirmation();
                     Some(UIEvent::ButtonClick(
                         self.button.value,
                         self.button.clip_id(),
@@ -489,5 +521,60 @@ impl UIElement for Interface {
             child.draw(context, atlas, pointer, frame)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod confirmation_tests {
+    use super::*;
+
+    fn button() -> ConfirmButtonElement {
+        ConfirmButtonElement::new(
+            (0, 0),
+            (88, 24),
+            1,
+            LabelTrim::Glorious,
+            LabelTheme::Action,
+            ContentElement::None,
+        )
+    }
+    fn click() -> Pointer {
+        let mut pointer = Pointer::default();
+        pointer.location = (10, 10);
+        pointer.pending_click = true;
+        pointer
+    }
+    #[test]
+    fn every_rematch_requires_two_clicks() {
+        let mut button = button();
+        for _ in 0..3 {
+            assert!(button.tick(&click()).is_none());
+            assert!(button.tick(&click()).is_some());
+        }
+    }
+    #[test]
+    fn continue_is_immediate_but_leave_still_confirms() {
+        let mut button = button();
+        button.set_confirmation_required(false);
+        assert!(button.tick(&click()).is_some());
+        button.set_confirmation_required(true);
+        assert!(button.tick(&click()).is_none());
+        assert!(button.tick(&click()).is_some());
+    }
+    #[test]
+    fn outside_click_menu_close_and_cancel_disarm_confirmation() {
+        let mut button = button();
+        assert!(button.tick(&click()).is_none());
+        let mut outside = click();
+        outside.location = (100, 100);
+        assert!(button.tick(&outside).is_none());
+        assert!(button.tick(&click()).is_none());
+        button.cancel_confirmation();
+        assert!(button.tick(&click()).is_none());
+        let mut cancelled = click();
+        cancelled.cancel();
+        assert!(button.tick(&cancelled).is_none());
+        assert!(button.tick(&click()).is_none());
+        assert!(button.tick(&click()).is_some());
     }
 }

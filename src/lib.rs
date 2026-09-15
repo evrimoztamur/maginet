@@ -100,6 +100,32 @@ async fn start() -> Result<(), JsValue> {
         atlas_layer
             .context
             .draw_image_with_html_image_element(&atlas_img, 0.0, 0.0)?;
+        // Preserve the arrow pixels and transparency exactly; only replace their color.
+        // This slot is outside the board caches and mage artwork.
+        let white_arrows = CanvasLayer::new(32, 16)?;
+        white_arrows
+            .context
+            .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+                &atlas_layer.canvas,
+                0.0,
+                32.0,
+                32.0,
+                16.0,
+                0.0,
+                0.0,
+                32.0,
+                16.0,
+            )?;
+        white_arrows
+            .context
+            .set_global_composite_operation("source-in")?;
+        white_arrows.context.set_fill_style(&"#ffffff".into());
+        white_arrows.context.fill_rect(0.0, 0.0, 32.0, 16.0);
+        atlas_layer.context.draw_image_with_html_canvas_element(
+            &white_arrows.canvas,
+            160.0,
+            144.0,
+        )?;
         let atlas = atlas_layer.canvas;
 
         let app = App::new(&canvas_settings, audio_system.clone());

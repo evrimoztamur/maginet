@@ -9,7 +9,7 @@ use web_sys::{
 
 use super::{
     ArenaMenu, AudioSystem, Editor, EditorPreview, Game, LobbyList, MainMenu, Pointer,
-    SettingsMenu, SkirmishMenu, Tutorial, BOARD_SCALE,
+    SettingsMenu, SkirmishMenu, Tutorial,
 };
 use crate::{
     app::State,
@@ -296,35 +296,6 @@ impl App {
         self.app_context.pointer.move_mouse_to(location);
     }
 
-    fn lobby_touch(
-        lobby_state: &mut Game,
-        pointer: &Pointer,
-        pointer_location: (i32, i32),
-    ) -> bool {
-        if pointer_location.0 < 0 || lobby_state.is_interface_active() {
-            return true;
-        } else {
-            let board_offset = lobby_state.board_offset();
-
-            if lobby_state
-                .location_as_position(pointer_location, board_offset, BOARD_SCALE)
-                .is_some_and(|tile| lobby_state.live_occupied(tile))
-            {
-                return true;
-            }
-            if let (Some(current_tile), Some(last_tile)) = (
-                lobby_state.location_as_position(pointer_location, board_offset, BOARD_SCALE),
-                lobby_state.location_as_position(pointer.location, board_offset, BOARD_SCALE),
-            ) {
-                if current_tile == last_tile {
-                    return true;
-                }
-            }
-        }
-
-        false
-    }
-
     pub fn on_touch_start(&mut self, bound: &DomRectReadOnly, event: TouchEvent) {
         if self.app_context.pointer.active_touch.is_some() {
             return;
@@ -342,19 +313,8 @@ impl App {
 
             {
                 match &mut self.state_sort {
-                    StateSort::Game(lobby_state) => {
-                        self.app_context.pointer.button = App::lobby_touch(
-                            lobby_state,
-                            &self.app_context.pointer,
-                            pointer_location,
-                        );
-                    }
-                    StateSort::Tutorial(state) => {
-                        self.app_context.pointer.button = App::lobby_touch(
-                            &mut state.game_state,
-                            &self.app_context.pointer,
-                            pointer_location,
-                        );
+                    StateSort::Game(_) | StateSort::Tutorial(_) => {
+                        self.app_context.pointer.button = false;
                     }
                     _ => self.app_context.pointer.button = true,
                 };
@@ -477,9 +437,25 @@ impl App {
     }
 
     pub fn kv_get(key: &str) -> String {
-        storage()
-            .and_then(|storage| storage.get_item(key).unwrap_or_default())
-            .unwrap_or_default()
+        let storage = storage();
+        let value = storage
+            .as_ref()
+            .and_then(|s| s.get_item(key).unwrap_or_default())
+            .unwrap_or_default();
+        // Rebalanced puzzles retain stars earned on their previous level codes.
+        if value != "win"
+            && shared::campaign_progress_aliases(key).iter().any(|alias| {
+                storage
+                    .as_ref()
+                    .and_then(|s| s.get_item(alias).unwrap_or_default())
+                    .as_deref()
+                    == Some("win")
+            })
+        {
+            "win".into()
+        } else {
+            value
+        }
     }
 }
 

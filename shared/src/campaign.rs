@@ -3,7 +3,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::{BoardStyle, Level};
 /// Tutorial saved-progress code.
-pub const TUTORIAL_CODE: &str = "hg18a09m4g0m81g00c4068035g14r0v008";
+pub const TUTORIAL_CODE: &str = "hg18a09m4g0m81000c4068039g1g";
+
+/// Earlier versions of these battles share their completion stars with the current puzzle.
+pub fn campaign_progress_aliases(code: &str) -> &'static [&'static str] {
+    match code {
+        TUTORIAL_CODE => &["hg18a09m4g0m81g00c4068035g14r0v008"],
+        "e01jg1148m0j8k834g00" => &["e01jg1248m0j8k834g00"],
+        _ => &[],
+    }
+}
+
 /// Tutorial map position.
 pub const TUTORIAL_POSITION: (isize, isize) = (0, 1);
 /// One campaign portal.
@@ -57,7 +67,7 @@ fn campaign_style(name: &str) -> BoardStyle {
 pub fn campaign_catalogue(demo: bool) -> Vec<CampaignEntry> {
     let definitions = [
         ("basics-i", "Basics I", "hg12g014cm0j800", (0, 0), true, false),
-        ("basics-ii", "Basics II", "e01jg1248m0j8k834g00", (1, 0), true, false),
+        ("basics-ii", "Basics II", "e01jg1148m0j8k834g00", (1, 0), true, false),
         ("basics-iii", "Basics III", "j0228014cm0j8v804gp04900", (2, 0), true, false),
         ("basics-iv", "Basics IV", "j022801mcm0j8v804gp04d06201g00s80dm07403g01g", (2, -1), true, false),
         ("patterns-i", "Patterns I", "dg30r0j4500m8v048g0g4h250526212400", (3, -1), false, false),
