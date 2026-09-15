@@ -32,14 +32,16 @@ impl CampaignEntry {
         level
     }
 }
-/// Board style at a map column, independent of level encoding.
-pub fn campaign_style(column: isize) -> BoardStyle {
-    match column {
-        ..=2 => BoardStyle::Grass,
-        3..=6 => BoardStyle::Desert,
-        7 => BoardStyle::Flesh,
-        8..=11 => BoardStyle::Crust,
-        _ => BoardStyle::Eldritch,
+/// Region theme follows the battle, independently of bends in the map.
+fn campaign_style(name: &str) -> BoardStyle {
+    match name {
+        "Tutorial" | "Basics I" | "Basics II" | "Basics III" | "Basics IV" => BoardStyle::Grass,
+        "Patterns I" | "Patterns II" | "Patterns III" | "Diagonals I" | "Diagonals II"
+        | "Diagonals III" => BoardStyle::Desert,
+        "Beams I" | "Diagonals IV" | "Beams II" | "Beams III" | "Challenge II" => BoardStyle::Flesh,
+        "Rite III" | "Rite IV" | "Ascension I" | "Ascension II" | "Junction V" | "Junction VI"
+        | "Junction VII" => BoardStyle::Eldritch,
+        _ => BoardStyle::Crust,
     }
 }
 /// Full catalogue in stable order, optionally filtered to demo portals.
@@ -90,7 +92,7 @@ pub fn campaign_catalogue(demo: bool) -> Vec<CampaignEntry> {
             name: name.into(),
             code: code.into(),
             position: portal_position(name, position),
-            style: campaign_style(portal_position(name, position).0),
+            style: campaign_style(name),
             demo,
             tutorial,
         })
@@ -181,36 +183,40 @@ pub fn campaign_connected(edges: &[CampaignConnection], from: &str, to: &str) ->
         .iter()
         .any(|e| e.from == from && e.to == to || !e.one_way && e.to == from && e.from == to)
 }
+// A climbing entrance, bent side paths, and a square loop with an open centre.
 fn portal_position(name: &str, original: (isize, isize)) -> (isize, isize) {
     match name {
-        "Diagonals I" => (6, -1),
-        "Beams I" => (7, -1),
-        "Shields I" => (8, -1),
-        "Junction I" => (9, -1),
-        "Rite I" => (10, -1),
-        "Rite II" => (11, -1),
-        "Rite III" => (12, -1),
-        "Rite IV" => (13, -1),
-        "Ascension I" => (14, -1),
-        "Ascension II" => (15, -1),
-        "Diagonals II" => (6, 0),
-        "Diagonals III" => (6, 1),
-        "Diagonals IV" => (7, -2),
-        "Beams II" => (7, -3),
-        "Beams III" => (7, -4),
-        "Challenge II" => (7, -5),
-        "Challenge I" => (11, 0),
-        "Junction VIII" => (11, 1),
-        "Challenge III" => (9, -2),
-        "Junction II" => (9, -3),
-        "Junction III" => (10, -3),
-        "Junction IV" => (11, -3),
-        "Junction V" => (12, -3),
-        "Junction VI" => (13, -3),
-        "Junction VII" => (13, -2),
-        "Shields II" => (8, 0),
-        "Shields III" => (8, 1),
-        "Challenge IV" => (8, 2),
+        "Patterns I" => (3, -1),
+        "Patterns II" => (3, -2),
+        "Patterns III" => (4, -2),
+        "Diagonals I" => (5, -2),
+        "Beams I" => (6, -2),
+        "Shields I" => (7, -2),
+        "Junction I" => (8, -2),
+        "Rite I" => (9, -2),
+        "Rite II" => (10, -2),
+        "Rite III" => (11, -2),
+        "Rite IV" => (11, -3),
+        "Ascension I" => (12, -3),
+        "Ascension II" => (13, -3),
+        "Diagonals II" => (5, -1),
+        "Diagonals III" => (5, 0),
+        "Diagonals IV" => (6, -3),
+        "Beams II" => (6, -4),
+        "Beams III" => (5, -4),
+        "Challenge II" => (4, -4),
+        "Challenge I" => (10, -1),
+        "Junction VIII" => (10, 0),
+        "Challenge III" => (8, -3),
+        "Junction II" => (8, -4),
+        "Junction III" => (8, -5),
+        "Junction IV" => (9, -5),
+        "Junction V" => (10, -5),
+        "Junction VI" => (11, -5),
+        "Junction VII" => (11, -4),
+        "Shields II" => (7, -1),
+        "Shields III" => (7, 0),
+        "Challenge IV" => (8, 0),
         _ => original,
     }
 }

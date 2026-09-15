@@ -190,8 +190,10 @@ fn every_connection_is_a_cardinal_neighbour_and_junctions_are_unique_duels() {
     }
     // The loop has an empty interior, and side branches do not touch accidentally.
     let occupied: std::collections::HashSet<_> = entries.iter().map(|e| e.position).collect();
-    for x in 10..=12 {
-        assert!(!occupied.contains(&(x, -2)));
+    for x in 9..=10 {
+        for y in -4..=-3 {
+            assert!(!occupied.contains(&(x, y)));
+        }
     }
     assert_eq!(
         OPTIONAL_ROUTES

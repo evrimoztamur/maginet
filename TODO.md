@@ -135,4 +135,4 @@
 - Check perceived difficulty after the forgiving Basics battles and Shields I. Keep optional challenges demanding.
 - See `assessments/campaign-revision/interpretation.md` for evidence and limitations; preserve the original assessment.
 
-- Exploration layout: one wider Rite IV loop and four reachable dead-end paths; arrows originate only at playable, uncompleted battles. Human-test map discoverability and navigation.
+- Exploration layout: a winding approach, square Rite IV loop with a 2×2 clearing, and bent optional paths; arrows originate only at playable, uncompleted battles. Human-test map discoverability and navigation.
