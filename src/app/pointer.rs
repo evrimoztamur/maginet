@@ -15,6 +15,9 @@ pub struct Pointer {
     pub active_touch: Option<i32>,
     pub suppress_mouse_until: f64,
     gesture_down: bool,
+    touch_cursor: bool,
+    cursor_position: Option<(f64, f64)>,
+    cursor_updated_at: Option<f64>,
     pub location: (i32, i32),
     pub button: bool,
     pub pending_click: bool,
@@ -43,7 +46,40 @@ impl Pointer {
             return false;
         }
         self.active_touch = Some(identifier);
+        self.touch_cursor = true;
         true
+    }
+
+    pub fn move_mouse_to(&mut self, location: (i32, i32)) {
+        self.touch_cursor = false;
+        self.move_to(location);
+    }
+
+    /// Animate only the drawn touch cursor; hit testing uses `location` immediately.
+    pub fn draw_location(&mut self, now_ms: f64) -> (f64, f64) {
+        let target = (self.location.0 as f64, self.location.1 as f64);
+        let elapsed = self
+            .cursor_updated_at
+            .replace(now_ms)
+            .map(|last| (now_ms - last).max(0.0));
+        let position = match (self.touch_cursor, self.cursor_position, elapsed) {
+            (true, Some(position), Some(elapsed)) => {
+                // Reach 99% of the target in about 90ms, independent of refresh rate.
+                let blend = 1.0 - (-elapsed / 20.0).exp();
+                let next = (
+                    position.0 + (target.0 - position.0) * blend,
+                    position.1 + (target.1 - position.1) * blend,
+                );
+                if (target.0 - next.0).abs().max((target.1 - next.1).abs()) < 0.5 {
+                    target
+                } else {
+                    next
+                }
+            }
+            _ => target,
+        };
+        self.cursor_position = Some(position);
+        position
     }
 
     pub fn press(&mut self, location: (i32, i32)) {
@@ -145,6 +181,54 @@ impl Pointer {
 #[cfg(test)]
 mod tests {
     use super::Pointer;
+
+    #[test]
+    fn touch_cursor_eases_after_release_without_delaying_clicks() {
+        let mut pointer = Pointer::default();
+        assert_eq!(pointer.draw_location(0.0), (0.0, 0.0));
+        pointer.begin_touch(1);
+        pointer.press((200, 100));
+        pointer.release((200, 100));
+        pointer.pending_click = true;
+        let cursor = pointer.draw_location(16.0);
+        assert!(cursor.0 > 0.0 && cursor.0 < 200.0);
+        assert_eq!(pointer.location, (200, 100));
+        assert!(pointer.clicked());
+        pointer.swap();
+        assert_eq!(pointer.draw_location(160.0), (200.0, 100.0));
+        assert!(!pointer.clicked());
+    }
+
+    #[test]
+    fn mouse_movement_immediately_interrupts_touch_animation() {
+        let mut pointer = Pointer::default();
+        pointer.draw_location(0.0);
+        pointer.begin_touch(1);
+        pointer.release((200, 100));
+        pointer.draw_location(16.0);
+        pointer.move_mouse_to((40, 60));
+        assert_eq!(pointer.draw_location(17.0), (40.0, 60.0));
+    }
+
+    #[test]
+    fn touch_cursor_motion_is_independent_of_refresh_rate() {
+        let mut pointer = Pointer::default();
+        pointer.draw_location(0.0);
+        pointer.begin_touch(1);
+        pointer.press((200, 100));
+        let mut faster = pointer.clone();
+        for frame in 1..=3 {
+            pointer.draw_location(frame as f64 * 1000.0 / 60.0);
+        }
+        for frame in 1..=6 {
+            faster.draw_location(frame as f64 * 1000.0 / 120.0);
+        }
+        let a = pointer.cursor_position.unwrap();
+        let b = faster.cursor_position.unwrap();
+        assert!((a.0 - b.0).abs() < 1e-9);
+        assert!((a.1 - b.1).abs() < 1e-9);
+    }
+
     #[test]
     fn short_gestures_keep_press_motion_and_matching_release_until_swap() {
         let mut p = Pointer::default();

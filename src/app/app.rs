@@ -154,6 +154,10 @@ impl App {
         }
 
         // DRAW cursor
+        let cursor = self
+            .app_context
+            .pointer
+            .draw_location(window().performance().unwrap().now());
         draw_sprite(
             interface_context,
             atlas,
@@ -161,8 +165,8 @@ impl App {
             8.0,
             16.0,
             16.0,
-            self.app_context.pointer.location.0 as f64 - 5.0,
-            self.app_context.pointer.location.1 as f64 - 2.0,
+            cursor.0 - 5.0,
+            cursor.1 - 2.0,
         )?;
 
         context.restore();
@@ -289,7 +293,7 @@ impl App {
         let x = event.client_x() as f64 - bound.left();
         let y = event.client_y() as f64 - bound.top();
         let location = App::transform_pointer(&self.app_context.canvas_settings, bound, x, y);
-        self.app_context.pointer.move_to(location);
+        self.app_context.pointer.move_mouse_to(location);
     }
 
     fn lobby_touch(

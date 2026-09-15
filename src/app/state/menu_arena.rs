@@ -38,7 +38,6 @@ struct LevelPortal {
     hidden: bool,
     chaos: bool,
     demo: bool,
-    unlock_boundary: bool,
     preview: [Option<PreviewEntity>; 4],
 }
 
@@ -77,7 +76,6 @@ impl LevelPortal {
             hidden: false,
             chaos: false,
             demo: true,
-            unlock_boundary: false,
             status,
             preview,
         }
@@ -208,16 +206,12 @@ impl LevelPortal {
     }
 
     fn entry_action(&self, demo_access: bool) -> PortalAction {
-        if demo_access && !self.demo {
-            if self.unlock_boundary {
-                PortalAction::Unlock
-            } else {
-                PortalAction::Locked
-            }
-        } else if self.is_available() {
-            PortalAction::Battle
-        } else {
+        if !self.is_available() {
             PortalAction::Locked
+        } else if demo_access && !self.demo {
+            PortalAction::Unlock
+        } else {
+            PortalAction::Battle
         }
     }
 
@@ -293,11 +287,9 @@ impl ArenaMenu {
             .to_string();
 
         context.save();
-        // Stay in the canvas corner, independent of map panning and board centering.
-        context.translate(
-            8.0 - app_context.canvas_settings.padding_x() as f64,
-            8.0 - app_context.canvas_settings.padding_y() as f64,
-        )?;
+        // Keep an 8px gap beside the widest button (ending at x=208),
+        // centered vertically on the button group spanning y=192..240.
+        context.translate(216.0, 200.0)?;
         let bob = ((app_context.frame as f64 * 0.06).sin() * 2.0).round();
         draw_sprite(context, atlas, 32.0, 320.0, 32.0, 32.0, 0.0, bob)?;
 
@@ -310,7 +302,8 @@ impl ArenaMenu {
             &earned,
         )?;
         draw_text(context, atlas, 44.0, 12.0, "/")?;
-        context.set_filter("brightness(0.55)");
+        // Dim the total without relying on canvas filter support.
+        context.set_global_alpha(0.55);
         draw_text(context, atlas, 52.0, 16.0, &total)?;
         context.restore();
         Ok(())
@@ -627,11 +620,6 @@ fn campaign_portals_for(
     entries: &[shared::CampaignEntry],
     completed: impl Fn(&str) -> bool,
 ) -> HashMap<(isize, isize), LevelPortal> {
-    let first_paid = shared::MAIN_ROUTE
-        .iter()
-        .filter_map(|id| entries.iter().find(|entry| entry.id == *id))
-        .find(|entry| !entry.demo)
-        .map(|entry| entry.position);
     let edges = shared::campaign_connections(entries);
     let connected = |from, to| {
         let a = entries.iter().find(|e| e.position == from).unwrap();
@@ -650,7 +638,6 @@ fn campaign_portals_for(
                 portal.hidden = entry.hidden;
                 portal.chaos = entry.chaos;
                 portal.demo = entry.demo;
-                portal.unlock_boundary = Some(entry.position) == first_paid;
                 portal
             })
         })
@@ -710,7 +697,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn runtime_demo_keeps_map_and_has_one_purchase_boundary() {
+    fn runtime_demo_keeps_map_and_requires_progress_before_purchase() {
         let entries = shared::campaign_catalogue(false);
         let portals = campaign_portals_for(&entries, |_| false);
         assert_eq!(portals.len(), entries.len());
@@ -720,7 +707,7 @@ mod tests {
             .filter(|(_, p)| p.entry_action(true) == PortalAction::Unlock)
             .map(|(position, _)| *position)
             .collect();
-        assert_eq!(unlocks, vec![(3, -1)]);
+        assert!(unlocks.is_empty());
         assert_eq!(portals[&(3, -1)].entry_action(false), PortalAction::Locked);
         let free_codes: HashSet<_> = entries
             .iter()
@@ -747,9 +734,68 @@ mod tests {
         for portal in won.values() {
             assert_eq!(portal.entry_action(false), PortalAction::Battle);
             if !portal.demo {
-                assert_ne!(portal.entry_action(true), PortalAction::Battle);
+                assert_eq!(portal.entry_action(true), PortalAction::Unlock);
+            } else {
+                assert_eq!(portal.entry_action(true), PortalAction::Battle);
             }
         }
+    }
+
+    #[test]
+    fn runtime_demo_offers_purchase_for_every_reached_paid_level() {
+        let entries = shared::campaign_catalogue(false);
+        let mut completed = HashSet::new();
+        let mut offered = HashSet::new();
+        for _ in 0..entries.len() {
+            let portals = campaign_portals_for(&entries, |code| completed.contains(code));
+            for entry in &entries {
+                let portal = &portals[&entry.position];
+                if portal.status == PortalStatus::Locked {
+                    assert_eq!(
+                        portal.entry_action(true),
+                        PortalAction::Locked,
+                        "{}",
+                        entry.id
+                    );
+                    assert_eq!(
+                        portal.entry_action(false),
+                        PortalAction::Locked,
+                        "{}",
+                        entry.id
+                    );
+                } else {
+                    assert_eq!(
+                        portal.entry_action(false),
+                        PortalAction::Battle,
+                        "{}",
+                        entry.id
+                    );
+                    if entry.demo {
+                        assert_eq!(
+                            portal.entry_action(true),
+                            PortalAction::Battle,
+                            "{}",
+                            entry.id
+                        );
+                    } else {
+                        assert_eq!(
+                            portal.entry_action(true),
+                            PortalAction::Unlock,
+                            "{}",
+                            entry.id
+                        );
+                        if portal.status == PortalStatus::Unlocked {
+                            offered.insert(entry.id.clone());
+                        }
+                    }
+                    completed.insert(portal.level.as_code());
+                }
+            }
+        }
+        assert_eq!(
+            offered.len(),
+            entries.iter().filter(|entry| !entry.demo).count()
+        );
     }
 
     #[test]
