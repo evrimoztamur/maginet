@@ -36,6 +36,8 @@ const assert = require('assert/strict');
  // Undo remains usable while thinking and disposes the pending job.
  await page.evaluate(()=>{window.obsolete=jobs.at(-1); window.late=obsolete.onmessage});
  await click(-16,145);
+ assert.notEqual(await page.evaluate(()=>jobs.at(-1).terminated),true,'first undo click only arms confirmation');
+ await click(-16,145);
  assert.equal(await page.evaluate(()=>jobs.at(-1).terminated),true);
  assert.deepEqual(errors,[]);
  await page.evaluate(()=>late({data:{...obsolete.request,selected:[[4,3],[4,2]]}}));

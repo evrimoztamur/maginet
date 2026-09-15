@@ -84,7 +84,7 @@ const assert=require('node:assert/strict');
   const after=await page.evaluate(()=>sprites);
   assert(after.every(s=>s.upright));
   assert.equal(after.find(s=>s.team==='Red').y>after.find(s=>s.team==='Blue').y,team==='Red');
-  await click(-16,140);await page.waitForTimeout(500);
+  await click(-16,140);await click(-16,140);await page.waitForTimeout(500);
   assert(Math.abs(await page.evaluate(()=>sprites.find(s=>s.team==='Red').y)-redY)<=2,'undo keeps perspective');
   await click(-16,108);await click(128,116);await click(128,116);await page.waitForTimeout(100);
   assert(Math.abs(await page.evaluate(()=>sprites.find(s=>s.team==='Red').y)-redY)<=2,'rematch keeps perspective');

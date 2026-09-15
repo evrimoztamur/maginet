@@ -36,7 +36,7 @@ impl SettingsMenu {
     fn purchase_button() -> ButtonElement {
         let owned = !crate::access::demo();
         ButtonElement::new(
-            (0, 216),
+            (160, 160),
             (144, 16),
             98,
             LabelTrim::Round,
@@ -174,12 +174,12 @@ impl State for SettingsMenu {
 
         draw_text(context, atlas, 0.0, 24.0, "Code")?;
         draw_text(context, atlas, 8.0, 24.0 + 12.0, "@evrimzone")?;
-        draw_text(context, atlas, 0.0, 24.0 + 32.0, "Graphics")?;
-        draw_text(context, atlas, 8.0, 24.0 + 32.0 + 12.0, "@mrmotarius")?;
-        draw_text(context, atlas, 0.0, 24.0 + 64.0, "Sounds")?;
-        draw_text(context, atlas, 8.0, 24.0 + 64.0 + 12.0, "@effoharkay")?;
-        draw_text(context, atlas, 0.0, 24.0 + 96.0, "Music")?;
-        draw_text(context, atlas, 8.0, 24.0 + 96.0 + 12.0, "Alex Neri")?;
+        draw_text(context, atlas, 0.0, 24.0 + 28.0, "Graphics")?;
+        draw_text(context, atlas, 8.0, 24.0 + 28.0 + 12.0, "@mrmotarius")?;
+        draw_text(context, atlas, 0.0, 24.0 + 56.0, "Sounds")?;
+        draw_text(context, atlas, 8.0, 24.0 + 56.0 + 12.0, "@effoharkay")?;
+        draw_text(context, atlas, 0.0, 24.0 + 84.0, "Music")?;
+        draw_text(context, atlas, 8.0, 24.0 + 84.0 + 12.0, "Alex Neri")?;
 
         context.restore();
 
@@ -358,7 +358,7 @@ impl Default for SettingsMenu {
             interface = Interface::new(vec![
                 interface.boxed(),
                 ButtonElement::new(
-                    (160, 216),
+                    (160, 196),
                     (144, 16),
                     99,
                     LabelTrim::Round,

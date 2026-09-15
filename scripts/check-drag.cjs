@@ -41,7 +41,7 @@ const assert = require('node:assert/strict');
    await page.goto(url); await page.waitForSelector('#game-canvas');
    const box=await page.locator('#game-canvas').boundingBox();
    point=(x,y)=>({x:box.x+(x+72)*box.width/400,y:box.y+(y+8)*box.height/272});
-   await click(248,174); await page.waitForTimeout(60);
+   await click(248,174); await page.waitForTimeout(300);
    return (await sample()).shadows[0];
  };
  const origin=await fresh();
@@ -51,8 +51,11 @@ const assert = require('node:assert/strict');
  assert.deepEqual(s.shadows.at(-1),[origin[0]+21,origin[1]+3],'shadow tracks ground and drag renders last');
  assert.equal(s.red[0][0],origin[0]+21,'preserves grab offset');
  assert.ok(s.red[0][1]-s.shadows.at(-1)[1]>=-13 && s.red[0][1]-s.shadows.at(-1)[1]<=-11,'jump-height bob');
- await move(32,112);await page.mouse.up();await page.waitForTimeout(60);
- assert.deepEqual((await sample()).shadows[0],origin,'outside drop snaps back');
+ await move(32,112);await page.waitForTimeout(30);await page.evaluate(()=>samples=[]);await page.mouse.up();await page.waitForTimeout(300);
+ const returning=await page.evaluate(()=>samples);
+ assert(returning.some(s=>s.shadows[0][0]>origin[0]-64 && s.shadows[0][0]<origin[0]),'invalid drop passes through intermediate positions');
+ assert(returning.every(s=>s.red.length===1),'return renders exactly one mage');
+ assert.deepEqual((await sample()).shadows[0],origin,'outside drop eases back to origin');
  // Releasing over the menu must not open it: a following valid drag must work.
  await move(96,112);await page.mouse.down();await move(-16,116);await page.mouse.up();await page.waitForTimeout(60);
  await move(96,112);await page.mouse.down();await move(117,115);await page.waitForTimeout(40);
@@ -61,6 +64,8 @@ const assert = require('node:assert/strict');
  const landing=await page.evaluate(()=>samples);
  assert.ok(landing.every(s=>s.red.length===1 && s.red[0][0]>=origin[0]+21),'landing never returns to origin or duplicates sprite');
  // Undo restores normal animation; ordinary taps still submit a move afterward.
+ await click(-16,140);
+ assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'first undo click only arms confirmation');
  await click(-16,140);await page.waitForTimeout(500);
  await click(96,112);await click(128,112);await page.waitForTimeout(400);
  assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]]);
@@ -95,7 +100,7 @@ const assert = require('node:assert/strict');
  }
  // Local battle: selecting a different mage after an invalid touch drag still works.
  await page.goto(url);await page.waitForSelector('#game-canvas');
- await click(248,110);await click(48,80);await click(128,200);await page.waitForTimeout(80);
+ await click(248,110);await page.waitForTimeout(300);await click(48,80);await click(128,200);await page.waitForTimeout(350);
  const reds=(await sample()).red;
  assert.ok(reds.length>1);
  const tilePoint=r=>[r[0]-72,Math.round((r[1]-8-16)/32)*32+16];

@@ -646,6 +646,12 @@ pub fn draw_board(
     clear_width: usize,
     clear_height: usize,
 ) -> Result<(), JsValue> {
+    // Sampling a canvas while modifying it forces repeated backing-store
+    // snapshots in WebKit. Take one immutable source for all board tiles/edges.
+    let source = crate::app::CanvasLayer::new(atlas.width(), atlas.height())?;
+    source
+        .context
+        .draw_image_with_html_canvas_element(atlas, 0.0, 0.0)?;
     let board_scale = tuple_as!(BOARD_SCALE, f64);
 
     let atlas_context = atlas
@@ -673,7 +679,7 @@ pub fn draw_board(
         for y in 0..board.height {
             draw_tile(
                 &atlas_context,
-                atlas,
+                &source.canvas,
                 &Position(x as i8, y as i8),
                 sprite_offset,
             )?;
@@ -697,7 +703,7 @@ pub fn draw_board(
                 (true, false, true, false) => {
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         0.0 + sprite_offset.1,
                         32.0,
@@ -710,7 +716,7 @@ pub fn draw_board(
                     atlas_context.rotate(std::f64::consts::PI * 0.5)?;
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         0.0 + sprite_offset.1,
                         32.0,
@@ -723,7 +729,7 @@ pub fn draw_board(
                     atlas_context.rotate(std::f64::consts::PI * 1.5)?;
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         0.0 + sprite_offset.1,
                         32.0,
@@ -736,7 +742,7 @@ pub fn draw_board(
                     atlas_context.rotate(std::f64::consts::PI)?;
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         0.0 + sprite_offset.1,
                         32.0,
@@ -748,7 +754,7 @@ pub fn draw_board(
                 (true, false, false, false) => {
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         32.0 + sprite_offset.1,
                         32.0,
@@ -761,7 +767,7 @@ pub fn draw_board(
                     atlas_context.rotate(std::f64::consts::PI)?;
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         32.0 + sprite_offset.1,
                         32.0,
@@ -774,7 +780,7 @@ pub fn draw_board(
                     atlas_context.rotate(std::f64::consts::PI * 0.5)?;
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         32.0 + sprite_offset.1,
                         32.0,
@@ -787,7 +793,7 @@ pub fn draw_board(
                     atlas_context.rotate(std::f64::consts::PI * 1.5)?;
                     draw_sprite(
                         &atlas_context,
-                        atlas,
+                        &source.canvas,
                         192.0 + sprite_offset.0,
                         32.0 + sprite_offset.1,
                         32.0,

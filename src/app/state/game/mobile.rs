@@ -63,12 +63,13 @@ impl RosterSlot {
     }
 }
 
-fn roster_key(view: BoardView, orientation: bool, mage: &Mage) -> (i8, i8, usize) {
+fn roster_key(view: BoardView, orientation: bool, flipped: bool, mage: &Mage) -> (i8, i8, usize) {
     let p = view.tile(mage.position);
-    if orientation {
-        (-p.1, p.0, mage.index)
+    let (x, y) = if orientation { (-p.1, p.0) } else { (p.0, p.1) };
+    if flipped {
+        (-x, -y, mage.index)
     } else {
-        (p.0, p.1, mage.index)
+        (x, y, mage.index)
     }
 }
 
@@ -80,7 +81,7 @@ struct MobileLayout {
     columns: usize,
 }
 impl MobileLayout {
-    fn new(s: &CanvasSettings) -> Self {
+    fn new(s: &CanvasSettings, flipped: bool) -> Self {
         let inset = |name: &str| {
             if cfg!(feature = "ios") {
                 js_sys::Reflect::get(&crate::window(), &name.into())
@@ -93,9 +94,28 @@ impl MobileLayout {
                 0.0
             }
         };
-        let left = 6 + inset("maginetSafeLeft").ceil() as i32;
-        let right = s.element_width() as i32 - 6 - inset("maginetSafeRight").ceil() as i32;
-        let bottom = s.element_height() as i32 - 6 - inset("maginetSafeBottom").ceil() as i32;
+        let left = 6 + inset(if flipped {
+            "maginetSafeRight"
+        } else {
+            "maginetSafeLeft"
+        })
+        .ceil() as i32;
+        let right = s.element_width() as i32
+            - 6
+            - inset(if flipped {
+                "maginetSafeLeft"
+            } else {
+                "maginetSafeRight"
+            })
+            .ceil() as i32;
+        let bottom = s.element_height() as i32
+            - 6
+            - inset(if flipped {
+                "maginetSafeTop"
+            } else {
+                "maginetSafeBottom"
+            })
+            .ceil() as i32;
         Self {
             left,
             right,
@@ -149,7 +169,24 @@ fn inside(p: (i32, i32), c: (i32, i32)) -> bool {
     p.0 >= c.0 - 14 && p.0 < c.0 + 14 && p.1 >= c.1 - 14 && p.1 < c.1 + 14
 }
 
+// An involution: the same transform maps physical input into player coordinates
+// and player coordinates back to physical drawing positions.
+fn player_point(s: &CanvasSettings, flipped: bool, p: (i32, i32)) -> (i32, i32) {
+    if flipped {
+        (
+            s.element_width() as i32 - 1 - p.0,
+            s.element_height() as i32 - 1 - p.1,
+        )
+    } else {
+        p
+    }
+}
+
 impl Game {
+    fn mobile_flipped(&self) -> bool {
+        self.lobby.settings.lobby_sort == LobbySort::Local
+            && self.lobby.game.turn_for() != self.view_team
+    }
     pub(crate) fn mobile_enabled(app: &AppContext) -> bool {
         crate::app::SettingsMenu::onscreen_controls_enabled() && Self::touch_enabled(app)
     }
@@ -182,8 +219,15 @@ impl Game {
             .iter_mages()
             .filter(|m| m.team == team)
             .collect();
-        roster.sort_by_key(|m| roster_key(self.board_view(), app.canvas_settings.orientation, m));
-        let layout = MobileLayout::new(&app.canvas_settings);
+        roster.sort_by_key(|m| {
+            roster_key(
+                self.board_view(),
+                app.canvas_settings.orientation,
+                self.mobile_flipped(),
+                m,
+            )
+        });
+        let layout = MobileLayout::new(&app.canvas_settings, self.mobile_flipped());
         let mut slots = self.mobile_roster.borrow_mut();
         slots.retain(|slot| roster.iter().any(|m| m.index == slot.index));
         let count = roster.len();
@@ -210,8 +254,13 @@ impl Game {
     }
     fn pad_direction(&self, dir: Position, s: &CanvasSettings) -> Position {
         let dir = self.board_view().direction(dir);
-        if s.orientation {
+        let dir = if s.orientation {
             Position(-dir.1, dir.0)
+        } else {
+            dir
+        };
+        if self.mobile_flipped() {
+            Position(-dir.0, -dir.1)
         } else {
             dir
         }
@@ -221,8 +270,8 @@ impl Game {
             return MobileHit::Board;
         }
         let s = &app.canvas_settings;
-        let layout = MobileLayout::new(s);
-        let p = physical(s, location);
+        let layout = MobileLayout::new(s, self.mobile_flipped());
+        let p = player_point(s, self.mobile_flipped(), physical(s, location));
         for (mage, center) in self.roster(app) {
             if roster_inside(p, center) {
                 return if mage.is_alive() {
@@ -270,6 +319,7 @@ impl Game {
     pub(super) fn mobile_input(&mut self, app: &AppContext) -> bool {
         if self.interaction_locked(app) {
             self.drag = None;
+            self.drag_return = None;
             self.mobile_press = None;
             self.destination = None;
             return !self.is_interface_active()
@@ -283,6 +333,7 @@ impl Game {
             match *event {
                 GestureEvent::Cancel => {
                     self.drag = None;
+                    self.drag_return = None;
                     self.destination = None;
                     self.mobile_press = None;
                 }
@@ -290,6 +341,7 @@ impl Game {
                     let hit = self.mobile_hit(p, app);
                     self.mobile_press = Some((hit, p));
                     self.drag = None;
+                    self.drag_return = None;
                     let mage = match hit {
                         MobileHit::Center => self.get_active_mage(),
                         MobileHit::Board => self
@@ -329,7 +381,7 @@ impl Game {
                                 (pose.ground.0 + 0.5).floor() as i8,
                                 (pose.ground.1 + 0.5).floor() as i8,
                             );
-                            self.submit_turn(Turn(d.origin, tile), Some(pose), app);
+                            self.drop_drag(d.index, Turn(d.origin, tile), pose, app);
                             continue;
                         }
                     }
@@ -376,12 +428,15 @@ impl Game {
             return Ok(());
         }
         let s = &app.canvas_settings;
-        let layout = MobileLayout::new(s);
+        let layout = MobileLayout::new(s, self.mobile_flipped());
         let place = |p| -> Result<(), JsValue> {
-            let p = logical(s, p);
+            let p = logical(s, player_point(s, self.mobile_flipped(), p));
             context.translate(p.0 as f64, p.1 as f64)?;
             if s.orientation {
                 context.rotate(-std::f64::consts::FRAC_PI_2)?;
+            }
+            if self.mobile_flipped() {
+                context.rotate(std::f64::consts::PI)?;
             }
             Ok(())
         };
@@ -519,10 +574,15 @@ mod tests {
                 height: 8,
             };
             let mut ordered: Vec<_> = mages.iter().collect();
-            ordered.sort_by_key(|m| roster_key(view, portrait, m));
+            ordered.sort_by_key(|m| roster_key(view, portrait, false, m));
             assert_eq!(
                 ordered.iter().map(|m| m.index).collect::<Vec<_>>(),
                 expected
+            );
+            ordered.sort_by_key(|m| roster_key(view, portrait, true, m));
+            assert_eq!(
+                ordered.iter().map(|m| m.index).collect::<Vec<_>>(),
+                expected.into_iter().rev().collect::<Vec<_>>()
             );
         }
         let mut slot = RosterSlot {
@@ -544,7 +604,22 @@ mod tests {
     fn physical_controls_round_trip_in_both_orientations() {
         for orientation in [false, true] {
             let s = CanvasSettings::new(400, 272, 256, 256, orientation);
-            let layout = MobileLayout::new(&s);
+            for flipped in [false, true] {
+                let layout = MobileLayout::new(&s, flipped);
+                for p in [
+                    layout.roster(0, 4),
+                    layout.center(),
+                    layout.button(Position(-1, 1)),
+                ] {
+                    let screen = player_point(&s, flipped, p);
+                    assert_eq!(player_point(&s, flipped, screen), p);
+                    assert_eq!(physical(&s, logical(&s, screen)), screen);
+                    if flipped {
+                        assert!(screen.1 < s.element_height() as i32 / 2);
+                    }
+                }
+            }
+            let layout = MobileLayout::new(&s, false);
             for i in 0..32 {
                 let p = layout.roster(i, 32);
                 assert_eq!(physical(&s, logical(&s, p)), p);

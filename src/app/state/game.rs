@@ -16,9 +16,9 @@ use crate::{
     app::{
         board_view::BoardView,
         presentation::{DragLanding, Presentation, Signal},
-        Alignment, App, AppContext, ButtonElement, ClipId, ConfirmButtonElement, LabelTheme,
-        LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
-        UIElement, UIEvent, BOARD_SCALE,
+        Alignment, App, AppContext, ClipId, ConfirmButtonElement, LabelTheme, LabelTrim, Particle,
+        ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement, UIElement, UIEvent,
+        BOARD_SCALE,
     },
     draw::{
         draw_board, draw_crosshair, draw_label, draw_mage, draw_mage_with_motion, draw_mana,
@@ -35,6 +35,27 @@ const BUTTON_REMATCH: usize = 1;
 const BUTTON_LEAVE: usize = 2;
 const BUTTON_MENU: usize = 10;
 const BUTTON_UNDO: usize = 20;
+
+struct DragReturn {
+    index: usize,
+    origin: Position,
+    from: DragLanding,
+    started: u64,
+}
+impl DragReturn {
+    fn pose(&self, frame: u64) -> DragLanding {
+        let remaining = (1.0 - frame.saturating_sub(self.started) as f64 / 12.0)
+            .clamp(0.0, 1.0)
+            .powi(3);
+        DragLanding {
+            ground: (
+                self.origin.0 as f64 + (self.from.ground.0 - self.origin.0 as f64) * remaining,
+                self.origin.1 as f64 + (self.from.ground.1 - self.origin.1 as f64) * remaining,
+            ),
+            offset_y: self.from.offset_y * remaining,
+        }
+    }
+}
 
 struct MageDrag {
     index: usize,
@@ -80,7 +101,7 @@ pub struct Game {
     button_rematch: ConfirmButtonElement,
     button_leave: ConfirmButtonElement,
     button_menu: ToggleButtonElement,
-    button_undo: ButtonElement,
+    button_undo: ConfirmButtonElement,
     lobby: Lobby,
     presentation: Presentation,
     last_visual_frame: u64,
@@ -90,6 +111,7 @@ pub struct Game {
     active_mage: Option<usize>,
     selection_memory: SelectionMemory,
     drag: Option<MageDrag>,
+    drag_return: Option<DragReturn>,
     destination: Option<Position>,
     mobile_press: Option<(MobileHit, (i32, i32))>,
     mobile_roster: RefCell<Vec<RosterSlot>>,
@@ -131,7 +153,7 @@ impl Game {
             crate::app::ContentElement::Sprite((112, 32), (16, 16)),
         );
 
-        let button_undo = ButtonElement::new(
+        let button_undo = ConfirmButtonElement::new(
             (-128 - 18 - 8, -9 + 12),
             (20, 20),
             BUTTON_UNDO,
@@ -179,6 +201,7 @@ impl Game {
             active_mage: None,
             selection_memory: SelectionMemory::default(),
             drag: None,
+            drag_return: None,
             destination: None,
             mobile_press: None,
             mobile_roster: RefCell::new(Vec::new()),
@@ -232,6 +255,8 @@ impl Game {
         if let Some(mage) = self.lobby.game.live_occupant(&turn.0) {
             self.selection_memory.remember(mage);
         }
+        self.drag_return = None;
+        self.button_undo.cancel_confirmation();
         self.local_landing = landing.map(|pose| (turn, pose));
         self.message_pool
             .borrow_mut()
@@ -242,6 +267,18 @@ impl Game {
         self.mobile_press = None;
         self.last_move_frame = app.frame;
         true
+    }
+
+    fn drop_drag(&mut self, index: usize, turn: Turn, pose: DragLanding, app: &AppContext) {
+        self.drag_return = None;
+        if !self.submit_turn(turn, Some(pose), app) {
+            self.drag_return = Some(DragReturn {
+                index,
+                origin: turn.0,
+                from: pose,
+                started: app.frame,
+            });
+        }
     }
 
     fn drag_input(&mut self, app: &AppContext) -> bool {
@@ -258,6 +295,7 @@ impl Game {
             || self.pending_game_change(app.session_id.as_ref())
         {
             self.drag = None;
+            self.drag_return = None;
             self.destination = None;
             self.mobile_press = None;
             return consumed;
@@ -266,10 +304,12 @@ impl Game {
             match *event {
                 GestureEvent::Cancel => {
                     self.drag = None;
+                    self.drag_return = None;
                     consumed = true;
                 }
                 GestureEvent::Press(press) => {
                     self.drag = None;
+                    self.drag_return = None;
                     if let Some(tile) =
                         self.location_as_position(press, self.board_offset(), BOARD_SCALE)
                     {
@@ -312,7 +352,7 @@ impl Game {
                                 .live_occupant(&drag.origin)
                                 .is_some_and(|m| m.index == drag.index)
                             {
-                                self.submit_turn(Turn(drag.origin, tile), Some(pose), app);
+                                self.drop_drag(drag.index, Turn(drag.origin, tile), pose, app);
                             }
                         }
                     }
@@ -460,6 +500,9 @@ impl Game {
             .drag
             .as_ref()
             .filter(|d| d.index == index && d.started.is_some());
+        if let Some(returning) = self.drag_return.as_ref().filter(|r| r.index == index) {
+            pose.offset_y = returning.pose(frame).offset_y;
+        }
         if let Some(drag) = drag {
             pose.offset_y = drag.landing(frame).offset_y;
         }
@@ -603,6 +646,13 @@ impl Game {
                     .total_cmp(&view.point(*b).1)
                     .then(a.0.total_cmp(&b.0))
             });
+            if let Some(returning) = &self.drag_return {
+                for (mage, position) in &mut visual_mages {
+                    if mage.index == returning.index {
+                        *position = returning.pose(frame).ground;
+                    }
+                }
+            }
             let dragging = self.drag.as_ref().filter(|d| d.started.is_some());
             if let Some(drag) = dragging {
                 for (mage, position) in &mut visual_mages {
@@ -1031,6 +1081,7 @@ impl Game {
                     for turn in turns {
                         let before = self.lobby.game.clone();
                         if let Some(hits) = self.lobby.game.take_move(turn.0, turn.1) {
+                            self.button_undo.cancel_confirmation();
                             if let Some(mage) = self
                                 .active_mage
                                 .and_then(|index| before.get_mage(index))
@@ -1041,6 +1092,7 @@ impl Game {
                             self.ai_pending = None;
                             self.ai_revision = self.ai_revision.wrapping_add(1);
                             self.drag = None;
+                            self.drag_return = None;
                             let landing = self.local_landing.take().and_then(|(expected, pose)| {
                                 (expected.0 == turn.0 && expected.1 == turn.1).then_some(pose)
                             });
@@ -1065,6 +1117,7 @@ impl Game {
                         self.ai_pending = None;
                         self.ai_revision = self.ai_revision.wrapping_add(1);
                         self.drag = None;
+                        self.drag_return = None;
                         self.local_landing = None;
                         self.selection_memory = SelectionMemory::default();
                         self.presentation = Presentation::new(&lobby.game);
@@ -1272,6 +1325,13 @@ impl State for Game {
         _text_input: &HtmlInputElement,
         app_context: &AppContext,
     ) -> Option<StateSort> {
+        if self
+            .drag_return
+            .as_ref()
+            .is_some_and(|r| app_context.frame.saturating_sub(r.started) >= 12)
+        {
+            self.drag_return = None;
+        }
         let consumed_drag = self.drag_input(app_context);
         let filtered_pointer = app_context.pointer.without_clicks();
         let mut released_pointer = app_context.pointer.clone();
@@ -1283,6 +1343,9 @@ impl State for Game {
                 .any(|e| matches!(e, crate::app::pointer::GestureEvent::Release(_)))
         {
             released_pointer.pending_click = true;
+        }
+        if consumed_drag && released_pointer.clicked() {
+            self.button_undo.cancel_confirmation();
         }
         let board_offset = self.board_offset();
         let frame = app_context.frame;
@@ -1395,6 +1458,7 @@ impl State for Game {
 
         if self.lobby.is_local() && self.button_undo.tick(&interface_pointer).is_some() {
             self.drag = None;
+            self.drag_return = None;
             self.local_landing = None;
             self.ai_pending = None;
             self.ai_revision = self.ai_revision.wrapping_add(1);
@@ -1419,6 +1483,7 @@ impl State for Game {
         self.configure_result_buttons();
         if self.is_interface_active() {
             self.drag = None;
+            self.drag_return = None;
             self.destination = None;
             self.mobile_press = None;
             let rematch_event = self.button_rematch.tick(&interface_pointer);
@@ -1454,6 +1519,11 @@ impl State for Game {
                             return Some(StateSort::ArenaMenu(ArenaMenu::at_position(
                                 *position,
                                 self.newly_won && !self.presentation.busy(),
+                            )));
+                        }
+                        settings if self.lobby.is_local() => {
+                            return Some(StateSort::SkirmishMenu(SkirmishMenu::new(
+                                settings.clone(),
                             )));
                         }
                         _ => return Some(StateSort::SkirmishMenu(SkirmishMenu::default())),

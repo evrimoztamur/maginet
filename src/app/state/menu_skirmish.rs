@@ -190,6 +190,22 @@ impl State for SkirmishMenu {
 
 impl Default for SkirmishMenu {
     fn default() -> SkirmishMenu {
+        Self::new(LobbySettings::default())
+    }
+}
+
+impl SkirmishMenu {
+    pub(super) fn new(lobby_settings: LobbySettings) -> Self {
+        let selected_mode = match lobby_settings.lobby_sort {
+            LobbySort::LocalAI => BUTTON_VS_AI,
+            LobbySort::Online(_) => BUTTON_ONLINE,
+            _ => BUTTON_LOCAL,
+        };
+        let selected_loadout = match lobby_settings.loadout_method {
+            LoadoutMethod::Random { symmetric: true } => BUTTON_SYMMETRIC_RANDOM,
+            LoadoutMethod::Random { symmetric: false } => BUTTON_RANDOM,
+            _ => BUTTON_DEFAULT,
+        };
         let button_local = ButtonElement::new(
             (0, 0),
             (72, 32),
@@ -230,7 +246,7 @@ impl Default for SkirmishMenu {
         let group_lobby_type = ButtonGroupElement::new(
             (12, 64),
             vec![button_local, button_vs_ai, button_online],
-            BUTTON_LOCAL,
+            selected_mode,
         );
 
         let button_default = ButtonElement::new(
@@ -276,7 +292,7 @@ impl Default for SkirmishMenu {
                 button_symmetric_random,
                 // button_round_robin,
             ],
-            BUTTON_DEFAULT,
+            selected_loadout,
         );
 
         let button_battle = ButtonElement::new(
@@ -316,8 +332,9 @@ impl Default for SkirmishMenu {
 
         SkirmishMenu {
             interface: root_element,
-            sentinel_lobby: Lobby::new(LobbySettings::default(), client_timestamp()),
-            lobby_settings: LobbySettings::default(),
+            // Reuse the seed so a random loadout returns exactly as previewed.
+            sentinel_lobby: Lobby::new(lobby_settings.clone(), client_timestamp()),
+            lobby_settings,
         }
     }
 }

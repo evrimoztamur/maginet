@@ -7,6 +7,14 @@ use web_sys::{console, AudioBuffer, AudioContext, GainNode};
 
 use super::SettingsMenu;
 
+const MUSIC_MAX_GAIN: f32 = 0.65;
+
+fn perceptual_gain(volume: i8) -> f32 {
+    // A squared curve gives finer control at quiet levels while preserving mute.
+    let normalized = volume.clamp(0, 10) as f32 / 10.0;
+    normalized * normalized
+}
+
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ClipId {
     CrackleI,
@@ -84,7 +92,7 @@ impl AudioSystem {
     }
 
     pub fn music_volume(&self) -> f32 {
-        self.music_volume as f32 / 10.0
+        perceptual_gain(self.music_volume) * MUSIC_MAX_GAIN
     }
 
     pub fn set_clip_volume(&mut self, volume: i8) {
@@ -92,7 +100,7 @@ impl AudioSystem {
     }
 
     pub fn clip_volume(&self) -> f32 {
-        self.clip_volume as f32 / 10.0
+        perceptual_gain(self.clip_volume)
     }
 
     pub fn play_clip(&self, clip_id: ClipId) {

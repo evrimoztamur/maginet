@@ -30,6 +30,20 @@ pub enum StateSort {
     Tutorial(Tutorial),
 }
 
+impl StateSort {
+    fn navigation_depth(&self) -> u8 {
+        match self {
+            Self::MainMenu(_) => 0,
+            Self::ArenaMenu(_)
+            | Self::SkirmishMenu(_)
+            | Self::SettingsMenu(_)
+            | Self::Editor(_) => 1,
+            Self::LobbyList(_) | Self::EditorPreview(_) => 2,
+            Self::Game(_) | Self::Tutorial(_) => 3,
+        }
+    }
+}
+
 pub struct AppContext {
     pub session_id: Option<String>,
     pub pointer: Pointer,
@@ -43,6 +57,8 @@ pub struct App {
     app_context: AppContext,
     state_sort: StateSort,
     atlas_complete: bool,
+    navigation: Option<i8>,
+    transition_until: f64,
 }
 
 impl App {
@@ -58,6 +74,8 @@ impl App {
             },
             state_sort: StateSort::MainMenu(MainMenu::default()),
             atlas_complete: false,
+            navigation: None,
+            transition_until: 0.0,
         }
     }
 
@@ -153,22 +171,6 @@ impl App {
             };
         }
 
-        // DRAW cursor
-        let cursor = self
-            .app_context
-            .pointer
-            .draw_location(window().performance().unwrap().now());
-        draw_sprite(
-            interface_context,
-            atlas,
-            64.0,
-            8.0,
-            16.0,
-            16.0,
-            cursor.0 - 5.0,
-            cursor.1 - 2.0,
-        )?;
-
         context.restore();
         interface_context.restore();
 
@@ -179,7 +181,47 @@ impl App {
         result
     }
 
+    // Draw after screen compositing so the cursor never enters a slide snapshot.
+    pub(super) fn draw_cursor(
+        &mut self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlCanvasElement,
+    ) -> Result<(), JsValue> {
+        context.save();
+        let settings = &self.app_context.canvas_settings;
+        if settings.orientation {
+            context.translate(settings.element_width() as f64, 0.0)?;
+            context.rotate(std::f64::consts::FRAC_PI_2)?;
+        }
+        context.translate(settings.padding_x() as f64, settings.padding_y() as f64)?;
+        let cursor = self
+            .app_context
+            .pointer
+            .draw_location(window().performance().unwrap().now());
+        draw_sprite(
+            context,
+            atlas,
+            64.0,
+            8.0,
+            16.0,
+            16.0,
+            cursor.0 - 5.0,
+            cursor.1 - 2.0,
+        )?;
+
+        context.restore();
+        Ok(())
+    }
+
+    pub(super) fn take_navigation(&mut self) -> Option<i8> {
+        self.navigation.take()
+    }
+
     pub fn tick(&mut self, text_input: &HtmlInputElement) {
+        if window().performance().unwrap().now() < self.transition_until {
+            self.app_context.pointer.cancel();
+            return;
+        }
         if cfg!(feature = "ios") {
             self.app_context.session_id = get_session_id();
             let online_screen = matches!(&self.state_sort, StateSort::LobbyList(_))
@@ -213,6 +255,19 @@ impl App {
         };
 
         if let Some(next_state) = next_state {
+            // Screen depth expresses forward/back navigation; same-screen resets
+            // (for example rematches) do not slide.
+            if std::mem::discriminant(&self.state_sort) != std::mem::discriminant(&next_state) {
+                self.navigation = Some(
+                    if next_state.navigation_depth() > self.state_sort.navigation_depth() {
+                        1
+                    } else {
+                        -1
+                    },
+                );
+                self.transition_until = window().performance().unwrap().now() + 250.0;
+                self.app_context.pointer.cancel();
+            }
             self.state_sort = next_state;
         }
     }

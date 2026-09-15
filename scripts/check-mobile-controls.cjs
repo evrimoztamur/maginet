@@ -42,7 +42,7 @@ const assert = require('node:assert/strict');
  });
  const url=process.env.DRAG_URL || 'http://127.0.0.1:8789/html/game.html';
  let point;
- const click=async(x,y)=>{const p=point(x,y);await page.mouse.click(p.x,p.y,{delay:30});await page.waitForTimeout(60)};
+ const click=async(x,y)=>{const p=point(x,y);await page.mouse.click(p.x,p.y,{delay:30});await page.waitForTimeout(300)};
  const move=async(x,y)=>{const p=point(x,y);await page.mouse.move(p.x,p.y)};
  const sample=()=>page.evaluate(()=>sprites);
  const fresh=async()=>{
@@ -60,7 +60,7 @@ const assert = require('node:assert/strict');
    }
  },{events:events.map(([type,id,x,y])=>{const p=point(x,y);return [type,id,p.x,p.y]})});
 
- const tap=async(x,y)=>{await touch([['touchstart',1,x,y],['touchend',1,x,y]]);await page.waitForTimeout(80)};
+ const tap=async(x,y)=>{await touch([['touchstart',1,x,y],['touchend',1,x,y]]);await page.waitForTimeout(300)};
  // Settings persists the controller preference and removes hidden hit areas.
  await fresh();
  await page.goto(url);await page.waitForSelector('#game-canvas');
@@ -103,7 +103,12 @@ const assert = require('node:assert/strict');
  await tap(128,112); // Same east destination confirms from board.
  await page.waitForTimeout(450);
  assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'cross-surface confirmation');
- await tap(-16,140);await page.waitForTimeout(500); // Undo.
+ await tap(-16,140);
+ assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'first undo tap only arms confirmation');
+ await tap(277,213); // A controller interaction cancels the armed undo.
+ await tap(-16,140);
+ assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'undo requires two new taps after touching elsewhere');
+ await tap(-16,140);await page.waitForTimeout(500); // Confirm undo.
  assert.deepEqual((await sample()).shadows[0],origin,'touch undo works');
  await tap(-51,243);await tap(307,213);
  await touch([['touchcancel',1,307,213]]); // A fresh active gesture cancellation clears preview.
@@ -119,11 +124,14 @@ const assert = require('node:assert/strict');
  await touch([['touchend',3,309,213]]);
  await page.waitForTimeout(450);
  assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'center drag moves relative to mage, exactly one tile');
- await tap(-16,140);await page.waitForTimeout(500);
+ await tap(-16,140);await tap(-16,140);await page.waitForTimeout(500);
  await tap(-51,243);
+ await page.evaluate(()=>samples=[]);
  await touch([['touchstart',4,277,213],['touchend',4,180,213]]);
- await page.waitForTimeout(100);
- assert.deepEqual((await sample()).shadows[0],origin,'invalid pad drop cancels');
+ await page.waitForTimeout(300);
+ const returnSamples=await page.evaluate(()=>samples);
+ assert(returnSamples.some(s=>s.shadows[0][0]>origin[0]-97 && s.shadows[0][0]<origin[0]),'invalid pad drop eases through intermediate positions');
+ assert.deepEqual((await sample()).shadows[0],origin,'invalid pad drop returns to origin');
  await tap(307,213);await tap(-16,116); // Preview then menu.
  await tap(-16,116);await tap(307,213);
  assert.deepEqual((await sample()).shadows[0],origin,'menu opening clears preview');
