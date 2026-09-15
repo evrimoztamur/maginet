@@ -11,9 +11,9 @@ use super::{ArenaMenu, Editor, SkirmishMenu, State};
 use crate::{
     app::{
         presentation::{Presentation, Signal},
-        Alignment, App, AppContext, ButtonElement, ClipId, ConfirmButtonElement, Interface,
-        LabelTheme, LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort,
-        ToggleButtonElement, UIElement, UIEvent, BOARD_SCALE,
+        Alignment, App, AppContext, ButtonElement, ClipId, ConfirmButtonElement, LabelTheme,
+        LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
+        UIElement, UIEvent, BOARD_SCALE,
     },
     draw::{
         draw_board, draw_crosshair, draw_label, draw_mage, draw_mage_with_motion, draw_mana,
@@ -36,7 +36,8 @@ pub struct Game {
     ai_revision: u32,
     ai_request: u32,
     difficulty: Difficulty,
-    interface: Interface,
+    button_rematch: ButtonElement,
+    button_leave: ConfirmButtonElement,
     button_menu: ToggleButtonElement,
     button_undo: ButtonElement,
     lobby: Lobby,
@@ -112,15 +113,14 @@ impl Game {
             crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
         );
 
-        let root_element = Interface::new(vec![button_rematch.boxed(), button_leave.boxed()]);
-
         let lobby = Lobby::new(lobby_settings, client_timestamp());
         Game {
             ai_pending: None,
             ai_revision: 0,
             ai_request: 0,
             difficulty: Difficulty::from_preference(&App::kv_get("difficulty")),
-            interface: root_element,
+            button_rematch,
+            button_leave,
             button_menu,
             button_undo,
             presentation: Presentation::new(&lobby.game),
@@ -890,7 +890,15 @@ impl State for Game {
             }
 
             if self.is_interface_active() {
-                self.interface
+                let campaign_win = self.lobby.settings.lobby_sort == LobbySort::LocalAI
+                    && matches!(self.lobby.settings.loadout_method, LoadoutMethod::Arena(..))
+                    && !self.presentation.busy()
+                    && self.presentation.game().result() == Some(GameResult::Win(Team::Red));
+                self.button_leave
+                    .set_text(if campaign_win { "Continue" } else { "Leave" });
+                self.button_rematch
+                    .draw(interface_context, atlas, &interface_pointer, frame)?;
+                self.button_leave
                     .draw(interface_context, atlas, &interface_pointer, frame)?;
 
                 for player in self
@@ -1073,8 +1081,9 @@ impl State for Game {
         }
 
         if self.is_interface_active() {
+            let rematch_event = self.button_rematch.tick(&interface_pointer);
             if let Some(UIEvent::ButtonClick(value, clip_id)) =
-                self.interface.tick(&interface_pointer)
+                self.button_leave.tick(&interface_pointer).or(rematch_event)
             {
                 app_context.audio_system.play_clip_option(clip_id);
 

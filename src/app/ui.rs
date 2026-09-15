@@ -238,6 +238,12 @@ pub struct ConfirmButtonElement {
 }
 
 impl ConfirmButtonElement {
+    pub fn set_text(&mut self, label: &str) {
+        if let ContentElement::Text(text, _) = &mut self.button.content {
+            label.clone_into(text);
+        }
+    }
+
     pub fn new(
         position: (i32, i32),
         size: (i32, i32),
