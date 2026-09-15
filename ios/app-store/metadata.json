@@ -1,0 +1,27 @@
+{
+  "locale": "en-US",
+  "name": "Maginet",
+  "subtitle": "A duel of mages and minds",
+  "promotional_text": "House Ruby demands victory. The Azur Clan objects. Command your mages, master their spells, and settle an ancient quarrel one carefully considered move at a time.",
+  "description": "Have at thee!\n\nFor millennia, House Ruby and the Azur Clan have disputed the checkered realms of Zugzwang. Neither side intends to concede. Both would appreciate your assistance.\n\nMaginet is a compact, chess-like tactics game about small bands of mages and the trouble they can cause. Move a mage and its spells strike automatically. Learn each attack pattern, guard your mana, and find the move that leaves your rival with nowhere comfortable to stand.\n\nA CAMPAIGN OF CURIOUS BATTLEFIELDS\nFollow a branching map through changing terrain and carefully arranged encounters. Discover side paths, collect victory stars, and meet new combinations of mages and magical powerups.\n\nSMALL BOARDS. MUCH TO CONSIDER.\nEvery mage moves alike, but each kind casts differently. Powerups alter movement, attacks, and defenses. A promising position can become a dreadful mistake in a single turn. Take your time. Your opponent certainly has.\n\nMORE WAYS TO DUEL\nChallenge the AI, share a device for a local battle, or face another player online. Build your own encounters in the level editor. Campaign, AI battles, and local play work offline.\n\nBEGIN YOUR CAMPAIGN FOR FREE\nThe tutorial, Basics I–IV, local battles, AI opponents, and level editor are free. A single Full Game purchase permanently unlocks the rest of the campaign and all online modes.\n\nGo forth, great maginettes. Do try to make your House proud.",
+  "keywords": "strategy,tactics,chess,turn based,fantasy,magic,duel,pixel art,offline,multiplayer,level editor",
+  "support_url": "https://maginet.evrim.zone",
+  "marketing_url": "https://evrim.zone",
+  "version": "1.0",
+  "copyright": "2026 Evrim Öztamur",
+  "review": {
+    "sign_in_required": false,
+    "first_name": "Evrim",
+    "last_name": "Öztamur",
+    "email": "maginet@evrim.zone",
+    "phone": "+31614297640",
+    "notes": "Maginet is a landscape-only tactics game for iPhone. No app account or sign-in is required.\n\nFree content: Tutorial, campaign levels Basics I–IV, local battles, battles against AI, and the level editor.\n\nFull Game is a permanent non-consumable in-app purchase (zone.evrim.maginet.all). It unlocks the remaining campaign and all online modes. To find the purchase, open Settings → Unlock Full Game. Restore Purchases is also available in Settings. The campaign purchase entry appears at Patterns I, after Basics IV.\n\nThe game starts from bundled content. Campaign, local battles, and AI play work offline. Online play requires an internet connection and the Full Game purchase.\n\nThe App Store screenshots include campaign content available with Full Game."
+  },
+  "in_app_purchase": {
+    "reference_name": "Full Game",
+    "product_id": "zone.evrim.maginet.all",
+    "type": "Non-Consumable",
+    "display_name": "Full Game",
+    "description": "Unlock the full campaign and every online mode."
+  }
+}

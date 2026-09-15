@@ -1,0 +1,9 @@
+Maginet is a landscape-only tactics game for iPhone. No app account or sign-in is required.
+
+Free content: Tutorial, campaign levels Basics I–IV, local battles, battles against AI, and the level editor.
+
+Full Game is a permanent non-consumable in-app purchase (zone.evrim.maginet.all). It unlocks the remaining campaign and all online modes. To find the purchase, open Settings → Unlock Full Game. Restore Purchases is also available in Settings. The campaign purchase entry appears at Patterns I, after Basics IV.
+
+The game starts from bundled content. Campaign, local battles, and AI play work offline. Online play requires an internet connection and the Full Game purchase.
+
+The App Store screenshots include campaign content available with Full Game.

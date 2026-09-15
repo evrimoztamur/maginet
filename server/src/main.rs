@@ -31,6 +31,8 @@ async fn main() {
     let app = Router::new()
         .nest_service("/static", ServeDir::new("static"))
         .route_service("/", ServeFile::new("html/game.html"))
+        .route_service("/privacy", ServeFile::new("static/privacy.html"))
+        .route_service("/privacy/", ServeFile::new("static/privacy.html"))
         .route("/lobbies", get(get_lobbies))
         .route("/lobby/create", post(create_lobby))
         .route("/lobby/:id/turns/:since", post(get_turns_since))

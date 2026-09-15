@@ -16,6 +16,8 @@ cargo run -p server
 
 The server listens on `127.0.0.1:8000` and serves the page, assets, and API. Open `http://127.0.0.1:8000`.
 
+The privacy policy and support contact are in `static/privacy.html`, served at `/privacy` (also accessible at `/static/privacy.html`). The production URL is `https://maginet.evrim.zone/privacy`; Nginx serves that file directly. Updating the page requires no game build or server restart. Keep its data handling and retention descriptions aligned with the app, server, and hosting configuration.
+
 **API routing:** `src/net.rs` currently points non-deploy clients at `https://tunnel.evrim.zone`, and deploy clients at `https://maginet.evrim.zone`. The existing local workflow expects a tunnel to the local server. For a fully local setup, change the non-deploy `API_URL` to `http://127.0.0.1:8000` while developing; do not accidentally commit a personal endpoint change.
 
 Optional rebuild watchers (`watchexec`):
