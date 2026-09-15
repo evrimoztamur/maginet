@@ -1,4 +1,4 @@
-// Uses the shared catalogue export; observe actual canvas labels and connection strokes.
+// Uses the shared catalogue export; observe movement sprites and revealed-portal visibility.
 const {chromium}=require('playwright-core');
 const assert=require('assert/strict');
 const graph=JSON.parse(require('child_process').execFileSync('cargo',['run','--quiet','-p','shared','--example','campaign_catalogue'],{encoding:'utf8',stdio:['ignore','pipe','inherit']}));
@@ -33,9 +33,11 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   await page.addInitScript(codes=>{
    localStorage.clear();for(const c of codes)localStorage.setItem(c,'win');
    window.jobs=[];window.Worker=class{constructor(){jobs.push(this)}postMessage(r){this.request=r}terminate(){}};
-   window.glyphs=[];window.paths=[];
+   window.glyphs=[];window.paths=[];window.arrowContext=null;
    const proto=CanvasRenderingContext2D.prototype, draw=proto.drawImage, begin=proto.beginPath, move=proto.moveTo,line=proto.lineTo,stroke=proto.stroke;
-   proto.drawImage=function(...a){if(a.length===9&&a[3]===8&&a[4]===8&&a[2]>=216&&a[2]<=272){glyphs.push(String.fromCharCode(((a[2]-216)/8)*32+a[1]/8));if(glyphs.length>2000)glyphs.splice(0,1000)}return draw.apply(this,a)};
+   const clear=proto.clearRect;
+   proto.clearRect=function(...a){this.movementArrows=[];return clear.apply(this,a)};
+   proto.drawImage=function(...a){if(a.length===9&&a[1]===0&&a[2]===32&&a[3]===16&&a[4]===16){const m=this.getTransform();(this.movementArrows??=[]).push({x:m.e+8*(m.a+m.c),y:m.f+8*(m.b+m.d),dx:Math.round(m.a)||0,dy:Math.round(m.b)||0});window.arrowContext=this;}if(a.length===9&&a[3]===8&&a[4]===8&&a[2]>=216&&a[2]<=272){glyphs.push(String.fromCharCode(((a[2]-216)/8)*32+a[1]/8));if(glyphs.length>2000)glyphs.splice(0,1000)}return draw.apply(this,a)};
    proto.beginPath=function(){this.trace=[];return begin.apply(this,arguments)};
    proto.moveTo=function(x,y){this.trace?.push(['M',x,y]);return move.apply(this,arguments)};
    proto.lineTo=function(x,y){this.trace?.push(['L',x,y]);return line.apply(this,arguments)};
@@ -58,14 +60,30 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   await page.waitForTimeout(500);await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);
   const drawn=await page.evaluate(()=>glyphs.join(''));
   assert(drawn.includes(available?'Battle':'Locked'),`${won} → ${target}: ${drawn.slice(-300)}`);
-  const arrows=await page.evaluate(()=>paths);
-  assert(arrows.length>0,'one-way arrowheads drawn');
-  for(const path of arrows)assert(path[0][1]===path[1][1]||path[0][2]===path[1][2],'arrow shaft is cardinal');
+  const directions=graph.connections.flatMap(e=>e.one_way?[[e.from,e.to]]:[[e.from,e.to],[e.to,e.from]]);
+  const availableIds=new Set(['tutorial',won]);
+  for(const [from,to] of directions)if(['tutorial',won].includes(from))availableIds.add(to);
+  const known=new Set(availableIds);
+  for(const [from,to] of directions)if(availableIds.has(from))known.add(to);
+  const expected=directions.filter(([from])=>known.has(from)).map(([from,to])=>{
+   const a=graph.catalogue.find(e=>e.id===from).position,b=graph.catalogue.find(e=>e.id===to).position;
+   const dx=b[0]-a[0],dy=b[1]-a[1],distance=dy>0?72:dy<0?40:48;
+   return {x:a[0]*128+dx*distance,y:a[1]*128+dy*distance,dx,dy};
+  });
+  const arrows=await page.evaluate(()=>arrowContext.movementArrows);
+  assert.equal(arrows.length,expected.length,'arrows only at known outgoing portals');
+  assert.equal(await page.evaluate(()=>paths.length),0,'old drawn arrowheads removed');
+  const offset={x:arrows[0].x-expected[0].x+3*expected[0].dx,y:arrows[0].y-expected[0].y+3*expected[0].dy};
+  arrows.forEach((a,i)=>{
+   const e=expected[i];assert.equal(a.dx,e.dx);assert.equal(a.dy,e.dy);
+   assert(Math.abs(a.x-(e.x+offset.x-3*e.dx))<=2,'sprite beside known source, with movement animation');
+   assert(Math.abs(a.y-(e.y+offset.y-3*e.dy))<=2,'sprite beside known source, with movement animation');
+  });
   assert(drawn.includes('2/36'),'star count includes junction battles');
   await page.screenshot({path:`/tmp/maginet-graph-${target}-${available}.png`});
   await click(128,204);
   if(!available){await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);assert((await page.evaluate(()=>glyphs.join(''))).includes('Locked'));}
   assert.deepEqual(errors,[]);await page.close();
  }
- await browser.close();console.log('graph arrows, loop entrances, shortcuts and blocked reverse unlocks passed');
+ await browser.close();console.log('movement sprites, known-level visibility, loop entrances and blocked reverse unlocks passed');
 })().catch(e=>{console.error(e);process.exit(1)});

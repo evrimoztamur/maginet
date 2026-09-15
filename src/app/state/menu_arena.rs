@@ -13,7 +13,7 @@ use crate::{
     },
     draw::{
         draw_board, draw_mage, draw_powerup, draw_sprite, draw_text, draw_text_centered,
-        text_length,
+        rotation_from_position, text_length,
     },
     tuple_as,
 };
@@ -333,32 +333,33 @@ impl State for ArenaMenu {
         )?;
 
         let entries = shared::campaign_catalogue(cfg!(feature = "demo"));
-        context.set_stroke_style(&JsValue::from_str("#817b91"));
-        context.set_line_width(3.0);
         for edge in shared::campaign_connections(&entries) {
             let a = entries.iter().find(|e| e.id == edge.from).unwrap().position;
             let b = entries.iter().find(|e| e.id == edge.to).unwrap().position;
-            let (ax, ay, bx, by) = (
-                a.0 as f64 * 128.0,
-                a.1 as f64 * 128.0,
-                b.0 as f64 * 128.0,
-                b.1 as f64 * 128.0,
-            );
-            let length = (bx - ax).hypot(by - ay);
-            let (dx, dy) = ((bx - ax) / length, (by - ay) / length);
-            // Leave room for the title beneath each portal as well as its preview.
-            let start = (44.0 / dx.abs()).min(if dy > 0.0 { 72.0 } else { 44.0 } / dy.abs());
-            let end = (44.0 / dx.abs()).min(if dy < 0.0 { 72.0 } else { 44.0 } / dy.abs());
-            let (ex, ey) = (bx - dx * end, by - dy * end);
-            context.begin_path();
-            context.move_to(ax + dx * start, ay + dy * start);
-            context.line_to(ex, ey);
-            if edge.one_way {
-                context.move_to(ex - dx * 12.0 - dy * 7.0, ey - dy * 12.0 + dx * 7.0);
-                context.line_to(ex, ey);
-                context.line_to(ex - dx * 12.0 + dy * 7.0, ey - dy * 12.0 - dx * 7.0);
+            for (from, to) in std::iter::once((a, b)).chain((!edge.one_way).then_some((b, a))) {
+                if !self.level_portals[&from].title_visible {
+                    continue;
+                }
+                let direction = Position((to.0 - from.0) as i8, (to.1 - from.1) as i8);
+                // The label below a portal needs more clearance than its other sides.
+                let distance = if direction.1 > 0 {
+                    72.0
+                } else if direction.1 < 0 {
+                    40.0
+                } else {
+                    48.0
+                };
+                context.save();
+                context.translate(
+                    from.0 as f64 * 128.0 + direction.0 as f64 * distance,
+                    from.1 as f64 * 128.0 + direction.1 as f64 * distance,
+                )?;
+                context.rotate(rotation_from_position(direction) as f64 * TAU / 8.0)?;
+                // Same atlas sprite and three-frame nudge as a cardinal movement hint.
+                context.translate((frame / 10 % 3) as f64 - 4.0, 0.0)?;
+                draw_sprite(context, atlas, 0.0, 32.0, 16.0, 16.0, -8.0, -8.0)?;
+                context.restore();
             }
-            context.stroke();
         }
 
         for (offset, portal) in &self.level_portals {
