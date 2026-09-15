@@ -16,17 +16,19 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
  const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
  for(const [won,target,available] of [
   ['diagonals-i','diagonals-ii',true],
-  ['diagonals-iii','beams-i',false],
-  ['beams-i','diagonals-iii',false],
-  ['shields-i','junction-i',true],
-  ['junction-i','challenge-iii',true],
-  ['challenge-iii','junction-ii',true],
-  ['junction-vii','rite-iv',true],
-  ['rite-iv','junction-vii',false],
-  ['rite-ii','challenge-i',true],
-  ['challenge-i','junction-viii',true],
-  ['junction-viii','rite-iv',false],
-  ['shields-ii','challenge-i',false],
+  ['diagonals-iii','diagonals-iv',true],
+  ['diagonals-iv','beams-i',false],
+  ['beams-i','beams-ii',true],
+  ['shields-i','shields-ii',true],
+  ['shields-i','rite-i',true],
+  ['rite-iii','challenge-i',false],
+  ['rite-iv','challenge-i',true],
+  ['rite-iv','ascension-i',true],
+  ['challenge-i','challenge-ii',true],
+  ['challenge-i','challenge-iii',false],
+  ['challenge-ii','challenge-iii',true],
+  ['challenge-iii','challenge-iv',true],
+  ['beams-iii','challenge-i',false],
  ]) {
   const page=await browser.newPage({viewport:{width:1000,height:700}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://tunnel.evrim.zone/**',r=>r.request().url().endsWith('/session')?r.fulfill({json:{session_id:'graph-check'}}):r.abort());
@@ -81,11 +83,11 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
    assert(Math.abs(a.x-(e.x+offset.x-3*e.dx))<=2,'sprite beside known source, with movement animation');
    assert(Math.abs(a.y-(e.y+offset.y-3*e.dy))<=2,'sprite beside known source, with movement animation');
   });
-  assert(drawn.includes('2/36'),'star count includes junction battles');
+  assert(drawn.includes(`2/${graph.catalogue.length}`),'star count matches the live catalogue');
   await page.screenshot({path:`/tmp/maginet-graph-${target}-${available}.png`});
   await click(128,204);
   if(!available){await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);assert((await page.evaluate(()=>glyphs.join(''))).includes('Locked'));}
   assert.deepEqual(errors,[]);await page.close();
  }
- await browser.close();console.log('playable-only arrows, detached side paths, wide-loop return and blocked reverse unlocks passed');
+ await browser.close();console.log('playable-only arrows, ordered practice and challenge paths, capstone fork and blocked skips passed');
 })().catch(e=>{console.error(e);process.exit(1)});

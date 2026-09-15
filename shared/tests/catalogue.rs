@@ -3,7 +3,7 @@ use shared::*;
 fn catalogue_preserves_codes_membership_and_reachability() {
     let full = campaign_catalogue(false);
     let demo = campaign_catalogue(true);
-    assert_eq!(full.len(), 36);
+    assert_eq!(full.len(), 28);
     assert_eq!(demo.len(), 5);
     assert_eq!(full.iter().filter(|e| e.tutorial).count(), 1);
     let mut reached = std::collections::HashSet::from(["tutorial".to_string()]);
@@ -48,10 +48,10 @@ fn teaching_prerequisites_are_cut_vertices() {
     use std::collections::HashSet;
     let entries = campaign_catalogue(false);
     let edges = campaign_connections(&entries);
-    assert_eq!(edges.len(), 36);
+    assert_eq!(edges.len(), 27);
     assert_eq!(
         entries.iter().map(|e| &e.id).collect::<HashSet<_>>().len(),
-        36
+        28
     );
     assert_eq!(
         entries
@@ -59,7 +59,7 @@ fn teaching_prerequisites_are_cut_vertices() {
             .map(|e| e.position)
             .collect::<HashSet<_>>()
             .len(),
-        36
+        28
     );
     assert_eq!(
         entries
@@ -67,7 +67,7 @@ fn teaching_prerequisites_are_cut_vertices() {
             .map(|e| e.level().as_code())
             .collect::<HashSet<_>>()
             .len(),
-        36
+        28
     );
     let reach = |removed: &[&str]| {
         let mut reached = HashSet::from(["tutorial".to_string()]);
@@ -84,17 +84,10 @@ fn teaching_prerequisites_are_cut_vertices() {
         }
         reached
     };
-    for required in MAIN_ROUTE.iter().filter(|id| {
-        ![
-            "tutorial",
-            "junction-i",
-            "rite-i",
-            "rite-ii",
-            "rite-iii",
-            "ascension-ii",
-        ]
-        .contains(id)
-    }) {
+    for required in MAIN_ROUTE
+        .iter()
+        .filter(|id| !["tutorial", "ascension-ii"].contains(id))
+    {
         assert!(
             !reach(&[required]).contains("ascension-ii"),
             "bypassed {required}"
@@ -107,7 +100,12 @@ fn teaching_prerequisites_are_cut_vertices() {
         "challenge-iv"
     ])
     .contains("ascension-ii"));
-    assert!(reach(&["rite-i", "rite-ii", "rite-iii"]).contains("ascension-ii"));
+    for required in ["rite-iv", "challenge-i", "challenge-ii", "challenge-iii"] {
+        assert!(
+            !reach(&[required]).contains("challenge-iv"),
+            "challenge trail bypassed {required}"
+        );
+    }
     for branch in OPTIONAL_ROUTES {
         let pair = &branch[branch.len() - 2..];
         assert!(campaign_connected(&edges, pair[0], pair[1]));
@@ -157,7 +155,7 @@ fn introductions_are_focused_and_capstone_combines_mechanics() {
 }
 
 #[test]
-fn every_connection_is_a_cardinal_neighbour_and_junctions_are_unique_duels() {
+fn every_connection_is_a_cardinal_neighbour_without_filler_or_accidental_contacts() {
     let entries = campaign_catalogue(false);
     for edge in campaign_connections(&entries) {
         let a = entries.iter().find(|e| e.id == edge.from).unwrap().position;
@@ -170,37 +168,28 @@ fn every_connection_is_a_cardinal_neighbour_and_junctions_are_unique_duels() {
             edge.to
         );
     }
-    let junctions: Vec<_> = entries
-        .iter()
-        .filter(|e| e.id.starts_with("junction-"))
-        .collect();
-    assert_eq!(junctions.len(), 8);
-    for entry in junctions {
-        let level = entry.level();
-        assert_eq!(level.mages.len(), 2);
-        assert_eq!(
-            level.mages.iter().filter(|m| m.team == Team::Red).count(),
-            1
-        );
-        assert_eq!(
-            level.mages.iter().filter(|m| m.team == Team::Blue).count(),
-            1
-        );
-        assert!(!entry.demo);
-    }
-    // The loop has an empty interior, and side branches do not touch accidentally.
-    let occupied: std::collections::HashSet<_> = entries.iter().map(|e| e.position).collect();
-    for x in 9..=10 {
-        for y in -4..=-3 {
-            assert!(!occupied.contains(&(x, y)));
-        }
-    }
+    assert!(entries.iter().all(|e| !e.id.starts_with("junction-")));
+    // Practice paths contain their own mechanic in numerical order. Challenges
+    // form a single optional series after the capstone, never a bridge to a lesson.
     assert_eq!(
-        OPTIONAL_ROUTES
-            .iter()
-            .filter(|r| MAIN_ROUTE.contains(r.last().unwrap()))
-            .count(),
-        1
+        OPTIONAL_ROUTES,
+        &[
+            &[
+                "diagonals-i",
+                "diagonals-ii",
+                "diagonals-iii",
+                "diagonals-iv"
+            ][..],
+            &["beams-i", "beams-ii", "beams-iii"][..],
+            &["shields-i", "shields-ii", "shields-iii"][..],
+            &[
+                "rite-iv",
+                "challenge-i",
+                "challenge-ii",
+                "challenge-iii",
+                "challenge-iv"
+            ][..],
+        ]
     );
     for a in &entries {
         for b in &entries {

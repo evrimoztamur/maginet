@@ -89,7 +89,7 @@
     - Record win upon exiting from won state
   - Lock level if no explicit incoming connection from a won battle
   - Flipping mages when level won (+ medal from Mrmo)
-  - 36 arena portals, including eight 1v1 junction battles and tutorial
+  - 28 arena portals: 27 battles plus the tutorial
 - Mechanics
   - Powerups
     - Diagonals
@@ -129,10 +129,10 @@
 
 ## Campaign revision followups
 
-- Implemented: shared explicit progression graph with cardinal-neighbour links and eight 1v1 junction battles, optional challenge routes, focused powerup introductions, distinct Rite IV, profile selection, paired seed namespaces, deterministic replays, staged assessments and source-attributed combined matrices.
+- Implemented: shared explicit progression graph with cardinal-neighbour links, three optional practice paths and an ordered post-capstone challenge series, focused powerup introductions, distinct Rite IV, profile selection, paired seed namespaces, deterministic replays, staged assessments and source-attributed combined matrices.
 - Human playtests: verify that each pickup introduction communicates its mechanic and tolerates a novice mistake; automated recovery examples do not validate instruction quality.
 - Combat redesign completed for Patterns I, Rite II and Rite IV: inactivity endings fell to 51/19/49 per 300 Normal/Normal games. Human-test the remaining retreat loops and immobilization endings; see assessments/campaign-combat-redesign/interpretation.md.
 - Check perceived difficulty after the forgiving Basics battles and Shields I. Keep optional challenges demanding.
 - See `assessments/campaign-revision/interpretation.md` for evidence and limitations; preserve the original assessment.
 
-- Exploration layout: a winding approach, square Rite IV loop with a 2×2 clearing, and bent optional paths; arrows originate only at playable, uncompleted battles. Human-test map discoverability and navigation.
+- Exploration layout: removed all eight filler Junctions; grouped numbered practice battles and Challenges into coherent paths; arrows originate only at playable, uncompleted battles. Human-test map discoverability, the required Rite sequence, and the Challenge I–IV series; its numbering is route order, not a validated difficulty ranking.

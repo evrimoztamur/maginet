@@ -34,14 +34,16 @@ impl CampaignEntry {
 }
 /// Region theme follows the battle, independently of bends in the map.
 fn campaign_style(name: &str) -> BoardStyle {
-    match name {
-        "Tutorial" | "Basics I" | "Basics II" | "Basics III" | "Basics IV" => BoardStyle::Grass,
-        "Patterns I" | "Patterns II" | "Patterns III" | "Diagonals I" | "Diagonals II"
-        | "Diagonals III" => BoardStyle::Desert,
-        "Beams I" | "Diagonals IV" | "Beams II" | "Beams III" | "Challenge II" => BoardStyle::Flesh,
-        "Rite III" | "Rite IV" | "Ascension I" | "Ascension II" | "Junction V" | "Junction VI"
-        | "Junction VII" => BoardStyle::Eldritch,
-        _ => BoardStyle::Crust,
+    if name == "Tutorial" || name.starts_with("Basics ") {
+        BoardStyle::Grass
+    } else if name.starts_with("Patterns ") || name.starts_with("Diagonals ") {
+        BoardStyle::Desert
+    } else if name.starts_with("Beams ") {
+        BoardStyle::Flesh
+    } else if name.starts_with("Shields ") || matches!(name, "Rite I" | "Rite II") {
+        BoardStyle::Crust
+    } else {
+        BoardStyle::Eldritch
     }
 }
 /// Full catalogue in stable order, optionally filtered to demo portals.
@@ -74,14 +76,6 @@ pub fn campaign_catalogue(demo: bool) -> Vec<CampaignEntry> {
         ("rite-iv", "Rite IV", "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00", (8, 0), false, false),
         ("ascension-i", "Ascension I", "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g", (8, -1), false, false),
         ("ascension-ii", "Ascension II", "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03", (9, -1), false, false),
-        ("junction-i", "Junction I", "d0108124cm23809400", (9, -1), false, false),
-        ("junction-ii", "Junction II", "9010g0248403809408", (10, -2), false, false),
-        ("junction-iii", "Junction III", "d01080a4cm0k809404", (11, -2), false, false),
-        ("junction-iv", "Junction IV", "9g12r1244423809800", (12, -2), false, false),
-        ("junction-v", "Junction V", "dg10g0j4cm0380h809200", (12, -1), false, false),
-        ("junction-vi", "Junction VI", "901081248m03809404", (10, 1), false, false),
-        ("junction-vii", "Junction VII", "d012g024840k809400", (11, 1), false, false),
-        ("junction-viii", "Junction VIII", "9g10g0a48m2380h808j02", (12, 1), false, false),
         ("tutorial", "Tutorial", TUTORIAL_CODE, TUTORIAL_POSITION, true, true),
     ];
     definitions
@@ -112,7 +106,6 @@ pub const MAIN_ROUTE: &[&str] = &[
     "diagonals-i",
     "beams-i",
     "shields-i",
-    "junction-i",
     "rite-i",
     "rite-ii",
     "rite-iii",
@@ -120,31 +113,24 @@ pub const MAIN_ROUTE: &[&str] = &[
     "ascension-i",
     "ascension-ii",
 ];
-/// Optional routes, including their entrance. Only routes rejoining the main route
-/// have a one-way final exit; the others are explorable dead ends.
+/// Optional practice paths and the post-capstone challenge series.
+/// Each starts at its named introduction or capstone and ends without reconnecting.
 pub const OPTIONAL_ROUTES: &[&[&str]] = &[
-    &["diagonals-i", "diagonals-ii", "diagonals-iii"],
     &[
-        "beams-i",
+        "diagonals-i",
+        "diagonals-ii",
+        "diagonals-iii",
         "diagonals-iv",
-        "beams-ii",
-        "beams-iii",
-        "challenge-ii",
     ],
-    &["rite-ii", "challenge-i", "junction-viii"],
+    &["beams-i", "beams-ii", "beams-iii"],
+    &["shields-i", "shields-ii", "shields-iii"],
     &[
-        "shields-i",
-        "junction-i",
-        "challenge-iii",
-        "junction-ii",
-        "junction-iii",
-        "junction-iv",
-        "junction-v",
-        "junction-vi",
-        "junction-vii",
         "rite-iv",
+        "challenge-i",
+        "challenge-ii",
+        "challenge-iii",
+        "challenge-iv",
     ],
-    &["shields-i", "shields-ii", "shields-iii", "challenge-iv"],
 ];
 /// An explicit connection. Ordinary connections can be followed in either direction.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -183,7 +169,8 @@ pub fn campaign_connected(edges: &[CampaignConnection], from: &str, to: &str) ->
         .iter()
         .any(|e| e.from == from && e.to == to || !e.one_way && e.to == from && e.from == to)
 }
-// A climbing entrance, bent side paths, and a square loop with an open centre.
+// Practice paths stay beside their introductions; the challenge trail forks
+// away from Ascension after the Rite IV capstone. No battles exist only as paving.
 fn portal_position(name: &str, original: (isize, isize)) -> (isize, isize) {
     match name {
         "Patterns I" => (3, -1),
@@ -192,31 +179,23 @@ fn portal_position(name: &str, original: (isize, isize)) -> (isize, isize) {
         "Diagonals I" => (5, -2),
         "Beams I" => (6, -2),
         "Shields I" => (7, -2),
-        "Junction I" => (8, -2),
-        "Rite I" => (9, -2),
-        "Rite II" => (10, -2),
-        "Rite III" => (11, -2),
-        "Rite IV" => (11, -3),
-        "Ascension I" => (12, -3),
-        "Ascension II" => (13, -3),
+        "Rite I" => (8, -2),
+        "Rite II" => (9, -2),
+        "Rite III" => (9, -3),
+        "Rite IV" => (9, -4),
+        "Ascension I" => (10, -4),
+        "Ascension II" => (11, -4),
         "Diagonals II" => (5, -1),
         "Diagonals III" => (5, 0),
-        "Diagonals IV" => (6, -3),
-        "Beams II" => (6, -4),
-        "Beams III" => (5, -4),
-        "Challenge II" => (4, -4),
-        "Challenge I" => (10, -1),
-        "Junction VIII" => (10, 0),
-        "Challenge III" => (8, -3),
-        "Junction II" => (8, -4),
-        "Junction III" => (8, -5),
-        "Junction IV" => (9, -5),
-        "Junction V" => (10, -5),
-        "Junction VI" => (11, -5),
-        "Junction VII" => (11, -4),
+        "Diagonals IV" => (4, 0),
+        "Beams II" => (6, -3),
+        "Beams III" => (6, -4),
         "Shields II" => (7, -1),
         "Shields III" => (7, 0),
-        "Challenge IV" => (8, 0),
+        "Challenge I" => (8, -4),
+        "Challenge II" => (8, -5),
+        "Challenge III" => (8, -6),
+        "Challenge IV" => (9, -6),
         _ => original,
     }
 }

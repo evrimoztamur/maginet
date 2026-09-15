@@ -699,35 +699,33 @@ mod tests {
 
     #[test]
     #[cfg(not(feature = "demo"))]
-    fn directed_exits_and_unconnected_neighbours_use_the_graph() {
+    fn practice_paths_and_challenges_unlock_in_order() {
         let entries = shared::campaign_catalogue(false);
-        for route in shared::OPTIONAL_ROUTES
-            .iter()
-            .filter(|route| shared::MAIN_ROUTE.contains(route.last().unwrap()))
-        {
-            let end = entries
-                .iter()
-                .find(|e| e.id == route[route.len() - 2])
-                .unwrap();
-            let destination = entries
-                .iter()
-                .find(|e| e.id == route[route.len() - 1])
-                .unwrap();
-            let tutorial = Level::from(TUTORIAL_CODE).as_code();
+        let tutorial = Level::from(TUTORIAL_CODE).as_code();
+        for (won, target, expected) in [
+            ("diagonals-iii", "diagonals-iv", PortalStatus::Unlocked),
+            ("diagonals-iv", "beams-i", PortalStatus::Locked),
+            ("shields-i", "rite-i", PortalStatus::Unlocked),
+            ("rite-iii", "challenge-i", PortalStatus::Locked),
+            ("rite-iv", "challenge-i", PortalStatus::Unlocked),
+            ("rite-iv", "ascension-i", PortalStatus::Unlocked),
+            ("challenge-i", "challenge-ii", PortalStatus::Unlocked),
+            ("challenge-i", "challenge-iii", PortalStatus::Locked),
+            ("challenge-ii", "challenge-iii", PortalStatus::Unlocked),
+            ("challenge-iii", "challenge-iv", PortalStatus::Unlocked),
+            ("beams-iii", "challenge-i", PortalStatus::Locked),
+        ] {
+            let won = entries.iter().find(|e| e.id == won).unwrap();
+            let target = entries.iter().find(|e| e.id == target).unwrap();
             let portals =
-                campaign_portals(|code| code == tutorial || code == destination.level().as_code());
-            assert!(portals[&end.position].status == PortalStatus::Locked);
-            assert!(!portals[&end.position].title_visible);
-            let portals =
-                campaign_portals(|code| code == tutorial || code == end.level().as_code());
-            assert!(portals[&destination.position].status == PortalStatus::Unlocked);
+                campaign_portals(|code| code == tutorial || code == won.level().as_code());
+            assert!(
+                portals[&target.position].status == expected,
+                "{} -> {}",
+                won.id,
+                target.id
+            );
         }
-        let rite = entries.iter().find(|e| e.id == "shields-ii").unwrap();
-        let challenge = entries.iter().find(|e| e.id == "challenge-i").unwrap();
-        let portals = campaign_portals(|code| {
-            code == Level::from(TUTORIAL_CODE).as_code() || code == rite.level().as_code()
-        });
-        assert!(portals[&challenge.position].status == PortalStatus::Locked);
     }
 
     #[test]

@@ -73,7 +73,7 @@ To add an effect, derive its data from the accepted turn and snapshots, sample c
 
 The campaign map starts at the guided Tutorial portal beside Basics I. Complete the tutorial (from the map or main menu) to unlock campaign battles; leaving it unfinished keeps them locked. Saved wins remain completed even after a later loss.
 
-Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route only from playable, uncompleted portals; revealed-but-locked portals have no arrows. Connections touching completed portals have no arrows. Ordinary links work in both directions; one-way branch exits never unlock backwards. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. Eight 1v1 junction battles fill the branching corridors, bringing the total to 36 portals. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by campaign region. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
+Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route only from playable, uncompleted portals; revealed-but-locked portals have no arrows. Connections touching completed portals have no arrows. Links work in both directions for replay and exploration; optional paths do not reconnect to bypass lessons. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. The campaign contains 27 battles plus the tutorial, with no filler junction battles. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by campaign region. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
 
 A fixed top-left star counter shows completed portals over the total, including the tutorial, with the total adapted to the demo build.
 
@@ -229,8 +229,19 @@ NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-combat-rede
 The graph browser check exports the live shared catalogue so that changed scenario progress keys are actually exercised. Earlier assessment datasets and their layout metadata remain immutable; current combined matrices explicitly attribute every reused result.
 
 
-### Exploration layout
+### Campaign structure
 
-The main route climbs through Patterns, crosses the three powerup introductions, then turns around the edge of a square loop before exiting east toward Ascension. The Challenge III route through Junctions II–VII encloses a 2×2 clearing and rejoins at Rite IV. The Beams branch hooks west beneath the introductions, while the Shields branch bends east into a separate pocket. Themes follow campaign regions rather than map columns, so bends preserve each battle’s tileset. Four optional paths end without reconnecting: Diagonals II–III, Diagonals IV → Beams II–III → Challenge II, Shields II–III → Challenge IV, and Challenge I → Junction VIII (entered from Rite II). They remain reachable and replayable; only their former return links are removed.
+The main route is Tutorial → Basics I–IV → Patterns I–III → Diagonals I → Beams I → Shields I → Rites I–IV → Ascension I–II. All teaching battles and Rites are required; completing Rite IV opens both Ascension and the optional challenge series.
 
-All 36 portals and battle codes are retained, with 36 cardinal-neighbour connections. No extra filler battles or skipped cells were added. The main teaching route remains intact, and the wide loop still bypasses Rites I–III. No pair of physically adjacent portals is now separated by an absent connection, which keeps the layout visually unambiguous. The tutorial-plus-Basics demo is unchanged. Assessment graphs are historical snapshots; live UI and new analyser runs use the current shared catalogue.
+| Entrance | Optional path | Purpose |
+| --- | --- | --- |
+| Diagonals I | Diagonals II → III → IV | Explore harder diagonal scenarios in order |
+| Beams I | Beams II → III | Further beam practice |
+| Shields I | Shields II → III | Further shield practice |
+| Rite IV | Challenge I → II → III → IV | Optional challenge series after the capstone |
+
+Each optional path ends at its final battle. Challenges no longer serve as transit between lessons, and all eight Junction battles have been removed. This replaces the earlier shortcut-loop design: Rites I–III can no longer be bypassed. Challenge numbering now describes a single route, not scattered locations; it does not claim a measured, steadily increasing human difficulty.
+
+The map has a stepped entrance, practice paths branching away from their introductions, and a turn through the Rites to a fork between Ascension and Challenges. All 28 portals connect through 27 cardinal-neighbour links, with no skipped cells or accidentally touching unconnected portals. The tutorial-plus-Basics demo and retained battle codes are unchanged. Themes follow each chapter; Challenges share the final region’s theme.
+
+Assessment graphs and junction results remain immutable historical snapshots. Their old progression comparisons describe the previous layout, not this route. The 27 retained battle scenarios are unchanged, so their individual outcome evidence still applies; no new difficulty simulation was run for this map revision. Live UI and new analyser runs consume the updated shared catalogue and exclude the removed junctions.
