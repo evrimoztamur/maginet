@@ -1,0 +1,10 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; connect-src 'self'; worker-src 'self'; img-src 'self'; media-src 'self'">
+<title>Maginet</title><style>
+html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#002a2a; touch-action:none; }
+* { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+#canvas-container { position:fixed; inset:0; } canvas { display:block; image-rendering:pixelated; }
+#text-input { position:fixed; left:25%; top:35%; width:50%; font-size:20px; z-index:-1; opacity:0; }
+#text-input:focus { z-index:2; opacity:1; }
+</style></head><body><div id="canvas-container"></div><input id="text-input" autocomplete="off" autocorrect="off" spellcheck="false"><script type="module" src="static/js/load.js"></script></body></html>

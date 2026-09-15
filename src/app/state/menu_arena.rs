@@ -37,6 +37,8 @@ struct LevelPortal {
     title_visible: bool,
     hidden: bool,
     chaos: bool,
+    demo: bool,
+    unlock_boundary: bool,
     preview: [Option<PreviewEntity>; 4],
 }
 
@@ -74,6 +76,8 @@ impl LevelPortal {
             title_visible: false,
             hidden: false,
             chaos: false,
+            demo: true,
+            unlock_boundary: false,
             status,
             preview,
         }
@@ -203,6 +207,20 @@ impl LevelPortal {
         Ok(())
     }
 
+    fn entry_action(&self, demo_access: bool) -> PortalAction {
+        if demo_access && !self.demo {
+            if self.unlock_boundary {
+                PortalAction::Unlock
+            } else {
+                PortalAction::Locked
+            }
+        } else if self.is_available() {
+            PortalAction::Battle
+        } else {
+            PortalAction::Locked
+        }
+    }
+
     fn is_visible(&self) -> bool {
         !self.hidden || self.is_available()
     }
@@ -216,10 +234,18 @@ impl LevelPortal {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PortalAction {
+    Battle,
+    Unlock,
+    Locked,
+}
+
 pub struct ArenaMenu {
     interface: Interface,
     button_locked: ButtonElement,
     button_battle: ButtonElement,
+    button_unlock: ButtonElement,
     particle_system: ParticleSystem,
     pan_offset: (f64, f64),
     pan_target: Option<(f64, f64)>,
@@ -345,7 +371,7 @@ impl State for ArenaMenu {
             128.0 + self.pan_offset.1 + drag_offset.1,
         )?;
 
-        let entries = shared::campaign_catalogue(cfg!(feature = "demo"));
+        let entries = shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "ios"));
         for edge in shared::campaign_connections(&entries) {
             let a = entries.iter().find(|e| e.id == edge.from).unwrap().position;
             let b = entries.iter().find(|e| e.id == edge.to).unwrap().position;
@@ -405,10 +431,10 @@ impl State for ArenaMenu {
         let selected_level = self.level_portals.get(&selected_position);
 
         if let Some(portal) = selected_level.filter(|p| p.is_visible()) {
-            if portal.is_available() {
-                self.button_battle.draw(context, atlas, pointer, frame)?
-            } else {
-                self.button_locked.draw(context, atlas, pointer, frame)?
+            match portal.entry_action(cfg!(feature = "ios") && crate::access::demo()) {
+                PortalAction::Battle => self.button_battle.draw(context, atlas, pointer, frame)?,
+                PortalAction::Unlock => self.button_unlock.draw(context, atlas, pointer, frame)?,
+                PortalAction::Locked => self.button_locked.draw(context, atlas, pointer, frame)?,
             }
         }
 
@@ -444,36 +470,40 @@ impl State for ArenaMenu {
         self.pan_offset.0 = self.pan_offset.0.floor();
         self.pan_offset.1 = self.pan_offset.1.floor();
 
+        let selected_position = self.level_position();
+        let action = self
+            .level_portals
+            .get(&selected_position)
+            .filter(|portal| portal.is_visible())
+            .map(|portal| portal.entry_action(cfg!(feature = "ios") && crate::access::demo()))
+            .unwrap_or(PortalAction::Locked);
+        let entry_click = match action {
+            PortalAction::Battle => self.button_battle.tick(pointer),
+            PortalAction::Unlock => self.button_unlock.tick(pointer),
+            PortalAction::Locked => None,
+        };
         if let Some(UIEvent::ButtonClick(BUTTON_BACK, clip_id)) = self.interface.tick(pointer) {
             app_context.audio_system.play_clip_option(clip_id);
-
             return Some(StateSort::MainMenu(MainMenu::default()));
-        } else if let Some(UIEvent::ButtonClick(BUTTON_BATTLE, clip_id)) =
-            self.button_battle.tick(pointer)
-        {
+        } else if let Some(UIEvent::ButtonClick(_, clip_id)) = entry_click {
             app_context.audio_system.play_clip_option(clip_id);
-
-            let selected_position = self.level_position();
-            let selected_level = self.level_portals.get(&selected_position);
-
-            if let Some(portal) = selected_level.filter(|p| p.is_visible()) {
-                if portal.is_available() {
-                    if selected_position == TUTORIAL_POSITION {
-                        return Some(StateSort::Tutorial(Tutorial::campaign()));
-                    }
-                    return Some(StateSort::Game(Game::new(LobbySettings {
-                        lobby_sort: shared::LobbySort::LocalAI,
-                        loadout_method: if portal.chaos {
-                            shared::LoadoutMethod::ArenaChaos(
-                                portal.level.clone(),
-                                selected_position,
-                            )
-                        } else {
-                            shared::LoadoutMethod::Arena(portal.level.clone(), selected_position)
-                        },
-                        ..Default::default()
-                    })));
+            if action == PortalAction::Unlock {
+                crate::access::purchase("purchase");
+                return None;
+            }
+            if let Some(portal) = self.level_portals.get(&selected_position) {
+                if selected_position == TUTORIAL_POSITION {
+                    return Some(StateSort::Tutorial(Tutorial::campaign()));
                 }
+                return Some(StateSort::Game(Game::new(LobbySettings {
+                    lobby_sort: shared::LobbySort::LocalAI,
+                    loadout_method: if portal.chaos {
+                        shared::LoadoutMethod::ArenaChaos(portal.level.clone(), selected_position)
+                    } else {
+                        shared::LoadoutMethod::Arena(portal.level.clone(), selected_position)
+                    },
+                    ..Default::default()
+                })));
             }
         } else if pointer.clicked() {
             self.pan_start = Some(pointer_floc);
@@ -545,6 +575,14 @@ impl Default for ArenaMenu {
         );
 
         let root_element = Interface::new(vec![button_back.boxed()]);
+        let button_unlock = ButtonElement::new(
+            (48, 192),
+            (160, 24),
+            BUTTON_BATTLE,
+            LabelTrim::Glorious,
+            LabelTheme::Action,
+            crate::app::ContentElement::Text("Unlock Full Game".into(), Alignment::Center),
+        );
 
         let level_portals = campaign_portals(|code| App::kv_get(code) == "win");
         let tutorial_done = level_portals[&TUTORIAL_POSITION].status == PortalStatus::Won;
@@ -553,6 +591,7 @@ impl Default for ArenaMenu {
             interface: root_element,
             button_locked,
             button_battle,
+            button_unlock,
             particle_system: ParticleSystem::default(),
             pan_offset: if tutorial_done {
                 (0.0, 0.0)
@@ -580,8 +619,20 @@ fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
 }
 
 fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize), LevelPortal> {
-    let entries = shared::campaign_catalogue(cfg!(feature = "demo"));
-    let edges = shared::campaign_connections(&entries);
+    let entries = shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "ios"));
+    campaign_portals_for(&entries, completed)
+}
+
+fn campaign_portals_for(
+    entries: &[shared::CampaignEntry],
+    completed: impl Fn(&str) -> bool,
+) -> HashMap<(isize, isize), LevelPortal> {
+    let first_paid = shared::MAIN_ROUTE
+        .iter()
+        .filter_map(|id| entries.iter().find(|entry| entry.id == *id))
+        .find(|entry| !entry.demo)
+        .map(|entry| entry.position);
+    let edges = shared::campaign_connections(entries);
     let connected = |from, to| {
         let a = entries.iter().find(|e| e.position == from).unwrap();
         let b = entries.iter().find(|e| e.position == to).unwrap();
@@ -598,6 +649,8 @@ fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize),
                 );
                 portal.hidden = entry.hidden;
                 portal.chaos = entry.chaos;
+                portal.demo = entry.demo;
+                portal.unlock_boundary = Some(entry.position) == first_paid;
                 portal
             })
         })
@@ -655,6 +708,49 @@ mod tests {
     use std::collections::HashSet;
 
     use super::*;
+
+    #[test]
+    fn runtime_demo_keeps_map_and_has_one_purchase_boundary() {
+        let entries = shared::campaign_catalogue(false);
+        let portals = campaign_portals_for(&entries, |_| false);
+        assert_eq!(portals.len(), entries.len());
+        assert_eq!(portals.values().filter(|p| p.is_visible()).count(), 26);
+        let unlocks: Vec<_> = portals
+            .iter()
+            .filter(|(_, p)| p.entry_action(true) == PortalAction::Unlock)
+            .map(|(position, _)| *position)
+            .collect();
+        assert_eq!(unlocks, vec![(3, -1)]);
+        assert_eq!(portals[&(3, -1)].entry_action(false), PortalAction::Locked);
+        let free_codes: HashSet<_> = entries
+            .iter()
+            .filter(|e| e.demo)
+            .map(|e| e.level().as_code())
+            .collect();
+        let progressed = campaign_portals_for(&entries, |c| free_codes.contains(c));
+        assert_eq!(
+            progressed[&(3, -1)].entry_action(true),
+            PortalAction::Unlock
+        );
+        assert_eq!(
+            progressed[&(3, -1)].entry_action(false),
+            PortalAction::Battle
+        );
+        assert_eq!(
+            progressed
+                .values()
+                .filter(|p| p.status == PortalStatus::Won)
+                .count(),
+            5
+        );
+        let won = campaign_portals_for(&entries, |_| true);
+        for portal in won.values() {
+            assert_eq!(portal.entry_action(false), PortalAction::Battle);
+            if !portal.demo {
+                assert_ne!(portal.entry_action(true), PortalAction::Battle);
+            }
+        }
+    }
 
     #[test]
     fn tutorial_is_the_only_entry_and_gates_existing_campaign_saves() {

@@ -242,6 +242,9 @@ impl State for EditorPreview {
                     })));
                 }
                 BUTTON_ONLINE => {
+                    if !crate::access::online() {
+                        return None;
+                    }
                     return Some(StateSort::Game(Game::new(LobbySettings {
                         lobby_sort: shared::LobbySort::Online(0),
                         loadout_method: shared::LoadoutMethod::EditorPrefab(self.level.clone()),

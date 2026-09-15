@@ -1,0 +1,16 @@
+{
+  "identifier": "F49D6374-889E-443C-820D-BF29CD8B9A22",
+  "nonRenewingSubscriptions": [],
+  "products": [{
+    "displayPrice": "1.99",
+    "familyShareable": false,
+    "internalID": "1000001",
+    "localizations": [{"description": "Permanently unlock the full campaign and online play.", "displayName": "Full Game", "locale": "en_US"}],
+    "productID": "zone.evrim.maginet.all",
+    "referenceName": "Full Game",
+    "type": "NonConsumable"
+  }],
+  "settings": {"_applicationInternalID": "", "_developerTeamID": "", "_failTransactionsEnabled": false, "_locale": "en_US", "_storefront": "USA", "_storeKitErrors": []},
+  "subscriptionGroups": [],
+  "version": {"major": 3, "minor": 0}
+}

@@ -7,7 +7,10 @@ use crate::{
     app::{
         Alignment, AppContext, ButtonElement, ButtonGroupElement, Interface, LabelTheme, LabelTrim,
         StateSort, UIElement, UIEvent,
-    }, draw::{draw_mage, draw_mana, draw_sprite}, net::client_timestamp, window
+    },
+    draw::{draw_mage, draw_mana, draw_sprite},
+    net::client_timestamp,
+    window,
 };
 
 pub struct SkirmishMenu {
@@ -112,6 +115,15 @@ impl State for SkirmishMenu {
                     self.lobby_settings.lobby_sort = LobbySort::LocalAI;
                 }
                 BUTTON_ONLINE => {
+                    if !crate::access::online() {
+                        let selected = if self.lobby_settings.lobby_sort == LobbySort::LocalAI {
+                            BUTTON_VS_AI
+                        } else {
+                            BUTTON_LOCAL
+                        };
+                        self.interface.select_group_value(selected);
+                        return None;
+                    }
                     self.lobby_settings.lobby_sort = LobbySort::Online(0);
                 }
                 BUTTON_DEFAULT => {
@@ -127,9 +139,17 @@ impl State for SkirmishMenu {
                     self.refresh_lobby();
                 }
                 BUTTON_BATTLE => {
+                    if matches!(self.lobby_settings.lobby_sort, LobbySort::Online(_))
+                        && !crate::access::online()
+                    {
+                        return None;
+                    }
                     return Some(StateSort::Game(Game::new(self.lobby_settings.clone())));
                 }
                 BUTTON_TELEPORT => {
+                    if !crate::access::online() {
+                        return None;
+                    }
                     return Some(StateSort::LobbyList(LobbyList::default()));
                 }
                 BUTTON_BACK => {

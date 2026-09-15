@@ -11,6 +11,8 @@ pub enum UIEvent {
 pub trait UIElement {
     fn boxed(self) -> Box<dyn UIElement>;
 
+    fn select_group_value(&mut self, _value: usize) {}
+
     fn tick(&mut self, _pointer: &Pointer) -> Option<UIEvent> {
         None
     }
@@ -391,6 +393,14 @@ impl ButtonGroupElement {
 }
 
 impl UIElement for ButtonGroupElement {
+    fn select_group_value(&mut self, value: usize) {
+        if self.buttons.iter().any(|button| button.value == value) {
+            self.value = value;
+            for button in &mut self.buttons {
+                button.selected = button.value == value;
+            }
+        }
+    }
     fn boxed(self) -> Box<dyn UIElement> {
         Box::new(self)
     }
@@ -445,6 +455,11 @@ impl Interface {
 }
 
 impl UIElement for Interface {
+    fn select_group_value(&mut self, value: usize) {
+        for child in &mut self.children {
+            child.select_group_value(value);
+        }
+    }
     fn boxed(self) -> Box<dyn UIElement> {
         Box::new(self)
     }

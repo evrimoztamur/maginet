@@ -1,3 +1,4 @@
+mod access;
 mod ai;
 mod app;
 mod draw;
@@ -56,7 +57,7 @@ async fn start() -> Result<(), JsValue> {
         .unwrap()
         .unwrap();
 
-    let canvas_settings = CanvasSettings::new(
+    let mut canvas_settings = CanvasSettings::new(
         384 + 16,
         256 + 16,
         256,
@@ -64,6 +65,8 @@ async fn start() -> Result<(), JsValue> {
         window().inner_width().unwrap().as_f64().unwrap()
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
+
+    canvas_settings.update_ios();
 
     // atlas_img.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
 
@@ -123,7 +126,7 @@ async fn start() -> Result<(), JsValue> {
             {
                 let app = app.borrow();
 
-                if app.session_id().is_none() {
+                if app.session_id().is_none() && !cfg!(feature = "ios") {
                     let _ = fetch(&request_session()).then(&session_closure);
                 }
             }
@@ -133,6 +136,10 @@ async fn start() -> Result<(), JsValue> {
                 let text_input = text_input.borrow_mut();
 
                 {
+                    if crate::access::backgrounded() {
+                        request_animation_frame(f.borrow().as_ref().unwrap());
+                        return;
+                    }
                     app.tick(&text_input);
                     renderer.draw(&mut app, &atlas).unwrap();
                 }
@@ -145,6 +152,24 @@ async fn start() -> Result<(), JsValue> {
 
         session_closure.forget();
 
+        for event_name in ["touchcancel", "maginet-background"] {
+            let app = app.clone();
+            let closure = Closure::<dyn FnMut(JsValue)>::new(move |_| {
+                app.borrow_mut().cancel_input();
+            });
+            window()
+                .add_event_listener_with_callback(event_name, closure.as_ref().unchecked_ref())?;
+            closure.forget();
+        }
+        for event_name in ["touchstart", "maginet-foreground"] {
+            let audio = audio_system.clone();
+            let closure = Closure::<dyn FnMut(JsValue)>::new(move |_| {
+                audio.resume();
+            });
+            window()
+                .add_event_listener_with_callback(event_name, closure.as_ref().unchecked_ref())?;
+            closure.forget();
+        }
         let canvas = Rc::new(canvas);
         let bound: Rc<RefCell<Option<DomRect>>> =
             Rc::new(RefCell::new(Some(canvas.get_bounding_client_rect())));
@@ -153,8 +178,10 @@ async fn start() -> Result<(), JsValue> {
             let canvas = canvas.clone();
             let bound = bound.clone();
             let renderer = renderer.clone();
+            let app = app.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
                 renderer.resize().unwrap();
+                app.borrow_mut().resize_ios();
                 bound.replace(Some(canvas.get_bounding_client_rect()));
             });
             window()
@@ -181,7 +208,9 @@ async fn start() -> Result<(), JsValue> {
             let app = app.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
-                app.on_mouse_down(event);
+                if !cfg!(feature = "ios") {
+                    app.on_mouse_down(event);
+                }
             });
             document()
                 .add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
@@ -192,7 +221,9 @@ async fn start() -> Result<(), JsValue> {
             let app = app.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
-                app.on_mouse_up(event);
+                if !cfg!(feature = "ios") {
+                    app.on_mouse_up(event);
+                }
             });
             document()
                 .add_event_listener_with_callback("mouseup", closure.as_ref().unchecked_ref())?;
@@ -205,7 +236,9 @@ async fn start() -> Result<(), JsValue> {
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
                 if let Some(bound) = bound.borrow().as_deref() {
-                    app.on_mouse_move(bound, event);
+                    if !cfg!(feature = "ios") {
+                        app.on_mouse_move(bound, event);
+                    }
                 }
             });
             document()

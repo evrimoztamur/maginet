@@ -166,6 +166,8 @@ impl State for SettingsMenu {
             app_context.audio_system.play_clip_option(clip_id);
 
             match value {
+                98 => crate::access::purchase("purchase"),
+                99 => crate::access::purchase("restore"),
                 14 => {
                     self.difficulty = self.difficulty.next();
                     App::kv_set("difficulty", self.difficulty.label());
@@ -244,7 +246,7 @@ impl Default for SettingsMenu {
             crate::app::ContentElement::Sprite((80, 24), (8, 8)),
         );
 
-        let interface = Interface::new(vec![
+        let mut interface = Interface::new(vec![
             ButtonElement::new(
                 (0, 160),
                 (56, 16),
@@ -261,6 +263,29 @@ impl Default for SettingsMenu {
             button_sound_plus.boxed(),
         ]);
 
+        if cfg!(feature = "ios") {
+            interface = Interface::new(vec![
+                interface.boxed(),
+                ButtonElement::new(
+                    (0, 188),
+                    (144, 16),
+                    98,
+                    LabelTrim::Round,
+                    LabelTheme::Action,
+                    ContentElement::Text("Unlock Full Game".into(), Alignment::Center),
+                )
+                .boxed(),
+                ButtonElement::new(
+                    (160, 188),
+                    (144, 16),
+                    99,
+                    LabelTrim::Round,
+                    LabelTheme::Default,
+                    ContentElement::Text("Restore Purchases".into(), Alignment::Center),
+                )
+                .boxed(),
+            ]);
+        }
         let (music_volume, clip_volume) = SettingsMenu::load_volume();
 
         SettingsMenu {

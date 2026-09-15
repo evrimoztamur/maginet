@@ -187,6 +187,15 @@ impl App {
     }
 
     pub fn tick(&mut self, text_input: &HtmlInputElement) {
+        if cfg!(feature = "ios") {
+            self.app_context.session_id = get_session_id();
+            let online_screen = matches!(&self.state_sort, StateSort::LobbyList(_))
+                || matches!(&self.state_sort, StateSort::Game(game) if !game.lobby().is_local());
+            let network_failed = crate::access::network_failed();
+            if online_screen && (network_failed || crate::access::demo()) {
+                self.state_sort = StateSort::SkirmishMenu(SkirmishMenu::default());
+            }
+        }
         let next_state = match &mut self.state_sort {
             StateSort::SkirmishMenu(state) => state.tick(text_input, &self.app_context),
             StateSort::ArenaMenu(state) => state.tick(text_input, &self.app_context),
@@ -215,6 +224,14 @@ impl App {
         }
     }
 
+    pub fn resize_ios(&mut self) {
+        self.app_context.canvas_settings.update_ios();
+        self.app_context.pointer = Pointer::new(&self.app_context.canvas_settings);
+    }
+    pub fn cancel_input(&mut self) {
+        self.app_context.pointer = Pointer::new(&self.app_context.canvas_settings);
+        self.app_context.audio_system.suspend();
+    }
     pub fn session_id(&self) -> Option<&String> {
         self.app_context.session_id.as_ref()
     }
@@ -308,6 +325,9 @@ impl App {
             }
 
             self.app_context.pointer.location = pointer_location;
+            if cfg!(feature = "ios") {
+                self.app_context.pointer.pending_click = self.app_context.pointer.button;
+            }
         }
     }
 
@@ -421,9 +441,40 @@ pub struct CanvasSettings {
     pub canvas_width: u32,
     pub canvas_height: u32,
     pub orientation: bool,
+    ios_padding_x: Option<u32>,
+    ios_padding_y: Option<u32>,
 }
 
 impl CanvasSettings {
+    pub fn update_ios(&mut self) {
+        #[cfg(feature = "ios")]
+        {
+            let w = window().inner_width().unwrap().as_f64().unwrap();
+            let h = window().inner_height().unwrap().as_f64().unwrap();
+            self.canvas_width = (w * 272.0 / h).ceil() as u32;
+            self.canvas_height = 272;
+            self.orientation = false;
+            let inset = |name: &str| {
+                js_sys::Reflect::get(&window(), &name.into())
+                    .ok()
+                    .and_then(|v| v.as_f64())
+                    .unwrap_or(0.0)
+                    * 272.0
+                    / h
+            };
+            self.ios_padding_y = Some(
+                (16.0 - inset("maginetSafeBottom"))
+                    .min(8.0)
+                    .max(0.0)
+                    .floor() as u32,
+            );
+            let minimum = inset("maginetSafeLeft") + 72.0;
+            let maximum = self.canvas_width as f64 - inset("maginetSafeRight") - 320.0;
+            let centered = (self.canvas_width as f64 - 256.0) / 2.0;
+            self.ios_padding_x =
+                Some(centered.max(minimum).min(maximum.max(minimum)).round() as u32);
+        }
+    }
     pub fn inverse_interface_center(&self) -> (i32, i32) {
         (
             -((self.interface_width / 2) as i32),
@@ -456,6 +507,13 @@ impl CanvasSettings {
     }
 
     pub fn pointer_at(&self, position: (f64, f64), displayed_size: (f64, f64)) -> (i32, i32) {
+        if cfg!(feature = "ios") {
+            let scale = displayed_size.1 / 272.0;
+            return (
+                (position.0 / scale).floor() as i32 - self.padding_x() as i32,
+                (position.1 / scale).floor() as i32 - self.padding_y() as i32,
+            );
+        }
         let native = (
             (position.0 * self.element_width() as f64 / displayed_size.0).floor() as i32,
             (position.1 * self.element_height() as f64 / displayed_size.1).floor() as i32,
@@ -464,11 +522,13 @@ impl CanvasSettings {
     }
 
     pub fn padding_x(&self) -> u32 {
-        (self.canvas_width - self.interface_width) / 2
+        self.ios_padding_x
+            .unwrap_or(self.canvas_width.saturating_sub(self.interface_width) / 2)
     }
 
     pub fn padding_y(&self) -> u32 {
-        (self.canvas_height - self.interface_height) / 2
+        self.ios_padding_y
+            .unwrap_or((self.canvas_height - self.interface_height) / 2)
     }
 
     pub fn padding(&self) -> (i32, i32) {
@@ -488,6 +548,8 @@ impl CanvasSettings {
             canvas_width,
             canvas_height,
             orientation,
+            ios_padding_x: None,
+            ios_padding_y: None,
         }
     }
 }

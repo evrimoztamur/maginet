@@ -41,7 +41,10 @@ async fn main() {
         .route("/session", get(obtain_session))
         .with_state(state);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
+    let port = std::env::var("MAGINET_PORT")
+        .map(|value| value.parse::<u16>().expect("MAGINET_PORT must be a port number"))
+        .unwrap_or(8000);
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

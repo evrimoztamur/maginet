@@ -52,6 +52,13 @@ pub struct AudioSystem {
 }
 
 impl AudioSystem {
+    pub fn suspend(&self) {
+        let _ = self.context.suspend();
+    }
+    pub fn resume(&self) {
+        let _ = self.context.resume();
+    }
+
     pub async fn register_audio_clip(&mut self, clip_id: ClipId, data: &[u8], volume: f32) {
         let promise = self
             .context

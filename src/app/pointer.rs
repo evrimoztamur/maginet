@@ -6,6 +6,7 @@ pub struct Pointer {
     pub real: (i32, i32),
     pub location: (i32, i32),
     pub button: bool,
+    pub pending_click: bool,
     pub alt_button: bool,
 }
 
@@ -24,6 +25,9 @@ impl Pointer {
     }
 
     pub fn clicked(&self) -> bool {
+        if self.pending_click {
+            return true;
+        }
         match &self.previous {
             Some(pointer) => self.button && !pointer.button,
             None => self.button,
@@ -38,6 +42,7 @@ impl Pointer {
     }
 
     pub fn swap(&mut self) {
+        self.pending_click = false;
         self.previous.take(); // Must explicitly drop old Pointer from heap
         self.previous = Some(Box::new(self.clone()));
     }
@@ -70,5 +75,22 @@ impl Pointer {
             && self.location.0 < position.0 + size.0
             && self.location.1 >= position.1
             && self.location.1 < position.1 + size.1
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Pointer;
+    #[test]
+    fn released_touch_is_consumed_once() {
+        let mut pointer = Pointer {
+            pending_click: true,
+            button: false,
+            ..Pointer::default()
+        };
+        assert!(pointer.clicked());
+        assert!(pointer.teleport((10, 10)).clicked());
+        pointer.swap();
+        assert!(!pointer.clicked());
     }
 }

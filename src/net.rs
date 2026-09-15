@@ -9,10 +9,13 @@ use web_sys::{Request, RequestInit, Response};
 
 use crate::{storage, window};
 
-#[cfg(feature = "deploy")]
+#[cfg(all(feature = "deploy", not(feature = "ios")))]
 const API_URL: &str = "https://maginet.evrim.zone";
 #[cfg(not(feature = "deploy"))]
 const API_URL: &str = "https://tunnel.evrim.zone";
+
+#[cfg(feature = "ios")]
+const API_URL: &str = "/api";
 
 pub struct MessagePool {
     pub messages: Vec<Message>,
@@ -52,11 +55,25 @@ fn wrap_response_into_json(value: JsValue) -> JsFuture {
     JsFuture::from(resp.json().unwrap())
 }
 
-pub fn fetch(request: &Request) -> Promise {
-    let resp_value = JsFuture::from(web_sys::window().unwrap().fetch_with_request(request))
-        .and_then(wrap_response_into_json);
+#[cfg(feature = "ios")]
+#[wasm_bindgen::prelude::wasm_bindgen(module = "/static/js/ios-access.js")]
+extern "C" {
+    #[wasm_bindgen::prelude::wasm_bindgen(js_name = nativeFetch)]
+    fn native_fetch(request: &Request) -> Promise;
+}
 
-    future_to_promise(resp_value)
+pub fn fetch(request: &Request) -> Promise {
+    #[cfg(feature = "ios")]
+    {
+        return native_fetch(request);
+    }
+    #[cfg(not(feature = "ios"))]
+    {
+        let resp_value = JsFuture::from(web_sys::window().unwrap().fetch_with_request(request))
+            .and_then(wrap_response_into_json);
+
+        future_to_promise(resp_value)
+    }
 }
 
 fn request_url(method: &str, url: &str) -> Request {

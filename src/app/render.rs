@@ -47,6 +47,31 @@ impl Renderer {
     }
 
     pub fn resize(&self) -> Result<(), JsValue> {
+        if cfg!(feature = "ios") {
+            let w = window().inner_width()?.as_f64().unwrap();
+            let h = window().inner_height()?.as_f64().unwrap();
+            let dpr = window().device_pixel_ratio();
+            // Sprite transforms must stay on the logical pixel grid. Fractional
+            // scaling belongs only to the final, already-composited image.
+            let logical_width = (w * 272.0 / h).ceil() as u32;
+            for layer in [&self.game, &self.interface] {
+                layer.canvas.set_width(logical_width);
+                layer.canvas.set_height(272);
+                layer.context.set_image_smoothing_enabled(false);
+            }
+            self.display.canvas.set_width((w * dpr).round() as u32);
+            self.display.canvas.set_height((h * dpr).round() as u32);
+            self.display.context.set_image_smoothing_enabled(false);
+            self.display
+                .canvas
+                .style()
+                .set_property("width", &format!("{w}px"))?;
+            self.display
+                .canvas
+                .style()
+                .set_property("height", &format!("{h}px"))?;
+            return Ok(());
+        }
         let window = window();
         let dpr = window.device_pixel_ratio().max(0.1);
         let nav_height = document()
@@ -91,17 +116,26 @@ impl Renderer {
         let width = self.display.canvas.width() as f64;
         let height = self.display.canvas.height() as f64;
         self.display.context.clear_rect(0.0, 0.0, width, height);
-        for layer in [&self.game, &self.interface] {
-            self.display
-                .context
-                .draw_image_with_html_canvas_element_and_dw_and_dh(
-                    &layer.canvas,
-                    0.0,
-                    0.0,
-                    width,
-                    height,
-                )?;
-        }
+        // Composite at source resolution, then sample that complete image once.
+        self.game
+            .context
+            .draw_image_with_html_canvas_element(&self.interface.canvas, 0.0, 0.0)?;
+        let drawn_width = if cfg!(feature = "ios") {
+            // The logical width is rounded up to cover the viewport. Clip the
+            // spare fraction at the right edge instead of stretching the pixels.
+            self.game.canvas.width() as f64 * height / self.game.canvas.height() as f64
+        } else {
+            width
+        };
+        self.display
+            .context
+            .draw_image_with_html_canvas_element_and_dw_and_dh(
+                &self.game.canvas,
+                0.0,
+                0.0,
+                drawn_width,
+                height,
+            )?;
         Ok(())
     }
 }

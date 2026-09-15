@@ -1,0 +1,542 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00A44B5DE511116D7567504A /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B826BF53FB45DC0B17BFDE83 /* StoreTests.swift */; };
+		306670BA716C15962B07EBC9 /* FullGame.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 8A6D6CDEBC2A4225C9EFD5CB /* FullGame.storekit */; };
+		66F04AF81888EA925E780AD5 /* Web in Resources */ = {isa = PBXBuildFile; fileRef = D02AA657CB09172B4C5B66C6 /* Web */; };
+		99E7070CCDDAC5F7AB7E39BA /* LocalServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9964ADF80FE95B0A2D7BEBE5 /* LocalServer.swift */; };
+		9BD7DA716A081AC00EA2821B /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6EDEC5B28E2BB3417F45B3 /* App.swift */; };
+		A06EF4D88262846C50C7B24C /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30873D10AABE30F8F38C1548 /* Store.swift */; };
+		A95D3FBDD3046698EFE0714F /* WebTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778D5D1CE91EEA2E99742B84 /* WebTests.swift */; };
+		CB69F0AB3A77BA00309315A3 /* GameUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E775688B080B1E4E146C1634 /* GameUITests.swift */; };
+		CD6DF608CDADA35EB883E3A3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0DF90D7D2AFA458EB80DD0 /* Assets.xcassets */; };
+		D8B2F08ACF06E42825E0D527 /* ai-fixture.json in Resources */ = {isa = PBXBuildFile; fileRef = F76221B0268246926AFA2DE5 /* ai-fixture.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5264DBA945DD955EFBDA740D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F66FA99BB1D752F32645CA68 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 656CF113BE0BCDFB0174F012;
+			remoteInfo = Maginet;
+		};
+		792BE345596B30EC15F4B6FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F66FA99BB1D752F32645CA68 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 656CF113BE0BCDFB0174F012;
+			remoteInfo = Maginet;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2BC7F6A4B48BE0CD41A6E6A0 /* MaginetTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MaginetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		30873D10AABE30F8F38C1548 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		51152EB0FA9230CC1622CF28 /* MaginetUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MaginetUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B4F839D543319F74B014766 /* Maginet.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Maginet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		778D5D1CE91EEA2E99742B84 /* WebTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebTests.swift; sourceTree = "<group>"; };
+		8A6D6CDEBC2A4225C9EFD5CB /* FullGame.storekit */ = {isa = PBXFileReference; path = FullGame.storekit; sourceTree = "<group>"; };
+		9964ADF80FE95B0A2D7BEBE5 /* LocalServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalServer.swift; sourceTree = "<group>"; };
+		AA0DF90D7D2AFA458EB80DD0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		ABF25932A867A3014C1E07F8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B826BF53FB45DC0B17BFDE83 /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
+		BB6EDEC5B28E2BB3417F45B3 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		D02AA657CB09172B4C5B66C6 /* Web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Web; sourceTree = SOURCE_ROOT; };
+		E775688B080B1E4E146C1634 /* GameUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameUITests.swift; sourceTree = "<group>"; };
+		F76221B0268246926AFA2DE5 /* ai-fixture.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "ai-fixture.json"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		093EA92C23068D6D34A47A4E /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				F76221B0268246926AFA2DE5 /* ai-fixture.json */,
+				B826BF53FB45DC0B17BFDE83 /* StoreTests.swift */,
+				778D5D1CE91EEA2E99742B84 /* WebTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		0B9AD1CF419E08853B2708B4 = {
+			isa = PBXGroup;
+			children = (
+				8A6D6CDEBC2A4225C9EFD5CB /* FullGame.storekit */,
+				D02AA657CB09172B4C5B66C6 /* Web */,
+				C05D0403CDDBFD0C7FB3490C /* Maginet */,
+				093EA92C23068D6D34A47A4E /* Tests */,
+				61256A8EA7D9A8610807D86B /* UITests */,
+				2F3DCB6200B109245003AF28 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2F3DCB6200B109245003AF28 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6B4F839D543319F74B014766 /* Maginet.app */,
+				2BC7F6A4B48BE0CD41A6E6A0 /* MaginetTests.xctest */,
+				51152EB0FA9230CC1622CF28 /* MaginetUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		61256A8EA7D9A8610807D86B /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				E775688B080B1E4E146C1634 /* GameUITests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		C05D0403CDDBFD0C7FB3490C /* Maginet */ = {
+			isa = PBXGroup;
+			children = (
+				BB6EDEC5B28E2BB3417F45B3 /* App.swift */,
+				AA0DF90D7D2AFA458EB80DD0 /* Assets.xcassets */,
+				ABF25932A867A3014C1E07F8 /* Info.plist */,
+				9964ADF80FE95B0A2D7BEBE5 /* LocalServer.swift */,
+				30873D10AABE30F8F38C1548 /* Store.swift */,
+			);
+			path = Maginet;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0F572089FF32EC1E7E73D207 /* MaginetUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 24D0C0862B64E424642EF0B1 /* Build configuration list for PBXNativeTarget "MaginetUITests" */;
+			buildPhases = (
+				FAE94B71AD2F2E88F6B8BB81 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				08DE238D4487CF257A161C86 /* PBXTargetDependency */,
+			);
+			name = MaginetUITests;
+			packageProductDependencies = (
+			);
+			productName = MaginetUITests;
+			productReference = 51152EB0FA9230CC1622CF28 /* MaginetUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		656CF113BE0BCDFB0174F012 /* Maginet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9ECEE5BB9F4CC1E0FCC4A786 /* Build configuration list for PBXNativeTarget "Maginet" */;
+			buildPhases = (
+				2A49B8CED0D2245CC1A493B4 /* Sources */,
+				30AD73FA9CB6CF9069879ABF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Maginet;
+			packageProductDependencies = (
+			);
+			productName = Maginet;
+			productReference = 6B4F839D543319F74B014766 /* Maginet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EFDB1F63298E30F53FF02F59 /* MaginetTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF5873734DCA116BE21C548D /* Build configuration list for PBXNativeTarget "MaginetTests" */;
+			buildPhases = (
+				349CED3868C8EAD2E38FB987 /* Sources */,
+				1C406757A0EC43F7FAA8C6D5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E13C254B837169EA642C1BFC /* PBXTargetDependency */,
+			);
+			name = MaginetTests;
+			packageProductDependencies = (
+			);
+			productName = MaginetTests;
+			productReference = 2BC7F6A4B48BE0CD41A6E6A0 /* MaginetTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F66FA99BB1D752F32645CA68 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					0F572089FF32EC1E7E73D207 = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = 656CF113BE0BCDFB0174F012;
+					};
+					656CF113BE0BCDFB0174F012 = {
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = "[\"com.apple.InAppPurchase\": [\"enabled\": 1]]";
+					};
+					EFDB1F63298E30F53FF02F59 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 8A37025EDD16DDA1C413B9EB /* Build configuration list for PBXProject "Maginet" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0B9AD1CF419E08853B2708B4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2F3DCB6200B109245003AF28 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				656CF113BE0BCDFB0174F012 /* Maginet */,
+				EFDB1F63298E30F53FF02F59 /* MaginetTests */,
+				0F572089FF32EC1E7E73D207 /* MaginetUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1C406757A0EC43F7FAA8C6D5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				306670BA716C15962B07EBC9 /* FullGame.storekit in Resources */,
+				D8B2F08ACF06E42825E0D527 /* ai-fixture.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		30AD73FA9CB6CF9069879ABF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CD6DF608CDADA35EB883E3A3 /* Assets.xcassets in Resources */,
+				66F04AF81888EA925E780AD5 /* Web in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2A49B8CED0D2245CC1A493B4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9BD7DA716A081AC00EA2821B /* App.swift in Sources */,
+				99E7070CCDDAC5F7AB7E39BA /* LocalServer.swift in Sources */,
+				A06EF4D88262846C50C7B24C /* Store.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		349CED3868C8EAD2E38FB987 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00A44B5DE511116D7567504A /* StoreTests.swift in Sources */,
+				A95D3FBDD3046698EFE0714F /* WebTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FAE94B71AD2F2E88F6B8BB81 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CB69F0AB3A77BA00309315A3 /* GameUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		08DE238D4487CF257A161C86 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 656CF113BE0BCDFB0174F012 /* Maginet */;
+			targetProxy = 5264DBA945DD955EFBDA740D /* PBXContainerItemProxy */;
+		};
+		E13C254B837169EA642C1BFC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 656CF113BE0BCDFB0174F012 /* Maginet */;
+			targetProxy = 792BE345596B30EC15F4B6FF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		223813BD490CC2079D805866 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		37C8CD04E64B2113F840DEA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = zone.evrim.MaginetTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Maginet.app/Maginet";
+			};
+			name = Debug;
+		};
+		5F89507110D1634F84498668 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		64E988CB2C1C58A9A8F76A7D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = zone.evrim.MaginetTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Maginet.app/Maginet";
+			};
+			name = Release;
+		};
+		7FCC169B654A37DA966390EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = zone.evrim.MaginetUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Maginet;
+			};
+			name = Debug;
+		};
+		CF2F2D5E5236957743EC45DC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Maginet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = zone.evrim.maginet;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		D93F38AFF07E0B6AA2242FA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Maginet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = zone.evrim.maginet;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		EC326D7262B3D83C754833A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = zone.evrim.MaginetUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Maginet;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		24D0C0862B64E424642EF0B1 /* Build configuration list for PBXNativeTarget "MaginetUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7FCC169B654A37DA966390EE /* Debug */,
+				EC326D7262B3D83C754833A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8A37025EDD16DDA1C413B9EB /* Build configuration list for PBXProject "Maginet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				223813BD490CC2079D805866 /* Debug */,
+				5F89507110D1634F84498668 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9ECEE5BB9F4CC1E0FCC4A786 /* Build configuration list for PBXNativeTarget "Maginet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D93F38AFF07E0B6AA2242FA0 /* Debug */,
+				CF2F2D5E5236957743EC45DC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FF5873734DCA116BE21C548D /* Build configuration list for PBXNativeTarget "MaginetTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				37C8CD04E64B2113F840DEA5 /* Debug */,
+				64E988CB2C1C58A9A8F76A7D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F66FA99BB1D752F32645CA68 /* Project object */;
+}

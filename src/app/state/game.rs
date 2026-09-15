@@ -69,8 +69,9 @@ impl Game {
 
             Closure::<dyn FnMut(JsValue)>::new(move |value| {
                 let mut message_pool = message_pool.borrow_mut();
-                let message: Message = serde_wasm_bindgen::from_value(value).unwrap();
-                message_pool.push(message);
+                if let Ok(message) = serde_wasm_bindgen::from_value::<Message>(value) {
+                    message_pool.push(message);
+                }
             })
         };
 
