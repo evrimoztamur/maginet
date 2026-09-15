@@ -102,8 +102,11 @@ pub fn request_lobbies() -> Request {
     request_url("GET", &format!("{API_URL}/lobbies"))
 }
 
-pub fn create_new_lobby(lobby_settings: LobbySettings) -> Option<Promise> {
-    let session_request = SessionNewLobby { lobby_settings };
+pub fn create_new_lobby(lobby_settings: LobbySettings, session_id: String) -> Option<Promise> {
+    let session_request = SessionNewLobby {
+        lobby_settings,
+        session_id: Some(session_id),
+    };
 
     if let Ok(json) = serde_json::to_string(&session_request) {
         let mut opts = RequestInit::new();

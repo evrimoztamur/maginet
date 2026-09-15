@@ -70,6 +70,22 @@ impl State for SkirmishMenu {
 
         draw_sprite(context, atlas, 256.0, 320.0, 128.0, 64.0, 0.0, 0.0)?;
 
+        context.set_stroke_style(&JsValue::from_str(match self.lobby_settings.player_team {
+            Team::Red => "#ef786b",
+            Team::Blue => "#78afff",
+        }));
+        context.set_line_width(2.0);
+        context.stroke_rect(
+            0.0,
+            if self.lobby_settings.player_team == Team::Red {
+                0.0
+            } else {
+                32.0
+            },
+            128.0,
+            32.0,
+        );
+
         for mage in self.sentinel_lobby.game.iter_mages() {
             context.save();
             context.translate(
@@ -103,6 +119,13 @@ impl State for SkirmishMenu {
         app_context: &AppContext,
     ) -> Option<StateSort> {
         let pointer = &app_context.pointer;
+
+        if pointer.clicked() {
+            let (x, y) = pointer.location;
+            if (108..236).contains(&x) && (112..176).contains(&y) {
+                self.lobby_settings.player_team = if y < 144 { Team::Red } else { Team::Blue };
+            }
+        }
 
         if let Some(UIEvent::ButtonClick(value, clip_id)) = self.interface.tick(pointer) {
             app_context.audio_system.play_clip_option(clip_id);

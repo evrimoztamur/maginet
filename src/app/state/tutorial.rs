@@ -230,6 +230,7 @@ impl Tutorial {
         let level: Level = TUTORIAL_CODE.into();
         Tutorial {
             game_state: Game::new(LobbySettings {
+                player_team: shared::Team::Red,
                 lobby_sort: LobbySort::LocalAI,
                 loadout_method: if campaign {
                     LoadoutMethod::Arena(level, TUTORIAL_POSITION)

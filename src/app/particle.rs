@@ -16,6 +16,16 @@ impl ParticleSystem {
         atlas: &HtmlCanvasElement,
         frame: u64,
     ) -> Result<(), JsValue> {
+        self.tick_and_draw_view(context, atlas, frame, None)
+    }
+
+    pub(crate) fn tick_and_draw_view(
+        &mut self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlCanvasElement,
+        frame: u64,
+        view: Option<super::board_view::BoardView>,
+    ) -> Result<(), JsValue> {
         if self.last_tick_at != frame {
             self.last_tick_at = frame;
 
@@ -27,7 +37,11 @@ impl ParticleSystem {
         }
 
         for particle in &self.particles {
-            draw_particle(context, atlas, particle, frame)?;
+            let mut visual = *particle;
+            if let Some(view) = view {
+                visual.position = view.point(visual.position);
+            }
+            draw_particle(context, atlas, &visual, frame)?;
         }
 
         Ok(())

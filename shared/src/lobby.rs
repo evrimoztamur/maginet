@@ -80,8 +80,8 @@ impl Lobby {
                 .expect("game should be instantiable with default values"),
             players: HashMap::new(),
             player_slots: VecDeque::from([
-                Player::new(Team::Red, Duration::default()),
-                Player::new(Team::Blue, Duration::default()),
+                Player::new(settings.player_team, Duration::default()),
+                Player::new(settings.player_team.enemy(), Duration::default()),
             ]),
             ticks: 0,
             first_heartbeat,
@@ -184,9 +184,16 @@ impl Lobby {
         // }
     }
 
-    /// Makes a fully-reset clone of this [`Lobby`].
+    /// Resets the match while retaining online player assignments.
     pub fn remake(&mut self, first_heartbeat: Duration) {
+        let players = std::mem::take(&mut self.players);
+        let slots = self.player_slots.clone();
         *self = Lobby::new(self.settings.clone(), first_heartbeat);
+        self.players = players;
+        self.player_slots = slots;
+        for player in self.players.values_mut() {
+            player.rematch = false;
+        }
     }
 
     /// Determines if the game is finished.
@@ -207,7 +214,7 @@ impl Lobby {
     /// Determines if the given session ID is the one taking its turn.
     pub fn is_active_player(&self, session_id: Option<&String>) -> bool {
         if self.is_local() {
-            !(self.has_ai() && self.game.turn_for() == Team::Blue)
+            !(self.has_ai() && self.game.turn_for() != self.settings.player_team)
         } else if !self.all_ready() {
             false
         } else {
@@ -218,6 +225,17 @@ impl Lobby {
                 },
                 None => false,
             }
+        }
+    }
+
+    /// The local player's fixed perspective, resolved from server assignments online.
+    pub fn player_team(&self, session_id: Option<&String>) -> Option<Team> {
+        if self.is_local() {
+            Some(self.settings.player_team)
+        } else {
+            session_id
+                .and_then(|id| self.players.get(id))
+                .map(|player| player.team)
         }
     }
 
@@ -361,6 +379,9 @@ impl LobbySort {
 /// Settings for the lobby.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LobbySettings {
+    /// Selected local team, or the online creator's team.
+    #[serde(default)]
+    pub player_team: Team,
     /// Sort of the lobby.
     pub lobby_sort: LobbySort,
     /// [`LoadoutMethod`] for the lobby.
@@ -458,6 +479,7 @@ impl Default for LobbySettings {
             loadout_method: Default::default(),
             seed: Default::default(),
             can_stalemate: true,
+            player_team: Team::Red,
         }
     }
 }

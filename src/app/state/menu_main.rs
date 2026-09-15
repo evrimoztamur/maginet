@@ -8,7 +8,8 @@ use crate::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
         LabelTrim, Pointer, StateSort, UIElement, UIEvent,
     },
-    draw::draw_sprite, window,
+    draw::draw_sprite,
+    window,
 };
 
 pub struct MainMenu {
@@ -188,6 +189,7 @@ impl Default for MainMenu {
             interface: root_element,
             button_reset,
             preview_state: Game::new(LobbySettings {
+                player_team: shared::Team::Red,
                 lobby_sort: LobbySort::Local,
                 loadout_method: LoadoutMethod::DefaultBoard(Board::new(6, 7).unwrap()),
                 seed: window().performance().unwrap().now() as u64,

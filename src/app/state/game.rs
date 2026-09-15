@@ -10,6 +10,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 use super::{ArenaMenu, Editor, SkirmishMenu, State};
 use crate::{
     app::{
+        board_view::BoardView,
         presentation::{DragLanding, Presentation, Signal},
         Alignment, App, AppContext, ButtonElement, ClipId, ConfirmButtonElement, LabelTheme,
         LabelTrim, Particle, ParticleSort, ParticleSystem, Pointer, StateSort, ToggleButtonElement,
@@ -40,7 +41,7 @@ struct MageDrag {
 }
 
 impl MageDrag {
-    fn update(&mut self, location: (i32, i32), frame: u64) {
+    fn update(&mut self, location: (i32, i32), frame: u64, team: Team) {
         let dx = location.0 - self.press.0;
         let dy = location.1 - self.press.1;
         if dx as i64 * dx as i64 + dy as i64 * dy as i64 > 16 {
@@ -48,7 +49,8 @@ impl MageDrag {
         }
         self.ground = (
             self.origin.0 as f64 + dx as f64 / BOARD_SCALE.0 as f64,
-            self.origin.1 as f64 + dy as f64 / BOARD_SCALE.1 as f64,
+            self.origin.1 as f64
+                + dy as f64 / BOARD_SCALE.1 as f64 * if team == Team::Blue { -1.0 } else { 1.0 },
         );
     }
 
@@ -65,6 +67,8 @@ impl MageDrag {
 }
 
 pub struct Game {
+    view_team: Team,
+    create_requested: bool,
     ai_pending: Option<crate::ai::Pending>,
     ai_revision: u32,
     ai_request: u32,
@@ -110,12 +114,6 @@ impl Game {
             })
         };
 
-        if let shared::LobbySort::Online(0) = lobby_settings.lobby_sort {
-            let _ = create_new_lobby(lobby_settings.clone())
-                .unwrap()
-                .then(&message_closure);
-        }
-
         let button_menu = ToggleButtonElement::new(
             (-128 - 18 - 8, -9 - 12),
             (20, 20),
@@ -154,6 +152,8 @@ impl Game {
 
         let lobby = Lobby::new(lobby_settings, client_timestamp());
         Game {
+            view_team: lobby.settings.player_team,
+            create_requested: false,
             ai_pending: None,
             ai_revision: 0,
             ai_request: 0,
@@ -266,7 +266,7 @@ impl Game {
                 }
                 GestureEvent::Move(location) => {
                     if let Some(drag) = &mut self.drag {
-                        drag.update(location, app.frame);
+                        drag.update(location, app.frame, self.view_team);
                         if drag.started.is_some() {
                             self.active_mage = Some(drag.index);
                             consumed = true;
@@ -275,7 +275,7 @@ impl Game {
                 }
                 GestureEvent::Release(location) => {
                     if let Some(mut drag) = self.drag.take() {
-                        drag.update(location, app.frame);
+                        drag.update(location, app.frame, self.view_team);
                         if drag.started.is_some() {
                             consumed = true;
                             self.active_mage = Some(drag.index);
@@ -327,21 +327,15 @@ impl Game {
         offset: (i32, i32),
         scale: (i32, i32),
     ) -> Option<Position> {
-        let position = Position(
-            ((location.0 - offset.0) / scale.0) as i8,
-            ((location.1 - offset.1) / scale.1) as i8,
-        );
+        self.board_view().location(location, offset, scale)
+    }
 
-        let (board_width, board_height) = self.lobby.game.board_size();
-
-        if (location.0 - offset.0) >= 0
-            && position.0 < board_width as i8
-            && (location.1 - offset.1) >= 0
-            && position.1 < board_height as i8
-        {
-            Some(position)
-        } else {
-            None
+    fn board_view(&self) -> BoardView {
+        let (width, height) = self.lobby.game.board_size();
+        BoardView {
+            team: self.view_team,
+            width: width as i32,
+            height: height as i32,
         }
     }
 
@@ -443,6 +437,7 @@ impl Game {
         frame: u64,
         pointer: &Pointer,
     ) -> Result<(), JsValue> {
+        let view = self.board_view();
         let board_scale = tuple_as!(BOARD_SCALE, f64);
         let board_offset = tuple_as!(self.board_offset(), f64);
 
@@ -479,22 +474,28 @@ impl Game {
         {
             context.save();
 
+            context.save();
+            if view.team == Team::Blue {
+                context.translate(0.0, 256.0)?;
+                context.scale(1.0, -1.0)?;
+            }
             draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
+            context.restore();
 
             context.translate(board_offset.0, board_offset.1)?;
 
             // DRAW particles
 
             self.particle_system()
-                .tick_and_draw(context, atlas, frame)?;
+                .tick_and_draw_view(context, atlas, frame, Some(view))?;
 
             // DRAW powerups
             for (position, powerup) in self.presentation.powerups(frame) {
                 context.save();
 
                 context.translate(
-                    16.0 + position.0 as f64 * board_scale.0,
-                    16.0 + position.1 as f64 * board_scale.1,
+                    16.0 + view.tile(*position).0 as f64 * board_scale.0,
+                    16.0 + view.tile(*position).1 as f64 * board_scale.1,
                 )?;
                 draw_powerup(context, atlas, position, powerup, frame)?;
 
@@ -515,6 +516,12 @@ impl Game {
             }
 
             let mut visual_mages = self.presentation.mages(frame);
+            visual_mages.sort_by(|(_, a), (_, b)| {
+                view.point(*a)
+                    .1
+                    .total_cmp(&view.point(*b).1)
+                    .then(a.0.total_cmp(&b.0))
+            });
             let dragging = self.drag.as_ref().filter(|d| d.started.is_some());
             if let Some(drag) = dragging {
                 for (mage, position) in &mut visual_mages {
@@ -525,9 +532,10 @@ impl Game {
                 visual_mages.sort_by_key(|(mage, _)| mage.index == drag.index);
             }
             let preview_location = dragging.map_or(pointer.location, |d| {
+                let ground = view.point(d.ground);
                 (
-                    (board_offset.0 + (d.ground.0 + 0.5) * board_scale.0).floor() as i32,
-                    (board_offset.1 + (d.ground.1 + 0.5) * board_scale.1).floor() as i32,
+                    (board_offset.0 + (ground.0 + 0.5) * board_scale.0).floor() as i32,
+                    (board_offset.1 + (ground.1 + 0.5) * board_scale.1).floor() as i32,
                 )
             });
             {
@@ -539,6 +547,7 @@ impl Game {
                 for (mage, _) in &visual_mages {
                     if mage.is_alive() && mage.is_defensive() {
                         for (_, position) in self.presentation.game().targets(mage, mage.position) {
+                            let position = view.tile(position);
                             match mage.team {
                                 Team::Red => {
                                     draw_sprite(
@@ -574,7 +583,8 @@ impl Game {
                 if let Some(mage) = self.get_active_mage() {
                     let available_moves = self.presentation.game().available_moves(mage);
                     for (position, dir, _) in &available_moves {
-                        let ri = rotation_from_position(*dir);
+                        let position = view.tile(*position);
+                        let ri = rotation_from_position(view.direction(*dir));
                         let is_diagonal = ri % 2 == 1;
                         context.save();
                         context.translate(
@@ -597,11 +607,9 @@ impl Game {
                         context.restore();
                     }
 
-                    if let Some(selected_tile) = self.presentation.game().location_as_position(
-                        preview_location,
-                        board_offset,
-                        BOARD_SCALE,
-                    ) {
+                    if let Some(selected_tile) =
+                        self.location_as_position(preview_location, board_offset, BOARD_SCALE)
+                    {
                         if available_moves
                             .iter()
                             .any(|(position, _, _)| position == &selected_tile)
@@ -609,6 +617,7 @@ impl Game {
                             for (enemy_occupied, position) in
                                 &self.presentation.game().targets(mage, selected_tile)
                             {
+                                let position = &view.tile(*position);
                                 if *enemy_occupied {
                                     draw_sprite(
                                         context,
@@ -639,20 +648,17 @@ impl Game {
                     }
                 }
 
-                if let Some(selected_tile) = self.presentation.game().location_as_position(
-                    preview_location,
-                    board_offset,
-                    BOARD_SCALE,
-                ) {
+                if let Some(selected_tile) =
+                    self.location_as_position(preview_location, board_offset, BOARD_SCALE)
+                {
                     if let Some(occupant) = self.presentation.game().live_occupant(&selected_tile) {
-                        if let Some(selected_tile) = self.presentation.game().location_as_position(
-                            preview_location,
-                            board_offset,
-                            BOARD_SCALE,
-                        ) {
+                        if let Some(selected_tile) =
+                            self.location_as_position(preview_location, board_offset, BOARD_SCALE)
+                        {
                             for (_, position) in
                                 &self.presentation.game().targets(occupant, selected_tile)
                             {
+                                let position = view.tile(*position);
                                 draw_sprite(
                                     context,
                                     atlas,
@@ -666,7 +672,13 @@ impl Game {
                             }
                         }
                     }
-                    draw_crosshair(context, atlas, &selected_tile, (32.0, 32.0), frame)?;
+                    draw_crosshair(
+                        context,
+                        atlas,
+                        &view.tile(selected_tile),
+                        (32.0, 32.0),
+                        frame,
+                    )?;
                 }
 
                 context.restore();
@@ -685,8 +697,8 @@ impl Game {
                     context.save();
 
                     context.translate(
-                        16.0 + position.0 * board_scale.0,
-                        16.0 + position.1 * board_scale.1,
+                        16.0 + view.point(*position).0 * board_scale.0,
+                        16.0 + view.point(*position).1 * board_scale.1,
                     )?;
 
                     context.save();
@@ -721,10 +733,17 @@ impl Game {
                                 self.particle_system.add(Particle::new(
                                     (
                                         position.0 + d.cos() * 0.4,
-                                        position.1 + pose.offset_y / board_scale.1 - 0.15
-                                            + d.sin() * 0.4,
+                                        position.1
+                                            + (pose.offset_y / board_scale.1 - 0.15
+                                                + d.sin() * 0.4)
+                                                * if view.team == Team::Blue { -1.0 } else { 1.0 },
                                     ),
-                                    (d.cos() * v, d.sin() * v),
+                                    (
+                                        d.cos() * v,
+                                        d.sin()
+                                            * v
+                                            * if view.team == Team::Blue { -1.0 } else { 1.0 },
+                                    ),
                                     (js_sys::Math::random() * 30.0) as u64,
                                     ParticleSort::Diagonals,
                                 ));
@@ -736,10 +755,17 @@ impl Game {
                                 self.particle_system.add(Particle::new(
                                     (
                                         position.0 + d.cos() * 0.4,
-                                        position.1 + pose.offset_y / board_scale.1 - 0.15
-                                            + d.sin() * 0.4,
+                                        position.1
+                                            + (pose.offset_y / board_scale.1 - 0.15
+                                                + d.sin() * 0.4)
+                                                * if view.team == Team::Blue { -1.0 } else { 1.0 },
                                     ),
-                                    (d.cos() * v, d.sin() * v),
+                                    (
+                                        d.cos() * v,
+                                        d.sin()
+                                            * v
+                                            * if view.team == Team::Blue { -1.0 } else { 1.0 },
+                                    ),
                                     (js_sys::Math::random() * 30.0) as u64,
                                     ParticleSort::Shield,
                                 ));
@@ -773,8 +799,8 @@ impl Game {
                     context.save();
 
                     context.translate(
-                        16.0 + position.0 * board_scale.0,
-                        16.0 + position.1 * board_scale.1,
+                        16.0 + view.point(*position).0 * board_scale.0,
+                        16.0 + view.point(*position).1 * board_scale.1,
                     )?;
                     context.translate(0.0, pose.offset_y)?;
                     draw_mana(context, atlas, mage)?;
@@ -885,6 +911,19 @@ impl Game {
         }
 
         let session_id = &app_context.session_id;
+        if let Some(team) = self.lobby.player_team(session_id.as_ref()) {
+            self.view_team = team;
+        }
+        if self.lobby.settings.lobby_sort == LobbySort::Online(0) && !self.create_requested {
+            if let Some(session_id) = session_id {
+                if let Some(promise) =
+                    create_new_lobby(self.lobby.settings.clone(), session_id.clone())
+                {
+                    let _ = promise.then(&self.message_closure);
+                    self.create_requested = true;
+                }
+            }
+        }
 
         let all_ready = self.lobby.all_ready();
 
@@ -901,7 +940,7 @@ impl Game {
             }
         }
         if self.lobby.has_ai()
-            && self.lobby.game.turn_for() == Team::Blue
+            && self.lobby.game.turn_for() != self.lobby.settings.player_team
             && !self.presentation.busy()
             && frame - self.last_move_frame > 45
             && !self.lobby.finished()
@@ -983,11 +1022,14 @@ impl Game {
                         self.result_menu_at = None;
                         self.button_menu.set_selected(false);
                     }
+                    if let Some(team) = lobby.player_team(session_id.as_ref()) {
+                        self.view_team = team;
+                    }
                     self.lobby = *lobby.clone();
                     self.board_dirty = true;
 
                     if let Ok(lobby_id) = self.lobby_id() {
-                        if !lobby.all_ready() {
+                        if !lobby.all_ready() && !lobby.has_session_id(session_id.as_ref()) {
                             send_ready(lobby_id, session_id.clone().unwrap());
                         }
                     }
@@ -1197,16 +1239,26 @@ impl State for Game {
                         .campaign_progress_code()
                         .unwrap_or_else(|| self.lobby.game.prototype_code());
                     let already_won = App::kv_get(&code) == "win";
-                    self.newly_won = team == Team::Red && !already_won;
+                    self.newly_won = team == self.view_team && !already_won;
                     // Completion is permanent, including when replaying the tutorial.
                     if !already_won {
-                        App::kv_set(&code, if team == Team::Red { "win" } else { "loss" });
+                        App::kv_set(
+                            &code,
+                            if team == self.view_team {
+                                "win"
+                            } else {
+                                "loss"
+                            },
+                        );
                     }
 
-                    match team {
-                        Team::Red => app_context.audio_system.play_clip(ClipId::LevelSuccess),
-                        Team::Blue => app_context.audio_system.play_clip(ClipId::LevelFailure),
-                    }
+                    app_context
+                        .audio_system
+                        .play_clip(if team == self.view_team {
+                            ClipId::LevelSuccess
+                        } else {
+                            ClipId::LevelFailure
+                        });
 
                     self.recorded_result = true;
                 }
@@ -1336,11 +1388,9 @@ impl State for Game {
             }
 
             if !self.presentation.busy() && pointer.clicked() {
-                if let Some(selected_tile) = self.lobby.game.location_as_position(
-                    pointer.location,
-                    board_offset,
-                    BOARD_SCALE,
-                ) {
+                if let Some(selected_tile) =
+                    self.location_as_position(pointer.location, board_offset, BOARD_SCALE)
+                {
                     if let Some(active_mage) = self.get_active_mage() {
                         let from = active_mage.position;
 
@@ -1369,6 +1419,20 @@ mod drag_tests {
     use super::*;
 
     #[test]
+    fn blue_drag_moves_in_world_coordinates() {
+        let mut drag = MageDrag {
+            index: 0,
+            origin: Position(2, 3),
+            press: (77, 110),
+            ground: (2.0, 3.0),
+            started: None,
+        };
+        drag.update((93, 142), 12, Team::Blue);
+        assert_eq!(drag.ground, (2.5, 2.0));
+        assert_eq!(drag.landing(12).offset_y, -12.0);
+    }
+
+    #[test]
     fn threshold_grab_offset_and_float_are_stable() {
         let mut drag = MageDrag {
             index: 0,
@@ -1377,13 +1441,13 @@ mod drag_tests {
             ground: (2.0, 3.0),
             started: None,
         };
-        drag.update((81, 110), 10);
+        drag.update((81, 110), 10, Team::Red);
         assert_eq!(drag.started, None);
-        drag.update((81, 111), 11);
+        drag.update((81, 111), 11, Team::Red);
         assert_eq!(drag.started, Some(11));
-        drag.update((109, 142), 12);
+        drag.update((109, 142), 12, Team::Red);
         assert_eq!(drag.ground, (3.0, 4.0));
-        drag.update((77, 110), 13);
+        drag.update((77, 110), 13, Team::Red);
         assert_eq!(drag.started, Some(11)); // Crossing back never becomes a tap.
         assert_eq!(drag.ground, (2.0, 3.0));
         assert_eq!(drag.landing(11).offset_y, -12.0);

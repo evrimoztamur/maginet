@@ -1,5 +1,7 @@
-use std::collections::HashMap;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashMap,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 use serde::{Deserialize, Serialize};
 use serde_json_any_key::*;
@@ -42,6 +44,9 @@ pub struct SessionMessage {
 /// An HTTP request made with a session ID, containing a [`Message`] payload.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SessionNewLobby {
+    /// Creator, reserved before the lobby becomes joinable.
+    #[serde(default)]
+    pub session_id: Option<String>,
     /// A [`Message`] payload.
     pub lobby_settings: LobbySettings,
 }

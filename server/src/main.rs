@@ -42,7 +42,11 @@ async fn main() {
         .with_state(state);
 
     let port = std::env::var("MAGINET_PORT")
-        .map(|value| value.parse::<u16>().expect("MAGINET_PORT must be a port number"))
+        .map(|value| {
+            value
+                .parse::<u16>()
+                .expect("MAGINET_PORT must be a port number")
+        })
         .unwrap_or(8000);
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
@@ -80,7 +84,11 @@ async fn create_lobby(
     let mut lobbies = state.lobbies.lock().unwrap();
 
     session_message.lobby_settings.lobby_sort = LobbySort::Online(lobby_id);
-    let lobby = Lobby::new(session_message.lobby_settings, timestamp());
+    let mut lobby = Lobby::new(session_message.lobby_settings, timestamp());
+    if let Some(session_id) = session_message.session_id {
+        let _ = lobby.join_player(session_id.clone());
+        lobby.beat_heart(session_id);
+    }
 
     lobbies.insert(lobby_id, lobby.clone());
 

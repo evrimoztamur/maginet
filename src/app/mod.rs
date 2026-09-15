@@ -1,5 +1,6 @@
 mod app;
 mod audio;
+mod board_view;
 mod particle;
 mod pointer;
 mod presentation;
