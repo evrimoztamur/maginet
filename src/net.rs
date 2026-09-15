@@ -1,11 +1,16 @@
 use std::time::Duration;
 
+#[cfg(not(feature = "ios"))]
 use futures::TryFutureExt;
 use js_sys::Promise;
 use shared::{LobbyID, LobbySettings, Message, SessionMessage, SessionNewLobby, SessionRequest};
+#[cfg(not(feature = "ios"))]
 use wasm_bindgen::{JsCast, JsValue};
+#[cfg(not(feature = "ios"))]
 use wasm_bindgen_futures::{future_to_promise, JsFuture};
-use web_sys::{Request, RequestInit, Response};
+#[cfg(not(feature = "ios"))]
+use web_sys::Response;
+use web_sys::{Request, RequestInit};
 
 use crate::{storage, window};
 
@@ -49,6 +54,7 @@ impl MessagePool {
     }
 }
 
+#[cfg(not(feature = "ios"))]
 fn wrap_response_into_json(value: JsValue) -> JsFuture {
     assert!(value.is_instance_of::<Response>());
     let resp: Response = value.dyn_into().unwrap();
@@ -65,7 +71,7 @@ extern "C" {
 pub fn fetch(request: &Request) -> Promise {
     #[cfg(feature = "ios")]
     {
-        return native_fetch(request);
+        native_fetch(request)
     }
     #[cfg(not(feature = "ios"))]
     {

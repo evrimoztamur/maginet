@@ -16,13 +16,14 @@ pub enum BoulderStyle {
 }
 
 /// A [`PowerUp`] is a the distinct type of the powerup.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Default)]
 pub enum PowerUp {
     /// Turns the mage into defensive mode.
     Shield,
     /// Zaps out a plus-shaped beam, damaging all in its way.
     Beam,
     /// Gives a mage the ability to move diagonals.
+    #[default]
     Diagonal,
     /// Blocks off the mages' movement.
     Boulder(BoulderStyle),
@@ -77,12 +78,6 @@ impl From<PowerUp> for u8 {
             PowerUp::Boulder(BoulderStyle::Pedestal) => 4,
             PowerUp::Boulder(BoulderStyle::Tentacle) => 5,
         }
-    }
-}
-
-impl Default for PowerUp {
-    fn default() -> Self {
-        Self::Diagonal
     }
 }
 

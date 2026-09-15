@@ -156,9 +156,7 @@ impl State for EditorPreview {
                     context.restore();
                 }
 
-                self.level
-                    .mages
-                    .sort_by(|a, b| a.position.1.cmp(&b.position.1));
+                self.level.mages.sort_by_key(|a| a.position.1);
 
                 // DRAW mages
                 for mage in &self.level.mages {

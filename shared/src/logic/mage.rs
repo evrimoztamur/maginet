@@ -3,11 +3,12 @@ use serde::{Deserialize, Serialize};
 use crate::{Board, Mana, Position, PowerUp, Spell, Team};
 
 /// A [`MageSort`] is the distinct type of the mage, determining its visual appearance and spell.
-#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, Default)]
 pub enum MageSort {
     /// A simple mage who attacks with a diamond pattern.
     Diamond,
     /// A simple mage who attacks with an X pattern.
+    #[default]
     Cross,
     /// A simple mage who attacks with a chess knight pattern.
     Knight,
@@ -50,12 +51,6 @@ impl From<usize> for MageSort {
             3 => Self::Spike,
             _ => Self::Plus,
         }
-    }
-}
-
-impl Default for MageSort {
-    fn default() -> Self {
-        Self::Cross
     }
 }
 

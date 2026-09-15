@@ -14,7 +14,7 @@ fn forced_red_win(game: &Game, plies: usize) -> bool {
     if plies == 0 {
         return false;
     }
-    let outcomes = game.legal_turns().into_iter().map(|t| {
+    let outcomes = game.legal_turns().iter().map(|t| {
         let mut next = game.clone();
         next.take_move(t.0, t.1);
         forced_red_win(&next, plies - 1)
@@ -31,7 +31,8 @@ fn crossfire_has_one_immediate_double_elimination() {
     let game = Game::new(&level, true).unwrap();
     let wins: Vec<_> = game
         .legal_turns()
-        .iter().copied()
+        .iter()
+        .copied()
         .filter(|t| {
             let mut next = game.clone();
             next.take_move(t.0, t.1);
@@ -51,7 +52,8 @@ fn side_step_requires_the_diagonal_pickup_for_its_five_ply_solution() {
     let game = Game::new(&level, true).unwrap();
     let wins: Vec<_> = game
         .legal_turns()
-        .iter().copied()
+        .iter()
+        .copied()
         .filter(|t| {
             let mut next = game.clone();
             next.take_move(t.0, t.1);

@@ -64,7 +64,7 @@ impl LevelPortal {
             }
 
             if let Some(PreviewEntity::Mage(_)) = &preview[dx + dy * 2] {
-                if (dx + dy) % 2 == 0 {
+                if (dx + dy).is_multiple_of(2) {
                     preview[dx + dy * 2] = Some(PreviewEntity::PowerUp(*powerup));
                 }
             }
@@ -517,7 +517,7 @@ impl State for ArenaMenu {
             );
 
             if drag_offset.0.hypot(drag_offset.1) < 3.0 {
-                if self.level_portals.get(&lloc).is_some() {
+                if self.level_portals.contains_key(&lloc) {
                     self.pan_target = Some((
                         -((-self.pan_offset.0 + pointer_floc.0 - 128.0) / 128.0).round() * 128.0,
                         -((-self.pan_offset.1 + pointer_floc.1 - 128.0) / 128.0).round() * 128.0,
@@ -929,9 +929,7 @@ mod tests {
             assert!(x >= 256.0 && x + 64.0 <= 512.0 && y + 64.0 <= 256.0);
             atlas_cells.insert((x as usize, y as usize));
         }
-        #[cfg(not(feature = "demo"))]
+        // Demo access is gated at runtime; the full map retains every board style.
         assert_eq!(atlas_cells.len(), 5);
-        #[cfg(feature = "demo")]
-        assert_eq!(atlas_cells.len(), 1);
     }
 }

@@ -110,6 +110,7 @@ impl Presentation {
         self.queue.front().map_or(&self.settled, |t| &t.before)
     }
 
+    #[cfg(test)]
     pub fn enqueue(
         &mut self,
         before: Game,

@@ -30,7 +30,6 @@ impl LobbyList {}
 
 const BUTTON_PAGE_PREVIOUS: usize = 10;
 const BUTTON_PAGE_NEXT: usize = 11;
-const BUTTON_ARENA: usize = 20;
 const BUTTON_BACK: usize = 21;
 const BUTTON_SEARCH: usize = 22;
 
@@ -82,7 +81,7 @@ impl State for LobbyList {
                     "No lobbies available.".to_string(),
                     Alignment::Center,
                 ),
-                &pointer,
+                pointer,
                 frame,
                 &LabelTrim::Round,
                 false,
@@ -99,7 +98,7 @@ impl State for LobbyList {
                     "Create a new one to start playing!".to_string(),
                     Alignment::Center,
                 ),
-                &pointer,
+                pointer,
                 frame,
                 &LabelTrim::Round,
                 false,
@@ -225,7 +224,7 @@ impl State for LobbyList {
                         .is_some()
                     {
                         return Some(StateSort::Game(Game::new(LobbySettings {
-                            lobby_sort: LobbySort::Online(lobby_code_input as u16),
+                            lobby_sort: LobbySort::Online(lobby_code_input),
                             ..Default::default()
                         })));
                     }
@@ -254,7 +253,7 @@ impl State for LobbyList {
 
         if let Some(UIEvent::ButtonClick(value, clip_id)) = self.lobby_list_interface.tick(pointer)
         {
-            if let Some(session_id) = &app_context.session_id {
+            if app_context.session_id.is_some() {
                 app_context.audio_system.play_clip_option(clip_id);
 
                 // console::log_1(&format!("{}", value).into());

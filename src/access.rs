@@ -13,7 +13,7 @@ extern "C" {
 pub fn demo() -> bool {
     #[cfg(feature = "ios")]
     {
-        return !owned();
+        !owned()
     }
     #[cfg(not(feature = "ios"))]
     {
@@ -37,7 +37,7 @@ pub fn online() -> bool {
 pub fn backgrounded() -> bool {
     #[cfg(feature = "ios")]
     {
-        return inactive();
+        inactive()
     }
     #[cfg(not(feature = "ios"))]
     {
@@ -48,7 +48,7 @@ pub fn backgrounded() -> bool {
 pub fn network_failed() -> bool {
     #[cfg(feature = "ios")]
     {
-        return take_failure();
+        take_failure()
     }
     #[cfg(not(feature = "ios"))]
     {

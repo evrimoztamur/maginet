@@ -285,7 +285,9 @@ fn execute(output: &Path, workers: usize, metadata: Metadata) -> Result<()> {
             }
         }
     }
-    if matchups.is_empty() { reports(output, &metadata, &matchups)?; }
+    if matchups.is_empty() {
+        reports(output, &metadata, &matchups)?;
+    }
     Ok(())
 }
 fn distances(entries: &[CampaignEntry]) -> Vec<usize> {

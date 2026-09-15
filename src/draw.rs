@@ -25,6 +25,8 @@ pub fn rotation_from_position(position: Position) -> i8 {
     }
 }
 
+// Keep the explicit drawing parameters consistent with the canvas API.
+#[allow(clippy::too_many_arguments)]
 pub fn draw_sprite(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,
@@ -40,6 +42,8 @@ pub fn draw_sprite(
 
 /// Snap after all parent transforms, so panning, jumping, and flips cannot move sprite
 /// edges off the native pixel grid. Restore the caller's unsnapped animation transform.
+// Keep the explicit drawing parameters consistent with the canvas API.
+#[allow(clippy::too_many_arguments)]
 fn draw_sprite_scaled(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,
@@ -259,6 +263,8 @@ pub fn draw_mage(
 }
 
 /// Keep idle motion separate from readiness and health while a turn is playing.
+// Keep the explicit drawing parameters consistent with the canvas API.
+#[allow(clippy::too_many_arguments)]
 pub fn draw_mage_with_motion(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,
@@ -801,6 +807,8 @@ pub fn draw_board(
     Ok(())
 }
 
+// Keep the explicit drawing parameters consistent with the canvas API.
+#[allow(clippy::too_many_arguments)]
 pub fn draw_label(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,

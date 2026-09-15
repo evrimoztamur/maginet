@@ -12,8 +12,8 @@ use axum::{
 };
 use rand::Rng;
 use shared::{
-    timestamp, Lobby, LobbyError, LobbySettings, LobbySort, Message, SessionMessage,
-    SessionNewLobby, SessionRequest, Turn,
+    timestamp, Lobby, LobbyError, LobbySort, Message, SessionMessage, SessionNewLobby,
+    SessionRequest, Turn,
 };
 use tower_http::services::{ServeDir, ServeFile};
 

@@ -412,6 +412,7 @@ impl Game {
     pub fn take_best_turn_quick(&mut self) {
         self.request_ai(Difficulty::Easy);
     }
+    #[cfg(not(feature = "deploy"))]
     pub fn take_best_turn(&mut self) {
         self.request_ai(self.difficulty);
     }
@@ -823,7 +824,7 @@ impl Game {
                     (72, 16),
                     "#2a9f55",
                     &crate::app::ContentElement::Text(format!("{lobby_id}"), Alignment::Center),
-                    &pointer,
+                    pointer,
                     frame,
                     &LabelTrim::Glorious,
                     false,

@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-use shared::{Board, Level, LobbyError, SessionRequest};
+use shared::{Board, Level, SessionRequest};
 use wasm_bindgen::JsValue;
 use web_sys::{
-    console, CanvasRenderingContext2d, DomRectReadOnly, FocusEvent, HtmlCanvasElement,
-    HtmlInputElement, KeyboardEvent, MouseEvent, TouchEvent,
+    CanvasRenderingContext2d, DomRectReadOnly, HtmlCanvasElement, HtmlInputElement, KeyboardEvent,
+    MouseEvent, TouchEvent,
 };
 
 use super::{
@@ -18,16 +17,6 @@ use crate::{
     net::get_session_id,
     storage, window,
 };
-
-/// Errors concerning the [`App`].
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AppError(String);
-
-impl From<LobbyError> for AppError {
-    fn from(lobby_error: LobbyError) -> Self {
-        AppError(format!("LobbyError: {0}", lobby_error.0))
-    }
-}
 
 pub enum StateSort {
     MainMenu(MainMenu),
@@ -423,16 +412,16 @@ impl App {
     }
 
     #[allow(clippy::single_match)]
-    pub fn on_key_down(&mut self, event: KeyboardEvent) {
+    pub fn on_key_down(&mut self, _event: KeyboardEvent) {
         #[cfg(not(feature = "deploy"))]
         match &mut self.state_sort {
             StateSort::Game(state) => {
-                match event.code().as_str() {
+                match _event.code().as_str() {
                     "KeyB" => {
                         state.take_best_turn();
                     }
                     "KeyM" => {
-                        console::log_1(&format!("{:?}", state.lobby()).into());
+                        web_sys::console::log_1(&format!("{:?}", state.lobby()).into());
                     }
                     _ => (),
                 };
@@ -518,12 +507,8 @@ impl CanvasSettings {
                     * 272.0
                     / h
             };
-            self.ios_padding_y = Some(
-                (16.0 - inset("maginetSafeBottom"))
-                    .min(8.0)
-                    .max(0.0)
-                    .floor() as u32,
-            );
+            self.ios_padding_y =
+                Some((16.0 - inset("maginetSafeBottom")).clamp(0.0, 8.0).floor() as u32);
             let minimum = inset("maginetSafeLeft") + 72.0;
             let maximum = self.canvas_width as f64 - inset("maginetSafeRight") - 320.0;
             let centered = (self.canvas_width as f64 - 256.0) / 2.0;

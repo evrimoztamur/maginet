@@ -1,3 +1,5 @@
+// The implementation module shares the public module name.
+#[allow(clippy::module_inception)]
 mod app;
 mod audio;
 mod board_view;

@@ -15,7 +15,6 @@ pub struct Pointer {
     pub active_touch: Option<i32>,
     pub suppress_mouse_until: f64,
     gesture_down: bool,
-    pub real: (i32, i32),
     pub location: (i32, i32),
     pub button: bool,
     pub pending_click: bool,
@@ -30,7 +29,6 @@ impl Pointer {
         );
 
         Pointer {
-            real: midpoint,
             location: Pointer::location_from_real(canvas_settings, midpoint),
             ..Default::default()
         }

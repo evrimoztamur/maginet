@@ -28,6 +28,8 @@ pub trait UIElement {
 
 #[derive(Clone)]
 pub enum Alignment {
+    // Retained for left-aligned text in the UI drawing API.
+    #[allow(dead_code)]
     Start(i32),
     Center,
     // End,

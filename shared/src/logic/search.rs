@@ -168,7 +168,7 @@ struct Search<F> {
 const INF: isize = isize::MAX / 2;
 impl<F: FnMut() -> bool> Search<F> {
     fn check(&mut self) -> Result<(), StopReason> {
-        if self.limits.max_nodes.map_or(false, |n| self.nodes >= n) {
+        if self.limits.max_nodes.is_some_and(|n| self.nodes >= n) {
             return Err(StopReason::Nodes);
         }
         if (self.deadline)() {

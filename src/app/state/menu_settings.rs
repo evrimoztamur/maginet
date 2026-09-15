@@ -176,19 +176,19 @@ impl State for SettingsMenu {
                     return Some(StateSort::MainMenu(MainMenu::default()));
                 }
                 BUTTON_MUSIC_MINUS => {
-                    self.music_volume = (self.music_volume - 1).max(0).min(10);
+                    self.music_volume = (self.music_volume - 1).clamp(0, 10);
                     self.save_volume();
                 }
                 BUTTON_MUSIC_PLUS => {
-                    self.music_volume = (self.music_volume + 1).max(0).min(10);
+                    self.music_volume = (self.music_volume + 1).clamp(0, 10);
                     self.save_volume();
                 }
                 BUTTON_SOUND_MINUS => {
-                    self.clip_volume = (self.clip_volume - 1).max(0).min(10);
+                    self.clip_volume = (self.clip_volume - 1).clamp(0, 10);
                     self.save_volume();
                 }
                 BUTTON_SOUND_PLUS => {
-                    self.clip_volume = (self.clip_volume + 1).max(0).min(10);
+                    self.clip_volume = (self.clip_volume + 1).clamp(0, 10);
                     self.save_volume();
                 }
                 _ => (),

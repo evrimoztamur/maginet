@@ -26,11 +26,6 @@ pub enum ClipId {
     MageMove,
     ClickForward,
     ClickBack,
-    ButtonHover,
-    MapPlaceObject,
-    MapSelectSquare,
-    MapIncreaseSize,
-    MapDecreaseSize,
     StarSparkle,
     MusicI,
 }

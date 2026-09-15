@@ -363,9 +363,7 @@ impl State for Editor {
 
         self.particle_system.tick_and_draw(context, atlas, frame)?;
 
-        self.level
-            .mages
-            .sort_by(|a, b| a.position.1.cmp(&b.position.1));
+        self.level.mages.sort_by_key(|a| a.position.1);
 
         // DRAW powerups
         for (position, powerup) in self.level.powerups.iter() {
@@ -859,7 +857,7 @@ impl State for Editor {
                                 _ => (),
                             }
                         }
-                    } else if self.level.powerups.get(&position).is_some() {
+                    } else if self.level.powerups.contains_key(&position) {
                         if let Some(UIEvent::ButtonClick(value, clip_id)) =
                             self.prop_interface.tick(pointer)
                         {
@@ -907,25 +905,21 @@ impl State for Editor {
                         app_context.audio_system.play_clip_option(clip_id);
 
                         match value {
-                            BUTTON_ADD_MAGE => {
-                                if !self.occupied(&position) {
-                                    self.level.mages.push(Mage::new(
-                                        self.level.mage_index,
-                                        Team::Red,
-                                        shared::MageSort::Cross,
-                                        position,
-                                    ));
-                                    self.level.mage_index += 1;
+                            BUTTON_ADD_MAGE if !self.occupied(&position) => {
+                                self.level.mages.push(Mage::new(
+                                    self.level.mage_index,
+                                    Team::Red,
+                                    shared::MageSort::Cross,
+                                    position,
+                                ));
+                                self.level.mage_index += 1;
 
-                                    self.sparkle_create(position);
-                                }
+                                self.sparkle_create(position);
                             }
-                            BUTTON_ADD_PROP => {
-                                if !self.occupied(&position) {
-                                    self.level.powerups.insert(position, PowerUp::Diagonal);
+                            BUTTON_ADD_PROP if !self.occupied(&position) => {
+                                self.level.powerups.insert(position, PowerUp::Diagonal);
 
-                                    self.sparkle_create(position);
-                                }
+                                self.sparkle_create(position);
                             }
                             _ => (),
                         }
