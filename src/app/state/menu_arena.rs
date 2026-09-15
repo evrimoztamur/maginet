@@ -35,6 +35,8 @@ struct LevelPortal {
     status: PortalStatus,
     title: String,
     title_visible: bool,
+    hidden: bool,
+    chaos: bool,
     preview: [Option<PreviewEntity>; 4],
 }
 
@@ -70,6 +72,8 @@ impl LevelPortal {
             level,
             title,
             title_visible: false,
+            hidden: false,
+            chaos: false,
             status,
             preview,
         }
@@ -199,6 +203,10 @@ impl LevelPortal {
         Ok(())
     }
 
+    fn is_visible(&self) -> bool {
+        !self.hidden || self.is_available()
+    }
+
     fn is_available(&self) -> bool {
         match self.status {
             PortalStatus::Locked => false,
@@ -251,7 +259,12 @@ impl ArenaMenu {
             .filter(|portal| portal.status == PortalStatus::Won)
             .count()
             .to_string();
-        let total = self.level_portals.len().to_string();
+        let total = self
+            .level_portals
+            .values()
+            .filter(|portal| portal.is_visible())
+            .count()
+            .to_string();
 
         context.save();
         // Stay in the canvas corner, independent of map panning and board centering.
@@ -338,7 +351,8 @@ impl State for ArenaMenu {
             let b = entries.iter().find(|e| e.id == edge.to).unwrap().position;
             let (from, to) = (a, b);
             // Arrows guide forward progression; replay/backtracking stays available.
-            if self.level_portals[&from].status != PortalStatus::Unlocked
+            if !self.level_portals[&to].is_visible()
+                || self.level_portals[&from].status != PortalStatus::Unlocked
                 || self.level_portals[&to].status == PortalStatus::Won
             {
                 continue;
@@ -364,7 +378,7 @@ impl State for ArenaMenu {
             context.restore();
         }
 
-        for (offset, portal) in &self.level_portals {
+        for (offset, portal) in self.level_portals.iter().filter(|(_, p)| p.is_visible()) {
             context.save();
             portal.draw_background(context, atlas, &mut self.particle_system, *offset, frame)?;
             context.restore();
@@ -377,7 +391,7 @@ impl State for ArenaMenu {
 
         let selected_position = self.level_position();
 
-        for (offset, portal) in &self.level_portals {
+        for (offset, portal) in self.level_portals.iter().filter(|(_, p)| p.is_visible()) {
             context.save();
             portal.draw(context, atlas, &mut self.particle_system, *offset, frame)?;
             context.restore();
@@ -390,7 +404,7 @@ impl State for ArenaMenu {
 
         let selected_level = self.level_portals.get(&selected_position);
 
-        if let Some(portal) = selected_level {
+        if let Some(portal) = selected_level.filter(|p| p.is_visible()) {
             if portal.is_available() {
                 self.button_battle.draw(context, atlas, pointer, frame)?
             } else {
@@ -442,17 +456,21 @@ impl State for ArenaMenu {
             let selected_position = self.level_position();
             let selected_level = self.level_portals.get(&selected_position);
 
-            if let Some(portal) = selected_level {
+            if let Some(portal) = selected_level.filter(|p| p.is_visible()) {
                 if portal.is_available() {
                     if selected_position == TUTORIAL_POSITION {
                         return Some(StateSort::Tutorial(Tutorial::campaign()));
                     }
                     return Some(StateSort::Game(Game::new(LobbySettings {
                         lobby_sort: shared::LobbySort::LocalAI,
-                        loadout_method: shared::LoadoutMethod::Arena(
-                            portal.level.clone(),
-                            selected_position,
-                        ),
+                        loadout_method: if portal.chaos {
+                            shared::LoadoutMethod::ArenaChaos(
+                                portal.level.clone(),
+                                selected_position,
+                            )
+                        } else {
+                            shared::LoadoutMethod::Arena(portal.level.clone(), selected_position)
+                        },
                         ..Default::default()
                     })));
                 }
@@ -572,10 +590,16 @@ fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize),
     let mut level_portals: HashMap<_, _> = entries
         .iter()
         .map(|entry| {
-            (
-                entry.position,
-                LevelPortal::from_level(entry.level(), entry.name.clone(), PortalStatus::Locked),
-            )
+            (entry.position, {
+                let mut portal = LevelPortal::from_level(
+                    entry.level(),
+                    entry.name.clone(),
+                    PortalStatus::Locked,
+                );
+                portal.hidden = entry.hidden;
+                portal.chaos = entry.chaos;
+                portal
+            })
         })
         .collect();
 
@@ -613,9 +637,10 @@ fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize),
         .iter()
         .filter_map(|(position, portal)| {
             (portal.is_available()
-                || level_portals
-                    .iter()
-                    .any(|(other, portal)| connected(*other, *position) && portal.is_available()))
+                || (!portal.hidden
+                    && level_portals.iter().any(|(other, portal)| {
+                        connected(*other, *position) && portal.is_available()
+                    })))
             .then_some(*position)
         })
         .collect();
@@ -726,6 +751,68 @@ mod tests {
                 target.id
             );
         }
+    }
+
+    #[test]
+    #[cfg(not(feature = "demo"))]
+    fn mysteries_are_absent_until_a_neighbour_is_won() {
+        let entries = shared::campaign_catalogue(false);
+        let tutorial = Level::from(TUTORIAL_CODE).as_code();
+        for (secret, neighbours) in [
+            ("crossfire", vec!["beams-iii", "challenge-i"]),
+            ("side-step", vec!["diagonals-iii", "shields-iii"]),
+            ("ascension-i", vec!["rite-iv", "ascension-ii"]),
+            ("ascension-ii", vec!["ascension-i", "ascension-iii"]),
+            ("ascension-iii", vec!["ascension-ii"]),
+        ] {
+            let entry = entries.iter().find(|e| e.id == secret).unwrap();
+            let portals = campaign_portals(|c| c == tutorial);
+            let p = &portals[&entry.position];
+            assert!(p.hidden && !p.is_available() && !p.title_visible);
+            for neighbour in neighbours {
+                let n = entries.iter().find(|e| e.id == neighbour).unwrap();
+                let portals = campaign_portals(|c| c == tutorial || c == n.level().as_code());
+                let p = &portals[&entry.position];
+                assert!(
+                    p.is_available() && p.title_visible,
+                    "{neighbour} reveals {secret}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(not(feature = "demo"))]
+    fn visible_total_grows_as_ascensions_are_discovered() {
+        let entries = shared::campaign_catalogue(false);
+        let mut completed = HashSet::from([Level::from(TUTORIAL_CODE).as_code()]);
+        let portals = campaign_portals(|c| completed.contains(c));
+        assert_eq!(portals.values().filter(|p| p.is_visible()).count(), 26);
+        for (won, revealed, total) in [
+            ("rite-iv", "ascension-i", 27),
+            ("ascension-i", "ascension-ii", 28),
+            ("ascension-ii", "ascension-iii", 29),
+        ] {
+            completed.insert(
+                entries
+                    .iter()
+                    .find(|e| e.id == won)
+                    .unwrap()
+                    .level()
+                    .as_code(),
+            );
+            let portals = campaign_portals(|c| completed.contains(c));
+            assert_eq!(portals.values().filter(|p| p.is_visible()).count(), total);
+            let entry = entries.iter().find(|e| e.id == revealed).unwrap();
+            assert!(portals[&entry.position].is_visible());
+        }
+        assert_eq!(
+            campaign_portals(|_| true)
+                .values()
+                .filter(|p| p.is_visible())
+                .count(),
+            31
+        );
     }
 
     #[test]

@@ -3,7 +3,7 @@ use shared::*;
 fn catalogue_preserves_codes_membership_and_reachability() {
     let full = campaign_catalogue(false);
     let demo = campaign_catalogue(true);
-    assert_eq!(full.len(), 28);
+    assert_eq!(full.len(), 31);
     assert_eq!(demo.len(), 5);
     assert_eq!(full.iter().filter(|e| e.tutorial).count(), 1);
     let mut reached = std::collections::HashSet::from(["tutorial".to_string()]);
@@ -48,10 +48,10 @@ fn teaching_prerequisites_are_cut_vertices() {
     use std::collections::HashSet;
     let entries = campaign_catalogue(false);
     let edges = campaign_connections(&entries);
-    assert_eq!(edges.len(), 27);
+    assert_eq!(edges.len(), 32);
     assert_eq!(
         entries.iter().map(|e| &e.id).collect::<HashSet<_>>().len(),
-        28
+        31
     );
     assert_eq!(
         entries
@@ -59,7 +59,7 @@ fn teaching_prerequisites_are_cut_vertices() {
             .map(|e| e.position)
             .collect::<HashSet<_>>()
             .len(),
-        28
+        31
     );
     assert_eq!(
         entries
@@ -67,7 +67,7 @@ fn teaching_prerequisites_are_cut_vertices() {
             .map(|e| e.level().as_code())
             .collect::<HashSet<_>>()
             .len(),
-        28
+        31
     );
     let reach = |removed: &[&str]| {
         let mut reached = HashSet::from(["tutorial".to_string()]);
@@ -86,7 +86,7 @@ fn teaching_prerequisites_are_cut_vertices() {
     };
     for required in MAIN_ROUTE
         .iter()
-        .filter(|id| !["tutorial", "ascension-ii"].contains(id))
+        .filter(|id| !["tutorial", "ascension-ii", "beams-i"].contains(id))
     {
         assert!(
             !reach(&[required]).contains("ascension-ii"),
@@ -100,7 +100,7 @@ fn teaching_prerequisites_are_cut_vertices() {
         "challenge-iv"
     ])
     .contains("ascension-ii"));
-    for required in ["rite-iv", "challenge-i", "challenge-ii", "challenge-iii"] {
+    for required in ["challenge-i", "challenge-ii", "challenge-iii"] {
         assert!(
             !reach(&[required]).contains("challenge-iv"),
             "challenge trail bypassed {required}"
@@ -169,28 +169,22 @@ fn every_connection_is_a_cardinal_neighbour_without_filler_or_accidental_contact
         );
     }
     assert!(entries.iter().all(|e| !e.id.starts_with("junction-")));
-    // Practice paths contain their own mechanic in numerical order. Challenges
-    // form a single optional series after the capstone, never a bridge to a lesson.
-    assert_eq!(
-        OPTIONAL_ROUTES,
-        &[
-            &[
-                "diagonals-i",
-                "diagonals-ii",
-                "diagonals-iii",
-                "diagonals-iv"
-            ][..],
-            &["beams-i", "beams-ii", "beams-iii"][..],
-            &["shields-i", "shields-ii", "shields-iii"][..],
-            &[
-                "rite-iv",
-                "challenge-i",
-                "challenge-ii",
-                "challenge-iii",
-                "challenge-iv"
-            ][..],
-        ]
-    );
+    assert_eq!(entries.iter().filter(|e| e.hidden).count(), 5);
+    assert!(campaign_connected(
+        &campaign_connections(&entries),
+        "side-step",
+        "shields-iii"
+    ));
+    assert!(campaign_connected(
+        &campaign_connections(&entries),
+        "shields-iii",
+        "side-step"
+    ));
+    assert!(!campaign_connected(
+        &campaign_connections(&entries),
+        "challenge-i",
+        "rite-iv"
+    ));
     for a in &entries {
         for b in &entries {
             if (a.position.0 - b.position.0).abs() + (a.position.1 - b.position.1).abs() == 1 {

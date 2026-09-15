@@ -58,7 +58,10 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(lobby_settings: LobbySettings) -> Game {
+    pub fn new(mut lobby_settings: LobbySettings) -> Game {
+        if matches!(lobby_settings.loadout_method, LoadoutMethod::ArenaChaos(..)) {
+            lobby_settings.seed = (js_sys::Math::random() * 9_007_199_254_740_991.0) as u64;
+        }
         let message_pool = Rc::new(RefCell::new(MessagePool::new()));
 
         let message_closure = {
@@ -891,7 +894,10 @@ impl State for Game {
 
             if self.is_interface_active() {
                 let campaign_win = self.lobby.settings.lobby_sort == LobbySort::LocalAI
-                    && matches!(self.lobby.settings.loadout_method, LoadoutMethod::Arena(..))
+                    && matches!(
+                        self.lobby.settings.loadout_method,
+                        LoadoutMethod::Arena(..) | LoadoutMethod::ArenaChaos(..)
+                    )
                     && !self.presentation.busy()
                     && self.presentation.game().result() == Some(GameResult::Win(Team::Red));
                 self.button_leave
@@ -989,7 +995,12 @@ impl State for Game {
             if let Some(GameResult::Win(team)) = self.lobby.game.result() {
                 // Did not record the result in the KV-store yet...
                 if !self.recorded_result {
-                    let code = self.lobby.game.prototype_code();
+                    let code = self
+                        .lobby
+                        .settings
+                        .loadout_method
+                        .campaign_progress_code()
+                        .unwrap_or_else(|| self.lobby.game.prototype_code());
                     let already_won = App::kv_get(&code) == "win";
                     self.newly_won = team == Team::Red && !already_won;
                     // Completion is permanent, including when replaying the tutorial.
@@ -1106,7 +1117,9 @@ impl State for Game {
                             return Some(StateSort::Editor(Editor::new(level.clone())));
                         }
                         LobbySettings {
-                            loadout_method: LoadoutMethod::Arena(_, position),
+                            loadout_method:
+                                LoadoutMethod::Arena(_, position)
+                                | LoadoutMethod::ArenaChaos(_, position),
                             ..
                         } => {
                             return Some(StateSort::ArenaMenu(ArenaMenu::at_position(

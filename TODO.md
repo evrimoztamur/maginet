@@ -89,7 +89,7 @@
     - Record win upon exiting from won state
   - Lock level if no explicit incoming connection from a won battle
   - Flipping mages when level won (+ medal from Mrmo)
-  - 28 arena portals: 27 battles plus the tutorial
+  - 31 arena portals: 30 battles plus the tutorial, including five hidden levels
 - Mechanics
   - Powerups
     - Diagonals
@@ -136,3 +136,5 @@
 - See `assessments/campaign-revision/interpretation.md` for evidence and limitations; preserve the original assessment.
 
 - Exploration layout: removed all eight filler Junctions; grouped numbered practice battles and Challenges into coherent paths; arrows originate only at playable, uncompleted battles. Human-test map discoverability, the required Rite sequence, and the Challenge I–IV series; its numbering is route order, not a validated difficulty ranking.
+
+- Hidden campaign additions: Crossfire beam puzzle, bidirectional Side Step diagonal puzzle, and a green 4×4 Chaos Ascension III with stable completion. Verify human discoverability and puzzle clarity; randomized Ascension III is excluded from fixed-scenario statistics.

@@ -165,6 +165,8 @@ pub fn run() -> Result<()> {
             style: level.board.style,
             demo: false,
             tutorial: false,
+            hidden: false,
+            chaos: false,
         })]
     };
     // Bind resumes to the actual rules/search/simulator sources, not an incidental git HEAD.
@@ -218,6 +220,9 @@ fn execute(output: &Path, workers: usize, metadata: Metadata) -> Result<()> {
         .build()?;
     let mut matchups = Vec::new();
     for (level, entry) in metadata.catalogue.iter().enumerate() {
+        if entry.chaos {
+            continue;
+        } // Random teams are not a fixed scenario assessment.
         let scenario = entry.level();
         for red in 0..3 {
             for blue in 0..if entry.tutorial { 1 } else { 3 } {
@@ -280,6 +285,7 @@ fn execute(output: &Path, workers: usize, metadata: Metadata) -> Result<()> {
             }
         }
     }
+    if matchups.is_empty() { reports(output, &metadata, &matchups)?; }
     Ok(())
 }
 fn distances(entries: &[CampaignEntry]) -> Vec<usize> {
@@ -351,6 +357,14 @@ fn reports(output: &Path, metadata: &Metadata, matchups: &[Matchup]) -> Result<(
     };
     let distance = distances(&metadata.catalogue);
     for (i, e) in metadata.catalogue.iter().enumerate() {
+        if e.chaos {
+            writeln!(
+                md,
+                "\n## {}\n\nRandomized Chaos teams; excluded from fixed-scenario statistics.",
+                e.name
+            )?;
+            continue;
+        }
         writeln!(md,"\n## {}\n\nMap {:?}; distance {}.\n\n| Player / opponent | Easy | Normal | Hard |\n|---|---|---|---|",e.name,e.position,if distance[i]==usize::MAX {"n/a".into()} else {distance[i].to_string()})?;
         for red in 0..3 {
             write!(

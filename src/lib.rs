@@ -67,7 +67,7 @@ async fn start() -> Result<(), JsValue> {
 
     // atlas_img.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
 
-    let atlas_future = ImageFuture::new(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
+    let atlas_future = ImageFuture::new(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=8"));
     // let atlas_img = atlas_future.await.unwrap();
     let atlas_img: Rc<HtmlImageElement> = Rc::new(atlas_future.await.unwrap());
 

@@ -29,6 +29,21 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   ['challenge-ii','challenge-iii',true],
   ['challenge-iii','challenge-iv',true],
   ['beams-iii','challenge-i',false],
+  ['beams-ii','crossfire',null],
+  ['beams-iii','crossfire',true],
+  ['challenge-i','crossfire',true],
+  ['crossfire','challenge-i',true],
+  ['challenge-i','rite-iv',false],
+  ['diagonals-ii','side-step',null],
+  ['diagonals-iii','side-step',true],
+  ['shields-iii','side-step',true],
+  ['side-step','shields-iii',true],
+  ['side-step','diagonals-iii',true],
+  ['rite-iii','ascension-i',null],
+  ['rite-iv','ascension-ii',null],
+  ['ascension-i','ascension-ii',true],
+  ['ascension-i','ascension-iii',null],
+  ['ascension-ii','ascension-iii',true],
  ]) {
   const page=await browser.newPage({viewport:{width:1000,height:700}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://tunnel.evrim.zone/**',r=>r.request().url().endsWith('/session')?r.fulfill({json:{session_id:'graph-check'}}):r.abort());
@@ -39,8 +54,8 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
    window.glyphs=[];window.paths=[];window.arrowContext=null;
    const proto=CanvasRenderingContext2D.prototype, draw=proto.drawImage, begin=proto.beginPath, move=proto.moveTo,line=proto.lineTo,stroke=proto.stroke;
    const clear=proto.clearRect;
-   proto.clearRect=function(...a){this.movementArrows=[];return clear.apply(this,a)};
-   proto.drawImage=function(...a){if(a.length===9&&a[1]===0&&a[2]===32&&a[3]===16&&a[4]===16){const m=this.getTransform();(this.movementArrows??=[]).push({x:m.e+8*(m.a+m.c),y:m.f+8*(m.b+m.d),dx:Math.round(m.a)||0,dy:Math.round(m.b)||0});window.arrowContext=this;}if(a.length===9&&a[3]===8&&a[4]===8&&a[2]>=216&&a[2]<=272){glyphs.push(String.fromCharCode(((a[2]-216)/8)*32+a[1]/8));if(glyphs.length>2000)glyphs.splice(0,1000)}return draw.apply(this,a)};
+   proto.clearRect=function(...a){this.movementArrows=[];this.portalTiles=[];return clear.apply(this,a)};
+   proto.drawImage=function(...a){if(a.length===9&&a[1]>=256&&a[1]<=448&&a[2]<=64&&a[3]===64&&a[4]===64){(this.portalTiles??=[]).push(1);window.portalContext=this;}if(a.length===9&&a[1]===0&&a[2]===32&&a[3]===16&&a[4]===16){const m=this.getTransform();(this.movementArrows??=[]).push({x:m.e+8*(m.a+m.c),y:m.f+8*(m.b+m.d),dx:Math.round(m.a)||0,dy:Math.round(m.b)||0});window.arrowContext=this;}if(a.length===9&&a[3]===8&&a[4]===8&&a[2]>=216&&a[2]<=272){glyphs.push(String.fromCharCode(((a[2]-216)/8)*32+a[1]/8));if(glyphs.length>2000)glyphs.splice(0,1000)}return draw.apply(this,a)};
    proto.beginPath=function(){this.trace=[];return begin.apply(this,arguments)};
    proto.moveTo=function(x,y){this.trace?.push(['M',x,y]);return move.apply(this,arguments)};
    proto.lineTo=function(x,y){this.trace?.push(['L',x,y]);return line.apply(this,arguments)};
@@ -62,14 +77,16 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   }
   await page.waitForTimeout(500);await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);
   const drawn=await page.evaluate(()=>glyphs.join(''));
-  assert(drawn.includes(available?'Battle':'Locked'),`${won} → ${target}: ${drawn.slice(-300)}`);
+  if(available===null) assert(!drawn.includes('Battle')&&!drawn.includes('Locked'),'undiscovered mystery has no button');
+  else assert(drawn.includes(available?'Battle':'Locked'),`${won} → ${target}: ${drawn.slice(-300)}`);
   const directions=graph.connections.flatMap(e=>e.one_way?[[e.from,e.to]]:[[e.from,e.to],[e.to,e.from]]);
   const availableIds=new Set(['tutorial',won]);
   for(const [from,to] of directions)if(['tutorial',won].includes(from))availableIds.add(to);
   const known=new Set(availableIds);
   for(const [from,to] of directions)if(availableIds.has(from))known.add(to);
+  assert.equal(await page.evaluate(()=>portalContext.portalTiles.length),graph.catalogue.filter(e=>!e.hidden||availableIds.has(e.id)).length,'undiscovered mystery tiles are absent');
   const completed=new Set(['tutorial',won]);
-  const expected=graph.connections.map(e=>[e.from,e.to]).filter(([from,to])=>availableIds.has(from)&&!completed.has(from)&&!completed.has(to)).map(([from,to])=>{
+  const expected=graph.connections.map(e=>[e.from,e.to]).filter(([from,to])=>availableIds.has(from)&&!completed.has(from)&&!completed.has(to)&&(!graph.catalogue.find(e=>e.id===to).hidden||availableIds.has(to))).map(([from,to])=>{
    const a=graph.catalogue.find(e=>e.id===from).position,b=graph.catalogue.find(e=>e.id===to).position;
    const dx=b[0]-a[0],dy=b[1]-a[1],distance=dy>0?72:dy<0?40:48;
    return {x:a[0]*128+dx*distance,y:a[1]*128+dy*distance,dx,dy};
@@ -83,11 +100,26 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
    assert(Math.abs(a.x-(e.x+offset.x-3*e.dx))<=2,'sprite beside known source, with movement animation');
    assert(Math.abs(a.y-(e.y+offset.y-3*e.dy))<=2,'sprite beside known source, with movement animation');
   });
-  assert(drawn.includes(`2/${graph.catalogue.length}`),'star count matches the live catalogue');
+  assert(drawn.includes(`2/${graph.catalogue.filter(e=>!e.hidden||availableIds.has(e.id)).length}`),'star total excludes undiscovered portals');
   await page.screenshot({path:`/tmp/maginet-graph-${target}-${available}.png`});
   await click(128,204);
-  if(!available){await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);assert((await page.evaluate(()=>glyphs.join(''))).includes('Locked'));}
+  if(target==='ascension-iii'&&available){
+   const trials=[];
+   for(let trial=0;trial<2;trial++){
+    const before=await page.evaluate(()=>jobs.length);
+    await click(80,176);await click(80,144);
+    await page.waitForFunction(n=>jobs.length>n,before);
+    const request=await page.evaluate(()=>jobs.at(-1).request);
+    const level=JSON.parse(request.snapshot).level_prototype;
+    assert.equal(level.board.width,4);assert.equal(level.board.height,4);
+    assert.equal(level.board.style,'Grass');assert.equal(level.mages.length,8);
+    trials.push(request.seed);
+    if(trial===0){await click(-16,107);await click(128,116);}
+   }
+   assert.notEqual(trials[0],trials[1],'Chaos rematch receives a fresh seed');
+  }
+  if(available===false){await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);assert((await page.evaluate(()=>glyphs.join(''))).includes('Locked'));}
   assert.deepEqual(errors,[]);await page.close();
  }
- await browser.close();console.log('playable-only arrows, ordered practice and challenge paths, capstone fork and blocked skips passed');
+ await browser.close();console.log('playable-only arrows, ordered practice and challenge paths, hidden puzzles, Chaos epilogue, capstone fork and blocked skips passed');
 })().catch(e=>{console.error(e);process.exit(1)});

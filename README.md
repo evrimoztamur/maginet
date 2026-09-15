@@ -73,7 +73,7 @@ To add an effect, derive its data from the accepted turn and snapshots, sample c
 
 The campaign map starts at the guided Tutorial portal beside Basics I. Complete the tutorial (from the map or main menu) to unlock campaign battles; leaving it unfinished keeps them locked. Saved wins remain completed even after a later loss.
 
-Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route only from playable, uncompleted portals; revealed-but-locked portals have no arrows. Connections touching completed portals have no arrows. Links work in both directions for replay and exploration; optional paths do not reconnect to bypass lessons. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. The campaign contains 27 battles plus the tutorial, with no filler junction battles. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by campaign region. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
+Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route only from playable, uncompleted portals; revealed-but-locked portals have no arrows. Connections touching completed portals have no arrows. Ordinary links work in both directions. The Rite IV → Challenge I exit is one-way, so the hidden Crossfire route cannot unlock Rite IV backwards. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. The campaign contains 30 battles plus the tutorial, including five hidden levels. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by campaign region. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
 
 A fixed top-left star counter shows completed portals over the total, including the tutorial, with the total adapted to the demo build.
 
@@ -150,7 +150,7 @@ cargo run --release -p generate -- campaign --demo --games 100 --output /tmp/dem
 cargo run --release -p generate -- generate
 ```
 
-Analysis defaults to 30 games per matchup, seed 1, a 200-ply safety limit, and at most four Rayon workers. All nine Easy/Normal/Hard player/opponent combinations run for battles. The tutorial runs three player profiles against Easy, with stalemates disabled. Red is the player, Blue the opponent; every scenario retains its starting team. Campaign defaults to all 35 battles plus the tutorial, independently of browser demo features; `--demo` selects four battles plus the tutorial.
+Analysis defaults to 30 games per matchup, seed 1, a 200-ply safety limit, and at most four Rayon workers. All nine Easy/Normal/Hard player/opponent combinations run for battles. The tutorial runs three player profiles against Easy, with stalemates disabled. Red is the player, Blue the opponent; every scenario retains its starting team. The campaign catalogue contains 30 battles plus the tutorial; randomized Ascension III is explicitly excluded from fixed-scenario statistics. This is independent of browser demo features; `--demo` selects four battles plus the tutorial.
 
 | Profile | Maximum depth | Nodes per move | Ranked probabilities |
 | --- | ---: | ---: | --- |
@@ -231,17 +231,22 @@ The graph browser check exports the live shared catalogue so that changed scenar
 
 ### Campaign structure
 
-The main route is Tutorial → Basics I–IV → Patterns I–III → Diagonals I → Beams I → Shields I → Rites I–IV → Ascension I–II. All teaching battles and Rites are required; completing Rite IV opens both Ascension and the optional challenge series.
+The main route is Tutorial → Basics I–IV → Patterns I–III → Diagonals I → Beams I → Shields I → Rites I–IV → Ascension I–II. The three Ascension battles use the first lush green tileset.
 
-| Entrance | Optional path | Purpose |
-| --- | --- | --- |
-| Diagonals I | Diagonals II → III → IV | Explore harder diagonal scenarios in order |
-| Beams I | Beams II → III | Further beam practice |
-| Shields I | Shields II → III | Further shield practice |
-| Rite IV | Challenge I → II → III → IV | Optional challenge series after the capstone |
+| Entrance | Optional path |
+| --- | --- |
+| Diagonals I | Diagonals II → III → IV |
+| Beams I | Beams II → III |
+| Shields I | Shields II → III |
+| Rite IV | Challenge I → II → III → IV |
+| Beams III | **Crossfire** → Challenge I |
+| Diagonals III | **Side Step** ↔ Shields III |
+| Ascension II | **Ascension III** |
 
-Each optional path ends at its final battle. Challenges no longer serve as transit between lessons, and all eight Junction battles have been removed. This replaces the earlier shortcut-loop design: Rites I–III can no longer be bypassed. Challenge numbering now describes a single route, not scattered locations; it does not claim a measured, steadily increasing human difficulty.
+Crossfire and Side Step occupy the empty cells between their neighbours. Both puzzle connections are bidirectional. A mystery tile, its name, and arrows toward it are entirely absent until a connected neighbour is completed. All three Ascension levels are hidden until a connected neighbour is completed. The star counter counts only visible portals: its total starts at 26 and grows as the five secrets are discovered. These shortcuts allow exploration between the practice branches; Side Step can bypass the Beams I introduction. Entering Challenges through Crossfire cannot unlock Rite IV backwards.
 
-The map has a stepped entrance, practice paths branching away from their introductions, and a turn through the Rites to a fork between Ascension and Challenges. All 28 portals connect through 27 cardinal-neighbour links, with no skipped cells or accidentally touching unconnected portals. The tutorial-plus-Basics demo and retained battle codes are unchanged. Themes follow each chapter; Challenges share the final region’s theme.
+Crossfire is a compact beam alignment puzzle with one immediate winning move. Side Step is a fragile duel with a forced five-ply solution that requires its diagonal pickup. The puzzle tests examine all legal replies rather than relying on a particular AI profile.
 
-Assessment graphs and junction results remain immutable historical snapshots. Their old progression comparisons describe the previous layout, not this route. The 27 retained battle scenarios are unchanged, so their individual outcome evidence still applies; no new difficulty simulation was run for this map revision. Live UI and new analyser runs consume the updated shared catalogue and exclude the removed junctions.
+Ascension III uses an empty 4×4 board with four mages per side and independently randomized teams from the existing Chaos generator. Entry and rematch each choose a fresh seed. Completion uses the fixed portal key, so rerolls share one star and preserve the campaign return location. Its catalogue code is a preview/progress template, not a fixed encounter; native campaign reports explicitly exclude it from fixed-scenario statistics.
+
+All 31 portals use cardinal-neighbour connections. The tutorial-plus-Basics demo is unchanged. Existing assessment graphs remain historical snapshots; live UI and new analyser runs use the current shared catalogue. No archived assessment files have been rewritten.

@@ -8,7 +8,7 @@ use crate::{
         Alignment, AppContext, ButtonElement, ConfirmButtonElement, Interface, LabelTheme,
         LabelTrim, Pointer, StateSort, UIElement, UIEvent,
     },
-    window,
+    draw::draw_sprite, window,
 };
 
 pub struct MainMenu {
@@ -48,6 +48,19 @@ impl State for MainMenu {
         )?;
 
         context.restore();
+
+        // The logo is stored at half its source size and drawn at native resolution.
+        // Keep it in the static left half, away from the generated board caches.
+        draw_sprite(
+            interface_context,
+            atlas,
+            0.0,
+            448.0,
+            96.0,
+            24.0,
+            200.0,
+            24.0,
+        )?;
 
         self.interface
             .draw(interface_context, atlas, pointer, frame)?;

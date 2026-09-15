@@ -296,26 +296,43 @@ pub enum LoadoutMethod {
     EditorPrefab(Level),
     /// An Arena level with attached position.
     Arena(Level, (isize, isize)),
+    /// Campaign Chaos battle; the template supplies the board and stable progress key.
+    ArenaChaos(Level, (isize, isize)),
+}
+
+impl LoadoutMethod {
+    /// Campaign completion identity, including randomized battles.
+    pub fn campaign_progress_code(&self) -> Option<String> {
+        match self {
+            Self::Arena(level, _) | Self::ArenaChaos(level, _) => Some(level.as_code()),
+            _ => None,
+        }
+    }
 }
 
 impl Display for LoadoutMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            LoadoutMethod::Default => "Default".to_string(),
-            LoadoutMethod::DefaultBoard(board) => {
-                format!("Default ({0} by {1})", &board.width, &board.height)
-            }
-            LoadoutMethod::Random { symmetric } => {
-                if *symmetric {
-                    "Symmetric Random".to_string()
-                } else {
-                    "Chaos".to_string()
+        f.write_str(
+            match self {
+                LoadoutMethod::Default => "Default".to_string(),
+                LoadoutMethod::DefaultBoard(board) => {
+                    format!("Default ({0} by {1})", &board.width, &board.height)
+                }
+                LoadoutMethod::Random { symmetric } => {
+                    if *symmetric {
+                        "Symmetric Random".to_string()
+                    } else {
+                        "Chaos".to_string()
+                    }
+                }
+                LoadoutMethod::Prefab(_) => "Custom".to_string(),
+                LoadoutMethod::EditorPrefab(_) => "Custom".to_string(),
+                LoadoutMethod::Arena(_, _) | LoadoutMethod::ArenaChaos(_, _) => {
+                    "Campaign".to_string()
                 }
             }
-            LoadoutMethod::Prefab(_) => "Custom".to_string(),
-            LoadoutMethod::EditorPrefab(_) => "Custom".to_string(),
-            LoadoutMethod::Arena(_, _) => todo!(),
-        }.as_str())
+            .as_str(),
+        )
     }
 }
 
@@ -417,6 +434,16 @@ impl LobbySettings {
                     ))
                 }
             }
+            LoadoutMethod::ArenaChaos(template, _) => Level::new(
+                template.board.clone(),
+                Self::generate_loadout_by_sorts(
+                    &template.board,
+                    Self::random_loadout(rng),
+                    Self::random_loadout(rng),
+                ),
+                BTreeMap::default(),
+                Team::Red,
+            ),
             LoadoutMethod::Prefab(level)
             | LoadoutMethod::EditorPrefab(level)
             | LoadoutMethod::Arena(level, _) => level.clone(),

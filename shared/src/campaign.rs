@@ -19,6 +19,12 @@ pub struct CampaignEntry {
     pub position: (isize, isize),
     /// Presentation style.
     pub style: BoardStyle,
+    /// Invisible until a connected neighbour is completed.
+    #[serde(default)]
+    pub hidden: bool,
+    /// Fresh independent Chaos teams on every entry and rematch.
+    #[serde(default)]
+    pub chaos: bool,
     /// Included in demo builds.
     pub demo: bool,
     /// Guided tutorial identity.
@@ -34,11 +40,12 @@ impl CampaignEntry {
 }
 /// Region theme follows the battle, independently of bends in the map.
 fn campaign_style(name: &str) -> BoardStyle {
-    if name == "Tutorial" || name.starts_with("Basics ") {
+    if name == "Tutorial" || name.starts_with("Basics ") || name.starts_with("Ascension ") {
         BoardStyle::Grass
-    } else if name.starts_with("Patterns ") || name.starts_with("Diagonals ") {
+    } else if name.starts_with("Patterns ") || name.starts_with("Diagonals ") || name == "Side Step"
+    {
         BoardStyle::Desert
-    } else if name.starts_with("Beams ") {
+    } else if name.starts_with("Beams ") || name == "Crossfire" {
         BoardStyle::Flesh
     } else if name.starts_with("Shields ") || matches!(name, "Rite I" | "Rite II") {
         BoardStyle::Crust
@@ -76,6 +83,9 @@ pub fn campaign_catalogue(demo: bool) -> Vec<CampaignEntry> {
         ("rite-iv", "Rite IV", "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00", (8, 0), false, false),
         ("ascension-i", "Ascension I", "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g", (8, -1), false, false),
         ("ascension-ii", "Ascension II", "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03", (9, -1), false, false),
+        ("crossfire", "Crossfire", "dg1g8092cm112b82240j808", (7, -4), false, false),
+        ("side-step", "Side Step", "dg10008h4m11209008", (6, 0), false, false),
+        ("ascension-iii", "Ascension III", "dg400024401m8g028hg02h3d0124t0t45m1483818g00", (12, -4), false, false),
         ("tutorial", "Tutorial", TUTORIAL_CODE, TUTORIAL_POSITION, true, true),
     ];
     definitions
@@ -87,6 +97,8 @@ pub fn campaign_catalogue(demo: bool) -> Vec<CampaignEntry> {
             code: code.into(),
             position: portal_position(name, position),
             style: campaign_style(name),
+            hidden: matches!(id, "crossfire" | "side-step") || id.starts_with("ascension-"),
+            chaos: id == "ascension-iii",
             demo,
             tutorial,
         })
@@ -114,7 +126,7 @@ pub const MAIN_ROUTE: &[&str] = &[
     "ascension-ii",
 ];
 /// Optional practice paths and the post-capstone challenge series.
-/// Each starts at its named introduction or capstone and ends without reconnecting.
+/// Includes hidden puzzle connections and the optional Chaos epilogue.
 pub const OPTIONAL_ROUTES: &[&[&str]] = &[
     &[
         "diagonals-i",
@@ -123,6 +135,9 @@ pub const OPTIONAL_ROUTES: &[&[&str]] = &[
         "diagonals-iv",
     ],
     &["beams-i", "beams-ii", "beams-iii"],
+    &["beams-iii", "crossfire", "challenge-i"],
+    &["diagonals-iii", "side-step", "shields-iii"],
+    &["ascension-ii", "ascension-iii"],
     &["shields-i", "shields-ii", "shields-iii"],
     &[
         "rite-iv",
@@ -153,7 +168,8 @@ pub fn campaign_connections(entries: &[CampaignEntry]) -> Vec<CampaignConnection
                 let edge = CampaignConnection {
                     from: pair[0].into(),
                     to: pair[1].into(),
-                    one_way: branch && i == route.len() - 2 && MAIN_ROUTE.contains(&pair[1]),
+                    one_way: branch && i == route.len() - 2 && MAIN_ROUTE.contains(&pair[1])
+                        || pair == ["rite-iv", "challenge-i"],
                 };
                 if !edges.contains(&edge) {
                     edges.push(edge);
