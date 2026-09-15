@@ -78,9 +78,10 @@ fn draw_sprite_scaled(
 
 fn sprite_transform(matrix: [f64; 6], dx: f64, dy: f64) -> [f64; 6] {
     let [mut a, mut b, mut c, mut d, e, f] = matrix;
-    // Quarter turns contain tiny sine/cosine errors; remove those too.
+    // Firefox canvas rotations use single-precision values, so quarter-turn errors
+    // can reach ~1e-7. Correct the axes before they affect destination coordinates.
     for axis in [&mut a, &mut b, &mut c, &mut d] {
-        if (*axis - axis.round()).abs() < 1e-9 {
+        if (*axis - axis.round()).abs() < 1e-6 {
             *axis = axis.round();
         }
     }
@@ -89,9 +90,21 @@ fn sprite_transform(matrix: [f64; 6], dx: f64, dy: f64) -> [f64; 6] {
         b,
         c,
         d,
-        (a * dx + c * dy + e).round(),
-        (b * dx + d * dy + f).round(),
+        sprite_coordinate(a * dx + c * dy + e),
+        sprite_coordinate(b * dx + d * dy + f),
     ]
+}
+
+fn sprite_coordinate(value: f64) -> f64 {
+    // Parent rotations can leave an integer position just below its intended value.
+    // Remove numerical noise before truncating toward zero like JavaScript's `x | 0`.
+    let nearest = value.round();
+    let value = if (value - nearest).abs() < 1e-9 {
+        nearest
+    } else {
+        value
+    };
+    value as i32 as f64
 }
 
 fn kerning(char: char) -> (isize, isize) {
@@ -892,7 +905,11 @@ mod sprite_tests {
     fn snap_combined_animation_and_local_offsets_not_each_one_separately() {
         assert_eq!(
             sprite_transform([1.0, 0.0, 0.0, 1.0, 10.4, 20.4], 0.4, -0.8),
-            [1.0, 0.0, 0.0, 1.0, 11.0, 20.0]
+            [1.0, 0.0, 0.0, 1.0, 10.0, 19.0]
+        );
+        assert_eq!(
+            sprite_transform([1.0, 0.0, 0.0, 1.0, -10.4, -20.4], -0.4, 0.8),
+            [1.0, 0.0, 0.0, 1.0, -10.0, -19.0]
         );
     }
 
@@ -909,8 +926,58 @@ mod sprite_tests {
                 assert_eq!((a * x + c * y + e).fract(), 0.0);
                 assert_eq!((b * x + d * y + f).fract(), 0.0);
             }
-            assert!((e - (matrix[0] * -19.0 + matrix[2] * -28.4 + matrix[4])).abs() <= 0.5);
-            assert!((f - (matrix[1] * -19.0 + matrix[3] * -28.4 + matrix[5])).abs() <= 0.5);
+            assert!((e - (matrix[0] * -19.0 + matrix[2] * -28.4 + matrix[4])).abs() < 1.0);
+            assert!((f - (matrix[1] * -19.0 + matrix[3] * -28.4 + matrix[5])).abs() < 1.0);
         }
+    }
+
+    #[test]
+    fn border_cutouts_keep_their_tile_bounds_despite_rotation_error() {
+        for (axes, origin) in [
+            ([1.0, 0.0, 0.0, 1.0], [64.0, 96.0]),
+            ([6.123e-17, 1.0, -1.0, 6.123e-17], [96.0, 96.0]),
+            ([-1.0, 1.225e-16, -1.225e-16, -1.0], [96.0, 128.0]),
+            ([-1.837e-16, -1.0, 1.0, -1.837e-16], [64.0, 128.0]),
+            // Actual quarter-turn axes returned by Firefox's canvas getTransform().
+            (
+                [-4.371138828673793e-8, 1.0, -1.0, -4.371138828673793e-8],
+                [96.0, 96.0],
+            ),
+            (
+                [-1.0, -8.742277657347586e-8, 8.742277657347586e-8, -1.0],
+                [96.0, 128.0],
+            ),
+            (
+                [1.1924880638503055e-8, -1.0, 1.0, 1.1924880638503055e-8],
+                [64.0, 128.0],
+            ),
+        ] {
+            for error in [-1e-12, 0.0, 1e-12] {
+                let [a, b, c, d, x, y] = sprite_transform(
+                    [
+                        axes[0],
+                        axes[1],
+                        axes[2],
+                        axes[3],
+                        80.0 + error,
+                        112.0 + error,
+                    ],
+                    -16.0,
+                    -16.0,
+                );
+                assert_eq!([x, y], origin);
+                let opposite = [x + 32.0 * (a + c), y + 32.0 * (b + d)];
+                assert_eq!([x.min(opposite[0]), y.min(opposite[1])], [64.0, 96.0]);
+                assert_eq!([x.max(opposite[0]), y.max(opposite[1])], [96.0, 128.0]);
+            }
+        }
+        assert_eq!(
+            sprite_transform(
+                [1.0, 0.0, 0.0, 1.0, -80.0 + 1e-12, -112.0 + 1e-12],
+                -16.0,
+                -16.0
+            ),
+            [1.0, 0.0, 0.0, 1.0, -96.0, -128.0]
+        );
     }
 }
