@@ -129,7 +129,7 @@ Hints advance automatically as the battle plays. Undo is introduced as an option
 
 Powerups are introduced on the first turn of Diagonals I, Beams I, and Shields I, using the same board hint layout. Their short explanations are titled **Diagon Rune**, **Beam Crystal**, and **Shield Rune**. The board stays playable, and the hint clears when the player moves. Each introduction contains only its own item; optional branches practice it, and the Rite battles combine mechanics. These hints appear only in the campaign introduction levels, including when replayed or rematched.
 
-Campaign panning keeps a displayed portal near the center throughout a drag and settles on a displayed portal. The reset star explains the remaining presses starting with “Press three more times” / “to reset campaign!” on two lines; four presses within five seconds of each other reset campaign records only.
+Campaign panning follows the pointer freely while dragging, then gently centers the nearest displayed portal on release. Hidden portals are excluded until revealed. The reset star explains the remaining presses starting with “Press three more times” / “to reset campaign!” on two lines; four presses within five seconds of each other reset campaign records only.
 
 Native reviewer access reveals an **Unlock all levels** button on the campaign map. This temporarily opens all portals, including secrets, without writing completion stars. It survives menu navigation and ends when review access ends or the web view restarts. Paid ownership alone does not enable it.
 

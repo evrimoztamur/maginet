@@ -25,7 +25,7 @@
   - Rebalance button sizes and gutters; center editor rows and restore board-edge dimension controls with room for larger boards
   - Match difficulty choices to the On/Off button group design
   - Explain the campaign reset on its first press and count down remaining presses
-  - Keep campaign focus near displayed portals while dragging and snapping
+  - Let campaign dragging move freely and gently center the nearest displayed portal on release
   - Show neutral attack patterns on selection, above sleepers/stones and beyond board edges
   - Inspect enemy mages without movement controls; hide the cursor on touch devices
   - Pair the tutorial X mage with a Plus opponent that can hit back; retain earlier stars

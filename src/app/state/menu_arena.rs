@@ -268,16 +268,6 @@ impl ArenaMenu {
         arena_menu
     }
 
-    fn constrain_pan(&self, offset: (f64, f64)) -> (f64, f64) {
-        constrain_to_portals(
-            offset,
-            self.level_portals
-                .iter()
-                .filter(|(_, portal)| portal.is_visible())
-                .map(|(position, _)| *position),
-        )
-    }
-
     fn nearest_portal(&self, offset: (f64, f64)) -> (f64, f64) {
         self.level_portals
             .iter()
@@ -393,11 +383,10 @@ impl State for ArenaMenu {
 
         context.save();
 
-        let displayed = self.constrain_pan((
-            self.pan_offset.0 + drag_offset.0,
-            self.pan_offset.1 + drag_offset.1,
-        ));
-        context.translate(128.0 + displayed.0, 128.0 + displayed.1)?;
+        context.translate(
+            128.0 + self.pan_offset.0 + drag_offset.0,
+            128.0 + self.pan_offset.1 + drag_offset.1,
+        )?;
 
         let entries =
             shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "mobile"));
@@ -499,18 +488,12 @@ impl State for ArenaMenu {
             return None;
         }
 
-        if let Some(pan_target) = self.pan_target {
-            self.pan_offset.0 += (pan_target.0 - self.pan_offset.0) * 0.25;
-            self.pan_offset.1 += (pan_target.1 - self.pan_offset.1) * 0.25;
-        } else {
-            self.pan_offset.0 +=
-                ((self.pan_offset.0 / 128.0).round() * 128.0 - self.pan_offset.0) * 0.25;
-            self.pan_offset.1 +=
-                ((self.pan_offset.1 / 128.0).round() * 128.0 - self.pan_offset.1) * 0.25;
+        if self.pan_start.is_none() && !pointer.clicked() {
+            if let Some(pan_target) = self.pan_target {
+                self.pan_offset.0 += (pan_target.0 - self.pan_offset.0) * 0.25;
+                self.pan_offset.1 += (pan_target.1 - self.pan_offset.1) * 0.25;
+            }
         }
-
-        self.pan_offset =
-            self.constrain_pan((self.pan_offset.0.round(), self.pan_offset.1.round()));
 
         let selected_position = self.level_position();
         let action = self
@@ -558,23 +541,18 @@ impl State for ArenaMenu {
                 ((-self.pan_offset.1 + (pointer_floc.1 - 128.0)) / 128.0).round() as isize,
             );
 
+            self.pan_offset.0 += drag_offset.0;
+            self.pan_offset.1 += drag_offset.1;
+            self.pan_target = Some(self.nearest_portal(self.pan_offset));
+
             if drag_offset.0.hypot(drag_offset.1) < 3.0 {
                 if self
                     .level_portals
                     .get(&lloc)
                     .is_some_and(|p| p.is_visible())
                 {
-                    self.pan_target = Some((
-                        -((-self.pan_offset.0 + pointer_floc.0 - 128.0) / 128.0).round() * 128.0,
-                        -((-self.pan_offset.1 + pointer_floc.1 - 128.0) / 128.0).round() * 128.0,
-                    ));
+                    self.pan_target = Some((-lloc.0 as f64 * 128.0, -lloc.1 as f64 * 128.0));
                 }
-            } else {
-                self.pan_offset = self.constrain_pan((
-                    self.pan_offset.0 + drag_offset.0,
-                    self.pan_offset.1 + drag_offset.1,
-                ));
-                self.pan_target = Some(self.nearest_portal(self.pan_offset));
             }
 
             self.pan_start = None;
@@ -655,27 +633,6 @@ impl Default for ArenaMenu {
             level_portals,
         }
     }
-}
-
-// Project focus into the union of visible portal neighbourhoods, so even a
-// drag across empty rows always leaves a portal within 64 pixels of the center.
-fn constrain_to_portals(
-    offset: (f64, f64),
-    positions: impl Iterator<Item = (isize, isize)>,
-) -> (f64, f64) {
-    positions
-        .map(|p| {
-            let center = (-p.0 as f64 * 128.0, -p.1 as f64 * 128.0);
-            (
-                offset.0.clamp(center.0 - 64.0, center.0 + 64.0),
-                offset.1.clamp(center.1 - 64.0, center.1 + 64.0),
-            )
-        })
-        .min_by(|a, b| {
-            ((a.0 - offset.0).powi(2) + (a.1 - offset.1).powi(2))
-                .total_cmp(&((b.0 - offset.0).powi(2) + (b.1 - offset.1).powi(2)))
-        })
-        .unwrap_or(offset)
 }
 
 fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
@@ -1070,27 +1027,5 @@ mod tests {
                 5
             }
         );
-    }
-}
-
-#[cfg(test)]
-mod pan_tests {
-    use super::*;
-    #[test]
-    fn panning_in_any_direction_keeps_a_displayed_portal_in_view() {
-        let positions = [(0, 1), (0, 0), (1, 0), (2, 0), (2, -1), (3, -1)];
-        for x in (-2000..=2000).step_by(71) {
-            for y in (-2000..=2000).step_by(71) {
-                let offset = constrain_to_portals((x as f64, y as f64), positions.into_iter());
-                assert!(positions.iter().any(|p| {
-                    (offset.0 + p.0 as f64 * 128.0).abs() <= 64.0
-                        && (offset.1 + p.1 as f64 * 128.0).abs() <= 64.0
-                }));
-            }
-        }
-        for p in positions {
-            let center = (-p.0 as f64 * 128.0, -p.1 as f64 * 128.0);
-            assert_eq!(constrain_to_portals(center, positions.into_iter()), center);
-        }
     }
 }

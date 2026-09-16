@@ -186,24 +186,37 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
    await page.waitForTimeout(2400);await click(128,160);
    await page.waitForFunction(()=>words.includes('Campaign'), undefined, {polling:50});
    assert.ok(!(await text()).includes('Diagon Rune'),'tutorial returns directly to the menu');
-   // Campaign panning never loses every displayed portal, including long drags.
+   // Campaign drags follow the pointer freely and settle on the nearest displayed portal.
    await click(248,80);
+   const portals=()=>page.evaluate(()=>sprites.filter(s=>s.w===64&&s.sx>=256).map(s=>[s.x+32,s.y+32]));
    const drag=async(from,to)=>{
     const a=point(...from),b=point(...to);
+    const before=await portals();
+    const checkHeld=async()=>{
+     const held=await portals();
+     for(let i=0;i<before.length;i++)for(let axis=0;axis<2;axis++)
+      assert.ok(Math.abs(held[i][axis]-before[i][axis]-(to[axis]-from[axis]))<=1,'held map follows the full pointer movement');
+     await page.waitForTimeout(150);
+     assert.deepEqual(await portals(),held,'held map does not ease or snap');
+     return held;
+    };
+    let held;
     if(touch) {
      const send=async(type,p)=>page.evaluate(({type,p})=>{const target=document.querySelector('#game-canvas');const t=new Touch({identifier:1,target,clientX:p.x,clientY:p.y});target.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,touches:type==='touchend'?[]:[t],changedTouches:[t]}))},{type,p});
-     await send('touchstart',a);await page.waitForTimeout(50);await send('touchmove',b);await page.waitForTimeout(50);await send('touchend',b);
-    } else {await page.mouse.move(a.x,a.y);await page.mouse.down();await page.mouse.move(b.x,b.y,{steps:4});await page.waitForTimeout(60);await page.mouse.up()}
+     await send('touchstart',a);await page.waitForTimeout(50);await send('touchmove',b);await page.waitForTimeout(50);held=await checkHeld();await send('touchend',b);
+    } else {await page.mouse.move(a.x,a.y);await page.mouse.down();await page.waitForTimeout(50);await page.mouse.move(b.x,b.y,{steps:4});await page.waitForTimeout(60);held=await checkHeld();await page.mouse.up()}
     await page.waitForTimeout(500);
+    const distance=p=>Math.hypot(p[0]-200,p[1]-136);
+    const nearest=held.reduce((best,p,i)=>distance(p)<distance(held[best])?i:best,0);
+    assert.ok(distance((await portals())[nearest])<=1,'release centers the nearest displayed portal');
    };
    for(let i=0;i<10;i++) {
     await drag([128,48],[128,180]);
-    assert.ok(await page.evaluate(()=>sprites.some(s=>s.w===64&&s.sx>=256&&Math.abs(s.x+32-200)<=65&&Math.abs(s.y+32-136)<=65)),'north pan retains a portal');
    }
    for(let i=0;i<10;i++)await drag([128,180],[128,48]);
    await shot('campaign-bounds');
    assert.deepEqual(errors,[]);await page.close();
   }
-  console.log('PASS: mouse/touch settings, editor, enemy inspection, neutral patterns, cursor, tutorial/one-mana undo/direct exit, and campaign bounds');
+  console.log('PASS: mouse/touch settings, editor, enemy inspection, neutral patterns, cursor, tutorial/one-mana undo/direct exit, and free campaign dragging with release centering');
  } finally {await browser.close();if(!process.env.TUTORIAL_REPLAY)fs.rmSync(replayRoot,{recursive:true,force:true})}
 })().catch(e=>{console.error(e);process.exit(1)});

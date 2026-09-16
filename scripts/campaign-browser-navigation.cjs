@@ -1,4 +1,4 @@
-// Follow visible neighbouring portals: the map snaps away from empty regions.
+// Follow visible neighbouring portals, settling on each after release.
 module.exports=async function navigate(page,xy,entries,target) {
  const queue=[[[0,0]]],seen=new Set(['0,0']);let route;
  while(queue.length){
