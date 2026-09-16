@@ -119,7 +119,9 @@ impl Game {
             mage.powerup = Some(PowerUp::Diagonal);
         }
         self.overcharge_at = Some(self.turns());
-        self.last_nominal = self.turns();
+        // last_nominal stores the zero-based move index, just as a damage event
+        // does before its turn is appended. Preserve the existing quiet-ply allowance.
+        self.last_nominal = self.turns().saturating_sub(1);
         self.available_turns = self.generate_available_turns();
     }
 

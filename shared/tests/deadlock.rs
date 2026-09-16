@@ -229,6 +229,45 @@ fn elimination_can_trigger_once_and_undo_reconstructs_it() {
 }
 
 #[test]
+fn activation_uses_the_same_inactivity_clock_as_damage() {
+    let mut level = duel();
+    let mut victim = Mage::new(2, Team::Blue, MageSort::Plus, Position(1, 2));
+    victim.mana.0 = 1;
+    level.mages.push(victim);
+    let game = Game::new(&level, true).unwrap();
+    let mut snapshot = serde_json::to_value(game).unwrap();
+    // Put the same red-to-move position beyond the opening grace period.
+    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 10]).unwrap();
+    snapshot["last_nominal"] = serde_json::json!(9);
+    let mut game: Game = serde_json::from_value(snapshot).unwrap();
+    game.take_move(Position(0, 0), Position(1, 0)).unwrap();
+    assert_eq!(game.overcharge_at(), Some(11));
+    assert_eq!(game.stalemate(), (false, 1));
+    let mut snapshot = serde_json::to_value(game).unwrap();
+    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 17]).unwrap();
+    assert_eq!(
+        serde_json::from_value::<Game>(snapshot.clone())
+            .unwrap()
+            .stalemate(),
+        (false, 7)
+    );
+    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 18]).unwrap();
+    assert_eq!(
+        serde_json::from_value::<Game>(snapshot.clone())
+            .unwrap()
+            .stalemate(),
+        (false, 8)
+    );
+    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 19]).unwrap();
+    assert_eq!(
+        serde_json::from_value::<Game>(snapshot)
+            .unwrap()
+            .stalemate(),
+        (true, 9)
+    );
+}
+
+#[test]
 fn separated_regions_and_terminal_positions_do_not_get_futile_overcharge() {
     let mut level = corridors();
     level.mages.retain(|m| m.index == 0 || m.index == 3);
