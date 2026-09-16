@@ -31,7 +31,7 @@ const assert = require('node:assert/strict');
        if(a[1]===208 && a[2]===32 && a[0]===0) window.sprites.rosterShadows.push([t.e+16,t.f+4]);
        if(a[1]===64 && a[2]===32 && a[3]===40) window.sprites.rosterRed.push([t.e+19*t.a,t.f+28]);
        if(a[0]===72 && a[1]===0 && a[2]===8 && a[3]===5) window.sprites.rosterMarkers.push(t.f);
-       if(a[0]===160 && a[1]===144 && a[2]===16) window.arrowSteps.push([t.e,t.f]);
+       if(a[0]===0 && a[1]===32 && a[2]===16) window.arrowSteps.push([t.e,t.f]);
        return draw.call(this,source,...a);
      } // Ignore interface roster portraits.
      if(a[0]===72 && a[1]===0 && a[2]===8 && a[3]===5) window.sprites.markers.push(t.f);
@@ -94,7 +94,7 @@ const assert = require('node:assert/strict');
  await tap(-51,243); // First roster portrait.
  await tap(307,213); // East pad arrow previews.
  await page.waitForTimeout(2100);
- assert.ok(await page.evaluate(()=>new Set(arrowSteps.map(p=>p.join(','))).size>2),'ordinary pad arrows animate');
+ assert.ok(await page.evaluate(()=>new Set(arrowSteps.map(p=>p.join(','))).size>2),'cyan movement arrows animate');
  assert.deepEqual((await sample()).shadows[0],origin,'preview does not time out or move');
  await tap(96,144); // Different board destination replaces east.
  await tap(307,213); // East replaces south rather than committing.
@@ -103,7 +103,6 @@ const assert = require('node:assert/strict');
  await tap(128,112); // Same east destination confirms from board.
  await page.waitForTimeout(450);
  assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'cross-surface confirmation');
- await tap(276,92);await tap(276,92); // Read Attacking and Undo before resuming battle.
  await tap(-16,140);
  assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'first undo tap only arms confirmation');
  await tap(277,213); // A controller interaction cancels the armed undo.
@@ -149,7 +148,7 @@ const assert = require('node:assert/strict');
      window.highlights=[];
      window.requestAnimationFrame=f=>raf.call(window,t=>{window.highlights=[];f(t)});
      CanvasRenderingContext2D.prototype.fillRect=function(...a){
-       if((this.fillStyle==='#001f1f' || this.fillStyle==='#007faa') && (a[2]===40 || a[2]===28)) window.highlights.push([this.getTransform().e,this.getTransform().f]);
+       if((this.fillStyle==='#001f1f' || this.fillStyle==='#007faa' || this.fillStyle==='#005878') && (a[2]===40 || a[2]===28)) window.highlights.push([this.getTransform().e,this.getTransform().f]);
        return fill.apply(this,a);
      };
    });

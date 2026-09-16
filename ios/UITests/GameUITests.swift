@@ -87,10 +87,7 @@ final class GameUITests: XCTestCase {
             attachScreen("Invalid drop \(orientation.rawValue)")
             drag(app, from: (96, 112), to: (128, 112))
             attachScreen("Drag landing \(orientation.rawValue)")
-            // Read the Attacking and Undo lessons, then wait for the AI reply.
-            tap(app, x: 276, y: 92)
-            Thread.sleep(forTimeInterval: 0.3)
-            tap(app, x: 276, y: 92)
+            // Tutorial hints advance automatically; wait for the AI reply.
             Thread.sleep(forTimeInterval: 1.5)
             tap(app, x: 128, y: 112)
             tap(app, x: 128, y: 80)

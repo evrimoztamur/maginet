@@ -30,7 +30,7 @@ const assert = require('assert/strict');
  await click(248,174);
  const count=await page.evaluate(()=>jobs.length);
  await click(96,112); await click(128,112);
- await page.waitForTimeout(500); await click(276,188); await click(276,188);
+ await page.waitForTimeout(500);
  await page.waitForFunction(n=>jobs.length>n,count);
  assert.equal(await page.evaluate(()=>jobs.at(-1).request.difficulty),'Easy');
  console.log('menu navigation cancellation, persisted selector, tutorial Easy override: passed');

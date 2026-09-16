@@ -92,6 +92,7 @@ pub enum LabelTrim {
 #[derive(Clone, PartialEq)]
 pub enum LabelTheme {
     Default,
+    Movement,
     Attack,
     Action,
     Bright,
@@ -164,7 +165,7 @@ impl UIElement for ButtonElement {
         frame: u64,
     ) -> Result<(), JsValue> {
         let color = match self.class {
-            LabelTheme::Default => {
+            LabelTheme::Default | LabelTheme::Attack => {
                 if self.selected {
                     &"#007faa"
                 } else if self.hovered(pointer) {
@@ -191,7 +192,7 @@ impl UIElement for ButtonElement {
                     &"#006080"
                 }
             }
-            LabelTheme::Attack => {
+            LabelTheme::Movement => {
                 if self.selected {
                     &"#005878"
                 } else if self.hovered(pointer) {

@@ -24,7 +24,7 @@ const assert = require('assert/strict');
     if(completed) {
       // Basics I: Red begins at (1,2), rendered on a 5x4 board.
       await click(96,144);await click(128,144);
-    } else {await click(96,112);await click(128,112);await page.waitForTimeout(500);await click(276,188);await click(276,188);}
+    } else {await click(96,112);await click(128,112);await page.waitForTimeout(500);}
     await page.waitForFunction(n=>jobs.length>n,before);
     const request=await page.evaluate(()=>jobs.at(-1).request);
     assert.equal(request.difficulty,completed?'Hard':'Easy');

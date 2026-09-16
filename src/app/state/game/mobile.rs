@@ -10,7 +10,7 @@ pub(super) fn destinations(game: &shared::Game, mage: &Mage) -> Vec<Destination>
         .collect()
 }
 
-// White copies are initialized in the atlas; damage uses the original cyan pixels.
+// Normal movement uses cyan; attacks use the white copies initialized in the atlas.
 pub(super) fn movement_arrow(
     context: &CanvasRenderingContext2d,
     atlas: &HtmlCanvasElement,
@@ -20,8 +20,8 @@ pub(super) fn movement_arrow(
     draw_sprite(
         context,
         atlas,
-        (if damage { 0.0 } else { 160.0 }) + if diagonal { 16.0 } else { 0.0 },
-        if damage { 32.0 } else { 144.0 },
+        (if damage { 160.0 } else { 0.0 }) + if diagonal { 16.0 } else { 0.0 },
+        if damage { 144.0 } else { 32.0 },
         16.0,
         16.0,
         -8.0,
@@ -701,7 +701,7 @@ fn mobile_button(
         if damage {
             LabelTheme::Attack
         } else {
-            LabelTheme::Default
+            LabelTheme::Movement
         },
         content,
     );

@@ -7,26 +7,56 @@ use super::{menu_arena::TUTORIAL_POSITION, ArenaMenu, Game, MainMenu, State};
 use crate::{
     app::{
         Alignment::Center, AppContext, ButtonElement, ContentElement::Text, LabelTheme, LabelTrim,
-        Particle, ParticleSort, StateSort, UIElement,
+        Particle, ParticleSort, StateSort, UIElement, BOARD_SCALE,
     },
-    draw::{draw_label, draw_powerup, draw_text_centered},
+    draw::{draw_label, draw_powerup, draw_text_centered, text_length},
     window,
 };
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum TutorialStage {
     Movement,
     Attacking,
-    Undo,
     FinalBlow,
     Victory,
+    Retry,
+}
+
+impl TutorialStage {
+    fn for_game(game: &shared::Game) -> Self {
+        match game.result() {
+            Some(GameResult::Win(Team::Red)) => Self::Victory,
+            Some(_) => Self::Retry,
+            None if game.turns() == 0 => Self::Movement,
+            None if can_finish(game) => Self::FinalBlow,
+            None => Self::Attacking,
+        }
+    }
+}
+
+fn can_finish(game: &shared::Game) -> bool {
+    if game.turn_for() != Team::Red
+        || game.result().is_some()
+        || game
+            .iter_mages()
+            .any(|mage| mage.team == Team::Blue && mage.mana > 1)
+    {
+        return false;
+    }
+    game.legal_turns().iter().any(|turn| {
+        let mut next = game.clone();
+        next.take_move(turn.0, turn.1).is_some()
+            && next.result() == Some(GameResult::Win(Team::Red))
+            && next
+                .iter_mages()
+                .all(|mage| mage.team != Team::Blue || !mage.is_alive())
+    })
 }
 
 pub struct Tutorial {
     pub game_state: Game,
     tutorial_stage: TutorialStage,
     campaign: bool,
-    lesson: u8,
     item_slide: Option<usize>,
 }
 
@@ -79,17 +109,6 @@ impl Tutorial {
                 ParticleSort::Diagonals,
             ));
         }
-    }
-
-    fn next_button(app: &AppContext, label: &str) -> ButtonElement {
-        ButtonElement::new(
-            (236, if Game::touch_enabled(app) { 80 } else { 176 }),
-            (80, 24),
-            1,
-            LabelTrim::Round,
-            LabelTheme::Action,
-            Text(label.into(), Center),
-        )
     }
 
     fn slide_button(back: bool, last: bool) -> ButtonElement {
@@ -187,7 +206,11 @@ impl State for Tutorial {
             TutorialStage::Movement => (
                 "Movement",
                 if touch {
-                    vec!["Tap the Red Mage.", "Tap an adjacent square twice to move."]
+                    vec![
+                        "Tap the Red Mage.",
+                        "Tap an adjacent square",
+                        "twice to move.",
+                    ]
                 } else {
                     vec!["Click the Red Mage.", "Click an adjacent square to move."]
                 },
@@ -195,15 +218,9 @@ impl State for Tutorial {
             TutorialStage::Attacking => (
                 "Attacking",
                 vec![
-                    "Mages shoot spells when they move.",
-                    "Mages have different attack patterns.",
-                ],
-            ),
-            TutorialStage::Undo => (
-                "Undo",
-                vec![
-                    "Use the back arrow to undo a move.",
-                    "Press it twice to confirm.",
+                    "Mages attack when they move.",
+                    "Each mage has its own pattern.",
+                    "Back arrow: twice to undo.",
                 ],
             ),
             TutorialStage::FinalBlow => ("Final Blow", vec!["Deal the final blow!"]),
@@ -211,12 +228,18 @@ impl State for Tutorial {
                 "Victory!",
                 vec!["Congratulations!", "Continue to learn about items."],
             ),
+            TutorialStage::Retry => ("Try Again", vec!["Choose Rematch to try again."]),
         };
+        let (width, height) = self.game_state.visual_game().board_size();
+        let (board_x, board_y) = self.game_state.board_offset();
+        let center_x = board_x + width as i32 * BOARD_SCALE.0 / 2;
+        let title_height = 24;
+        let margin = 16;
         draw_label(
             context,
             atlas,
-            (80, if touch { -4 } else { 16 }),
-            (96, 24),
+            (center_x - 48, board_y - margin - title_height),
+            (96, title_height),
             "#557F55",
             &Text(title.into(), Center),
             &app.pointer,
@@ -224,22 +247,28 @@ impl State for Tutorial {
             &LabelTrim::Glorious,
             false,
         )?;
-        let y = if touch { 28.0 } else { 216.0 };
+        // Anchor the first glyph row to the board, identically for mouse and touch.
+        let text_top = (board_y + height as i32 * BOARD_SCALE.1 + margin) as f64;
+        let text_width = lines
+            .iter()
+            .map(|line| text_length(line))
+            .max()
+            .unwrap_or(0) as f64
+            + 8.0;
         interface_context.set_fill_style(&"#002a2a".into());
-        interface_context.fill_rect(0.0, y - 4.0, 256.0, lines.len() as f64 * 14.0 + 4.0);
+        interface_context.fill_rect(
+            center_x as f64 - text_width / 2.0,
+            text_top,
+            text_width,
+            lines.len() as f64 * 14.0,
+        );
         for (i, line) in lines.iter().enumerate() {
-            draw_text_centered(interface_context, atlas, 128.0, y + i as f64 * 14.0, line)?;
-        }
-        if matches!(
-            self.tutorial_stage,
-            TutorialStage::Attacking | TutorialStage::Undo
-        ) && !self.game_state.is_interface_active()
-        {
-            Self::next_button(app, "Next").draw(
+            draw_text_centered(
                 interface_context,
                 atlas,
-                &app.pointer,
-                app.frame,
+                center_x as f64,
+                text_top + 4.0 + i as f64 * 14.0,
+                line,
             )?;
         }
         Ok(())
@@ -278,34 +307,11 @@ impl State for Tutorial {
         }
         let game = self.game_state.visual_game();
         let won = game.result() == Some(GameResult::Win(Team::Red));
-        let stage = if won {
-            TutorialStage::Victory
-        } else if game.turns() == 0 {
-            TutorialStage::Movement
-        } else if self.lesson == 0 {
-            TutorialStage::Attacking
-        } else if self.lesson == 1 {
-            TutorialStage::Undo
-        } else {
-            TutorialStage::FinalBlow
-        };
-        if self.tutorial_stage != stage {
-            self.tutorial_stage = stage;
-            self.spark_board();
-        }
-        if matches!(
-            self.tutorial_stage,
-            TutorialStage::Attacking | TutorialStage::Undo
-        ) && !self.game_state.is_interface_active()
-        {
-            if Self::next_button(app, "Next").tick(&pointer).is_some() {
-                self.lesson += 1;
-                return None;
-            }
-            // Let playback finish and keep menu/undo accessible while a lesson
-            // is being read. The next battle move waits for Next.
-            if !self.game_state.is_animating() && app.pointer.location.0 >= 0 {
-                return None;
+        if !self.game_state.is_animating() {
+            let stage = TutorialStage::for_game(game);
+            if self.tutorial_stage != stage {
+                self.tutorial_stage = stage;
+                self.spark_board();
             }
         }
         match self.game_state.tick(text_input, app) {
@@ -346,8 +352,53 @@ impl Tutorial {
             .with_tutorial(),
             tutorial_stage: TutorialStage::Movement,
             campaign,
-            lesson: 0,
             item_slide: None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use shared::{Board, Mage, MageSort};
+
+    use super::*;
+
+    #[test]
+    fn final_blow_requires_a_legal_move_that_finishes_every_enemy() {
+        let mut level = Level::default();
+        level.board = Board::new(6, 6).unwrap();
+        level.mages = vec![
+            Mage::new(0, Team::Red, MageSort::Plus, Position(1, 2)),
+            Mage::new(1, Team::Blue, MageSort::Plus, Position(4, 2)),
+        ];
+        assert!(!can_finish(&shared::Game::new(&level, false).unwrap()));
+        level.mages[1].mana.0 = 1;
+        assert!(can_finish(&shared::Game::new(&level, false).unwrap()));
+        level.mages[1].position = Position(5, 5);
+        assert!(!can_finish(&shared::Game::new(&level, false).unwrap()));
+        level.mages[1].position = Position(4, 2);
+        level
+            .mages
+            .push(Mage::new(2, Team::Blue, MageSort::Plus, Position(5, 5)));
+        level.mages[2].mana.0 = 1;
+        assert!(!can_finish(&shared::Game::new(&level, false).unwrap()));
+        level.mages.pop();
+        level.starting_team = Team::Blue;
+        assert!(!can_finish(&shared::Game::new(&level, false).unwrap()));
+    }
+
+    #[test]
+    fn tutorial_stays_in_attacking_after_nonlethal_opening_moves() {
+        let mut game = shared::Game::new(&TUTORIAL_CODE.into(), false).unwrap();
+        assert_eq!(TutorialStage::for_game(&game), TutorialStage::Movement);
+        for (from, to) in [
+            (Position(1, 1), Position(2, 1)),
+            (Position(4, 1), Position(4, 2)),
+            (Position(2, 1), Position(2, 2)),
+            (Position(4, 2), Position(4, 1)),
+        ] {
+            assert!(game.take_move(from, to).is_some());
+            assert_eq!(TutorialStage::for_game(&game), TutorialStage::Attacking);
         }
     }
 }

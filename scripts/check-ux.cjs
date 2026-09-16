@@ -94,20 +94,41 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
    idle=await highlights();assert.equal(idle.length,8);assert.ok(idle.every(s=>s.sx===64));
    await shot('idle-pattern');
    await click(128,112);if(touch)await click(128,112);
-   await page.waitForFunction(()=>words.includes('Mages have different attack patterns.'), undefined, {polling:50});
+   await page.waitForFunction(()=>words.includes('Mages attack when they move.'), undefined, {polling:50});
+   assert.ok((await text()).includes('Back arrow: twice to undo.'));
+   assert.ok(!(await text()).includes('Next'),'battle lessons never require Next');
+   assert.ok(!(await text()).includes('Deal the final blow!'),'nonlethal opening stays in Attacking');
+   const title=await page.evaluate(()=>labels.find(b=>b.color==='#557f55'&&b.w===96));
+   const hint=await page.evaluate(()=>labels.find(b=>b.color==='#002a2a'));
+   assert.equal(72-title.y-title.h,16,'title has a sixteen-pixel margin above the board');
+   assert.equal(hint.y-200,16,'instructions have a sixteen-pixel margin below the board');
    await shot('attacking');
-   await click(276,touch?92:188);
-   await page.waitForFunction(()=>words.includes('Use the back arrow to undo a move.'), undefined, {polling:50});
-   await shot('undo');
-   await click(276,touch?92:188);
-   await page.waitForFunction(()=>words.includes('Deal the final blow!'), undefined, {polling:50});
-   // The undo control remains available after leaving the lesson.
+   // Undo remains available while the opponent is thinking.
    await click(-24,144);await click(-24,144);await page.waitForTimeout(700);
    assert.ok((await text()).includes(touch?'Tap the Red Mage.':'Click the Red Mage.'));
    // Replay a deterministic native tutorial win with controlled opponent replies.
    const file=fs.readdirSync(replayRoot).find(f=>f.startsWith('matchup-')&&f.endsWith('.json'));
    const replay=JSON.parse(fs.readFileSync(`${replayRoot}/${file}`)).games[0].replay;
-   for(const step of replay) {
+   for(const [index,step] of replay.entries()) {
+    if(index===6) {
+     await click(128,112);
+     if(touch)await click(128,144);
+     else {const p=point(128,144);await page.mouse.move(p.x,p.y);await page.waitForTimeout(100)}
+     const frame=await page.evaluate(()=>({sprites,labels}));
+     const diamond=frame.sprites.findIndex(s=>s.sx===32&&s.sy===256&&s.w===32);
+     const mage=frame.sprites.findIndex(s=>s.sy===104&&s.w===32&&s.h===40);
+     const pips=frame.sprites.findIndex(s=>s.sx>=64&&s.sx<=72&&s.sy>=32&&s.sy<=40&&s.w===8);
+     assert.ok(diamond>=0&&diamond<mage&&mage<pips,'red diamond stays below the enemy; targeting pips stay above');
+     assert.ok(frame.sprites.some(s=>s.sx===160&&s.sy===144&&s.w===16),'attack arrows are white');
+     assert.ok(frame.sprites.some(s=>s.sx===0&&s.sy===32&&s.w===16),'ordinary movement arrows are cyan');
+     if(touch) {
+      const pad=frame.labels.filter(b=>b.w===28&&b.h===28);
+      assert.ok(pad.some(b=>b.color==='#007faa'),'selected attack has the brighter background');
+      assert.ok(pad.some(b=>b.color==='#003e60'),'ordinary movement has the darker background');
+     }
+     await shot('attack-preview');
+    }
+    if(index===replay.length-1)assert.ok((await text()).includes('Deal the final blow!'),'winning move receives the final-blow hint');
     if(step.team==='Red') {
      for(const [i,[x,y]] of step.turn.entries()) {
       await click(64+x*32,80+y*32);

@@ -28,7 +28,7 @@
   - Keep campaign focus near displayed portals while dragging and snapping
   - Show neutral attack patterns on selection, above sleepers/stones and beyond board edges
   - Inspect enemy mages without movement controls; hide the cursor on touch devices
-  - Teach movement, spells/patterns, undo, then the final blow
+  - Teach movement, spells/patterns and undo through automatic hints; show final blow only for a winning move
   - Follow tutorial victory with diagonal, shield, and beam explanation slides
   - Replace Diagonals I with an X-mage duel requiring the rune to attack; retain old stars
   - Add temporary reviewer-only level unlocking without forging completion stars

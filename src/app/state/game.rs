@@ -697,6 +697,45 @@ impl Game {
                     (board_offset.1 + (ground.1 + 0.5) * board_scale.1).floor() as i32,
                 )
             });
+            let attack_highlights = if !self.presentation.busy() && !self.is_interface_active() {
+                let hovered =
+                    self.location_as_position(preview_location, self.board_offset(), BOARD_SCALE);
+                let selected = self.get_active_mage().or_else(|| {
+                    hovered.and_then(|tile| self.presentation.game().live_occupant(&tile))
+                });
+                selected
+                    .map(|mage| {
+                        let destination = self.get_movable_mage().and_then(|movable| {
+                            hovered.filter(|tile| {
+                                self.presentation
+                                    .game()
+                                    .legal_turns()
+                                    .contains(&Turn(movable.position, *tile))
+                            })
+                        });
+                        highlights::attack_highlights(self.presentation.game(), mage, destination)
+                            .into_iter()
+                            .map(|(damage, tile)| (damage, view.tile(tile)))
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            for (damage, tile) in &attack_highlights {
+                if *damage {
+                    draw_sprite(
+                        context,
+                        atlas,
+                        32.0,
+                        256.0,
+                        32.0,
+                        32.0,
+                        tile.0 as f64 * 32.0,
+                        tile.1 as f64 * 32.0,
+                    )?;
+                }
+            }
             {
                 let board_offset = self.board_offset();
 
@@ -868,39 +907,22 @@ impl Game {
                 }
             }
 
-            if !self.presentation.busy() && !self.is_interface_active() {
-                let hovered =
-                    self.location_as_position(preview_location, self.board_offset(), BOARD_SCALE);
-                let selected = self.get_active_mage().or_else(|| {
-                    hovered.and_then(|tile| self.presentation.game().live_occupant(&tile))
-                });
-                if let Some(mage) = selected {
-                    let destination = self.get_movable_mage().and_then(|movable| {
-                        hovered.filter(|tile| {
-                            self.presentation
-                                .game()
-                                .legal_turns()
-                                .contains(&Turn(movable.position, *tile))
-                        })
-                    });
-                    for (damage, tile) in
-                        highlights::attack_highlights(self.presentation.game(), mage, destination)
-                    {
-                        let tile = view.tile(tile);
-                        draw_sprite(
-                            context,
-                            atlas,
-                            if damage { 32.0 } else { 64.0 },
-                            256.0,
-                            32.0,
-                            32.0,
-                            tile.0 as f64 * 32.0,
-                            tile.1 as f64 * 32.0,
-                        )?;
-                        if damage {
-                            draw_crosshair(context, atlas, &tile, (64.0, 32.0), frame)?;
-                        }
-                    }
+            // Neutral study markers remain visible over sleepers and stones.
+            // Damage diamonds sit below living mages; only the small pips overlay them.
+            for (damage, tile) in &attack_highlights {
+                if *damage {
+                    draw_crosshair(context, atlas, tile, (64.0, 32.0), frame)?;
+                } else {
+                    draw_sprite(
+                        context,
+                        atlas,
+                        64.0,
+                        256.0,
+                        32.0,
+                        32.0,
+                        tile.0 as f64 * 32.0,
+                        tile.1 as f64 * 32.0,
+                    )?;
                 }
             }
 
