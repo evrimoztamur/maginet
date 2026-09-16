@@ -1,0 +1,10 @@
+{
+  "activations": 0,
+  "dataset": "assessments/campaign-pedagogy/followup/basics-iii-control",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 5
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

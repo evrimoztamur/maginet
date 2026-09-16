@@ -1,0 +1,10 @@
+{
+  "activations": 1,
+  "dataset": "assessments/campaign-pedagogy/followup/basics-finale-control",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 18
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

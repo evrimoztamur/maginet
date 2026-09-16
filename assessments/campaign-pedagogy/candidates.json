@@ -1,0 +1,354 @@
+[
+  {
+    "id": "basics-ii-control",
+    "battle": "basics-ii",
+    "code": "e01jg1148m0j8k834g00",
+    "seed_namespace": "e01jg1148m0j8k834g00",
+    "lesson": "Read both enemy patterns and use the Plus mage to attack safely or hit two targets.",
+    "baseline": true,
+    "selected": true,
+    "adopt_as": "basics-i"
+  },
+  {
+    "id": "basics-ii-mana-1",
+    "battle": "basics-ii",
+    "code": "e01jg1148m0j8k834g00",
+    "seed_namespace": "e01jg1148m0j8k834g00",
+    "lesson": "Read both enemy patterns and use the Plus mage to attack safely or hit two targets.",
+    "baseline": false
+  },
+  {
+    "id": "basics-ii-mana-2",
+    "battle": "basics-ii",
+    "code": "e01jg1148m0h8k834g00",
+    "seed_namespace": "e01jg1148m0j8k834g00",
+    "lesson": "Read both enemy patterns and use the Plus mage to attack safely or hit two targets.",
+    "baseline": false
+  },
+  {
+    "id": "basics-ii-mana-3",
+    "battle": "basics-ii",
+    "code": "e01jg1148m0j8k832g00",
+    "seed_namespace": "e01jg1148m0j8k834g00",
+    "lesson": "Read both enemy patterns and use the Plus mage to attack safely or hit two targets.",
+    "baseline": false
+  },
+  {
+    "id": "basics-ii-mana-4",
+    "battle": "basics-ii",
+    "code": "e01jg10m8m0h8k832g00",
+    "seed_namespace": "e01jg1148m0j8k834g00",
+    "lesson": "Read both enemy patterns and use the Plus mage to attack safely or hit two targets.",
+    "baseline": false
+  },
+  {
+    "id": "basics-iii-control",
+    "battle": "basics-iii",
+    "code": "j0228014cm0j8v804gp04900",
+    "seed_namespace": "j0228014cm0j8v804gp04900",
+    "lesson": "Coordinate Diamond and Knight coverage; protect the mage exposed by a fork.",
+    "baseline": true
+  },
+  {
+    "id": "basics-iii-mana-1",
+    "battle": "basics-iii",
+    "code": "j0228014cm0j8v804gp04500",
+    "seed_namespace": "j0228014cm0j8v804gp04900",
+    "lesson": "Coordinate Diamond and Knight coverage; protect the mage exposed by a fork.",
+    "baseline": false
+  },
+  {
+    "id": "basics-iii-mana-2",
+    "battle": "basics-iii",
+    "code": "j022800mcm0j8v804gp04900",
+    "seed_namespace": "j0228014cm0j8v804gp04900",
+    "lesson": "Coordinate Diamond and Knight coverage; protect the mage exposed by a fork.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "basics-ii"
+  },
+  {
+    "id": "basics-iii-mana-3",
+    "battle": "basics-iii",
+    "code": "j0228014cm0k8v804gp04900",
+    "seed_namespace": "j0228014cm0j8v804gp04900",
+    "lesson": "Coordinate Diamond and Knight coverage; protect the mage exposed by a fork.",
+    "baseline": false
+  },
+  {
+    "id": "basics-iii-mana-4",
+    "battle": "basics-iii",
+    "code": "j0228014cm0j8v806gp04900",
+    "seed_namespace": "j0228014cm0j8v804gp04900",
+    "lesson": "Coordinate Diamond and Knight coverage; protect the mage exposed by a fork.",
+    "baseline": false
+  },
+  {
+    "id": "diagonals-i-control",
+    "battle": "diagonals-i",
+    "code": "dg1080a4d40j409408",
+    "seed_namespace": "dg1080a4d40j409408",
+    "lesson": "Use the diagonal rune to change attack alignment, with less spare mana.",
+    "baseline": true
+  },
+  {
+    "id": "diagonals-i-mana-1",
+    "battle": "diagonals-i",
+    "code": "dg10809md40j409408",
+    "seed_namespace": "dg1080a4d40j409408",
+    "lesson": "Use the diagonal rune to change attack alignment, with less spare mana.",
+    "baseline": false
+  },
+  {
+    "id": "diagonals-i-mana-2",
+    "battle": "diagonals-i",
+    "code": "dg108094d40j409408",
+    "seed_namespace": "dg1080a4d40j409408",
+    "lesson": "Use the diagonal rune to change attack alignment, with less spare mana.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "diagonals-i"
+  },
+  {
+    "id": "diagonals-i-mana-3",
+    "battle": "diagonals-i",
+    "code": "dg10809md40k609408",
+    "seed_namespace": "dg1080a4d40j409408",
+    "lesson": "Use the diagonal rune to change attack alignment, with less spare mana.",
+    "baseline": false
+  },
+  {
+    "id": "shields-i-control",
+    "battle": "shields-i",
+    "code": "d012g0an840k80h401200",
+    "seed_namespace": "d012g0an840k80h401200",
+    "lesson": "Use retaliation deliberately instead of winning through five starting mana.",
+    "baseline": true
+  },
+  {
+    "id": "shields-i-mana-1",
+    "battle": "shields-i",
+    "code": "d012g0a5840k80h401200",
+    "seed_namespace": "d012g0an840k80h401200",
+    "lesson": "Use retaliation deliberately instead of winning through five starting mana.",
+    "baseline": false
+  },
+  {
+    "id": "shields-i-mana-2",
+    "battle": "shields-i",
+    "code": "d012g09n840k80h401200",
+    "seed_namespace": "d012g0an840k80h401200",
+    "lesson": "Use retaliation deliberately instead of winning through five starting mana.",
+    "baseline": false
+  },
+  {
+    "id": "shields-i-mana-3",
+    "battle": "shields-i",
+    "code": "d012g09n840j80h401200",
+    "seed_namespace": "d012g0an840k80h401200",
+    "lesson": "Use retaliation deliberately instead of winning through five starting mana.",
+    "baseline": false
+  },
+  {
+    "id": "beams-i-control",
+    "battle": "beams-i",
+    "code": "hg22r024dg0m81816j2g0d02500pg08",
+    "seed_namespace": "hg22r024dg0m81816j2g0d02500pg08",
+    "lesson": "Choose a beam line without friendly fire; remove the starting mana surplus.",
+    "baseline": true
+  },
+  {
+    "id": "beams-i-mana-1",
+    "battle": "beams-i",
+    "code": "hg22r01mdg0k81816j2g0d02500pg08",
+    "seed_namespace": "hg22r024dg0m81816j2g0d02500pg08",
+    "lesson": "Choose a beam line without friendly fire; remove the starting mana surplus.",
+    "baseline": false
+  },
+  {
+    "id": "beams-i-mana-2",
+    "battle": "beams-i",
+    "code": "hg22r014dg0j81814j2g0902500pg08",
+    "seed_namespace": "hg22r024dg0m81816j2g0d02500pg08",
+    "lesson": "Choose a beam line without friendly fire; remove the starting mana surplus.",
+    "baseline": false
+  },
+  {
+    "id": "patterns-i-control",
+    "battle": "patterns-i",
+    "code": "dg30r0j4500m8v048g0g4h250526212400",
+    "seed_namespace": "dg30r0j4500m8v048g0g4h250526212400",
+    "lesson": "Mixed patterns with less room to absorb avoidable hits.",
+    "baseline": true
+  },
+  {
+    "id": "patterns-i-mana-1",
+    "battle": "patterns-i",
+    "code": "dg30r0hm500k8v046g0g4d2504t6211m00",
+    "seed_namespace": "dg30r0j4500m8v048g0g4h250526212400",
+    "lesson": "Mixed patterns with less room to absorb avoidable hits.",
+    "baseline": false
+  },
+  {
+    "id": "patterns-i-mana-2",
+    "battle": "patterns-i",
+    "code": "dg30r0h4500j8v044g0g492504j6211400",
+    "seed_namespace": "dg30r0j4500m8v048g0g4h250526212400",
+    "lesson": "Mixed patterns with less room to absorb avoidable hits.",
+    "baseline": false
+  },
+  {
+    "id": "patterns-i-mana-3",
+    "battle": "patterns-i",
+    "code": "dg30r0hm500k8v046g0g4h250526212400",
+    "seed_namespace": "dg30r0j4500m8v048g0g4h250526212400",
+    "lesson": "Mixed patterns with less room to absorb avoidable hits.",
+    "baseline": false
+  },
+  {
+    "id": "patterns-iii-control",
+    "battle": "patterns-iii",
+    "code": "pg3220j4g41m8h818gr06h4g052780j400",
+    "seed_namespace": "pg3220j4g41m8h818gr06h4g052780j400",
+    "lesson": "Coordinate the three patterns against equal numbers with less health insurance.",
+    "baseline": true
+  },
+  {
+    "id": "patterns-iii-mana-1",
+    "battle": "patterns-iii",
+    "code": "pg3220j4g41m8h818gr06d4g04t780hm00",
+    "seed_namespace": "pg3220j4g41m8h818gr06h4g052780j400",
+    "lesson": "Coordinate the three patterns against equal numbers with less health insurance.",
+    "baseline": false
+  },
+  {
+    "id": "rite-iv-control",
+    "battle": "rite-iv",
+    "code": "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00",
+    "seed_namespace": "dg30r0a45g1m8v048g0g2h210d2621240gj02a028g14g00",
+    "lesson": "A capstone where careful use of all three item types matters.",
+    "baseline": true
+  },
+  {
+    "id": "rite-iv-mana-1",
+    "battle": "rite-iv",
+    "code": "dg30r09m5g1k8v046g0g2h210d2621240gm04h024g0mg00",
+    "seed_namespace": "dg30r0a45g1m8v048g0g2h210d2621240gj02a028g14g00",
+    "lesson": "A capstone where careful use of all three item types matters.",
+    "baseline": false
+  },
+  {
+    "id": "basics-finale-cross-1",
+    "battle": "basics-finale",
+    "code": "dg2gr0145g128g844hjg250100j00",
+    "seed_namespace": "maginet-basics-finale-pedagogy-1",
+    "lesson": "Combine fork recognition, target priority and protecting the partner mage.",
+    "baseline": false
+  },
+  {
+    "id": "basics-finale-cross-2",
+    "battle": "basics-finale",
+    "code": "dg2gr0145g128g844hjg290100j00",
+    "seed_namespace": "maginet-basics-finale-pedagogy-1",
+    "lesson": "Combine fork recognition, target priority and protecting the partner mage.",
+    "baseline": false
+  },
+  {
+    "id": "basics-finale-short",
+    "battle": "basics-finale",
+    "code": "dg2gr0145g118g842hjg250100j00",
+    "seed_namespace": "maginet-basics-finale-pedagogy-1",
+    "lesson": "Combine fork recognition, target priority and protecting the partner mage.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "basics-iii"
+  },
+  {
+    "id": "basics-finale-courtyard",
+    "battle": "basics-finale",
+    "code": "hg2gg0145g128r812j4g09250gj02j03",
+    "seed_namespace": "maginet-basics-finale-pedagogy-1",
+    "lesson": "Combine fork recognition, target priority and protecting the partner mage.",
+    "baseline": false
+  },
+  {
+    "id": "shields-i-spike-2",
+    "battle": "shields-i",
+    "code": "d012g0s4841j808800",
+    "seed_namespace": "d012g0an840k80h401200",
+    "lesson": "Pick up the shield with an opening ranged hit; both mages can fight, and retaliation changes subsequent adjacent exchanges.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "shields-i"
+  },
+  {
+    "id": "shields-i-spike-3",
+    "battle": "shields-i",
+    "code": "d012g0sm841k808800",
+    "seed_namespace": "d012g0an840k80h401200",
+    "lesson": "Pick up the shield with an opening ranged hit; both mages can fight, and retaliation changes subsequent adjacent exchanges.",
+    "baseline": false
+  },
+  {
+    "id": "patterns-i-focused-0",
+    "battle": "patterns-i",
+    "code": "dg30r0hm500m8v048g0g4h250526212400",
+    "seed_namespace": "dg30r0j4500m8v048g0g4h250526212400",
+    "lesson": "Keep the same encounter but make one key mage less able to absorb careless exchanges.",
+    "baseline": false
+  },
+  {
+    "id": "patterns-i-focused-1",
+    "battle": "patterns-i",
+    "code": "dg30r0j4500k8v048g0g4h250526212400",
+    "seed_namespace": "dg30r0j4500m8v048g0g4h250526212400",
+    "lesson": "Keep the same encounter but make one key mage less able to absorb careless exchanges.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "patterns-i"
+  },
+  {
+    "id": "patterns-iii-focused-3",
+    "battle": "patterns-iii",
+    "code": "pg3220j4g41m8h818gr06d4g052780j400",
+    "seed_namespace": "pg3220j4g41m8h818gr06h4g052780j400",
+    "lesson": "Keep the same encounter but make one key mage less able to absorb careless exchanges.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "patterns-iii"
+  },
+  {
+    "id": "rite-iv-focused-0",
+    "battle": "rite-iv",
+    "code": "dg30r09m5g1m8v048g0g2h210d2621240gm04h024g0mg00",
+    "seed_namespace": "dg30r0a45g1m8v048g0g2h210d2621240gj02a028g14g00",
+    "lesson": "Keep the same encounter but make one key mage less able to absorb careless exchanges.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "rite-iv"
+  },
+  {
+    "id": "rite-iv-focused-1",
+    "battle": "rite-iv",
+    "code": "dg30r0a45g1k8v048g0g2h210d2621240gm04h024g0mg00",
+    "seed_namespace": "dg30r0a45g1m8v048g0g2h210d2621240gj02a028g14g00",
+    "lesson": "Keep the same encounter but make one key mage less able to absorb careless exchanges.",
+    "baseline": false
+  },
+  {
+    "id": "beams-i-focused-0",
+    "battle": "beams-i",
+    "code": "hg22r01mdg0m81816j2g0d02500pg08",
+    "seed_namespace": "hg22r024dg0m81816j2g0d02500pg08",
+    "lesson": "Keep the same encounter but make one key mage less able to absorb careless exchanges.",
+    "baseline": false
+  },
+  {
+    "id": "basics-finale-control",
+    "battle": "basics-finale",
+    "code": "j022801mcm0j8v804gp04d06201g00s80dm07403g01g",
+    "seed_namespace": "maginet-basics-finale-pedagogy-1",
+    "baseline": true,
+    "lesson": "Old Basics IV: the preceding board with more Red mana and some obstacles."
+  }
+]

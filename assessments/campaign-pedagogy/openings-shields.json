@@ -1,0 +1,494 @@
+[
+  {
+    "code": "d012g0an840k80h401200",
+    "completed_depth": 10,
+    "id": "shields-i-control",
+    "moves": [
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      }
+    ],
+    "nodes": 1069,
+    "stop": "Depth"
+  },
+  {
+    "code": "d012g0a5840k80h401200",
+    "completed_depth": 10,
+    "id": "shields-i-mana-1",
+    "moves": [
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      }
+    ],
+    "nodes": 1069,
+    "stop": "Depth"
+  },
+  {
+    "code": "d012g09n840k80h401200",
+    "completed_depth": 10,
+    "id": "shields-i-mana-2",
+    "moves": [
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [],
+        "score": 0,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      }
+    ],
+    "nodes": 1198,
+    "stop": "Depth"
+  },
+  {
+    "code": "d012g09n840j80h401200",
+    "completed_depth": 10,
+    "id": "shields-i-mana-3",
+    "moves": [
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      }
+    ],
+    "nodes": 452,
+    "stop": "Depth"
+  },
+  {
+    "code": "d012g0s4841j808800",
+    "completed_depth": 10,
+    "id": "shields-i-spike-2",
+    "moves": [
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                0
+              ]
+            ]
+          },
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                2,
+                2
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      }
+    ],
+    "nodes": 1129,
+    "stop": "Depth"
+  },
+  {
+    "code": "d012g0sm841k808800",
+    "completed_depth": 10,
+    "id": "shields-i-spike-3",
+    "moves": [
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": 15,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                0
+              ]
+            ]
+          },
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                2,
+                2
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      }
+    ],
+    "nodes": 2116,
+    "stop": "Depth"
+  }
+]

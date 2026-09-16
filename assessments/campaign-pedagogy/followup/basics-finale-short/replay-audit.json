@@ -1,0 +1,10 @@
+{
+  "activations": 46,
+  "dataset": "assessments/campaign-pedagogy/followup/basics-finale-short",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 1
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

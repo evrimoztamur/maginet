@@ -1,0 +1,10 @@
+{
+  "activations": 7,
+  "dataset": "assessments/campaign-pedagogy/followup/patterns-i-focused-1",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 17
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}
