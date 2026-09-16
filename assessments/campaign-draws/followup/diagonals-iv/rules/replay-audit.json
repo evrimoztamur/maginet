@@ -1,0 +1,11 @@
+{
+  "activations": 1,
+  "dataset": "assessments/campaign-draws/followup/diagonals-iv/rules",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 24,
+    "Unsupported": 207
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

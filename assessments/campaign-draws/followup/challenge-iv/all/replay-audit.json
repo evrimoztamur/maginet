@@ -1,0 +1,11 @@
+{
+  "activations": 0,
+  "dataset": "assessments/campaign-draws/followup/challenge-iv/all",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 7,
+    "Unsupported": 249
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

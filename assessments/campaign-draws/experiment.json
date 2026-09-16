@@ -1,0 +1,58 @@
+{
+  "created_utc": "2026-09-16T16:17:38.048508+00:00",
+  "arms": {
+    "control": {
+      "revision": "a22803100a199696c15911441a9285731875247a",
+      "binaries": {
+        "diagnose": "45bcdb8fd4459a2d8cbaeb4587894f5e83cd1e4bfc16029d94ee87b4b64a0894",
+        "audit": "19a522a98f4e76854f6e5ee3200ad993a8e392cbea973db7b162fb2da2b32500",
+        "generate": "77f6fc57f73f7011eef90007f716bd00e5b8268f1f3699251f9c50918f75d71c"
+      }
+    },
+    "rules": {
+      "revision": "d32ba01f0eedd580a44353254fa1a9ba9b47b752",
+      "binaries": {
+        "diagnose": "5d41fa9d80ad7eba92f76de48b2a65904a6b2be24becc69e3688ea87f6b2d063",
+        "audit": "4053befdd39961249f2b95e28760fdf20a922bb5ca2fae68b88e7b4078452e9a",
+        "generate": "b7c06116f554a4502bba5843fe13862bcf0b727ec1f96876c62789c043c3498e"
+      }
+    },
+    "all": {
+      "revision": "cf39c097ecdbe8a39ee0901de32c0e999a7f48b4",
+      "binaries": {
+        "diagnose": "e3666f4748f7a930d6424b42140ec560a00a8b46b602c42358748c842ab96363",
+        "audit": "9ae6968bda436d0940361d0ae628ea9c352eaf7232b5adb80149b4d8d390ce40",
+        "generate": "57143509b57edcc0edbae47d008dcfc740caf76a46fca15b9b2f9482957ddfb8"
+      }
+    }
+  },
+  "control_dataset": "../campaign-overcharge/after",
+  "screen_games_per_cell": 30,
+  "followup_games_per_cell": 300,
+  "seed": 1,
+  "max_plies": 200,
+  "followup_ids": [
+    "patterns-ii",
+    "side-step",
+    "challenge-ii",
+    "challenge-iv",
+    "diagonals-iv",
+    "beams-ii"
+  ],
+  "followup_selection": "Six battles with the most inactivity draws in the pre-change screen, chosen before inspecting new results. First 30 followup trials overlap each screen; analyse new 270 separately.",
+  "changes": {
+    "control": "Existing overcharge; 8 quiet plies; pickups do not reset clock; seeded AI ties.",
+    "rules": "Overcharge plus pickups reset clock and 16 quiet plies, eight full-turn pips; seeded AI ties.",
+    "all": "Rules arm plus fewer past occurrences to break equal AI root scores after completed search."
+  },
+  "workers": {
+    "screen": 4,
+    "followup": {
+      "control": 1,
+      "rules": 2,
+      "all": 2
+    }
+  },
+  "control_dataset_provenance": "The existing overcharge screen is reused unchanged; a228031 adds diagnosis tooling without changing its engine rules.",
+  "archive_format": "Per-matchup JSON is compacted without changing parsed records; reports and metadata retain indentation."
+}

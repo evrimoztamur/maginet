@@ -7,7 +7,7 @@ const assert = require('assert/strict');
  const page = await browser.newPage({viewport:{width:1000,height:700}});
  const errors=[]; page.on('pageerror', e=>{errors.push(e.message); console.log('ERROR',e.message)}); page.on('console', m=>{if(m.type()==='error') console.log(m.text())});
  await page.route('https://tunnel.evrim.zone/**', route => route.request().url().endsWith('/session') ? route.fulfill({json:{session_id:'solver-check'}}) : route.abort());
- await page.goto('http://127.0.0.1:8000/', {waitUntil:'domcontentloaded'});
+ await page.goto(process.env.GAME_URL || 'http://127.0.0.1:8000/', {waitUntil:'domcontentloaded'});
  await page.waitForSelector('#game-canvas');
  const snapshots = execFileSync('cargo',['run','--quiet','-p','shared','--example','search_bench','--','--snapshot'],{cwd:path.join(__dirname,'..'),encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim().split('\n');
  const result = await page.evaluate(async snapshot => {

@@ -1,0 +1,11 @@
+{
+  "activations": 43,
+  "dataset": "assessments/campaign-draws/all",
+  "games": 7920,
+  "inactivity_contact_status": {
+    "Possible": 735,
+    "Unsupported": 1283
+  },
+  "matchups": 264,
+  "overcharge_enabled": true
+}
