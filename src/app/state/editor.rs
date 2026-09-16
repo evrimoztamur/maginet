@@ -94,7 +94,7 @@ impl Editor {
         );
 
         let button_width_minus = ButtonElement::new(
-            (82, if cfg!(feature = "ios") { 244 } else { 248 }),
+            (82, if cfg!(feature = "mobile") { 244 } else { 248 }),
             (12, 12),
             BUTTON_WIDTH_MINUS,
             LabelTrim::Round,
@@ -103,7 +103,7 @@ impl Editor {
         );
 
         let button_width_plus = ButtonElement::new(
-            (98, if cfg!(feature = "ios") { 244 } else { 248 }),
+            (98, if cfg!(feature = "mobile") { 244 } else { 248 }),
             (12, 12),
             BUTTON_WIDTH_PLUS,
             LabelTrim::Round,

@@ -10,11 +10,11 @@ final class GameUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 1.2) // Wait for the native rotation animation to finish.
             // Canvas is 272 logical units high, with the fixed interface centered.
             tap(app, x: 248, y: 212) // Settings
-            tap(app, x: 72, y: 224) // Unlock Full Game
+            tap(app, x: 232, y: 176) // Unlock Full Game
             XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 10))
             XCTAssertTrue(app.alerts.staticTexts["Unlock Full Game"].exists)
             app.alerts.buttons["Dismiss"].tap()
-            tap(app, x: 128, y: 248) // Settings back
+            tap(app, x: 152, y: 248) // Settings back
             tap(app, x: 248, y: 110) // Battle
             tap(app, x: 208, y: 80) // Online
             XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 10))
@@ -26,6 +26,26 @@ final class GameUITests: XCTestCase {
             add(screenshot)
         }
     }
+    func testReviewerDialogRejectsInvalidCode() {
+        let app = XCUIApplication()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app.launch()
+        XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 15))
+        Thread.sleep(forTimeInterval: 1.2)
+        tap(app, x: 248, y: 212)
+        tap(app, x: 232, y: 216)
+        let input = app.alerts.textFields["reviewer-code-input"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        input.tap()
+        input.typeText("INVALID-REVIEW-CODE")
+        app.alerts.buttons["Unlock"].tap()
+        XCTAssertTrue(app.alerts.staticTexts["Invalid reviewer code."].waitForExistence(timeout: 5))
+        app.alerts.buttons["OK"].tap()
+        tap(app, x: 232, y: 176)
+        XCTAssertTrue(app.alerts.staticTexts["Unlock Full Game"].waitForExistence(timeout: 10))
+        app.alerts.buttons["Dismiss"].tap()
+    }
+
     func testCampaignEditorAndKeyboard() {
         let app = XCUIApplication()
         XCUIDevice.shared.orientation = .landscapeLeft

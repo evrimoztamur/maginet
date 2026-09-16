@@ -36,7 +36,7 @@ impl SettingsMenu {
     fn purchase_button() -> ButtonElement {
         let owned = !crate::access::demo();
         ButtonElement::new(
-            (160, 160),
+            (160, 168),
             (144, 16),
             98,
             LabelTrim::Round,
@@ -122,7 +122,7 @@ impl State for SettingsMenu {
             }
         }
 
-        draw_text(context, atlas, 0.0, 100.0, "Sound Volume")?;
+        draw_text(context, atlas, 0.0, 104.0, "Sound Volume")?;
 
         for i in (0..10).rev() {
             if self.clip_volume > i {
@@ -134,7 +134,7 @@ impl State for SettingsMenu {
                     12.0,
                     12.0,
                     32.0 + i as f64 * 10.0,
-                    116.0,
+                    120.0,
                 )?;
             } else {
                 draw_sprite(
@@ -145,25 +145,25 @@ impl State for SettingsMenu {
                     12.0,
                     12.0,
                     32.0 + i as f64 * 10.0,
-                    116.0,
+                    120.0,
                 )?;
             }
         }
 
-        draw_text(context, atlas, 0.0, 144.0, "AI Difficulty")?;
-        draw_text(context, atlas, 64.0, 164.0, self.difficulty.label())?;
+        draw_text(context, atlas, 0.0, 148.0, "AI Difficulty")?;
+        draw_text(context, atlas, 64.0, 168.0, self.difficulty.label())?;
 
-        draw_text(context, atlas, 0.0, 184.0, "On-screen controls")?;
+        draw_text(context, atlas, 0.0, 192.0, "On-screen controls")?;
 
         context.save();
 
-        context.translate(180.0, 28.0)?;
+        context.translate(160.0, 24.0)?;
 
         draw_label(
             context,
             atlas,
             (0, 0),
-            (96, 16),
+            (112, 24),
             "#7f0055",
             &ContentElement::Text("Credits".to_string(), Alignment::Center),
             &app_context.pointer,
@@ -172,20 +172,25 @@ impl State for SettingsMenu {
             false,
         )?;
 
-        draw_text(context, atlas, 0.0, 24.0, "Code")?;
-        draw_text(context, atlas, 8.0, 24.0 + 12.0, "@evrimzone")?;
-        draw_text(context, atlas, 0.0, 24.0 + 28.0, "Graphics")?;
-        draw_text(context, atlas, 8.0, 24.0 + 28.0 + 12.0, "@mrmotarius")?;
-        draw_text(context, atlas, 0.0, 24.0 + 56.0, "Sounds")?;
-        draw_text(context, atlas, 8.0, 24.0 + 56.0 + 12.0, "@effoharkay")?;
-        draw_text(context, atlas, 0.0, 24.0 + 84.0, "Music")?;
-        draw_text(context, atlas, 8.0, 24.0 + 84.0 + 12.0, "Alex Neri")?;
+        for (index, (role, author)) in [
+            ("Code", "@evrimzone"),
+            ("Graphics", "@mrmotarius"),
+            ("Sounds", "@effoharkay"),
+            ("Music", "Alex Neri"),
+        ]
+        .iter()
+        .enumerate()
+        {
+            let y = 36.0 + index as f64 * 24.0;
+            draw_text(context, atlas, 0.0, y, role)?;
+            draw_text(context, atlas, 8.0, y + 10.0, author)?;
+        }
 
         context.restore();
 
         self.interface
             .draw(interface_context, atlas, pointer, frame)?;
-        if cfg!(feature = "ios") {
+        if cfg!(feature = "mobile") {
             Self::purchase_button().draw(interface_context, atlas, pointer, frame)?;
         }
 
@@ -207,7 +212,7 @@ impl State for SettingsMenu {
         let pointer = &app_context.pointer;
 
         let event = self.interface.tick(pointer).or_else(|| {
-            if cfg!(feature = "ios") {
+            if cfg!(feature = "mobile") {
                 Self::purchase_button().tick(pointer)
             } else {
                 None
@@ -229,6 +234,7 @@ impl State for SettingsMenu {
                 }
                 98 => crate::access::purchase("purchase"),
                 99 => crate::access::purchase("restore"),
+                100 => crate::access::purchase("review"),
                 14 => {
                     self.difficulty = self.difficulty.next();
                     App::kv_set("difficulty", self.difficulty.label());
@@ -263,7 +269,7 @@ impl State for SettingsMenu {
 impl Default for SettingsMenu {
     fn default() -> Self {
         let button_back = ButtonElement::new(
-            (84, 240),
+            (108, 240),
             (88, 16),
             BUTTON_BACK,
             LabelTrim::Return,
@@ -290,7 +296,7 @@ impl Default for SettingsMenu {
         );
 
         let button_sound_minus = ButtonElement::new(
-            (0, 116),
+            (0, 120),
             (12, 12),
             BUTTON_SOUND_MINUS,
             LabelTrim::Round,
@@ -299,7 +305,7 @@ impl Default for SettingsMenu {
         );
 
         let button_sound_plus = ButtonElement::new(
-            (16, 116),
+            (16, 120),
             (12, 12),
             BUTTON_SOUND_PLUS,
             LabelTrim::Round,
@@ -313,7 +319,7 @@ impl Default for SettingsMenu {
             BUTTON_CONTROLS_OFF
         };
         let mut controls = ButtonGroupElement::new(
-            (0, 196),
+            (0, 208),
             vec![
                 ButtonElement::new(
                     (0, 0),
@@ -339,7 +345,7 @@ impl Default for SettingsMenu {
         let mut interface = Interface::new(vec![
             controls.boxed(),
             ButtonElement::new(
-                (0, 160),
+                (0, 164),
                 (56, 16),
                 14,
                 LabelTrim::Round,
@@ -354,16 +360,25 @@ impl Default for SettingsMenu {
             button_sound_plus.boxed(),
         ]);
 
-        if cfg!(feature = "ios") {
+        if cfg!(feature = "mobile") {
             interface = Interface::new(vec![
                 interface.boxed(),
                 ButtonElement::new(
-                    (160, 180),
+                    (160, 188),
                     (144, 16),
                     99,
                     LabelTrim::Round,
                     LabelTheme::Default,
                     ContentElement::Text("Restore Purchases".into(), Alignment::Center),
+                )
+                .boxed(),
+                ButtonElement::new(
+                    (160, 208),
+                    (144, 16),
+                    100,
+                    LabelTrim::Round,
+                    LabelTheme::Default,
+                    ContentElement::Text("Reviewer Access".into(), Alignment::Center),
                 )
                 .boxed(),
             ]);

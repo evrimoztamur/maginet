@@ -560,8 +560,10 @@ impl Game {
         atlas: &HtmlCanvasElement,
         frame: u64,
         pointer: &Pointer,
+        onscreen_controls: bool,
     ) -> Result<(), JsValue> {
         let view = self.board_view();
+        let face_to_face = onscreen_controls && self.lobby.settings.lobby_sort == LobbySort::Local;
         let board_scale = tuple_as!(BOARD_SCALE, f64);
         let board_offset = tuple_as!(self.board_offset(), f64);
 
@@ -835,6 +837,13 @@ impl Game {
                         16.0 + view.point(*position).1 * board_scale.1,
                     )?;
 
+                    // Rotate the whole visual around its tile, including shadow and selection.
+                    let facing = if face_to_face && mage.team == Team::Blue {
+                        -1.0
+                    } else {
+                        1.0
+                    };
+                    context.scale(facing, facing)?;
                     self.draw_mage_visual(context, atlas, mage, frame)?;
 
                     if mage.is_alive() {
@@ -844,16 +853,18 @@ impl Game {
                                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
                                 self.particle_system.add(Particle::new(
                                     (
-                                        position.0 + d.cos() * 0.4,
+                                        position.0 + facing * d.cos() * 0.4,
                                         position.1
                                             + (pose.offset_y / board_scale.1 - 0.15
                                                 + d.sin() * 0.4)
+                                                * facing
                                                 * if view.team == Team::Blue { -1.0 } else { 1.0 },
                                     ),
                                     (
-                                        d.cos() * v,
+                                        facing * d.cos() * v,
                                         d.sin()
                                             * v
+                                            * facing
                                             * if view.team == Team::Blue { -1.0 } else { 1.0 },
                                     ),
                                     (js_sys::Math::random() * 30.0) as u64,
@@ -866,16 +877,18 @@ impl Game {
                                 let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.05;
                                 self.particle_system.add(Particle::new(
                                     (
-                                        position.0 + d.cos() * 0.4,
+                                        position.0 + facing * d.cos() * 0.4,
                                         position.1
                                             + (pose.offset_y / board_scale.1 - 0.15
                                                 + d.sin() * 0.4)
+                                                * facing
                                                 * if view.team == Team::Blue { -1.0 } else { 1.0 },
                                     ),
                                     (
-                                        d.cos() * v,
+                                        facing * d.cos() * v,
                                         d.sin()
                                             * v
+                                            * facing
                                             * if view.team == Team::Blue { -1.0 } else { 1.0 },
                                     ),
                                     (js_sys::Math::random() * 30.0) as u64,
@@ -897,6 +910,9 @@ impl Game {
                         16.0 + view.point(*position).0 * board_scale.0,
                         16.0 + view.point(*position).1 * board_scale.1,
                     )?;
+                    if face_to_face && mage.team == Team::Blue {
+                        context.scale(-1.0, -1.0)?;
+                    }
                     context.translate(0.0, pose.offset_y)?;
                     draw_mana(context, atlas, mage)?;
 
@@ -1229,7 +1245,14 @@ impl State for Game {
         let pointer = &app_context.pointer;
 
         self.configure_result_buttons();
-        self.draw_game(context, interface_context, atlas, frame, pointer)?;
+        self.draw_game(
+            context,
+            interface_context,
+            atlas,
+            frame,
+            pointer,
+            Self::mobile_enabled(app_context),
+        )?;
         self.draw_mobile(interface_context, atlas, app_context)?;
 
         {
@@ -1251,6 +1274,27 @@ impl State for Game {
             }
 
             if self.is_interface_active() {
+                if !self.presentation.busy() {
+                    if let Some(result) = self.presentation.game().result() {
+                        let (title, color) = match result {
+                            GameResult::Win(Team::Red) => ("House Ruby wins!", "#a52f55"),
+                            GameResult::Win(Team::Blue) => ("Azur Clan wins!", "#256f9c"),
+                            GameResult::Stalemate => ("Stalemate!", "#70783e"),
+                        };
+                        draw_label(
+                            interface_context,
+                            atlas,
+                            (-88, -64),
+                            (176, 24),
+                            color,
+                            &crate::app::ContentElement::Text(title.into(), Alignment::Center),
+                            &interface_pointer,
+                            frame,
+                            &LabelTrim::Glorious,
+                            false,
+                        )?;
+                    }
+                }
                 self.button_rematch
                     .draw(interface_context, atlas, &interface_pointer, frame)?;
                 self.button_leave

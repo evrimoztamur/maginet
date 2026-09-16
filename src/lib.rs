@@ -66,7 +66,7 @@ async fn start() -> Result<(), JsValue> {
             < window().inner_height().unwrap().as_f64().unwrap(),
     );
 
-    canvas_settings.update_ios();
+    canvas_settings.update_mobile();
 
     // atlas_img.set_src(&format!("{RESOURCE_BASE_URL}/static/png/atlas.png?v=6"));
 
@@ -152,7 +152,7 @@ async fn start() -> Result<(), JsValue> {
             {
                 let app = app.borrow();
 
-                if app.session_id().is_none() && !cfg!(feature = "ios") {
+                if app.session_id().is_none() && !cfg!(feature = "mobile") {
                     let _ = fetch(&request_session()).then(&session_closure);
                 }
             }
@@ -226,7 +226,7 @@ async fn start() -> Result<(), JsValue> {
             let app = app.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |_: JsValue| {
                 renderer.resize().unwrap();
-                app.borrow_mut().resize_ios();
+                app.borrow_mut().resize_mobile();
                 bound.replace(Some(canvas.get_bounding_client_rect()));
             });
             window()
@@ -254,7 +254,7 @@ async fn start() -> Result<(), JsValue> {
             let bound = bound.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
-                if !cfg!(feature = "ios") {
+                if !cfg!(feature = "mobile") {
                     if let Some(bound) = bound.borrow().as_deref() {
                         app.on_mouse_down(bound, event);
                     }
@@ -270,7 +270,7 @@ async fn start() -> Result<(), JsValue> {
             let bound = bound.clone();
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
-                if !cfg!(feature = "ios") {
+                if !cfg!(feature = "mobile") {
                     if let Some(bound) = bound.borrow().as_deref() {
                         app.on_mouse_up(bound, event);
                     }
@@ -287,7 +287,7 @@ async fn start() -> Result<(), JsValue> {
             let closure = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
                 let mut app = app.borrow_mut();
                 if let Some(bound) = bound.borrow().as_deref() {
-                    if !cfg!(feature = "ios") {
+                    if !cfg!(feature = "mobile") {
                         app.on_mouse_move(bound, event);
                     }
                 }

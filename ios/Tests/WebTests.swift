@@ -27,7 +27,7 @@ import StoreKitTest
     }
 
     private static let accessQuery = """
-        const url = performance.getEntriesByType('resource').find(e => e.name.endsWith('/ios-access.js'))?.name;
+        const url = performance.getEntriesByType('resource').find(e => e.name.endsWith('/mobile-access.js'))?.name;
         if (!url) return null;
         return (await import(url)).owned();
         """

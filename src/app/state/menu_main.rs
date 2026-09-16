@@ -46,6 +46,7 @@ impl State for MainMenu {
             atlas,
             frame,
             &Pointer::default(),
+            false,
         )?;
 
         context.restore();

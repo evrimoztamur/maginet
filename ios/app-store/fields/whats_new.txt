@@ -1,0 +1,1 @@
+A tidier Settings screen, clearer end-of-game banners, and improved face-to-face local battles: blue mages and their indicators now face the opposing player when on-screen controls are enabled.

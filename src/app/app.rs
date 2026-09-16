@@ -222,7 +222,7 @@ impl App {
             self.app_context.pointer.cancel();
             return;
         }
-        if cfg!(feature = "ios") {
+        if cfg!(feature = "mobile") {
             self.app_context.session_id = get_session_id();
             let online_screen = matches!(&self.state_sort, StateSort::LobbyList(_))
                 || matches!(&self.state_sort, StateSort::Game(game) if !game.lobby().is_local());
@@ -272,8 +272,8 @@ impl App {
         }
     }
 
-    pub fn resize_ios(&mut self) {
-        self.app_context.canvas_settings.update_ios();
+    pub fn resize_mobile(&mut self) {
+        self.app_context.canvas_settings.update_mobile();
         self.app_context.pointer.cancel();
     }
     pub fn cancel_input(&mut self) {
@@ -521,13 +521,13 @@ pub struct CanvasSettings {
     pub canvas_width: u32,
     pub canvas_height: u32,
     pub orientation: bool,
-    ios_padding_x: Option<u32>,
-    ios_padding_y: Option<u32>,
+    mobile_padding_x: Option<u32>,
+    mobile_padding_y: Option<u32>,
 }
 
 impl CanvasSettings {
-    pub fn update_ios(&mut self) {
-        #[cfg(feature = "ios")]
+    pub fn update_mobile(&mut self) {
+        #[cfg(feature = "mobile")]
         {
             let w = window().inner_width().unwrap().as_f64().unwrap();
             let h = window().inner_height().unwrap().as_f64().unwrap();
@@ -542,12 +542,12 @@ impl CanvasSettings {
                     * 272.0
                     / h
             };
-            self.ios_padding_y =
+            self.mobile_padding_y =
                 Some((16.0 - inset("maginetSafeBottom")).clamp(0.0, 8.0).floor() as u32);
             let minimum = inset("maginetSafeLeft") + 72.0;
             let maximum = self.canvas_width as f64 - inset("maginetSafeRight") - 320.0;
             let centered = (self.canvas_width as f64 - 256.0) / 2.0;
-            self.ios_padding_x =
+            self.mobile_padding_x =
                 Some(centered.max(minimum).min(maximum.max(minimum)).round() as u32);
         }
     }
@@ -583,7 +583,7 @@ impl CanvasSettings {
     }
 
     pub fn pointer_at(&self, position: (f64, f64), displayed_size: (f64, f64)) -> (i32, i32) {
-        if cfg!(feature = "ios") {
+        if cfg!(feature = "mobile") {
             let scale = displayed_size.1 / 272.0;
             return (
                 (position.0 / scale).floor() as i32 - self.padding_x() as i32,
@@ -598,12 +598,12 @@ impl CanvasSettings {
     }
 
     pub fn padding_x(&self) -> u32 {
-        self.ios_padding_x
+        self.mobile_padding_x
             .unwrap_or(self.canvas_width.saturating_sub(self.interface_width) / 2)
     }
 
     pub fn padding_y(&self) -> u32 {
-        self.ios_padding_y
+        self.mobile_padding_y
             .unwrap_or((self.canvas_height - self.interface_height) / 2)
     }
 
@@ -624,8 +624,8 @@ impl CanvasSettings {
             canvas_width,
             canvas_height,
             orientation,
-            ios_padding_x: None,
-            ios_padding_y: None,
+            mobile_padding_x: None,
+            mobile_padding_y: None,
         }
     }
 }
@@ -660,10 +660,10 @@ mod canvas_tests {
 
     #[test]
     fn pointer_round_trips_board_corners_at_every_display_scale_and_orientation() {
-        // iOS rotates the native view; only web uses a rotated canvas in portrait.
+        // Mobile shells rotate the native view; only web uses a rotated canvas in portrait.
         for portrait in [false, true]
             .into_iter()
-            .filter(|portrait| !cfg!(feature = "ios") || !portrait)
+            .filter(|portrait| !cfg!(feature = "mobile") || !portrait)
         {
             let settings = settings(portrait);
             for ratio in [1.0, 2.0, 2.4, 3.0] {

@@ -15,3 +15,16 @@ target/
 **/xcuserdata/
 **/*.xcuserstate
 **/*overview*.png
+
+# Android build output and local credentials
+/android/.gradle/
+/android/.kotlin/
+/android/**/build/
+/android/local.properties
+/android/app/src/main/assets/
+*.jks
+*.keystore
+
+# Local release credentials and Python test output
+/android/play/*.env
+/android/scripts/**/__pycache__/

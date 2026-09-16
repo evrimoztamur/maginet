@@ -52,3 +52,7 @@ Attach the first in-app purchase to the app version for review. Storefront price
 ## Copy checks
 
 Name: 7/30 characters. Subtitle: 25/30. Promotional text: 162/170. Description: 1396/4000. Keywords: 95/100 ASCII bytes. In-app purchase description: 47/55. Description and text exports use plain text, with no Markdown formatting to leak into the listing.
+
+## Latest upload (16 September 2026)
+
+Version **1.0, build 7** contains the latest shared mobile changes and uploaded successfully. Apple processing starts after upload. This was **upload only** at the user's request: the existing version 1.0 review submission was not changed or resubmitted. Select build 7 later when ready to update the submission. Archive and receipt: `../build-final-update/`. Prepared update text: `fields/whats_new.txt`.

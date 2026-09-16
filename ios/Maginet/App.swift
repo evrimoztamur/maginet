@@ -96,7 +96,8 @@ final class GameController: UIViewController, WKScriptMessageHandler, WKNavigati
         case "networkError": store.notice("Online connection failed. Local modes are still available. Please try again.", on: self)
         case "state": publish()
         case "purchase": store.show(on: self)
-        case "restore": Task { do { try await store.restore(); store.notice(store.owned ? "Full Game restored." : "No purchase found.", on: self) } catch { store.notice(error.localizedDescription, on: self) } }
+        case "review": store.showReviewerAccess(on: self)
+        case "restore": Task { do { try await store.restore(); store.notice(store.restoreMessage, on: self) } catch { store.notice(error.localizedDescription, on: self) } }
         default: break
         }
     }

@@ -1,25 +1,25 @@
 use std::time::Duration;
 
-#[cfg(not(feature = "ios"))]
+#[cfg(not(feature = "mobile"))]
 use futures::TryFutureExt;
 use js_sys::Promise;
 use shared::{LobbyID, LobbySettings, Message, SessionMessage, SessionNewLobby, SessionRequest};
-#[cfg(not(feature = "ios"))]
+#[cfg(not(feature = "mobile"))]
 use wasm_bindgen::{JsCast, JsValue};
-#[cfg(not(feature = "ios"))]
+#[cfg(not(feature = "mobile"))]
 use wasm_bindgen_futures::{future_to_promise, JsFuture};
-#[cfg(not(feature = "ios"))]
+#[cfg(not(feature = "mobile"))]
 use web_sys::Response;
 use web_sys::{Request, RequestInit};
 
 use crate::{storage, window};
 
-#[cfg(all(feature = "deploy", not(feature = "ios")))]
+#[cfg(all(feature = "deploy", not(feature = "mobile")))]
 const API_URL: &str = "https://maginet.evrim.zone";
 #[cfg(not(feature = "deploy"))]
 const API_URL: &str = "https://tunnel.evrim.zone";
 
-#[cfg(feature = "ios")]
+#[cfg(feature = "mobile")]
 const API_URL: &str = "/api";
 
 pub struct MessagePool {
@@ -54,26 +54,26 @@ impl MessagePool {
     }
 }
 
-#[cfg(not(feature = "ios"))]
+#[cfg(not(feature = "mobile"))]
 fn wrap_response_into_json(value: JsValue) -> JsFuture {
     assert!(value.is_instance_of::<Response>());
     let resp: Response = value.dyn_into().unwrap();
     JsFuture::from(resp.json().unwrap())
 }
 
-#[cfg(feature = "ios")]
-#[wasm_bindgen::prelude::wasm_bindgen(module = "/static/js/ios-access.js")]
+#[cfg(feature = "mobile")]
+#[wasm_bindgen::prelude::wasm_bindgen(module = "/static/js/mobile-access.js")]
 extern "C" {
     #[wasm_bindgen::prelude::wasm_bindgen(js_name = nativeFetch)]
     fn native_fetch(request: &Request) -> Promise;
 }
 
 pub fn fetch(request: &Request) -> Promise {
-    #[cfg(feature = "ios")]
+    #[cfg(feature = "mobile")]
     {
         native_fetch(request)
     }
-    #[cfg(not(feature = "ios"))]
+    #[cfg(not(feature = "mobile"))]
     {
         let resp_value = JsFuture::from(web_sys::window().unwrap().fetch_with_request(request))
             .and_then(wrap_response_into_json);

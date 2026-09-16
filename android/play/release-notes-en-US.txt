@@ -1,0 +1,4 @@
+First Android closed-test build of Maginet.
+Play the tutorial and free campaign levels, local battles, AI, and editor offline.
+Test Full Game purchase and restore to unlock the remaining campaign and online play.
+Includes full-height landscape play, native text entry, and saved campaign progress.

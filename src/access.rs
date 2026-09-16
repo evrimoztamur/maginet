@@ -1,8 +1,8 @@
-//! iOS access is supplied by the native bridge, never persisted in web storage.
-#[cfg(feature = "ios")]
+//! Mobile access is supplied by the native bridge, never persisted in web storage.
+#[cfg(feature = "mobile")]
 use wasm_bindgen::prelude::*;
-#[cfg(feature = "ios")]
-#[wasm_bindgen(module = "/static/js/ios-access.js")]
+#[cfg(feature = "mobile")]
+#[wasm_bindgen(module = "/static/js/mobile-access.js")]
 extern "C" {
     fn owned() -> bool;
     fn request(action: &str);
@@ -11,19 +11,19 @@ extern "C" {
     fn take_failure() -> bool;
 }
 pub fn demo() -> bool {
-    #[cfg(feature = "ios")]
+    #[cfg(feature = "mobile")]
     {
         !owned()
     }
-    #[cfg(not(feature = "ios"))]
+    #[cfg(not(feature = "mobile"))]
     {
         cfg!(feature = "demo")
     }
 }
 pub fn purchase(action: &str) {
-    #[cfg(feature = "ios")]
+    #[cfg(feature = "mobile")]
     request(action);
-    #[cfg(not(feature = "ios"))]
+    #[cfg(not(feature = "mobile"))]
     let _ = action;
 }
 pub fn online() -> bool {
@@ -35,22 +35,22 @@ pub fn online() -> bool {
     }
 }
 pub fn backgrounded() -> bool {
-    #[cfg(feature = "ios")]
+    #[cfg(feature = "mobile")]
     {
         inactive()
     }
-    #[cfg(not(feature = "ios"))]
+    #[cfg(not(feature = "mobile"))]
     {
         false
     }
 }
 
 pub fn network_failed() -> bool {
-    #[cfg(feature = "ios")]
+    #[cfg(feature = "mobile")]
     {
         take_failure()
     }
-    #[cfg(not(feature = "ios"))]
+    #[cfg(not(feature = "mobile"))]
     {
         false
     }

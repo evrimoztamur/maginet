@@ -1,6 +1,7 @@
 import XCTest
 import StoreKitTest
 import StoreKit
+import CryptoKit
 @testable import Maginet
 
 @MainActor final class StoreTests: XCTestCase {
@@ -138,5 +139,69 @@ import StoreKit
         XCTAssertFalse(LocalServer.allows(method: "DELETE", path: "/lobby/42/state"))
         XCTAssertFalse(LocalServer.allows(method: "POST", path: "/lobby/../../admin"))
         XCTAssertFalse(LocalServer.allows(method: "GET", path: "https://example.com"))
+    }
+}
+
+
+@MainActor final class ReviewerAccessTests: XCTestCase {
+    private let code = "MAGINET-0123456789ABCDEF01234567"
+    private var digest: String { SHA256.hash(data: Data(code.utf8)).map { String(format: "%02x", $0) }.joined() }
+
+    func testVerificationPersistenceRotationAndRemoval() throws {
+        let account = UUID().uuidString
+        let review = ReviewerAccess(account: account, digest: digest)
+        defer { try? review.clear() }
+        XCTAssertFalse(review.active)
+        XCTAssertFalse(ReviewerAccess.matches(code, digest: ""))
+        XCTAssertFalse(ReviewerAccess.matches(String(repeating: " ", count: 129) + code, digest: digest))
+        XCTAssertFalse(try review.redeem("wrong"))
+        XCTAssertFalse(review.active)
+        XCTAssertTrue(try review.redeem("  " + code.lowercased() + "\n"))
+        XCTAssertTrue(review.active)
+        XCTAssertTrue(ReviewerAccess(account: account, digest: digest).active)
+        XCTAssertFalse(ReviewerAccess(account: account, digest: String(repeating: "0", count: 64)).active)
+        try review.clear()
+        XCTAssertFalse(ReviewerAccess(account: account, digest: digest).active)
+    }
+
+    func testReviewAccessDoesNotFabricateOrRemovePurchases() async throws {
+        let session = try SKTestSession(configurationFileNamed: "FullGame")
+        session.resetToDefaultState()
+        session.disableDialogs = true
+        session.clearTransactions()
+        let cache = Store.OwnershipCache(account: UUID().uuidString)
+        let review = ReviewerAccess(account: UUID().uuidString, digest: digest)
+        defer { try? review.clear(); cache.save(nil); session.clearTransactions() }
+        let store = Store(cache: cache, reviewer: review)
+        await store.refresh()
+        XCTAssertFalse(store.owned)
+        var published = false
+        store.changed = { published = true }
+        XCTAssertTrue(try store.redeemReviewCode(code))
+        XCTAssertTrue(published)
+        XCTAssertTrue(store.owned)
+        XCTAssertNil(cache.read())
+        await store.refresh()
+        XCTAssertTrue(store.owned)
+        XCTAssertTrue(store.restoreMessage.contains("Reviewer access remains active"))
+        try store.endReview()
+        XCTAssertFalse(store.owned)
+        XCTAssertTrue(try store.redeemReviewCode(code))
+        let transaction = try await session.buyProduct(identifier: Store.productID)
+        for _ in 0..<50 {
+            await store.refresh()
+            if cache.read() != nil { break }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTAssertNotNil(cache.read())
+        try store.endReview()
+        XCTAssertTrue(store.owned, "Ending review must preserve verified paid ownership")
+        try session.refundTransaction(identifier: UInt(transaction.id))
+        for _ in 0..<50 {
+            await store.refresh()
+            if !store.owned { break }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTAssertFalse(store.owned)
     }
 }

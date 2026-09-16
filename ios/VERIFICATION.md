@@ -95,3 +95,10 @@ xcodebuild -project ios/Maginet.xcodeproj -scheme Maginet \
 - StoreKit history itself still returns empty on this phone. Cached verified ownership prevents relocking; restoring on a clean installation without a native record still depends on StoreKit delivering a verified transaction. Refunds take effect when StoreKit supplies verified revocation information.
 
 - Final purchase-fix validation: all seven native tests also pass on the iPhone 17 Pro / iOS 26.2 simulator with signing enabled. An unsigned simulator run failed the two Keychain recovery assertions with `errSecMissingEntitlement`; the documented test command now keeps signing enabled. The Release device build succeeds, and the rebuilt app is running on the connected iPhone through Xcode.
+
+## Upload-only update — 16 September 2026
+
+- Archived the latest shared mobile changes: Settings layout, native reviewer access, face-to-face local mage visuals, and winner/Stalemate banners. All 11 bundled game assets match the rebuilt iOS assets; archive signature verified.
+- The full iOS simulator native/Web/UI suite passed (`ios/build-review-test/Logs/Test/Test-Maginet-2026.09.16_11-43-31-+0200.xcresult`).
+- Uploaded version **1.0, build 7** through the existing Xcode App Store Connect account. Xcode's automatic version management incremented the prior uploaded build 6. Upload completed successfully; Apple processing was pending at upload completion. Logs/archive: `ios/build-final-update/`.
+- User explicitly requested upload only. The existing version 1.0 submission remains Waiting for Review; no submission was withdrawn, no attached build changed, and no new App Review submission was made. Build 7 is for the user to select later.

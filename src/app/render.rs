@@ -56,7 +56,7 @@ impl Renderer {
 
     pub fn resize(&self) -> Result<(), JsValue> {
         self.transition.replace(None);
-        if cfg!(feature = "ios") {
+        if cfg!(feature = "mobile") {
             let w = window().inner_width()?.as_f64().unwrap();
             let h = window().inner_height()?.as_f64().unwrap();
             let dpr = window().device_pixel_ratio();
@@ -171,7 +171,7 @@ impl Renderer {
             self.transition.replace(None);
         }
         app.draw_cursor(&self.composite.context, atlas)?;
-        let drawn_width = if cfg!(feature = "ios") {
+        let drawn_width = if cfg!(feature = "mobile") {
             // The logical width is rounded up to cover the viewport. Clip the
             // spare fraction at the right edge instead of stretching the pixels.
             self.game.canvas.width() as f64 * height / self.game.canvas.height() as f64

@@ -364,7 +364,8 @@ impl State for ArenaMenu {
             128.0 + self.pan_offset.1 + drag_offset.1,
         )?;
 
-        let entries = shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "ios"));
+        let entries =
+            shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "mobile"));
         for edge in shared::campaign_connections(&entries) {
             let a = entries.iter().find(|e| e.id == edge.from).unwrap().position;
             let b = entries.iter().find(|e| e.id == edge.to).unwrap().position;
@@ -424,7 +425,7 @@ impl State for ArenaMenu {
         let selected_level = self.level_portals.get(&selected_position);
 
         if let Some(portal) = selected_level.filter(|p| p.is_visible()) {
-            match portal.entry_action(cfg!(feature = "ios") && crate::access::demo()) {
+            match portal.entry_action(cfg!(feature = "mobile") && crate::access::demo()) {
                 PortalAction::Battle => self.button_battle.draw(context, atlas, pointer, frame)?,
                 PortalAction::Unlock => self.button_unlock.draw(context, atlas, pointer, frame)?,
                 PortalAction::Locked => self.button_locked.draw(context, atlas, pointer, frame)?,
@@ -468,7 +469,7 @@ impl State for ArenaMenu {
             .level_portals
             .get(&selected_position)
             .filter(|portal| portal.is_visible())
-            .map(|portal| portal.entry_action(cfg!(feature = "ios") && crate::access::demo()))
+            .map(|portal| portal.entry_action(cfg!(feature = "mobile") && crate::access::demo()))
             .unwrap_or(PortalAction::Locked);
         let entry_click = match action {
             PortalAction::Battle => self.button_battle.tick(pointer),
@@ -612,7 +613,7 @@ fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
 }
 
 fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize), LevelPortal> {
-    let entries = shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "ios"));
+    let entries = shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "mobile"));
     campaign_portals_for(&entries, completed)
 }
 

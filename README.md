@@ -266,3 +266,7 @@ Crossfire is a compact beam alignment puzzle with one immediate winning move. Si
 Ascension III uses an empty 4×4 board with four mages per side and independently randomized teams from the existing Chaos generator. Entry and rematch each choose a fresh seed. Completion uses the fixed portal key, so rerolls share one star and preserve the campaign return location. Its catalogue code is a preview/progress template, not a fixed encounter; native campaign reports explicitly exclude it from fixed-scenario statistics.
 
 All 31 portals use cardinal-neighbour connections. The tutorial-plus-Basics demo is unchanged. Existing assessment graphs remain historical snapshots; live UI and new analyser runs use the current shared catalogue. No archived assessment files have been rewritten.
+
+## Android app
+
+Run `./deploy-android.sh` to build an installable debug APK and release app bundle, or `./deploy-android.sh DEVICE_SERIAL` to also install and launch through adb. See [Android setup](android/README.md) for signing, Play product configuration, and [verification results](android/VERIFICATION.md).

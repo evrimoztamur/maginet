@@ -83,7 +83,7 @@ struct MobileLayout {
 impl MobileLayout {
     fn new(s: &CanvasSettings, flipped: bool) -> Self {
         let inset = |name: &str| {
-            if cfg!(feature = "ios") {
+            if cfg!(feature = "mobile") {
                 js_sys::Reflect::get(&crate::window(), &name.into())
                     .ok()
                     .and_then(|v| v.as_f64())
@@ -191,7 +191,7 @@ impl Game {
         crate::app::SettingsMenu::onscreen_controls_enabled() && Self::touch_enabled(app)
     }
     pub(crate) fn touch_enabled(app: &AppContext) -> bool {
-        cfg!(feature = "ios")
+        cfg!(feature = "mobile")
             || app.pointer.is_touch()
             || js_sys::Reflect::get(&crate::window(), &"navigator".into())
                 .ok()
