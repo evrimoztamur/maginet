@@ -57,6 +57,9 @@ pub struct Game {
 }
 
 impl Game {
+    /// Eight full turns (one move by each side) without damage or a pickup.
+    pub const STALEMATE_TURNS: usize = 8;
+
     /// Instantiates the [`Game`] `struct` with a given board size (always 8-by-8) and number of mages (always 4)]
     pub fn new(level: &Level, can_stalemate: bool) -> Result<Game, &'static str> {
         Self::new_with_overcharge(level, can_stalemate, true)
@@ -136,12 +139,18 @@ impl Game {
             let gap = self
                 .turns()
                 .saturating_sub(self.last_nominal.max(self.level.mages.len() * 3));
-            let gap_passed = gap > 8;
+            let gap_passed = gap > Self::STALEMATE_TURNS * 2;
 
             (gap_passed, gap)
         } else {
             (false, 0)
         }
+    }
+
+    /// Completed full quiet turns for the inactivity pips. The progress move
+    /// itself occupies gap 1; two subsequent quiet plies complete the first pip.
+    pub fn quiet_turns(&self) -> usize {
+        self.stalemate().1.saturating_sub(1) / 2
     }
 
     /// Determines if the game is finished.
@@ -379,13 +388,14 @@ impl Game {
                     if let Some((to, _, _)) = potential_move {
                         mage.position = *to;
 
-                        if let Some(powerup) = self.level.powerups.remove(to) {
+                        let pickup = self.level.powerups.remove(to);
+                        if let Some(powerup) = pickup {
                             mage.powerup = Some(powerup);
                         }
 
                         let attacks = self.attack(*to);
 
-                        if !attacks.is_empty() {
+                        if pickup.is_some() || !attacks.is_empty() {
                             self.last_nominal = self.turns();
                         }
 

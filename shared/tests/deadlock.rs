@@ -244,26 +244,26 @@ fn activation_uses_the_same_inactivity_clock_as_damage() {
     assert_eq!(game.overcharge_at(), Some(11));
     assert_eq!(game.stalemate(), (false, 1));
     let mut snapshot = serde_json::to_value(game).unwrap();
-    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 17]).unwrap();
+    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 25]).unwrap();
     assert_eq!(
         serde_json::from_value::<Game>(snapshot.clone())
             .unwrap()
             .stalemate(),
-        (false, 7)
+        (false, 15)
     );
-    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 18]).unwrap();
+    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 26]).unwrap();
     assert_eq!(
         serde_json::from_value::<Game>(snapshot.clone())
             .unwrap()
             .stalemate(),
-        (false, 8)
+        (false, 16)
     );
-    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 19]).unwrap();
+    snapshot["turns"] = serde_json::to_value(vec![Turn::sentinel(); 27]).unwrap();
     assert_eq!(
         serde_json::from_value::<Game>(snapshot)
             .unwrap()
             .stalemate(),
-        (true, 9)
+        (true, 17)
     );
 }
 

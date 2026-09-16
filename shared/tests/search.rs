@@ -128,7 +128,7 @@ fn terminal_root_and_early_terminal_children() {
 fn stalemate_counters_and_scores_are_rule_sensitive() {
     let game = fixture(Team::Red, None);
     let mut value = serde_json::to_value(&game).unwrap();
-    value["turns"] = serde_json::to_value(vec![Turn(Position(0, 0), Position(1, 0)); 16]).unwrap();
+    value["turns"] = serde_json::to_value(vec![Turn(Position(0, 0), Position(1, 0)); 24]).unwrap();
     value["last_nominal"] = serde_json::json!(0);
     let ended: Game = serde_json::from_value(value.clone()).unwrap();
     assert!(ended.result().is_some());
@@ -138,7 +138,7 @@ fn stalemate_counters_and_scores_are_rule_sensitive() {
             .best_move(),
         None
     );
-    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 14]).unwrap();
+    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 22]).unwrap();
     let near: Game = serde_json::from_value(value.clone()).unwrap();
     assert!(near.result().is_none());
     for m in near.search(SearchLimits::depth(3), 5, || false).moves {
@@ -146,7 +146,7 @@ fn stalemate_counters_and_scores_are_rule_sensitive() {
         child.take_move(m.turn.0, m.turn.1).unwrap();
         assert_eq!(m.score, minimax(&child, 2));
     }
-    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 16]).unwrap();
+    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 24]).unwrap();
     value["level"]["mages"][0]["mana"][0] = serde_json::json!(1);
     let drawn: Game = serde_json::from_value(value.clone()).unwrap();
     assert!(drawn.result() == Some(GameResult::Stalemate));

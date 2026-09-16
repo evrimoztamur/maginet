@@ -957,9 +957,9 @@ impl Game {
         context.translate(6.0 - self.board_offset().0 as f64 + 128.0, -40.0 + 128.0)?;
 
         if self.presentation.game().can_stalemate() {
-            let (_, gap) = self.presentation.game().stalemate();
-            for i in 1..9 {
-                if gap > i {
+            let quiet_turns = self.presentation.game().quiet_turns();
+            for i in 1..=shared::Game::STALEMATE_TURNS {
+                if quiet_turns >= i {
                     if i % 2 == 1 {
                         draw_sprite(
                             context,
