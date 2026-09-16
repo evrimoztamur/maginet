@@ -2,7 +2,7 @@ use super::*;
 use crate::app::{pointer::GestureEvent, ClipId, Particle, ParticleSort, ParticleSystem};
 
 const CENTER: (f64, f64) = (296.0, 36.0);
-const CLICK_WINDOW: u64 = 180; // Allow time to read each countdown step.
+const CLICK_WINDOW: u64 = 300; // Allow time to read each countdown step.
 
 #[derive(Default)]
 struct Spring {
@@ -171,16 +171,23 @@ impl ResetStar {
         {
             "Campaign reset"
         } else if self.clicks.count == 1 {
-            "3 clicks to reset!"
+            "Press three more times\nto reset campaign!"
         } else if self.clicks.count == 2 {
-            "2 clicks to reset!"
+            "Press two more times\nto reset campaign!"
         } else if self.clicks.count == 3 {
-            "1 click to reset!"
+            "Press once more\nto reset campaign!"
         } else {
             ""
         };
         if !text.is_empty() {
-            let width = crate::draw::text_length(text) as i32 + 12;
+            let lines: Vec<_> = text.lines().collect();
+            let width = lines
+                .iter()
+                .map(|line| crate::draw::text_length(line))
+                .max()
+                .unwrap() as i32
+                + 12;
+            let height = 12 + lines.len() as i32 * 12;
             let settings = &app.canvas_settings;
             let right = settings.interface_width as i32 + settings.padding_x() as i32 - 6;
             let x = (CENTER.0 as i32 - width / 2).min(right - width);
@@ -188,14 +195,23 @@ impl ResetStar {
                 context,
                 atlas,
                 (x, CENTER.1 as i32 + 22),
-                (width, 16),
+                (width, height),
                 "#001515",
-                &ContentElement::Text(text.into(), Alignment::Center),
+                &ContentElement::None,
                 &app.pointer,
                 app.frame,
                 &LabelTrim::Round,
                 false,
             )?;
+            for (i, line) in lines.iter().enumerate() {
+                crate::draw::draw_text_centered(
+                    context,
+                    atlas,
+                    x as f64 + width as f64 / 2.0,
+                    CENTER.1 + 34.0 + i as f64 * 12.0,
+                    line,
+                )?;
+            }
         }
         Ok(())
     }
@@ -236,13 +252,13 @@ mod tests {
         let mut clicks = ClickSequence::default();
         assert!(!clicks.click(10));
         assert!(!clicks.click(20));
-        assert!(!clicks.click(210)); // Earlier clicks expired.
-        assert!(!clicks.click(220));
-        assert!(!clicks.click(230));
-        assert!(clicks.click(240));
-        assert!(!clicks.click(241));
-        assert!(!clicks.click(242));
-        assert!(!clicks.click(243));
+        assert!(!clicks.click(330)); // Earlier clicks expired.
+        assert!(!clicks.click(340));
+        assert!(!clicks.click(350));
+        assert!(clicks.click(360));
+        assert!(!clicks.click(361));
+        assert!(!clicks.click(362));
+        assert!(!clicks.click(363));
         assert_eq!(clicks.count, 0);
     }
     #[test]

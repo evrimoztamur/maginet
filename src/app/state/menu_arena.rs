@@ -247,6 +247,7 @@ pub struct ArenaMenu {
     level_portals: HashMap<(isize, isize), LevelPortal>,
     board_dirty: bool,
     sparkle_due: bool,
+    review_unlocked: bool,
 }
 
 impl ArenaMenu {
@@ -265,6 +266,39 @@ impl ArenaMenu {
         arena_menu.sparkle_due = newly_won && sparkle_due;
 
         arena_menu
+    }
+
+    fn constrain_pan(&self, offset: (f64, f64)) -> (f64, f64) {
+        constrain_to_portals(
+            offset,
+            self.level_portals
+                .iter()
+                .filter(|(_, portal)| portal.is_visible())
+                .map(|(position, _)| *position),
+        )
+    }
+
+    fn nearest_portal(&self, offset: (f64, f64)) -> (f64, f64) {
+        self.level_portals
+            .iter()
+            .filter(|(_, portal)| portal.is_visible())
+            .map(|(p, _)| (-p.0 as f64 * 128.0, -p.1 as f64 * 128.0))
+            .min_by(|a, b| {
+                ((a.0 - offset.0).powi(2) + (a.1 - offset.1).powi(2))
+                    .total_cmp(&((b.0 - offset.0).powi(2) + (b.1 - offset.1).powi(2)))
+            })
+            .unwrap_or(offset)
+    }
+
+    fn reviewer_button() -> ButtonElement {
+        ButtonElement::new(
+            (-68, 224),
+            (128, 28),
+            22,
+            LabelTrim::Round,
+            LabelTheme::Action,
+            crate::app::ContentElement::Text("Unlock all levels".into(), Alignment::Center),
+        )
     }
 
     fn draw_star_counter(
@@ -359,10 +393,11 @@ impl State for ArenaMenu {
 
         context.save();
 
-        context.translate(
-            128.0 + self.pan_offset.0 + drag_offset.0,
-            128.0 + self.pan_offset.1 + drag_offset.1,
-        )?;
+        let displayed = self.constrain_pan((
+            self.pan_offset.0 + drag_offset.0,
+            self.pan_offset.1 + drag_offset.1,
+        ));
+        context.translate(128.0 + displayed.0, 128.0 + displayed.1)?;
 
         let entries =
             shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "mobile"));
@@ -433,6 +468,9 @@ impl State for ArenaMenu {
         }
 
         self.draw_star_counter(interface_context, atlas, app_context)?;
+        if crate::access::reviewing() && !self.review_unlocked {
+            Self::reviewer_button().draw(interface_context, atlas, pointer, frame)?;
+        }
 
         Ok(())
     }
@@ -446,9 +484,19 @@ impl State for ArenaMenu {
         let pointer_floc = tuple_as!(pointer.location, f64);
 
         let previous_selected_position = self.level_position();
-
-        if self.pan_offset.0 > 0.0 {
-            self.pan_offset.0 -= self.pan_offset.0 * 0.25;
+        let review_unlocked = crate::access::review_levels_unlocked();
+        if review_unlocked != self.review_unlocked {
+            self.level_portals = campaign_portals(|code| App::kv_get(code) == "win");
+            self.review_unlocked = review_unlocked;
+        }
+        if crate::access::reviewing()
+            && !self.review_unlocked
+            && Self::reviewer_button().tick(pointer).is_some()
+        {
+            crate::access::unlock_review_levels();
+            self.level_portals = campaign_portals(|code| App::kv_get(code) == "win");
+            self.review_unlocked = true;
+            return None;
         }
 
         if let Some(pan_target) = self.pan_target {
@@ -461,8 +509,8 @@ impl State for ArenaMenu {
                 ((self.pan_offset.1 / 128.0).round() * 128.0 - self.pan_offset.1) * 0.25;
         }
 
-        self.pan_offset.0 = self.pan_offset.0.floor();
-        self.pan_offset.1 = self.pan_offset.1.floor();
+        self.pan_offset =
+            self.constrain_pan((self.pan_offset.0.round(), self.pan_offset.1.round()));
 
         let selected_position = self.level_position();
         let action = self
@@ -511,15 +559,22 @@ impl State for ArenaMenu {
             );
 
             if drag_offset.0.hypot(drag_offset.1) < 3.0 {
-                if self.level_portals.contains_key(&lloc) {
+                if self
+                    .level_portals
+                    .get(&lloc)
+                    .is_some_and(|p| p.is_visible())
+                {
                     self.pan_target = Some((
                         -((-self.pan_offset.0 + pointer_floc.0 - 128.0) / 128.0).round() * 128.0,
                         -((-self.pan_offset.1 + pointer_floc.1 - 128.0) / 128.0).round() * 128.0,
                     ));
                 }
             } else {
-                self.pan_offset.0 += drag_offset.0;
-                self.pan_offset.1 += drag_offset.1;
+                self.pan_offset = self.constrain_pan((
+                    self.pan_offset.0 + drag_offset.0,
+                    self.pan_offset.1 + drag_offset.1,
+                ));
+                self.pan_target = Some(self.nearest_portal(self.pan_offset));
             }
 
             self.pan_start = None;
@@ -543,7 +598,7 @@ impl Default for ArenaMenu {
     fn default() -> ArenaMenu {
         let button_battle = ButtonElement::new(
             (64, 192),
-            (128, 24),
+            (128, 28),
             BUTTON_BATTLE,
             LabelTrim::Glorious,
             LabelTheme::Action,
@@ -552,7 +607,7 @@ impl Default for ArenaMenu {
 
         let button_locked = ButtonElement::new(
             (68, 192),
-            (120, 24),
+            (120, 28),
             BUTTON_BATTLE,
             LabelTrim::Round,
             LabelTheme::Disabled,
@@ -560,8 +615,8 @@ impl Default for ArenaMenu {
         );
 
         let button_back = ButtonElement::new(
-            (84, 224),
-            (88, 16),
+            (68, 224),
+            (120, 28),
             BUTTON_BACK,
             LabelTrim::Return,
             LabelTheme::Default,
@@ -571,7 +626,7 @@ impl Default for ArenaMenu {
         let root_element = Interface::new(vec![button_back.boxed()]);
         let button_unlock = ButtonElement::new(
             (48, 192),
-            (160, 24),
+            (160, 28),
             BUTTON_BATTLE,
             LabelTrim::Glorious,
             LabelTheme::Action,
@@ -596,9 +651,31 @@ impl Default for ArenaMenu {
             pan_start: None,
             board_dirty: true,
             sparkle_due: false,
+            review_unlocked: crate::access::review_levels_unlocked(),
             level_portals,
         }
     }
+}
+
+// Project focus into the union of visible portal neighbourhoods, so even a
+// drag across empty rows always leaves a portal within 64 pixels of the center.
+fn constrain_to_portals(
+    offset: (f64, f64),
+    positions: impl Iterator<Item = (isize, isize)>,
+) -> (f64, f64) {
+    positions
+        .map(|p| {
+            let center = (-p.0 as f64 * 128.0, -p.1 as f64 * 128.0);
+            (
+                offset.0.clamp(center.0 - 64.0, center.0 + 64.0),
+                offset.1.clamp(center.1 - 64.0, center.1 + 64.0),
+            )
+        })
+        .min_by(|a, b| {
+            ((a.0 - offset.0).powi(2) + (a.1 - offset.1).powi(2))
+                .total_cmp(&((b.0 - offset.0).powi(2) + (b.1 - offset.1).powi(2)))
+        })
+        .unwrap_or(offset)
 }
 
 fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
@@ -614,7 +691,16 @@ fn portal_atlas_offset(style: &BoardStyle) -> (f64, f64) {
 
 fn campaign_portals(completed: impl Fn(&str) -> bool) -> HashMap<(isize, isize), LevelPortal> {
     let entries = shared::campaign_catalogue(cfg!(feature = "demo") && !cfg!(feature = "mobile"));
-    campaign_portals_for(&entries, completed)
+    let mut portals = campaign_portals_for(&entries, completed);
+    if crate::access::review_levels_unlocked() {
+        for portal in portals.values_mut() {
+            if portal.status != PortalStatus::Won {
+                portal.status = PortalStatus::Unlocked;
+            }
+            portal.title_visible = true;
+        }
+    }
+    portals
 }
 
 fn campaign_portals_for(
@@ -976,7 +1062,36 @@ mod tests {
             assert!(x >= 256.0 && x + 64.0 <= 512.0 && y + 64.0 <= 256.0);
             atlas_cells.insert((x as usize, y as usize));
         }
-        // Demo access is gated at runtime; the full map retains every board style.
-        assert_eq!(atlas_cells.len(), 5);
+        // Native demo access is gated at runtime; web demos contain only Basics.
+        assert_eq!(
+            atlas_cells.len(),
+            if cfg!(feature = "demo") && !cfg!(feature = "mobile") {
+                1
+            } else {
+                5
+            }
+        );
+    }
+}
+
+#[cfg(test)]
+mod pan_tests {
+    use super::*;
+    #[test]
+    fn panning_in_any_direction_keeps_a_displayed_portal_in_view() {
+        let positions = [(0, 1), (0, 0), (1, 0), (2, 0), (2, -1), (3, -1)];
+        for x in (-2000..=2000).step_by(71) {
+            for y in (-2000..=2000).step_by(71) {
+                let offset = constrain_to_portals((x as f64, y as f64), positions.into_iter());
+                assert!(positions.iter().any(|p| {
+                    (offset.0 + p.0 as f64 * 128.0).abs() <= 64.0
+                        && (offset.1 + p.1 as f64 * 128.0).abs() <= 64.0
+                }));
+            }
+        }
+        for p in positions {
+            let center = (-p.0 as f64 * 128.0, -p.1 as f64 * 128.0);
+            assert_eq!(constrain_to_portals(center, positions.into_iter()), center);
+        }
     }
 }

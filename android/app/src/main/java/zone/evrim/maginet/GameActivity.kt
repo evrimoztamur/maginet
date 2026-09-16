@@ -120,7 +120,7 @@ class GameActivity : ComponentActivity() {
     }
     private fun blur() = js("document.getElementById('text-input')?.blur()")
     private fun js(script: String) { web.evaluateJavascript(script, null) }
-    private fun publish() = js("window.dispatchEvent(new CustomEvent('maginet-access',{detail:${store.owned}}))")
+    private fun publish() = js("window.dispatchEvent(new CustomEvent('maginet-review',{detail:${store.reviewing}}));window.dispatchEvent(new CustomEvent('maginet-access',{detail:${store.owned}}))")
     private fun insets() {
         val inset = web.rootWindowInsets ?: return
         val density = resources.displayMetrics.density

@@ -16,7 +16,7 @@ const codes=[...new Set([...source.matchAll(/"([0-9a-hjkmnp-tv-z]{20,})"/g)].map
     window.starFrames=[];window.starPose=null;window.sparkles=0;window.tooltips=[];
     const fill=CanvasRenderingContext2D.prototype.fillRect;
     CanvasRenderingContext2D.prototype.fillRect=function(...a) {
-     if(this.fillStyle==='#001515' && a[3]===16) {const t=this.getTransform();tooltips.push([t.e,t.f,a[2],a[3]])}
+     if(this.fillStyle==='#001515' && [24,36].includes(a[3])) {const t=this.getTransform();tooltips.push([t.e,t.f,a[2],a[3]])}
      return fill.apply(this,a);
     };
     window.requestAnimationFrame=f=>raf.call(window,t=>{
@@ -54,19 +54,20 @@ const codes=[...new Set([...source.matchAll(/"([0-9a-hjkmnp-tv-z]{20,})"/g)].map
    await page.evaluate(()=>starFrames=[]);
    assert.equal(await page.evaluate(()=>tooltips.length),0,'hint starts hidden');
    await click(296,36);
-   assert.equal(await page.evaluate(()=>tooltips.length),1,'first click reveals exactly one tooltip line');
+   assert.equal(await page.evaluate(()=>tooltips.length),1,'first click reveals one tooltip');
    assert.equal(await page.evaluate(()=>tooltips[0][1]),66,'tooltip sits beneath the star');
+   assert.equal(await page.evaluate(()=>tooltips[0][3]),36,'countdown has room for two lines');
    await page.screenshot({path:`/tmp/maginet-star-countdown-${touch?'touch':'mouse'}.png`});
    await click(296,36);
    assert.equal(await page.evaluate(code=>localStorage.getItem(code),codes[0]),'win','two clicks preserve progress');
    assert.ok(await page.evaluate(y=>starFrames.some(p=>Math.abs(p[1]-y)>3),idleY),'clicks kick the positional spring');
    assert.equal(await page.evaluate(()=>starFrames.every(p=>Number.isInteger(p[0]) && Number.isInteger(p[1]) && p[2]===1 && p[3]===0 && p[4]===0 && p[5]===1)),true,'star stays unscaled, unrotated, and on the pixel grid');
-   await page.waitForTimeout(3100); // An expired sequence starts over.
+   await page.waitForTimeout(5100); // An expired sequence starts over.
    await click(296,36);
    assert.equal(await page.evaluate(code=>localStorage.getItem(code),codes[0]),'win','expired click sequence cannot reset');
    await click(296,36);await click(296,36);
    assert.equal(await page.evaluate(code=>localStorage.getItem(code),codes[0]),'win','three clicks preserve progress');
-   assert.equal(await page.evaluate(()=>tooltips.length),1,'countdown remains a single line');
+   assert.equal(await page.evaluate(()=>tooltips.length),1,'countdown remains a single tooltip');
    await click(296,36);
    assert.equal(await page.evaluate(codes=>codes.every(code=>localStorage.getItem(code)===null),codes),true,'fourth click resets every catalogue entry');
    assert.equal(await page.evaluate(()=>starPose),null,'star explodes out of view');

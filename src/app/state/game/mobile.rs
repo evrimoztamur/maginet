@@ -284,7 +284,7 @@ impl Game {
         if inside(p, layout.center()) {
             return MobileHit::Center;
         }
-        if let Some(mage) = self.get_active_mage() {
+        if let Some(mage) = self.get_movable_mage() {
             for (at, dir, _) in destinations(&self.lobby.game, mage) {
                 if inside(p, layout.button(self.pad_direction(dir, s))) {
                     return MobileHit::Destination(at);
@@ -299,7 +299,7 @@ impl Game {
         }
     }
     fn destination_tap(&mut self, tile: Position, app: &AppContext) {
-        if let Some(mage) = self.get_active_mage() {
+        if let Some(mage) = self.get_movable_mage() {
             if destinations(&self.lobby.game, mage)
                 .iter()
                 .any(|(at, _, _)| *at == tile)
@@ -343,7 +343,7 @@ impl Game {
                     self.drag = None;
                     self.drag_return = None;
                     let mage = match hit {
-                        MobileHit::Center => self.get_active_mage(),
+                        MobileHit::Center => self.get_movable_mage(),
                         MobileHit::Board => self
                             .location_as_position(p, self.board_offset(), BOARD_SCALE)
                             .and_then(|tile| self.lobby.game.live_occupant(&tile))
@@ -486,7 +486,7 @@ impl Game {
             false,
         )?;
         context.restore();
-        if let Some(mage) = self.get_active_mage() {
+        if let Some(mage) = self.get_movable_mage() {
             for (at, dir, targets) in destinations(&self.lobby.game, mage) {
                 context.save();
                 place(layout.button(self.pad_direction(dir, s)))?;

@@ -13,7 +13,7 @@ use crate::{
     },
     draw::{
         draw_board, draw_crosshair, draw_mage, draw_mana, draw_powerup, draw_spell_pattern,
-        draw_sprite,
+        draw_sprite, draw_text,
     },
     tuple_as,
 };
@@ -67,8 +67,8 @@ const BUTTON_LEAVE: usize = 100;
 impl Editor {
     pub fn new(level: Level) -> Editor {
         let button_menu = ToggleButtonElement::new(
-            (-60, 118),
-            (20, 20),
+            (-68, 8),
+            (32, 32),
             BUTTON_MENU,
             LabelTrim::Round,
             LabelTheme::Bright,
@@ -77,7 +77,7 @@ impl Editor {
 
         let button_mode_toggle = ButtonElement::new(
             (236, 228),
-            (80, 24),
+            (88, 28),
             BUTTON_MODE_TOGGLE,
             LabelTrim::Glorious,
             LabelTheme::Action,
@@ -85,8 +85,8 @@ impl Editor {
         );
 
         let button_save = ButtonElement::new(
-            (244, 204),
-            (64, 16),
+            (236, 192),
+            (88, 28),
             BUTTON_SAVE,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -94,8 +94,8 @@ impl Editor {
         );
 
         let button_width_minus = ButtonElement::new(
-            (82, if cfg!(feature = "mobile") { 244 } else { 248 }),
-            (12, 12),
+            (-68, 68),
+            (28, 28),
             BUTTON_WIDTH_MINUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -103,8 +103,8 @@ impl Editor {
         );
 
         let button_width_plus = ButtonElement::new(
-            (98, if cfg!(feature = "mobile") { 244 } else { 248 }),
-            (12, 12),
+            (-68, 104),
+            (28, 28),
             BUTTON_WIDTH_PLUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -112,8 +112,8 @@ impl Editor {
         );
 
         let button_height_minus = ButtonElement::new(
-            (216, 114),
-            (12, 12),
+            (-68, 164),
+            (28, 28),
             BUTTON_HEIGHT_MINUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -121,8 +121,8 @@ impl Editor {
         );
 
         let button_height_plus = ButtonElement::new(
-            (216, 130),
-            (12, 12),
+            (-68, 200),
+            (28, 28),
             BUTTON_HEIGHT_PLUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -130,8 +130,8 @@ impl Editor {
         );
 
         let button_team_left = ButtonElement::new(
-            (240, 122 - 92),
-            (12, 20),
+            (236, 24),
+            (28, 28),
             BUTTON_TEAM_LEFT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -139,8 +139,8 @@ impl Editor {
         );
 
         let button_team_right = ButtonElement::new(
-            (300, 122 - 92),
-            (12, 20),
+            (296, 24),
+            (28, 28),
             BUTTON_TEAM_RIGHT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -148,8 +148,8 @@ impl Editor {
         );
 
         let button_spell_left = ButtonElement::new(
-            (240, 122 - 38),
-            (12, 32),
+            (228, 80),
+            (24, 36),
             BUTTON_SPELL_LEFT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -157,8 +157,8 @@ impl Editor {
         );
 
         let button_spell_right = ButtonElement::new(
-            (300, 122 - 38),
-            (12, 32),
+            (300, 80),
+            (24, 36),
             BUTTON_SPELL_RIGHT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -166,8 +166,8 @@ impl Editor {
         );
 
         let button_mana_left = ButtonElement::new(
-            (244, 122 + 8),
-            (12, 12),
+            (236, 124),
+            (28, 28),
             BUTTON_MANA_LEFT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -175,8 +175,8 @@ impl Editor {
         );
 
         let button_mana_right = ButtonElement::new(
-            (296, 122 + 8),
-            (12, 12),
+            (296, 124),
+            (28, 28),
             BUTTON_MANA_RIGHT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -184,8 +184,8 @@ impl Editor {
         );
 
         let button_delete = ButtonElement::new(
-            (260, 160),
-            (32, 20),
+            (256, 156),
+            (40, 28),
             BUTTON_DELETE,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -203,8 +203,8 @@ impl Editor {
         ]);
 
         let button_delete = ButtonElement::new(
-            (260, 80),
-            (32, 20),
+            (256, 80),
+            (40, 28),
             BUTTON_DELETE,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -218,8 +218,8 @@ impl Editor {
         ]);
 
         let button_add_mage = ButtonElement::new(
-            (252, 118 - 14),
-            (48, 20),
+            (248, 96),
+            (56, 28),
             BUTTON_ADD_MAGE,
             LabelTrim::Glorious,
             LabelTheme::Default,
@@ -227,8 +227,8 @@ impl Editor {
         );
 
         let button_add_prop: ButtonElement = ButtonElement::new(
-            (252, 118 + 14),
-            (48, 20),
+            (248, 132),
+            (56, 28),
             BUTTON_ADD_PROP,
             LabelTrim::Glorious,
             LabelTheme::Default,
@@ -248,8 +248,8 @@ impl Editor {
         ]);
 
         let button_load = ButtonElement::new(
-            (96 - 44, 128 - 32),
-            (88, 24),
+            (48, 68),
+            (96, 28),
             BUTTON_LOAD,
             LabelTrim::Round,
             LabelTheme::Action,
@@ -257,8 +257,8 @@ impl Editor {
         );
 
         let button_simulate = ButtonElement::new(
-            (96 - 44, 128),
-            (88, 16),
+            (48, 104),
+            (96, 28),
             BUTTON_SIMULATE,
             LabelTrim::Round,
             LabelTheme::Disabled,
@@ -266,8 +266,8 @@ impl Editor {
         );
 
         let button_reset = ConfirmButtonElement::new(
-            (96 - 44, 128 + 20),
-            (88, 16),
+            (48, 140),
+            (96, 28),
             BUTTON_RESET,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -275,8 +275,8 @@ impl Editor {
         );
 
         let button_leave = ConfirmButtonElement::new(
-            (96 - 36, 128 + 48),
-            (72, 16),
+            (48, 176),
+            (96, 28),
             BUTTON_LEAVE,
             LabelTrim::Return,
             LabelTheme::Default,
@@ -532,6 +532,8 @@ impl State for Editor {
 
         context.restore();
 
+        draw_text(interface_context, atlas, -60.0, 52.0, "W")?;
+        draw_text(interface_context, atlas, -60.0, 148.0, "H")?;
         self.interface
             .draw(interface_context, atlas, pointer, frame)?;
 

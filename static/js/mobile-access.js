@@ -1,4 +1,6 @@
 let access = false;
+let review = false;
+export const reviewing = () => review;
 let background = false;
 export const owned = () => access;
 export const inactive = () => background;
@@ -7,6 +9,7 @@ const send = body => {
     else window.webkit.messageHandlers.maginet.postMessage(body);
 };
 export const request = action => send({action});
+if (typeof window !== 'undefined') window.addEventListener('maginet-review', event => { review = event.detail === true; });
 if (typeof window !== 'undefined') window.addEventListener('maginet-access', event => { access = event.detail === true; });
 if (typeof window !== 'undefined') window.addEventListener('maginet-background', () => { background = true; document.activeElement?.blur(); });
 if (typeof window !== 'undefined') window.addEventListener('maginet-foreground', () => { background = false; });

@@ -1,15 +1,15 @@
 pub(super) use shared::TUTORIAL_CODE;
-use shared::{GameResult, Level, LoadoutMethod, LobbySettings, LobbySort, Team};
+use shared::{GameResult, Level, LoadoutMethod, LobbySettings, LobbySort, Position, PowerUp, Team};
 use wasm_bindgen::JsValue;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{menu_arena::TUTORIAL_POSITION, Game, MainMenu, State};
+use super::{menu_arena::TUTORIAL_POSITION, ArenaMenu, Game, MainMenu, State};
 use crate::{
     app::{
-        Alignment::Center, AppContext, ContentElement::Text, LabelTrim, Particle, ParticleSort,
-        StateSort,
+        Alignment::Center, AppContext, ButtonElement, ContentElement::Text, LabelTheme, LabelTrim,
+        Particle, ParticleSort, StateSort, UIElement,
     },
-    draw::{draw_label, draw_text_centered},
+    draw::{draw_label, draw_powerup, draw_text_centered},
     window,
 };
 
@@ -17,6 +17,7 @@ use crate::{
 enum TutorialStage {
     Movement,
     Attacking,
+    Undo,
     FinalBlow,
     Victory,
 }
@@ -25,16 +26,52 @@ pub struct Tutorial {
     pub game_state: Game,
     tutorial_stage: TutorialStage,
     campaign: bool,
+    lesson: u8,
+    item_slide: Option<usize>,
 }
+
+const ITEMS: [(PowerUp, &str, &[&str]); 3] = [
+    (
+        PowerUp::Diagonal,
+        "Diagonal rune",
+        &[
+            "Pick up the green rune to move",
+            "diagonally as well as up, down,",
+            "left and right. Your spell stays",
+            "the same. This lasts until you",
+            "pick up another item.",
+        ],
+    ),
+    (
+        PowerUp::Shield,
+        "Shield",
+        &[
+            "Enemies that move into your",
+            "attack pattern lose 1 mana,",
+            "even on their turn. You still",
+            "take damage when hit. Lasts",
+            "until you pick up another item.",
+        ],
+    ),
+    (
+        PowerUp::Beam,
+        "Beam",
+        &[
+            "Move onto a beam to fire once.",
+            "It hits every other mage in its",
+            "row and column, including allies.",
+            "It uses your turn and replaces",
+            "your usual attack for that move.",
+        ],
+    ),
+];
 
 impl Tutorial {
     pub fn spark_board(&mut self) {
         let board_size = self.game_state.visual_game().board_size();
-
         for _ in 0..board_size.0 * 8 {
             let d = js_sys::Math::random() * std::f64::consts::TAU;
             let v = (js_sys::Math::random() + js_sys::Math::random()) * 0.1;
-
             self.game_state.particle_system().add(Particle::new(
                 (js_sys::Math::random() * board_size.0 as f64 - 0.5, -0.5),
                 (d.sin() * v * 0.2, -v),
@@ -42,6 +79,46 @@ impl Tutorial {
                 ParticleSort::Diagonals,
             ));
         }
+    }
+
+    fn next_button(app: &AppContext, label: &str) -> ButtonElement {
+        ButtonElement::new(
+            (228, if Game::touch_enabled(app) { 76 } else { 172 }),
+            (96, 32),
+            1,
+            LabelTrim::Round,
+            LabelTheme::Action,
+            Text(label.into(), Center),
+        )
+    }
+
+    fn slide_button(back: bool, last: bool) -> ButtonElement {
+        ButtonElement::new(
+            (if back { 8 } else { 140 }, 216),
+            (108, 32),
+            if back { 0 } else { 1 },
+            if back {
+                LabelTrim::Return
+            } else {
+                LabelTrim::Round
+            },
+            if back {
+                LabelTheme::Default
+            } else {
+                LabelTheme::Action
+            },
+            Text(
+                if back {
+                    "Back"
+                } else if last {
+                    "Continue"
+                } else {
+                    "Next"
+                }
+                .into(),
+                Center,
+            ),
+        )
     }
 }
 
@@ -51,181 +128,194 @@ impl State for Tutorial {
         context: &CanvasRenderingContext2d,
         interface_context: &CanvasRenderingContext2d,
         atlas: &HtmlCanvasElement,
-        app_context: &AppContext,
+        app: &AppContext,
     ) -> Result<(), JsValue> {
-        interface_context.save();
-        if Game::touch_enabled(app_context) {
-            interface_context.translate(0.0, -192.0)?;
+        if let Some(slide) = self.item_slide {
+            let (powerup, title, lines) = ITEMS[slide];
+            draw_label(
+                context,
+                atlas,
+                (24, 16),
+                (208, 28),
+                "#557F55",
+                &Text(title.into(), Center),
+                &app.pointer,
+                app.frame,
+                &LabelTrim::Glorious,
+                false,
+            )?;
+            context.save();
+            context.translate(128.0, 80.0)?;
+            draw_powerup(context, atlas, &Position(0, 0), &powerup, app.frame)?;
+            context.restore();
+            for (i, line) in lines.iter().enumerate() {
+                draw_text_centered(
+                    interface_context,
+                    atlas,
+                    128.0,
+                    112.0 + i as f64 * 16.0,
+                    line,
+                )?;
+            }
+            draw_text_centered(
+                interface_context,
+                atlas,
+                128.0,
+                196.0,
+                &format!("{} / 3", slide + 1),
+            )?;
+            if slide > 0 {
+                Self::slide_button(true, false).draw(
+                    interface_context,
+                    atlas,
+                    &app.pointer,
+                    app.frame,
+                )?;
+            }
+            Self::slide_button(false, slide == 2).draw(
+                interface_context,
+                atlas,
+                &app.pointer,
+                app.frame,
+            )?;
+            return Ok(());
         }
-        match self.tutorial_stage {
-            TutorialStage::Movement => {
-                draw_label(
-                    context,
-                    atlas,
-                    (
-                        80,
-                        if Game::touch_enabled(app_context) {
-                            8
-                        } else {
-                            24
-                        },
-                    ),
-                    (96, 16),
-                    "#557F55",
-                    &Text("Movement".to_string(), Center),
-                    &app_context.pointer,
-                    app_context.frame,
-                    &LabelTrim::Glorious,
-                    false,
-                )?;
-
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    224.0,
-                    if Game::touch_enabled(app_context) {
-                        "Tap the Red Mage"
-                    } else {
-                        "Click the Red Mage"
-                    },
-                )?;
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    240.0,
-                    if Game::touch_enabled(app_context) {
-                        "Tap a square twice to move"
-                    } else {
-                        "Then pick a square to move to"
-                    },
-                )?;
-            }
-            TutorialStage::Attacking => {
-                draw_label(
-                    context,
-                    atlas,
-                    (
-                        80,
-                        if Game::touch_enabled(app_context) {
-                            8
-                        } else {
-                            24
-                        },
-                    ),
-                    (96, 16),
-                    "#557F55",
-                    &Text("Attacking".to_string(), Center),
-                    &app_context.pointer,
-                    app_context.frame,
-                    &LabelTrim::Glorious,
-                    false,
-                )?;
-
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    224.0,
-                    "Mages attack when they move",
-                )?;
-                draw_text_centered(interface_context, atlas, 128.0, 240.0, "Zap the Blue Mage!")?;
-            }
-            TutorialStage::FinalBlow => {
-                draw_label(
-                    context,
-                    atlas,
-                    (
-                        80,
-                        if Game::touch_enabled(app_context) {
-                            8
-                        } else {
-                            24
-                        },
-                    ),
-                    (96, 16),
-                    "#557F55",
-                    &Text("Final Blow".to_string(), Center),
-                    &app_context.pointer,
-                    app_context.frame,
-                    &LabelTrim::Glorious,
-                    false,
-                )?;
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    232.0,
-                    "Deal the final blow!",
-                )?;
-            }
-            TutorialStage::Victory => {
-                draw_label(
-                    context,
-                    atlas,
-                    (
-                        80,
-                        if Game::touch_enabled(app_context) {
-                            8
-                        } else {
-                            24
-                        },
-                    ),
-                    (96, 16),
-                    "#557F55",
-                    &Text("Victory!".to_string(), Center),
-                    &app_context.pointer,
-                    app_context.frame,
-                    &LabelTrim::Glorious,
-                    false,
-                )?;
-                draw_text_centered(interface_context, atlas, 128.0, 224.0, "Congratulations!")?;
-                draw_text_centered(
-                    interface_context,
-                    atlas,
-                    128.0,
-                    240.0,
-                    "You won your first battle",
-                )?;
-            }
-        }
-
-        interface_context.restore();
         self.game_state
-            .draw(context, interface_context, atlas, app_context)
+            .draw(context, interface_context, atlas, app)?;
+        let touch = Game::touch_enabled(app);
+        let (title, lines): (&str, Vec<&str>) = match self.tutorial_stage {
+            TutorialStage::Movement => (
+                "Movement",
+                if touch {
+                    vec!["Tap the Red Mage.", "Tap an adjacent square twice to move."]
+                } else {
+                    vec!["Click the Red Mage.", "Click an adjacent square to move."]
+                },
+            ),
+            TutorialStage::Attacking => (
+                "Attacking",
+                vec![
+                    "Mages shoot spells when they move.",
+                    "Mages have different attack patterns.",
+                ],
+            ),
+            TutorialStage::Undo => (
+                "Undo",
+                vec![
+                    "Use the back arrow to undo a move.",
+                    "Press it twice to confirm.",
+                ],
+            ),
+            TutorialStage::FinalBlow => ("Final Blow", vec!["Deal the final blow!"]),
+            TutorialStage::Victory => (
+                "Victory!",
+                vec!["Congratulations!", "Continue to learn about items."],
+            ),
+        };
+        draw_label(
+            context,
+            atlas,
+            (80, if touch { -4 } else { 16 }),
+            (96, 24),
+            "#557F55",
+            &Text(title.into(), Center),
+            &app.pointer,
+            app.frame,
+            &LabelTrim::Glorious,
+            false,
+        )?;
+        let y = if touch { 28.0 } else { 216.0 };
+        interface_context.set_fill_style(&"#002a2a".into());
+        interface_context.fill_rect(0.0, y - 4.0, 256.0, lines.len() as f64 * 14.0 + 4.0);
+        for (i, line) in lines.iter().enumerate() {
+            draw_text_centered(interface_context, atlas, 128.0, y + i as f64 * 14.0, line)?;
+        }
+        if matches!(
+            self.tutorial_stage,
+            TutorialStage::Attacking | TutorialStage::Undo
+        ) && !self.game_state.is_interface_active()
+        {
+            Self::next_button(app, "Next").draw(
+                interface_context,
+                atlas,
+                &app.pointer,
+                app.frame,
+            )?;
+        }
+        Ok(())
     }
 
-    fn tick(
-        &mut self,
-        text_input: &HtmlInputElement,
-        app_context: &AppContext,
-    ) -> Option<StateSort> {
-        let game = self.game_state.visual_game();
-        let stage = if game.result() == Some(GameResult::Win(Team::Red)) {
-            TutorialStage::Victory
-        } else if game
-            .iter_mages()
-            .any(|mage| mage.mana == 1 && mage.team == Team::Blue)
+    fn tick(&mut self, text_input: &HtmlInputElement, app: &AppContext) -> Option<StateSort> {
+        let mut pointer = app.pointer.clone();
+        if pointer.is_touch()
+            && pointer
+                .gestures
+                .iter()
+                .any(|event| matches!(event, crate::app::pointer::GestureEvent::Release(_)))
         {
-            TutorialStage::FinalBlow
-        } else if game.turns() > 0 {
-            TutorialStage::Attacking
-        } else {
+            pointer.pending_click = true;
+        }
+        if let Some(slide) = self.item_slide {
+            if slide > 0 && Self::slide_button(true, false).tick(&pointer).is_some() {
+                self.item_slide = Some(slide - 1);
+            } else if Self::slide_button(false, slide == 2)
+                .tick(&pointer)
+                .is_some()
+            {
+                if slide == 2 {
+                    return Some(if self.campaign {
+                        StateSort::ArenaMenu(ArenaMenu::at_position(
+                            TUTORIAL_POSITION,
+                            self.game_state.newly_won(),
+                        ))
+                    } else {
+                        StateSort::MainMenu(MainMenu::default())
+                    });
+                }
+                self.item_slide = Some(slide + 1);
+            }
+            return None;
+        }
+        let game = self.game_state.visual_game();
+        let won = game.result() == Some(GameResult::Win(Team::Red));
+        let stage = if won {
+            TutorialStage::Victory
+        } else if game.turns() == 0 {
             TutorialStage::Movement
+        } else if self.lesson == 0 {
+            TutorialStage::Attacking
+        } else if self.lesson == 1 {
+            TutorialStage::Undo
+        } else {
+            TutorialStage::FinalBlow
         };
-
         if self.tutorial_stage != stage {
             self.tutorial_stage = stage;
             self.spark_board();
         }
-
-        let next_state = self.game_state.tick(text_input, app_context);
-
-        match next_state {
+        if matches!(
+            self.tutorial_stage,
+            TutorialStage::Attacking | TutorialStage::Undo
+        ) && !self.game_state.is_interface_active()
+        {
+            if Self::next_button(app, "Next").tick(&pointer).is_some() {
+                self.lesson += 1;
+                return None;
+            }
+            // Let playback finish and keep menu/undo accessible while a lesson
+            // is being read. The next battle move waits for Next.
+            if !self.game_state.is_animating() && app.pointer.location.0 >= 0 {
+                return None;
+            }
+        }
+        match self.game_state.tick(text_input, app) {
             Some(StateSort::Game(_)) => Some(StateSort::Tutorial(Tutorial::new(self.campaign))),
+            Some(StateSort::ArenaMenu(_)) | Some(StateSort::SkirmishMenu(_)) if won => {
+                self.item_slide = Some(0);
+                None
+            }
             Some(StateSort::SkirmishMenu(_)) => Some(StateSort::MainMenu(MainMenu::default())),
-            _ => next_state,
+            next => next,
         }
     }
 }
@@ -235,17 +325,15 @@ impl Default for Tutorial {
         Self::new(false)
     }
 }
-
 impl Tutorial {
     pub fn campaign() -> Self {
         Self::new(true)
     }
-
     fn new(campaign: bool) -> Self {
         let level: Level = TUTORIAL_CODE.into();
-        Tutorial {
+        Self {
             game_state: Game::new(LobbySettings {
-                player_team: shared::Team::Red,
+                player_team: Team::Red,
                 lobby_sort: LobbySort::LocalAI,
                 loadout_method: if campaign {
                     LoadoutMethod::Arena(level, TUTORIAL_POSITION)
@@ -255,9 +343,11 @@ impl Tutorial {
                 seed: window().performance().unwrap().now() as u64,
                 can_stalemate: false,
             })
-            .with_easy_ai(),
+            .with_tutorial(),
             tutorial_stage: TutorialStage::Movement,
             campaign,
+            lesson: 0,
+            item_slide: None,
         }
     }
 }

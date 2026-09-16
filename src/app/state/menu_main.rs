@@ -126,7 +126,7 @@ impl Default for MainMenu {
     fn default() -> Self {
         let button_arena = ButtonElement::new(
             (192, 68),
-            (112, 24),
+            (112, 28),
             BUTTON_ARENA,
             LabelTrim::Glorious,
             LabelTheme::Action,
@@ -135,7 +135,7 @@ impl Default for MainMenu {
 
         let button_skirmish = ButtonElement::new(
             (200, 68 + 32),
-            (96, 20),
+            (96, 28),
             BUTTON_SKIRMISH,
             LabelTrim::Glorious,
             LabelTheme::Default,
@@ -143,8 +143,8 @@ impl Default for MainMenu {
         );
 
         let button_editor = ButtonElement::new(
-            (208, 68 + 32 * 2 + 4),
-            (80, 20),
+            (208, 68 + 32 * 2),
+            (80, 28),
             BUTTON_EDITOR,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -153,7 +153,7 @@ impl Default for MainMenu {
 
         let button_tutorial = ButtonElement::new(
             (208, 68 + 32 * 3),
-            (80, 20),
+            (80, 28),
             BUTTON_TUTORIAL,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -162,7 +162,7 @@ impl Default for MainMenu {
 
         let button_settings = ButtonElement::new(
             (208, 68 + 32 * 4 + 4),
-            (80, 20),
+            (80, 28),
             BUTTON_SETTINGS,
             LabelTrim::Return,
             LabelTheme::Default,

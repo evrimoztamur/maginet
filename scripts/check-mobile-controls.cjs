@@ -64,7 +64,7 @@ const assert = require('node:assert/strict');
  // Settings persists the controller preference and removes hidden hit areas.
  await fresh();
  await page.goto(url);await page.waitForSelector('#game-canvas');
- await tap(248,210);await tap(100,204);
+ await tap(248,210);await tap(100,222);
  assert.equal(await page.evaluate(()=>localStorage.getItem('onscreen_controls')),'off');
  await page.screenshot({path:'/tmp/maginet-controls-settings.png'});
  await tap(128,248);await tap(248,174);
@@ -78,7 +78,7 @@ const assert = require('node:assert/strict');
  await fresh();
  assert.equal((await sample()).rosterRed.length,0,'Off persists across reloads');
  await page.goto(url);await page.waitForSelector('#game-canvas');
- await tap(248,210);await tap(32,204);
+ await tap(248,210);await tap(32,222);
  assert.equal(await page.evaluate(()=>localStorage.getItem('onscreen_controls')),'on');
  const origin=await fresh();
  assert.equal(await page.evaluate(()=>{
@@ -103,6 +103,7 @@ const assert = require('node:assert/strict');
  await tap(128,112); // Same east destination confirms from board.
  await page.waitForTimeout(450);
  assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'cross-surface confirmation');
+ await tap(276,92);await tap(276,92); // Read Attacking and Undo before resuming battle.
  await tap(-16,140);
  assert.deepEqual((await sample()).shadows[0],[origin[0]+32,origin[1]],'first undo tap only arms confirmation');
  await tap(277,213); // A controller interaction cancels the armed undo.
