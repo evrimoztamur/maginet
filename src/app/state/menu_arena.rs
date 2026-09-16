@@ -788,34 +788,33 @@ mod tests {
         let entries = shared::campaign_catalogue(false);
         let portals = campaign_portals_for(&entries, |_| false);
         assert_eq!(portals.len(), entries.len());
-        assert_eq!(portals.values().filter(|p| p.is_visible()).count(), 26);
+        assert_eq!(portals.values().filter(|p| p.is_visible()).count(), 25);
         let unlocks: Vec<_> = portals
             .iter()
             .filter(|(_, p)| p.entry_action(true) == PortalAction::Unlock)
             .map(|(position, _)| *position)
             .collect();
         assert!(unlocks.is_empty());
-        assert_eq!(portals[&(3, -1)].entry_action(false), PortalAction::Locked);
+        let paid = entries
+            .iter()
+            .find(|e| e.id == "patterns-i")
+            .unwrap()
+            .position;
+        assert_eq!(portals[&paid].entry_action(false), PortalAction::Locked);
         let free_codes: HashSet<_> = entries
             .iter()
             .filter(|e| e.demo)
             .map(|e| e.level().as_code())
             .collect();
         let progressed = campaign_portals_for(&entries, |c| free_codes.contains(c));
-        assert_eq!(
-            progressed[&(3, -1)].entry_action(true),
-            PortalAction::Unlock
-        );
-        assert_eq!(
-            progressed[&(3, -1)].entry_action(false),
-            PortalAction::Battle
-        );
+        assert_eq!(progressed[&paid].entry_action(true), PortalAction::Unlock);
+        assert_eq!(progressed[&paid].entry_action(false), PortalAction::Battle);
         assert_eq!(
             progressed
                 .values()
                 .filter(|p| p.status == PortalStatus::Won)
                 .count(),
-            5
+            4
         );
         let won = campaign_portals_for(&entries, |_| true);
         for portal in won.values() {
@@ -930,7 +929,7 @@ mod tests {
         let portals = campaign_portals(|code| code == tutorial_code || code == basics_code);
         assert!(portals[&(1, 0)].status == PortalStatus::Unlocked);
         assert!(portals[&(2, 0)].title_visible);
-        assert!(!portals[&(2, -1)].title_visible);
+        assert!(!portals[&(3, 0)].title_visible);
     }
 
     #[test]
@@ -1016,11 +1015,11 @@ mod tests {
         let entries = shared::campaign_catalogue(false);
         let mut completed = HashSet::from([Level::from(TUTORIAL_CODE).as_code()]);
         let portals = campaign_portals(|c| completed.contains(c));
-        assert_eq!(portals.values().filter(|p| p.is_visible()).count(), 26);
+        assert_eq!(portals.values().filter(|p| p.is_visible()).count(), 25);
         for (won, revealed, total) in [
-            ("rite-iv", "ascension-i", 27),
-            ("ascension-i", "ascension-ii", 28),
-            ("ascension-ii", "ascension-iii", 29),
+            ("rite-iv", "ascension-i", 26),
+            ("ascension-i", "ascension-ii", 27),
+            ("ascension-ii", "ascension-iii", 28),
         ] {
             completed.insert(
                 entries
@@ -1040,7 +1039,7 @@ mod tests {
                 .values()
                 .filter(|p| p.is_visible())
                 .count(),
-            31
+            30
         );
     }
 

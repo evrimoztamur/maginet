@@ -1,0 +1,663 @@
+{
+  "config": {
+    "version": 2,
+    "seed_namespace": null,
+    "red_profile": null,
+    "blue_profile": null,
+    "replays": true,
+    "games": 30,
+    "seed": 1,
+    "max_plies": 200,
+    "profiles": [
+      {
+        "difficulty": "Easy",
+        "depth": 2,
+        "nodes": 1000,
+        "weights": [
+          65,
+          25,
+          10
+        ]
+      },
+      {
+        "difficulty": "Normal",
+        "depth": 4,
+        "nodes": 5000,
+        "weights": [
+          80,
+          15,
+          5
+        ]
+      },
+      {
+        "difficulty": "Hard",
+        "depth": 8,
+        "nodes": 20000,
+        "weights": [
+          90,
+          8,
+          2
+        ]
+      }
+    ],
+    "table_capacity": 32768
+  },
+  "catalogue": [
+    {
+      "id": "basics-i",
+      "name": "Basics I",
+      "code": "hg12g014cm0j800",
+      "position": [
+        0,
+        0
+      ],
+      "style": "Grass",
+      "hidden": false,
+      "chaos": false,
+      "demo": true,
+      "tutorial": false
+    },
+    {
+      "id": "basics-ii",
+      "name": "Basics II",
+      "code": "e01jg1148m0j8k834g00",
+      "position": [
+        1,
+        0
+      ],
+      "style": "Grass",
+      "hidden": false,
+      "chaos": false,
+      "demo": true,
+      "tutorial": false
+    },
+    {
+      "id": "basics-iii",
+      "name": "Basics III",
+      "code": "j0228014cm0j8v804gp04900",
+      "position": [
+        2,
+        0
+      ],
+      "style": "Grass",
+      "hidden": false,
+      "chaos": false,
+      "demo": true,
+      "tutorial": false
+    },
+    {
+      "id": "basics-iv",
+      "name": "Basics IV",
+      "code": "j022801mcm0j8v804gp04d06201g00s80dm07403g01g",
+      "position": [
+        2,
+        -1
+      ],
+      "style": "Grass",
+      "hidden": false,
+      "chaos": false,
+      "demo": true,
+      "tutorial": false
+    },
+    {
+      "id": "patterns-i",
+      "name": "Patterns I",
+      "code": "dg30r0j4500m8v048g0g4h250526212400",
+      "position": [
+        3,
+        -1
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "patterns-ii",
+      "name": "Patterns II",
+      "code": "pg2620a48m1m8c038ht02h04gg1jr0wg0d406",
+      "position": [
+        3,
+        -2
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "patterns-iii",
+      "name": "Patterns III",
+      "code": "pg3220j4g41m8h818gr06h4g052780j400",
+      "position": [
+        4,
+        -2
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "diagonals-i",
+      "name": "Diagonals I",
+      "code": "dg1080a4d40j409408",
+      "position": [
+        5,
+        -2
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "diagonals-ii",
+      "name": "Diagonals II",
+      "code": "f02220t4840m8e018hc06h04a014g0sg0cm04",
+      "position": [
+        5,
+        -1
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "diagonals-iii",
+      "name": "Diagonals III",
+      "code": "bg3200240g248h038gcg6h2s0h23t02408r04b02",
+      "position": [
+        5,
+        0
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "diagonals-iv",
+      "name": "Diagonals IV",
+      "code": "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08",
+      "position": [
+        4,
+        0
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "beams-i",
+      "name": "Beams I",
+      "code": "hg22r024dg0m81816j2g0d02500pg08",
+      "position": [
+        6,
+        -2
+      ],
+      "style": "Flesh",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "beams-ii",
+      "name": "Beams II",
+      "code": "eg3020t4c40489818gr02h0m0d2780240gp06a03d00pr08",
+      "position": [
+        6,
+        -3
+      ],
+      "style": "Flesh",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "beams-iii",
+      "name": "Beams III",
+      "code": "qg22j0t4h41m8d038ja06h04gg13g0mr04j02",
+      "position": [
+        6,
+        -4
+      ],
+      "style": "Flesh",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "shields-i",
+      "name": "Shields I",
+      "code": "d012g0an840k80h401200",
+      "position": [
+        7,
+        -2
+      ],
+      "style": "Crust",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "shields-ii",
+      "name": "Shields II",
+      "code": "xg2420a4r40m9b018gp02h06x00080140f406t02gg10",
+      "position": [
+        7,
+        -1
+      ],
+      "style": "Crust",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "shields-iii",
+      "name": "Shields III",
+      "code": "j02280j4500m8t818hpg4h025g06800",
+      "position": [
+        7,
+        0
+      ],
+      "style": "Crust",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "challenge-i",
+      "name": "Challenge I",
+      "code": "hg2280a4d40490008g6g2h02cg12g00",
+      "position": [
+        8,
+        -4
+      ],
+      "style": "Eldritch",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "challenge-ii",
+      "name": "Challenge II",
+      "code": "hg2680t44m048a028hmg2h04000gr0mc06004",
+      "position": [
+        8,
+        -5
+      ],
+      "style": "Eldritch",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "challenge-iii",
+      "name": "Challenge III",
+      "code": "q03220t4840m98828gw02h2r0d2bg0j40x804j03dg0k00s80a807200",
+      "position": [
+        8,
+        -6
+      ],
+      "style": "Eldritch",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "challenge-iv",
+      "name": "Challenge IV",
+      "code": "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404",
+      "position": [
+        9,
+        -6
+      ],
+      "style": "Eldritch",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "rite-i",
+      "name": "Rite I",
+      "code": "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g",
+      "position": [
+        8,
+        -2
+      ],
+      "style": "Crust",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "rite-ii",
+      "name": "Rite II",
+      "code": "dg20r124dg1m80838hgg8h03501480h404",
+      "position": [
+        9,
+        -2
+      ],
+      "style": "Crust",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "rite-iii",
+      "name": "Rite III",
+      "code": "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g",
+      "position": [
+        9,
+        -3
+      ],
+      "style": "Eldritch",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "rite-iv",
+      "name": "Rite IV",
+      "code": "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00",
+      "position": [
+        9,
+        -4
+      ],
+      "style": "Eldritch",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "ascension-i",
+      "name": "Ascension I",
+      "code": "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g",
+      "position": [
+        10,
+        -4
+      ],
+      "style": "Grass",
+      "hidden": true,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "ascension-ii",
+      "name": "Ascension II",
+      "code": "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03",
+      "position": [
+        11,
+        -4
+      ],
+      "style": "Grass",
+      "hidden": true,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "crossfire",
+      "name": "Crossfire",
+      "code": "dg1g8092cm112b82240j808",
+      "position": [
+        7,
+        -4
+      ],
+      "style": "Flesh",
+      "hidden": true,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "side-step",
+      "name": "Side Step",
+      "code": "dg10008h4m11209008",
+      "position": [
+        6,
+        0
+      ],
+      "style": "Desert",
+      "hidden": true,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "ascension-iii",
+      "name": "Ascension III",
+      "code": "dg400024401m8g028hg02h3d0124t0t45m1483818g00",
+      "position": [
+        12,
+        -4
+      ],
+      "style": "Grass",
+      "hidden": true,
+      "chaos": true,
+      "demo": false,
+      "tutorial": false
+    },
+    {
+      "id": "tutorial",
+      "name": "Tutorial",
+      "code": "hg18a09m4g0m81000c4068039g1g",
+      "position": [
+        0,
+        1
+      ],
+      "style": "Grass",
+      "hidden": false,
+      "chaos": false,
+      "demo": true,
+      "tutorial": true
+    }
+  ],
+  "graph": [
+    {
+      "from": "tutorial",
+      "to": "basics-i",
+      "one_way": false
+    },
+    {
+      "from": "basics-i",
+      "to": "basics-ii",
+      "one_way": false
+    },
+    {
+      "from": "basics-ii",
+      "to": "basics-iii",
+      "one_way": false
+    },
+    {
+      "from": "basics-iii",
+      "to": "basics-iv",
+      "one_way": false
+    },
+    {
+      "from": "basics-iv",
+      "to": "patterns-i",
+      "one_way": false
+    },
+    {
+      "from": "patterns-i",
+      "to": "patterns-ii",
+      "one_way": false
+    },
+    {
+      "from": "patterns-ii",
+      "to": "patterns-iii",
+      "one_way": false
+    },
+    {
+      "from": "patterns-iii",
+      "to": "diagonals-i",
+      "one_way": false
+    },
+    {
+      "from": "diagonals-i",
+      "to": "beams-i",
+      "one_way": false
+    },
+    {
+      "from": "beams-i",
+      "to": "shields-i",
+      "one_way": false
+    },
+    {
+      "from": "shields-i",
+      "to": "rite-i",
+      "one_way": false
+    },
+    {
+      "from": "rite-i",
+      "to": "rite-ii",
+      "one_way": false
+    },
+    {
+      "from": "rite-ii",
+      "to": "rite-iii",
+      "one_way": false
+    },
+    {
+      "from": "rite-iii",
+      "to": "rite-iv",
+      "one_way": false
+    },
+    {
+      "from": "rite-iv",
+      "to": "ascension-i",
+      "one_way": false
+    },
+    {
+      "from": "ascension-i",
+      "to": "ascension-ii",
+      "one_way": false
+    },
+    {
+      "from": "diagonals-i",
+      "to": "diagonals-ii",
+      "one_way": false
+    },
+    {
+      "from": "diagonals-ii",
+      "to": "diagonals-iii",
+      "one_way": false
+    },
+    {
+      "from": "diagonals-iii",
+      "to": "diagonals-iv",
+      "one_way": false
+    },
+    {
+      "from": "beams-i",
+      "to": "beams-ii",
+      "one_way": false
+    },
+    {
+      "from": "beams-ii",
+      "to": "beams-iii",
+      "one_way": false
+    },
+    {
+      "from": "beams-iii",
+      "to": "crossfire",
+      "one_way": false
+    },
+    {
+      "from": "crossfire",
+      "to": "challenge-i",
+      "one_way": false
+    },
+    {
+      "from": "diagonals-iii",
+      "to": "side-step",
+      "one_way": false
+    },
+    {
+      "from": "side-step",
+      "to": "shields-iii",
+      "one_way": false
+    },
+    {
+      "from": "ascension-ii",
+      "to": "ascension-iii",
+      "one_way": false
+    },
+    {
+      "from": "shields-i",
+      "to": "shields-ii",
+      "one_way": false
+    },
+    {
+      "from": "shields-ii",
+      "to": "shields-iii",
+      "one_way": false
+    },
+    {
+      "from": "rite-iv",
+      "to": "challenge-i",
+      "one_way": true
+    },
+    {
+      "from": "challenge-i",
+      "to": "challenge-ii",
+      "one_way": false
+    },
+    {
+      "from": "challenge-ii",
+      "to": "challenge-iii",
+      "one_way": false
+    },
+    {
+      "from": "challenge-iii",
+      "to": "challenge-iv",
+      "one_way": false
+    }
+  ],
+  "main_route": [
+    "tutorial",
+    "basics-i",
+    "basics-ii",
+    "basics-iii",
+    "basics-iv",
+    "patterns-i",
+    "patterns-ii",
+    "patterns-iii",
+    "diagonals-i",
+    "beams-i",
+    "shields-i",
+    "rite-i",
+    "rite-ii",
+    "rite-iii",
+    "rite-iv",
+    "ascension-i",
+    "ascension-ii"
+  ],
+  "engine": "fnv1a-23982e7547852d42"
+}

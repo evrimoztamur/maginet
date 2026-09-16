@@ -9,6 +9,7 @@ metadata = json.loads((root / 'metadata.json').read_text())
 config, catalogue = metadata['config'], metadata['catalogue']
 summaries = json.loads((root / 'aggregate.json').read_text())
 expected = {(i, red, blue) for i, entry in enumerate(catalogue)
+            if not entry.get('chaos')
             for red in range(3) for blue in range(1 if entry['tutorial'] else 3)
             if config.get('red_profile') in (None, red) and config.get('blue_profile') in (None, blue)}
 assert {(s['level'], s['red'], s['blue']) for s in summaries} == expected

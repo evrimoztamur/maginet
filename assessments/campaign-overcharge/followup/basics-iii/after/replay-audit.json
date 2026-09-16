@@ -1,0 +1,10 @@
+{
+  "activations": 0,
+  "dataset": "assessments/campaign-overcharge/followup/basics-iii/after",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 6
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

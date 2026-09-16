@@ -1,0 +1,98 @@
+{
+  "source_revision": "d8ceb7b02529d46f4f261954f33f99c3e726ca1f",
+  "workspace_tests": {
+    "command": "cargo test --workspace",
+    "passed": 97,
+    "failed": 0,
+    "log": "validation-logs/workspace-tests.log"
+  },
+  "format": {
+    "command": "cargo fmt --all -- --check",
+    "passed": true
+  },
+  "features": {
+    "command": "cargo check --workspace --all-features",
+    "passed": true,
+    "log": "validation-logs/all-features.log"
+  },
+  "wasm": {
+    "command": "wasm-pack build --release --target web --out-dir static/js/pkg",
+    "passed": true,
+    "log": "validation-logs/wasm-build.log"
+  },
+  "browser": {
+    "game_url": "http://127.0.0.1:8793/",
+    "passed": true,
+    "scripts": [
+      "scripts/check-campaign.cjs",
+      "scripts/check-campaign-graph.cjs",
+      "scripts/check-pedagogy.cjs"
+    ],
+    "covers": [
+      "fresh tutorial and saved-progress Basics I",
+      "eight selected battles load via canonical legacy saves",
+      "first-move mana and turn traces match native simulation",
+      "cardinal routes and playable-only arrows",
+      "hidden portal visibility and star counts",
+      "locked skips stay on map",
+      "Chaos rematch gets a fresh seed"
+    ],
+    "navigation_note": "Browser fixtures follow visible neighbouring portals to respect map snapping. An inactive Locked click can select a different map portal; it must not enter battle.",
+    "screenshots": "browser/"
+  },
+  "replay_audits": {
+    "passed": true,
+    "candidate_screen_datasets": 42,
+    "candidate_followup_datasets": 15,
+    "catalogue_datasets": 1,
+    "games": 13410,
+    "method": "Frozen combined-rules audit_overcharge after plus scripts/audit-campaign.py on each dataset.",
+    "records": "Each dataset contains replay-audit.json; validation-logs records the summary checks."
+  },
+  "comparison_validation": {
+    "script": "scripts/report-pedagogy.py",
+    "passed": true,
+    "selected_encounters": 8,
+    "first_30_match_in_all_15_followups": true,
+    "paired_trial_seeds_and_profiles_match": true,
+    "unchanged_fixed_scenarios_match_exactly": [
+      "basics-i",
+      "patterns-ii",
+      "diagonals-ii",
+      "diagonals-iii",
+      "diagonals-iv",
+      "beams-i",
+      "beams-ii",
+      "beams-iii",
+      "shields-ii",
+      "shields-iii",
+      "challenge-i",
+      "challenge-ii",
+      "challenge-iii",
+      "challenge-iv",
+      "rite-i",
+      "rite-ii",
+      "rite-iii",
+      "ascension-i",
+      "ascension-ii",
+      "crossfire",
+      "side-step",
+      "tutorial"
+    ]
+  },
+  "full_campaign": {
+    "cells": 255,
+    "games": 7650,
+    "outcomes": {
+      "Win": 4088,
+      "Loss": 3158,
+      "Draw": 404,
+      "SafetyLimit": 0
+    }
+  },
+  "limitations": [
+    "Bot simulation measures these AI profiles rather than human learning.",
+    "Full-catalogue changed scenarios use production code-derived seeds; the 300-trial custom comparisons use matched namespaces.",
+    "Separate main-branch tutorial changes through 966746a remain unmerged."
+  ]
+}

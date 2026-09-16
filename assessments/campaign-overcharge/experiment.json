@@ -1,0 +1,54 @@
+{
+  "created_utc": "2026-09-16T15:29:08.468356+00:00",
+  "branch": "experiment/deadlock-overcharge",
+  "baseline_commit": "c09268958a7e3c201d4d066d599e0b39f57d74f1",
+  "baseline_note": "Snapshot of the original checkout including ongoing user changes; original checkout left unchanged.",
+  "original_head": "e211804",
+  "engine_source_sha256": {
+    "shared/src/logic/deadlock.rs": "ecf7e5df69be4e24ae4f32d7c494ae5275b4b603ad4e47eaefb1fae461f95f4c",
+    "shared/src/logic/game.rs": "1e4e54c6ad9bdc653d2267f10c3f0fed4226f44c86e6058d09903bf5d933ae8d",
+    "shared/src/logic/mod.rs": "dbcf623d3157826d827ae233c7a2de0927794be54d108fd6a3001d08f46567d4",
+    "generate/src/analysis.rs": "6218773481141a1ce70c4441ba296f08b460eb36b05c37abb323a39b3c1202c0",
+    "generate/src/cli.rs": "e2979b46f830229920b75ad702a01b499d0c95aad615de114023a848c7fca07f"
+  },
+  "platform": "macOS-15.8-arm64-arm-64bit-Mach-O",
+  "cpu": "Apple M2 Pro",
+  "screen_games_per_cell": 30,
+  "followup_games_per_cell": 300,
+  "seed": 1,
+  "max_plies": 200,
+  "baseline_binary": "target/overcharge-baseline/generate",
+  "after_binary": "target/release/generate",
+  "scope": "Four-phase relaxed bitboards; no held abilities or remaining collectible pickups; all survivors receive permanent diagonal runes; one inactivity reset; tutorial and no-legal-move terminals unchanged; no activation when diagonal contact is also proven impossible. Activation uses the same zero-based last-progress index as damage (eight quiet moves after the normal opening grace).",
+  "commands": [
+    "cargo build --release -p generate (at baseline snapshot; preserve binary before edits)",
+    "cargo build --release -p generate (experiment)",
+    "python3 scripts/run-overcharge.py screen --before-bin target/overcharge-baseline/generate",
+    "python3 scripts/report-overcharge.py",
+    "python3 scripts/run-overcharge.py followup --before-bin target/overcharge-baseline/generate",
+    "python3 scripts/report-overcharge.py",
+    "cargo run --release -p shared --example deadlock_bench",
+    "cargo run --release -p generate --example audit_overcharge -- DATASET before|after",
+    "NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-deadlock.cjs"
+  ],
+  "implementation_commit": "181b53cd81aeb240ec37ce2ff3fd2104450bfef9",
+  "screen_workers": {
+    "before": 4,
+    "after": 8
+  },
+  "followup_workers": 4,
+  "screen_engines": {
+    "before": "fnv1a-1738a84d34e463e2",
+    "after": "fnv1a-23982e7547852d42"
+  },
+  "followup_ids": [
+    "basics-iii",
+    "basics-iv",
+    "crossfire",
+    "diagonals-iv",
+    "patterns-i",
+    "patterns-iii"
+  ],
+  "recorded_games": 19440,
+  "distinct_trials_per_arm": 9540
+}

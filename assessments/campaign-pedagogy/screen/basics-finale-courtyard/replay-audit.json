@@ -1,0 +1,10 @@
+{
+  "activations": 1,
+  "dataset": "assessments/campaign-pedagogy/screen/basics-finale-courtyard",
+  "games": 30,
+  "inactivity_contact_status": {
+    "Possible": 7
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

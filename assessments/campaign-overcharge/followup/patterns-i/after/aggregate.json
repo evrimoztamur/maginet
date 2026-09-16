@@ -1,0 +1,47 @@
+[
+  {
+    "level": 0,
+    "red": 1,
+    "blue": 1,
+    "stats": {
+      "wins": 202,
+      "losses": 84,
+      "draws": 14,
+      "unresolved": 0,
+      "resolved_win_rate": 0.6733333333333333,
+      "wilson95": [
+        0.6183622089237593,
+        0.7239215610517313
+      ],
+      "overall_win_range": [
+        0.6733333333333333,
+        0.6733333333333333
+      ],
+      "mean_plies": 25.65,
+      "min_plies": 17,
+      "max_plies": 41,
+      "red": {
+        "nodes": 2106800,
+        "searches": 3953,
+        "fallbacks": 0,
+        "depths": {
+          "4": 3953
+        },
+        "stops": {
+          "Depth": 3953
+        }
+      },
+      "blue": {
+        "nodes": 1956423,
+        "searches": 3742,
+        "fallbacks": 0,
+        "depths": {
+          "4": 3742
+        },
+        "stops": {
+          "Depth": 3742
+        }
+      }
+    }
+  }
+]

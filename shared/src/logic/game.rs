@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     ops::Neg,
 };
 
@@ -50,11 +50,27 @@ pub struct Game {
     available_turns: Vec<Turn>,
     shielded_positions: HashSet<(Position, Team)>,
     can_stalemate: bool,
+    #[serde(default)]
+    overcharge_enabled: bool,
+    #[serde(default)]
+    overcharge_at: Option<usize>,
 }
 
 impl Game {
+    /// Eight full turns (one move by each side) without damage or a pickup.
+    pub const STALEMATE_TURNS: usize = 8;
+
     /// Instantiates the [`Game`] `struct` with a given board size (always 8-by-8) and number of mages (always 4)]
     pub fn new(level: &Level, can_stalemate: bool) -> Result<Game, &'static str> {
+        Self::new_with_overcharge(level, can_stalemate, true)
+    }
+
+    /// Creates a game with an explicit rule switch for reproducible comparisons.
+    pub fn new_with_overcharge(
+        level: &Level,
+        can_stalemate: bool,
+        overcharge_enabled: bool,
+    ) -> Result<Game, &'static str> {
         let turns = Vec::new();
         let last_nominal = 0;
 
@@ -66,12 +82,50 @@ impl Game {
             available_turns: Vec::new(),
             shielded_positions: HashSet::new(),
             can_stalemate,
+            overcharge_enabled,
+            overcharge_at: None,
         };
 
         game.available_turns = game.generate_available_turns();
         game.shielded_positions = game.generate_shielded_positions();
+        game.resolve_deadlock();
 
         Ok(game)
+    }
+
+    /// Whether this game's rules enable conservative deadlock resolution.
+    pub fn overcharge_enabled(&self) -> bool {
+        self.overcharge_enabled
+    }
+
+    /// Number of completed plies when all survivors gained diagonal movement.
+    pub fn overcharge_at(&self) -> Option<usize> {
+        self.overcharge_at
+    }
+
+    fn resolve_deadlock(&mut self) {
+        use crate::{contact_reachability, ContactReachability};
+        if !self.overcharge_enabled
+            || !self.can_stalemate
+            || self.overcharge_at.is_some()
+            || self.available_turns.is_empty()
+            || contact_reachability(&self.level, self.turn_for(), false)
+                != ContactReachability::Impossible
+            || contact_reachability(&self.level, self.turn_for(), true)
+                != ContactReachability::Possible
+        {
+            return;
+        }
+        // The proof excludes held abilities and all collectible pickups. Thus this
+        // grants permanent diagonals without replacing an ability or losing it later.
+        for mage in self.level.mages.iter_mut().filter(|m| m.is_alive()) {
+            mage.powerup = Some(PowerUp::Diagonal);
+        }
+        self.overcharge_at = Some(self.turns());
+        // last_nominal stores the zero-based move index, just as a damage event
+        // does before its turn is appended. Preserve the existing quiet-ply allowance.
+        self.last_nominal = self.turns().saturating_sub(1);
+        self.available_turns = self.generate_available_turns();
     }
 
     /// Can the game stalemate.
@@ -85,12 +139,18 @@ impl Game {
             let gap = self
                 .turns()
                 .saturating_sub(self.last_nominal.max(self.level.mages.len() * 3));
-            let gap_passed = gap > 8;
+            let gap_passed = gap > Self::STALEMATE_TURNS * 2;
 
             (gap_passed, gap)
         } else {
             (false, 0)
         }
+    }
+
+    /// Completed full quiet turns for the inactivity pips. The progress move
+    /// itself occupies gap 1; two subsequent quiet plies complete the first pip.
+    pub fn quiet_turns(&self) -> usize {
+        self.stalemate().1.saturating_sub(1) / 2
     }
 
     /// Determines if the game is finished.
@@ -297,8 +357,66 @@ impl Game {
             self.turns.len(),
             self.last_nominal,
             self.can_stalemate,
+            self.overcharge_enabled,
+            self.overcharge_at,
         ))
         .unwrap()
+    }
+
+    /// Board identity for repetition preferences, independent of the inactivity
+    /// clock and render ordering. Keep effective shielding and consumed overcharge.
+    fn repetition_key(&self) -> Vec<u8> {
+        let mut mages: Vec<_> = self.level.mages.iter().collect();
+        mages.sort_by_key(|m| m.index);
+        let mut shields: Vec<_> = self.shielded_positions.iter().copied().collect();
+        shields.sort_by_key(|(p, team)| (*p, usize::from(*team == Team::Blue)));
+        serde_json::to_vec(&(
+            &self.level.board,
+            mages,
+            self.level.powerups.iter().collect::<Vec<_>>(),
+            self.turn_for(),
+            self.overcharge_enabled,
+            self.overcharge_at.is_some(),
+            shields,
+        ))
+        .unwrap()
+    }
+
+    /// Reconstruct played positions once per root search, never per search node.
+    /// Edited/synthetic snapshots may have an unreplayable history; skip the
+    /// preference for those instead of inventing historical positions.
+    pub(crate) fn root_repetitions(&self) -> HashMap<Turn, usize> {
+        if self.turns.len() < 3 {
+            return HashMap::new();
+        }
+        let mut replay = Self::new_with_overcharge(
+            &self.level_prototype,
+            self.can_stalemate,
+            self.overcharge_enabled,
+        )
+        .unwrap();
+        let mut counts = HashMap::<Vec<u8>, usize>::new();
+        *counts.entry(replay.repetition_key()).or_default() += 1;
+        for turn in &self.turns {
+            if replay.take_move(turn.0, turn.1).is_none() {
+                return HashMap::new();
+            }
+            *counts.entry(replay.repetition_key()).or_default() += 1;
+        }
+        if replay.repetition_key() != self.repetition_key() {
+            return HashMap::new();
+        }
+        self.legal_turns()
+            .iter()
+            .map(|turn| {
+                let mut child = self.clone();
+                child.take_move(turn.0, turn.1).unwrap();
+                (
+                    *turn,
+                    counts.get(&child.repetition_key()).copied().unwrap_or(0),
+                )
+            })
+            .collect()
     }
 
     /// Mix a game seed with the complete ordered turn history.
@@ -326,13 +444,14 @@ impl Game {
                     if let Some((to, _, _)) = potential_move {
                         mage.position = *to;
 
-                        if let Some(powerup) = self.level.powerups.remove(to) {
+                        let pickup = self.level.powerups.remove(to);
+                        if let Some(powerup) = pickup {
                             mage.powerup = Some(powerup);
                         }
 
                         let attacks = self.attack(*to);
 
-                        if !attacks.is_empty() {
+                        if pickup.is_some() || !attacks.is_empty() {
                             self.last_nominal = self.turns();
                         }
 
@@ -340,6 +459,7 @@ impl Game {
 
                         self.available_turns = self.generate_available_turns();
                         self.shielded_positions = self.generate_shielded_positions();
+                        self.resolve_deadlock();
 
                         return Some(attacks);
                     }
@@ -460,7 +580,12 @@ impl Game {
     /// Rewinds the [`Game`] by `delta` turns.
     /// Works via replicating the game from the initial [`Level`] with its [`Turn`] history.
     pub fn rewind(&self, delta: usize) -> Game {
-        let mut rewinded_game = Game::new(&self.level_prototype, self.can_stalemate).unwrap();
+        let mut rewinded_game = Game::new_with_overcharge(
+            &self.level_prototype,
+            self.can_stalemate,
+            self.overcharge_enabled,
+        )
+        .unwrap();
         let turn_toward = self.turns().saturating_sub(delta);
 
         for Turn(from, to) in self.turns.iter().take(turn_toward) {
@@ -540,5 +665,44 @@ mod search_key_tests {
         changed.turns.push(Turn::sentinel());
         changed.turns.push(Turn::sentinel());
         assert_ne!(key, changed.search_key());
+    }
+
+    #[test]
+    fn repetition_identity_ignores_clock_and_order_but_keeps_effective_state() {
+        let game = Game::new(
+            &Level::default_with_mages(vec![
+                Mage::new(0, Team::Red, crate::MageSort::Plus, Position(0, 0)),
+                Mage::new(1, Team::Blue, crate::MageSort::Plus, Position(7, 7)),
+            ]),
+            true,
+        )
+        .unwrap();
+        let key = game.repetition_key();
+        let mut same = game.clone();
+        same.last_nominal = 40;
+        same.turns.extend([Turn::sentinel(), Turn::sentinel()]);
+        same.level.mages.reverse();
+        assert_eq!(key, same.repetition_key());
+        assert!(same.root_repetitions().is_empty());
+        let mut changed = game.clone();
+        changed.turns.push(Turn::sentinel());
+        assert_ne!(key, changed.repetition_key());
+        changed = game.clone();
+        changed.level.mages[0].mana.0 -= 1;
+        assert_ne!(key, changed.repetition_key());
+        changed = game.clone();
+        changed.level.mages[0].powerup = Some(PowerUp::Diagonal);
+        assert_ne!(key, changed.repetition_key());
+        changed = game.clone();
+        changed.level.powerups.insert(Position(1, 0), PowerUp::Beam);
+        assert_ne!(key, changed.repetition_key());
+        changed = game.clone();
+        changed
+            .shielded_positions
+            .insert((Position(1, 0), Team::Blue));
+        assert_ne!(key, changed.repetition_key());
+        changed = game.clone();
+        changed.overcharge_at = Some(0);
+        assert_ne!(key, changed.repetition_key());
     }
 }

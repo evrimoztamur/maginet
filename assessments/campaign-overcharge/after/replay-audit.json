@@ -1,0 +1,12 @@
+{
+  "activations": 34,
+  "dataset": "assessments/campaign-overcharge/after",
+  "games": 7920,
+  "inactivity_contact_status": {
+    "Impossible": 1,
+    "Possible": 1043,
+    "Unsupported": 2450
+  },
+  "matchups": 264,
+  "overcharge_enabled": true
+}

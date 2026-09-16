@@ -1,0 +1,22 @@
+[
+  {
+    "id": "diagonals-i-mana-2-without-rune",
+    "battle": "diagonals-i",
+    "code": "dg108094d40j400",
+    "seed_namespace": "dg1080a4d40j409408",
+    "lesson": "Use the diagonal rune to change attack alignment, with less spare mana.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "diagonals-i"
+  },
+  {
+    "id": "shields-i-spike-2-without-rune",
+    "battle": "shields-i",
+    "code": "d012g0s4841j800",
+    "seed_namespace": "d012g0an840k80h401200",
+    "lesson": "Pick up the shield with an opening ranged hit; both mages can fight, and retaliation changes subsequent adjacent exchanges.",
+    "baseline": false,
+    "selected": true,
+    "adopt_as": "shields-i"
+  }
+]

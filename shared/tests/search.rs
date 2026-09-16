@@ -128,7 +128,7 @@ fn terminal_root_and_early_terminal_children() {
 fn stalemate_counters_and_scores_are_rule_sensitive() {
     let game = fixture(Team::Red, None);
     let mut value = serde_json::to_value(&game).unwrap();
-    value["turns"] = serde_json::to_value(vec![Turn(Position(0, 0), Position(1, 0)); 16]).unwrap();
+    value["turns"] = serde_json::to_value(vec![Turn(Position(0, 0), Position(1, 0)); 24]).unwrap();
     value["last_nominal"] = serde_json::json!(0);
     let ended: Game = serde_json::from_value(value.clone()).unwrap();
     assert!(ended.result().is_some());
@@ -138,7 +138,7 @@ fn stalemate_counters_and_scores_are_rule_sensitive() {
             .best_move(),
         None
     );
-    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 14]).unwrap();
+    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 22]).unwrap();
     let near: Game = serde_json::from_value(value.clone()).unwrap();
     assert!(near.result().is_none());
     for m in near.search(SearchLimits::depth(3), 5, || false).moves {
@@ -146,7 +146,7 @@ fn stalemate_counters_and_scores_are_rule_sensitive() {
         child.take_move(m.turn.0, m.turn.1).unwrap();
         assert_eq!(m.score, minimax(&child, 2));
     }
-    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 16]).unwrap();
+    value["turns"] = serde_json::to_value(vec![Turn::sentinel(); 24]).unwrap();
     value["level"]["mages"][0]["mana"][0] = serde_json::json!(1);
     let drawn: Game = serde_json::from_value(value.clone()).unwrap();
     assert!(drawn.result() == Some(GameResult::Stalemate));
@@ -183,6 +183,81 @@ fn ranked_sampling_renormalizes_and_allows_weaker_forced_outcomes() {
     }
     for invalid in ["", "invalid", "normal"] {
         assert_eq!(Difficulty::from_preference(invalid), Difficulty::Normal);
+    }
+}
+
+#[test]
+fn equal_scores_prefer_new_positions_for_both_teams_and_after_restore() {
+    for team in [Team::Red, Team::Blue] {
+        let mut game = Game::new(
+            &Level::new(
+                Board::new(5, 5).unwrap(),
+                vec![
+                    Mage::new(
+                        0,
+                        Team::Red,
+                        MageSort::Plus,
+                        Position(0, usize::from(team == Team::Red) as i8),
+                    ),
+                    Mage::new(
+                        1,
+                        Team::Blue,
+                        MageSort::Plus,
+                        Position(4, 4 - usize::from(team == Team::Blue) as i8),
+                    ),
+                ],
+                BTreeMap::new(),
+                team,
+            ),
+            true,
+        )
+        .unwrap();
+        for _ in 0..4 {
+            let mage = game
+                .iter_mages()
+                .find(|m| m.team == game.turn_for())
+                .unwrap();
+            let p = mage.position;
+            let x = if mage.team == Team::Red {
+                1 - p.0
+            } else {
+                7 - p.0
+            };
+            assert!(game.take_move(p, Position(x, p.1)).unwrap().is_empty());
+        }
+        let fresh = if team == Team::Red {
+            Turn(Position(0, 1), Position(0, 2))
+        } else {
+            Turn(Position(4, 3), Position(4, 2))
+        };
+        game.sort_mages();
+        let restored: Game = serde_json::from_str(&serde_json::to_string(&game).unwrap()).unwrap();
+        for seed in 0..32 {
+            for depth in 1..=3 {
+                let result = restored.search(SearchLimits::depth(depth), seed, || false);
+                assert_eq!(result.moves.len(), 3);
+                assert_eq!(result.moves[0].score, result.moves[1].score);
+                assert_eq!(result.best_move(), Some(fresh));
+                // The third move is also new, but has a worse score. Novelty
+                // must never promote it above the repeated, better move.
+                if team == Team::Red {
+                    assert!(result.moves[1].score > result.moves[2].score);
+                } else {
+                    assert!(result.moves[1].score < result.moves[2].score);
+                }
+                for m in result.moves {
+                    let mut child = restored.clone();
+                    child.take_move(m.turn.0, m.turn.1).unwrap();
+                    assert_eq!(m.score, minimax(&child, depth - 1));
+                }
+            }
+        }
+        let rewound = restored.rewind(2);
+        assert_eq!(rewound.turns(), 2);
+        assert!(rewound
+            .search(SearchLimits::depth(2), 1, || false)
+            .best_move()
+            .is_some());
     }
 }
 

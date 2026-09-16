@@ -1,0 +1,10 @@
+{
+  "activations": 1,
+  "dataset": "assessments/campaign-pedagogy/screen/patterns-iii-focused-3",
+  "games": 30,
+  "inactivity_contact_status": {
+    "Possible": 16
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

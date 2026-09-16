@@ -1,0 +1,11 @@
+{
+  "activations": 86,
+  "dataset": "assessments/campaign-pedagogy/campaign",
+  "games": 7650,
+  "inactivity_contact_status": {
+    "Possible": 686,
+    "Unsupported": 1282
+  },
+  "matchups": 255,
+  "overcharge_enabled": true
+}

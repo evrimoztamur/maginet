@@ -1,0 +1,10 @@
+{
+  "activations": 0,
+  "dataset": "assessments/campaign-draws/followup/challenge-ii/control",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Unsupported": 163
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

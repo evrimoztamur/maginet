@@ -89,7 +89,7 @@ To add an effect, derive its data from the accepted turn and snapshots, sample c
 
 The campaign map starts at the guided Tutorial portal beside Basics I. Complete the tutorial (from the map or main menu) to unlock campaign battles; leaving it unfinished keeps them locked. Saved wins remain completed even after a later loss.
 
-Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route only from playable, uncompleted portals; revealed-but-locked portals have no arrows. Connections touching completed portals have no arrows. Ordinary links work in both directions. The Rite IV → Challenge I exit is one-way, so the hidden Crossfire route cannot unlock Rite IV backwards. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. The campaign contains 30 battles plus the tutorial, including five hidden levels. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by campaign region. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
+Winning a level unlocks portals along its explicit outgoing connections. Every connection joins cardinal-neighbour battle cells; proximity alone does not grant an unlock. Movement-arrow sprites show the forward route only from playable, uncompleted portals; revealed-but-locked portals have no arrows. Connections touching completed portals have no arrows. Ordinary links work in both directions. The Rite IV → Challenge I exit is one-way, so the hidden Crossfire route cannot unlock Rite IV backwards. Available levels keep their names, and locked names are revealed one outgoing connection ahead; more distant names read `???`. The campaign contains 29 battles plus the tutorial, including five hidden levels. The full campaign progresses through Grass, Desert, Flesh, Crust, and Eldritch tilesets by campaign region. Each portal uses the same style as its battle. Styles do not change level codes or existing progress keys.
 
 A fixed top-left star counter shows completed portals over the total, including the tutorial, with the total adapted to the demo build.
 
@@ -161,7 +161,11 @@ Settings includes saved Easy, Normal, and Hard buttons below the audio controls,
 
 These are initial tuning values, not measured strength guarantees. Sampling renormalizes for fewer than three moves, and even Hard can choose a weaker forced outcome. Seeded tie ordering and selection use the game seed mixed with its ordered turn history. Identical seeds and completed depths reproduce choices; wall-clock budgets can complete different depths on different runs. Use node limits for deterministic analysis.
 
-`shared/src/logic/search.rs` implements the single iterative-deepening alpha-beta engine used by `best_turn`, `best_turn_auto`, and native simulations. Terminal results are checked before the depth horizon, and evaluations contain no random noise. Every root move receives a full-window search so published scores are exact and comparable at one completed depth. Previous iterations order root moves and cached internal best moves. A per-search table holds at most 32,768 entries, distinguishes exact/lower/upper bounds, and keys the current level, side to move, turn count, last attack counter, and stalemate setting. Successors use `Game::take_move` and clones of authoritative state.
+`shared/src/logic/search.rs` implements the single iterative-deepening alpha-beta engine used by `best_turn`, `best_turn_auto`, and native simulations. Terminal results are checked before the depth horizon, and evaluations contain no random noise. Every root move receives a full-window search so published scores are exact and comparable at one completed depth. Previous iterations order root moves and cached internal best moves. A per-search table holds at most 32,768 entries, distinguishes exact/lower/upper bounds, and keys the current level, side to move, turn count, last progress counter, and stalemate setting. Successors use `Game::take_move` and clones of authoritative state.
+
+The eight inactivity pips each represent a full turn: one move by each side. After the existing opening grace, sixteen consecutive quiet plies end the game and total mana determines the result. Damage, collecting any powerup (including a beam that is consumed immediately), and deadlock overcharge restart the inactivity clock. Pips reflect the presented board state, so the reset appears with the move's impact. Tutorial games retain disabled inactivity.
+
+After the search completes, equally scored root moves prefer positions visited fewer times in the actual game. Position identity includes the side to move, mana, abilities, remaining props, sleepers, effective shields and whether overcharge has been used; it ignores the inactivity counter and rendering order. This only breaks ties: search scores, node exploration and difficulty sampling weights retain their existing meaning. History is reconstructed once per root search, and invalid synthetic histories skip the preference.
 
 `Game::search(SearchLimits, seed, deadline)` returns ranked root scores (positive for Red), completed depth, visited successor nodes, and a stop reason. An interrupted iteration never replaces completed results. Before the first iteration completes, selection returns a seeded legal fallback; a terminal root returns no move. `SearchResult::best_move` gives the actual best move; `select` applies difficulty probabilities separately. Set `table_capacity` to zero to compare uncached search.
 
@@ -189,6 +193,37 @@ Set `CHROME_PATH` if Chrome is not at the default macOS location. These checks e
 
 ## Scenario analysis
 
+The experimental deadlock rule grants every surviving mage a permanent diagonal
+rune when a conservative four-phase bitboard analysis proves that cardinal play
+cannot cause damage. It ignores collisions between living mages, retains boulders
+and sleepers, and declines to decide when abilities or collectible pickups remain.
+It applies only when diagonal contact is possible in the abstraction, resets the
+inactivity clock once, and leaves tutorial and already-terminal positions alone.
+The green **Deadlock!** banner follows the visible board transition: 250 ms entering
+from the left, one second centered, and 250 ms leaving to the right.
+
+The [paired overcharge assessment](assessments/campaign-overcharge/report.md)
+compares the current campaign before and after this rule. Its baseline snapshot is
+`c092689`, including the workspace changes present when the experiment began.
+Build that revision's analyser in a separate checkout and pass its executable to:
+
+```sh
+cargo build --release -p generate
+python3 scripts/run-overcharge.py screen --before-bin /path/to/baseline/generate --root /tmp/overcharge-survey
+python3 scripts/report-overcharge.py --root /tmp/overcharge-survey
+python3 scripts/run-overcharge.py followup --before-bin /path/to/baseline/generate --root /tmp/overcharge-survey
+python3 scripts/report-overcharge.py --root /tmp/overcharge-survey
+cargo run --release -p shared --example deadlock_bench
+cargo run --release -p generate --example audit_overcharge -- /tmp/overcharge-survey/after after
+```
+
+The screen runs all nine difficulty pairings at 30 trials; affected scenarios get
+300-trial Normal/Normal followups. The first 30 overlap the screen, and the report
+separately evaluates the 270 new trials. Replays record activation ply and survivor
+count. After a web build served on port 8792, run
+`NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-deadlock.cjs`
+to check actual canvas banner timing and diagonal movement.
+
 The native `generate` executable has explicit `analyse`, `campaign`, and `generate` subcommands. No arguments prints help; `generate` preserves the original level-generation workflow.
 
 ```sh
@@ -198,7 +233,7 @@ cargo run --release -p generate -- campaign --demo --games 100 --output /tmp/dem
 cargo run --release -p generate -- generate
 ```
 
-Analysis defaults to 30 games per matchup, seed 1, a 200-ply safety limit, and at most four Rayon workers. All nine Easy/Normal/Hard player/opponent combinations run for battles. The tutorial runs three player profiles against Easy, with stalemates disabled. Red is the player, Blue the opponent; every scenario retains its starting team. The campaign catalogue contains 30 battles plus the tutorial; randomized Ascension III is explicitly excluded from fixed-scenario statistics. This is independent of browser demo features; `--demo` selects four battles plus the tutorial.
+Analysis defaults to 30 games per matchup, seed 1, a 200-ply safety limit, and at most four Rayon workers. All nine Easy/Normal/Hard player/opponent combinations run for battles. The tutorial runs three player profiles against Easy, with stalemates disabled. Red is the player, Blue the opponent; every scenario retains its starting team. The campaign catalogue contains 29 battles plus the tutorial; randomized Ascension III is explicitly excluded from fixed-scenario statistics. This is independent of browser demo features; `--demo` selects three battles plus the tutorial.
 
 | Profile | Maximum depth | Nodes per move | Ranked probabilities |
 | --- | ---: | ---: | --- |
@@ -279,7 +314,7 @@ The graph browser check exports the live shared catalogue so that changed scenar
 
 ### Campaign structure
 
-The main route is Tutorial → Basics I–IV → Patterns I–III → Diagonals I → Beams I → Shields I → Rites I–IV → Ascension I–II. The three Ascension battles use the first lush green tileset.
+The main route is Tutorial → Basics I–III → Patterns I–III → Diagonals I → Beams I → Shields I → Rites I–IV → Ascension I–II. The three Ascension battles use the first lush green tileset.
 
 | Entrance | Optional path |
 | --- | --- |
@@ -291,14 +326,22 @@ The main route is Tutorial → Basics I–IV → Patterns I–III → Diagonals 
 | Diagonals III | **Side Step** ↔ Shields III |
 | Ascension II | **Ascension III** |
 
-Crossfire and Side Step occupy the empty cells between their neighbours. Both puzzle connections are bidirectional. A mystery tile, its name, and arrows toward it are entirely absent until a connected neighbour is completed. All three Ascension levels are hidden until a connected neighbour is completed. The star counter counts only visible portals: its total starts at 26 and grows as the five secrets are discovered. These shortcuts allow exploration between the practice branches; Side Step can bypass the Beams I introduction. Entering Challenges through Crossfire cannot unlock Rite IV backwards.
+Crossfire and Side Step occupy the empty cells between their neighbours. Both puzzle connections are bidirectional. A mystery tile, its name, and arrows toward it are entirely absent until a connected neighbour is completed. All three Ascension levels are hidden until a connected neighbour is completed. The star counter counts only visible portals: its total starts at 25 and grows as the five secrets are discovered. These shortcuts allow exploration between the practice branches; Side Step can bypass the Beams I introduction. Entering Challenges through Crossfire cannot unlock Rite IV backwards.
 
 Crossfire is a compact beam alignment puzzle with one immediate winning move. Side Step is a fragile duel with a forced five-ply solution that requires its diagonal pickup. The puzzle tests examine all legal replies rather than relying on a particular AI profile.
 
 Ascension III uses an empty 4×4 board with four mages per side and independently randomized teams from the existing Chaos generator. Entry and rematch each choose a fresh seed. Completion uses the fixed portal key, so rerolls share one star and preserve the campaign return location. Its catalogue code is a preview/progress template, not a fixed encounter; native campaign reports explicitly exclude it from fixed-scenario statistics.
 
-All 31 portals use cardinal-neighbour connections. The tutorial-plus-Basics demo is unchanged. Existing assessment graphs remain historical snapshots; live UI and new analyser runs use the current shared catalogue. No archived assessment files have been rewritten.
+All 30 portals use cardinal-neighbour connections. The demo contains the tutorial and the three Basics followups. Existing assessment graphs remain historical snapshots; live UI and new analyser runs use the current shared catalogue. No archived assessment files have been rewritten.
 
 ## Android app
 
 Run `./deploy-android.sh` to build an installable debug APK and release app bundle, or `./deploy-android.sh DEVICE_SERIAL` to also install and launch through adb. See [Android setup](android/README.md) for signing, Play product configuration, and [verification results](android/VERIFICATION.md).
+
+## Campaign teaching revision
+
+Basics now has three battles after the tutorial. Basics I uses the former Basics II Plus-mage fork puzzle. Basics II uses the former Basics III board with one mana on the Diamond and two on the Knight, making coordination consequential. The new Basics III asks the player to resist a losing three-target Knight attack and begin with the Diamond instead. All three have verified forced winning openings; their selected mistakes lose against correct replies. None introduces powerups early.
+
+Diagonals I now has equal two-mana mages. Shields I uses two two-mana Spike mages and one shield: the opening ranged hit and subsequent retaliation matter, and removing the rune makes the puzzle lose against correct play. Patterns I, Patterns III and Rite IV each reduce one key player mage from four mana to three, preserving the encounter while tightening its margin for mistakes. The later map region moves one cell south to connect directly to Basics III; all branches remain cardinal. Completion stars follow their old battles through aliases. The removed Basics I does not automatically complete the more demanding new Basics I.
+
+The [draw assessment](assessments/campaign-draws/report.md) and [campaign assessment](assessments/campaign-pedagogy/report.md) retain the experiment's paired simulations and replay audits. These are historical snapshots from before integration with the newer Plus-opponent tutorial and first-turn powerup hints. The merged game retains that tutorial, its saved-progress aliases, and those hints alongside the revised battles and draw rules.

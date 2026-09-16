@@ -1,0 +1,11 @@
+{
+  "activations": 7,
+  "dataset": "assessments/campaign-pedagogy/followup/patterns-iii-control",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 137,
+    "Unsupported": 3
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

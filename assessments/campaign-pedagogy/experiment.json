@@ -1,0 +1,40 @@
+{
+  "created_utc": "2026-09-16T16:56:12.587067+00:00",
+  "engine_revision": "cf39c097ecdbe8a39ee0901de32c0e999a7f48b4",
+  "campaign_revision": "d8ceb7b02529d46f4f261954f33f99c3e726ca1f",
+  "campaign_binary_sha256": "a820c2b4b4211a4d98977cde254151818382da2d30e12418225f7b099cdf175a",
+  "campaign_binary_note": "Built from the campaign revision before rustfmt-only edits to campaign.rs aliases and menu_arena.rs tests; identical catalogue, runtime rules and engine fingerprint.",
+  "candidate_binary_sha256": "57143509b57edcc0edbae47d008dcfc740caf76a46fca15b9b2f9482957ddfb8",
+  "candidate_screen": {
+    "records": 42,
+    "games_per_record": 30,
+    "red_profile": "Normal",
+    "blue_profile": "Normal",
+    "seed": 1,
+    "max_plies": 200,
+    "seed_namespace": "Explicit per-battle namespaces in candidates.json pair all controls and alternatives."
+  },
+  "followup": {
+    "datasets": 15,
+    "games_per_dataset": 300,
+    "first_30_reproduce_screen": true,
+    "independent_holdout": 270,
+    "workers": 2
+  },
+  "campaign_screen": {
+    "games_per_cell": 30,
+    "cells": 255,
+    "games": 7650,
+    "workers": 4,
+    "profiles": "All nine Easy/Normal/Hard pairs; tutorial Easy opponent only",
+    "seed": 1,
+    "max_plies": 200,
+    "chaos": "Excluded",
+    "seed_namespace": "Normal production namespace derived from each canonical level code."
+  },
+  "selection": "Selected using 30-trial screens, completed depth-10 opening searches and mechanic-ablation checks, before inspecting the new 270 followup trials.",
+  "finale_baseline": "Old Basics IV added after candidate selection, before running its 300 trials; its 30-trial screen was subsequently replayed to verify the same seeds.",
+  "opening_analysis": "generate/examples/pedagogy.rs; full-window depth 10 with a 500,000-node cap. Every recorded candidate opening completed depth 10.",
+  "archive_format": "Matchup JSON compacted without changing parsed records; full move/damage/pickup traces retained.",
+  "main_checkout": "Separate tutorial and introductory-hint changes through 966746a remain untouched and unmerged."
+}

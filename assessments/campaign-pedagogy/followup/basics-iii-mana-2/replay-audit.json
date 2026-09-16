@@ -1,0 +1,10 @@
+{
+  "activations": 2,
+  "dataset": "assessments/campaign-pedagogy/followup/basics-iii-mana-2",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 2
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

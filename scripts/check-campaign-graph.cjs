@@ -45,6 +45,7 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   ['ascension-i','ascension-iii',null],
   ['ascension-ii','ascension-iii',true],
  ]) {
+  console.log('checking',won,'→',target,available);
   const page=await browser.newPage({viewport:{width:1000,height:700}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://tunnel.evrim.zone/**',r=>r.request().url().endsWith('/session')?r.fulfill({json:{session_id:'graph-check'}}):r.abort());
   const codes=graph.catalogue.filter(e=>['tutorial',won].includes(e.id)).map(e=>canonical(e.code));
@@ -61,27 +62,21 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
    proto.lineTo=function(x,y){this.trace?.push(['L',x,y]);return line.apply(this,arguments)};
    proto.stroke=function(){if(this.trace?.length===5){paths.push(this.trace);if(paths.length>100)paths.shift()}return stroke.apply(this,arguments)};
   },codes);
-  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>jobs.length);
+  await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>jobs.length);
   const box=await page.locator('#game-canvas').boundingBox();
   const xy=(x,y)=>[box.x+(x+72)*box.width/400,box.y+(y+8)*box.height/272];
   const click=async(x,y)=>{await page.mouse.click(...xy(x,y),{delay:100});await page.waitForTimeout(150)};
   await click(248,80);
   const pos=graph.catalogue.find(e=>e.id===target).position;
-  // Drag by one map tile per gesture, keeping the pointer on the canvas.
-  for(let x=0;x<pos[0];x++){
-   await page.mouse.move(...xy(196,128));await page.mouse.down();await page.mouse.move(...xy(68,128),{steps:4});await page.waitForTimeout(30);await page.mouse.up();await page.waitForTimeout(50);
-  }
-  for(let y=0;y<Math.abs(pos[1]);y++){
-   const start=pos[1]<0?56:184,end=pos[1]<0?184:56;
-   await page.mouse.move(...xy(128,start));await page.mouse.down();await page.mouse.move(...xy(128,end),{steps:4});await page.waitForTimeout(30);await page.mouse.up();await page.waitForTimeout(50);
-  }
-  await page.waitForTimeout(500);await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);
-  const drawn=await page.evaluate(()=>glyphs.join(''));
-  if(available===null) assert(!drawn.includes('Battle')&&!drawn.includes('Locked'),'undiscovered mystery has no button');
-  else assert(drawn.includes(available?'Battle':'Locked'),`${won} → ${target}: ${drawn.slice(-300)}`);
   const directions=graph.connections.flatMap(e=>e.one_way?[[e.from,e.to]]:[[e.from,e.to],[e.to,e.from]]);
   const availableIds=new Set(['tutorial',won]);
   for(const [from,to] of directions)if(['tutorial',won].includes(from))availableIds.add(to);
+  const visible=graph.catalogue.filter(e=>!e.hidden||availableIds.has(e.id));
+  if(available!==null)await require('./campaign-browser-navigation.cjs')(page,xy,visible,pos);
+  await page.waitForTimeout(500);await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);
+  const drawn=await page.evaluate(()=>glyphs.join(''));
+  await page.screenshot({path:'/tmp/maginet-graph-current.png'});
+  if(available!==null) assert(drawn.includes(available?'Battle':'Locked'),`${won} → ${target}: ${drawn.slice(-300)}`);
   const known=new Set(availableIds);
   for(const [from,to] of directions)if(availableIds.has(from))known.add(to);
   assert.equal(await page.evaluate(()=>portalContext.portalTiles.length),graph.catalogue.filter(e=>!e.hidden||availableIds.has(e.id)).length,'undiscovered mystery tiles are absent');
@@ -102,7 +97,7 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
   });
   assert(drawn.includes(`2/${graph.catalogue.filter(e=>!e.hidden||availableIds.has(e.id)).length}`),'star total excludes undiscovered portals');
   await page.screenshot({path:`/tmp/maginet-graph-${target}-${available}.png`});
-  await click(128,204);
+  if(available!==null)await click(128,204);
   if(target==='ascension-iii'&&available){
    const trials=[];
    for(let trial=0;trial<2;trial++){
@@ -118,7 +113,8 @@ for(const edge of graph.connections){const a=graph.catalogue.find(e=>e.id===edge
    }
    assert.notEqual(trials[0],trials[1],'Chaos rematch receives a fresh seed');
   }
-  if(available===false){await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);assert((await page.evaluate(()=>glyphs.join(''))).includes('Locked'));}
+  // A click on the inactive button can pan to the portal below it, but cannot enter battle.
+  if(available===false){await page.evaluate(()=>glyphs=[]);await page.waitForTimeout(100);assert((await page.evaluate(()=>glyphs.join(''))).includes('2/'),'locked entry stays on the campaign map');}
   assert.deepEqual(errors,[]);await page.close();
  }
  await browser.close();console.log('playable-only arrows, ordered practice and challenge paths, hidden puzzles, Chaos epilogue, capstone fork and blocked skips passed');

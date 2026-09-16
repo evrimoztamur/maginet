@@ -1,0 +1,10 @@
+{
+  "activations": 3,
+  "dataset": "assessments/campaign-pedagogy/screen/basics-finale-cross-2",
+  "games": 30,
+  "inactivity_contact_status": {
+    "Possible": 4
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

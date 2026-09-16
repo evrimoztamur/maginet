@@ -1,0 +1,11 @@
+{
+  "activations": 0,
+  "dataset": "assessments/campaign-pedagogy/followup/rite-iv-focused-0",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 36,
+    "Unsupported": 1
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

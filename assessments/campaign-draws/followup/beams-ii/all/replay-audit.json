@@ -1,0 +1,11 @@
+{
+  "activations": 0,
+  "dataset": "assessments/campaign-draws/followup/beams-ii/all",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Possible": 158,
+    "Unsupported": 83
+  },
+  "matchups": 1,
+  "overcharge_enabled": true
+}

@@ -10,7 +10,7 @@ const out=path.join(root,'target/ux-learning');fs.mkdirSync(out,{recursive:true}
 const cases=[
  {id:'diagonals-i',title:'Diagon Rune',text:'This rune allows you to movediagonally, too.',size:[4,4],turn:[[0,1],[1,1]],item:'Diagonal'},
  {id:'beams-i',title:'Beam Crystal',text:'This crystal discharges astrong cardinal beam, hurtingall in its way.',size:[5,4],turn:[[1,3],[1,2]],item:'Beam'},
- {id:'shields-i',title:'Shield Rune',text:'This rune reflects attacksto the enemy.',size:[4,3],turn:[[1,2],[1,1]],item:'Shield'},
+ {id:'shields-i',title:'Shield Rune',text:'This rune reflects attacksto the enemy.',size:[4,3],turn:[[1,2],[0,2]],item:'Shield'},
 ];
 function routeTo(target) {
  const queue=[[[0,0]]],seen=new Set(['0,0']);

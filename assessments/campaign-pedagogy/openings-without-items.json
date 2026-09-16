@@ -1,0 +1,233 @@
+[
+  {
+    "code": "dg108094d40j400",
+    "completed_depth": 10,
+    "id": "diagonals-i-mana-2-without-rune",
+    "moves": [
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                0,
+                0
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                3,
+                2
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                3,
+                2
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          },
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                3,
+                2
+              ],
+              [
+                3,
+                3
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "nodes": 1050,
+    "stop": "Depth"
+  },
+  {
+    "code": "d012g0s4841j800",
+    "completed_depth": 10,
+    "id": "shields-i-spike-2-without-rune",
+    "moves": [
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                0
+              ]
+            ]
+          },
+          {
+            "hits": [
+              [
+                1,
+                1
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [
+          {
+            "hits": [
+              [
+                2,
+                2
+              ]
+            ],
+            "mana_difference": -1,
+            "turn": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          }
+        ],
+        "hits": [],
+        "score": -99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      {
+        "damaging_replies": [],
+        "hits": [
+          [
+            2,
+            0
+          ]
+        ],
+        "score": -99999,
+        "turn": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      }
+    ],
+    "nodes": 1291,
+    "stop": "Depth"
+  }
+]

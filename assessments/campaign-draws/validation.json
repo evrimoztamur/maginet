@@ -1,0 +1,58 @@
+{
+  "workspace_tests": {
+    "command": "cargo test --workspace",
+    "passed": 94,
+    "revision": "cf39c097ecdbe8a39ee0901de32c0e999a7f48b4"
+  },
+  "wasm_build": {
+    "command": "wasm-pack build --release --target web --out-dir static/js/pkg",
+    "passed": true
+  },
+  "mobile_features": {
+    "command": "cargo check --workspace --all-features",
+    "passed": true
+  },
+  "browser": {
+    "inactivity": {
+      "script": "scripts/check-inactivity.cjs",
+      "passed": true,
+      "evidence": "browser/inactivity-pips.json"
+    },
+    "deadlock": {
+      "script": "scripts/check-deadlock.cjs",
+      "passed": true,
+      "evidence": "browser/banner-timing.json"
+    },
+    "ai_worker": {
+      "script": "scripts/check-ai-worker.cjs",
+      "passed": true,
+      "depth": 8,
+      "nodes": 24609,
+      "elapsed_ms": 126.3,
+      "main_thread_ticks": 12,
+      "covers": [
+        "real Wasm worker",
+        "stale identifiers",
+        "revision checks",
+        "callback cleanup",
+        "worker failure"
+      ]
+    }
+  },
+  "replay_audits": {
+    "passed": true,
+    "datasets": 21,
+    "games": 29160,
+    "method": "Frozen matching-arm audit_overcharge after plus scripts/audit-campaign.py for every screen and followup.",
+    "records": "control-replay-audit.json and replay-audit.json in each new dataset"
+  },
+  "pairing": {
+    "passed": true,
+    "script": "scripts/report-draws.py",
+    "checks": [
+      "matching catalogue, graph, configuration",
+      "trial and seed pairs",
+      "first 30 followup trials exactly reproduce screen"
+    ]
+  }
+}
