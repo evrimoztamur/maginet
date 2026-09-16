@@ -123,7 +123,11 @@ Settings and editor adjustments use modest 20-pixel controls; selectors and acti
 
 Select either team's mage to study its full attack pattern. Neutral highlights appear immediately, including over sleeping mages, stones, and visible space beyond the board. Selecting an enemy does not expose movement controls. A legal destination preview uses the authoritative rules to mark damage, including beam friendly fire and shield retaliation. Red damage diamonds render below living mages; animated targeting pips stay above them. Normal movement arrows are cyan on darker buttons, while attacks use white arrows and brighter buttons.
 
-The tutorial teaches adjacent movement, spells and patterns, undo, then the final blow. Hints advance automatically as the battle plays, with an undo reminder in the attack instructions. The final-blow hint requires a legal move that defeats the remaining enemies on the player’s turn. The title sits 16 logical pixels above the board and instructions 16 pixels below it on mouse and touch screens. After winning, Continue opens three item slides: diagonal movement, shield retaliation, and the single-use beam. Shields still allow incoming damage; beams use a turn and hit allies in their row/column. Replay wins preserve their stars and do not replay the campaign completion sparkle.
+The tutorial pairs Red’s X mage (4 mana) with Blue’s Plus mage (3 mana), so the opponent can hit back while Red retains a health advantage. The old X-versus-X starting square colors prevented Blue from ever hitting Red with cardinal movement. Earlier tutorial completion stars remain valid.
+
+Hints advance automatically as the battle plays. Undo is introduced as an option after an attack leaves Red at 1 mana, without promising a safer outcome. While this two-line hint is present, the tutorial undo button blinks between normal and brighter states once per second. The hint and blinking clear on moving or undoing and do not repeat; rematch resets them. Ordinary battles do not blink the undo button. The final-blow hint takes priority over undo and requires a legal move that defeats the remaining enemies on the player’s turn. The title sits 16 logical pixels above the board and instructions 16 pixels below it on mouse and touch screens. After winning, Continue returns directly to the campaign or main menu. Replay wins preserve their stars and do not replay the campaign completion sparkle.
+
+Powerups are introduced on the first turn of Diagonals I, Beams I, and Shields I, using the same board hint layout. Their short explanations are titled **Diagon Rune**, **Beam Crystal**, and **Shield Rune**. The board stays playable, and the hint clears when the player moves. Each introduction contains only its own item; optional branches practice it, and the Rite battles combine mechanics. These hints appear only in the campaign introduction levels, including when replayed or rematched.
 
 Campaign panning keeps a displayed portal near the center throughout a drag and settles on a displayed portal. The reset star explains the remaining presses starting with “Press three more times” / “to reset campaign!” on two lines; four presses within five seconds of each other reset campaign records only.
 
@@ -138,11 +142,12 @@ python3 -m http.server 8790 --bind 127.0.0.1
 # In another terminal (install playwright-core once):
 npm install --prefix /tmp/maginet-browser-check playwright-core
 NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-ux.cjs
+NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-learning.cjs
 wasm-pack build --target web --debug --out-name maginet --out-dir /tmp/maginet-ux-mobile-pkg -- --features mobile
 NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-reviewer-levels.cjs
 ```
 
-The UX check creates a temporary native tutorial replay, then exercises mouse/touch UI and a complete win through the item slides. The mobile check supplies native bridge events in Chrome and verifies reviewer unlock/revocation and unchanged saves. Neither replaces testing the feel of these controls on a physical phone.
+The UX check creates a temporary native tutorial replay, then exercises mouse/touch UI, the one-mana undo hint and final-blow priority, and a complete win back to the menu. The learning check visits the three powerup introductions, verifies their first-turn hints and playable pickups, and checks rematches. The mobile check supplies native bridge events in Chrome and verifies reviewer unlock/revocation and unchanged saves. These checks do not replace testing the feel of the controls on a physical phone.
 
 ## Solver and opponent difficulty
 

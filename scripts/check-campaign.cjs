@@ -2,16 +2,17 @@ const {chromium} = require('playwright-core');
 const assert = require('assert/strict');
 (async () => {
   const browser = await chromium.launch({executablePath:process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
-  for (const completed of [false,true]) {
+  for (const savedCode of [null,'hg18a09m4g0m81000c4068039g1g','hg18a09m4g0m81g00c4068035g14r0v008']) {
+    const completed=!!savedCode;
     const page = await browser.newPage({viewport:{width:1000,height:700}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.route('https://tunnel.evrim.zone/**',route=>route.request().url().endsWith('/session')?route.fulfill({json:{session_id:'campaign-check'}}):route.abort());
-    await page.addInitScript(completed=>{
+    await page.addInitScript(savedCode=>{
       localStorage.clear();localStorage.setItem('difficulty','Hard');
-      if(completed)localStorage.setItem('hg18a09m4g0m81g00c4068035g14r0v008','win');
+      if(savedCode)localStorage.setItem(savedCode,'win');
       window.jobs=[];
       window.Worker=class {constructor(){jobs.push(this)}postMessage(request){this.request=request}terminate(){this.terminated=true}};
-    },completed);
+    },savedCode);
     await page.goto(process.env.DRAG_URL || 'http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});
     await page.waitForSelector('#game-canvas');
     await page.waitForFunction(()=>jobs.length>0);

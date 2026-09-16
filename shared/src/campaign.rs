@@ -3,13 +3,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::{BoardStyle, Level};
 /// Tutorial saved-progress code.
-pub const TUTORIAL_CODE: &str = "hg18a09m4g0m81000c4068039g1g";
+pub const TUTORIAL_CODE: &str = "hg18a11m4g0m81000c4068039g1g";
 
 /// Earlier versions of these battles share their completion stars with the current puzzle.
 pub fn campaign_progress_aliases(code: &str) -> &'static [&'static str] {
     match code {
         "dg1080a4d40j409408" => &["d010812ncm23809408"],
-        TUTORIAL_CODE => &["hg18a09m4g0m81g00c4068035g14r0v008"],
+        TUTORIAL_CODE => &[
+            "hg18a09m4g0m81000c4068039g1g",
+            "hg18a09m4g0m81g00c4068035g14r0v008",
+        ],
         "e01jg1148m0j8k834g00" => &["e01jg1248m0j8k834g00"],
         _ => &[],
     }

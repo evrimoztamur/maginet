@@ -1,6 +1,7 @@
 mod editor;
 mod editor_preview;
 mod game;
+mod learning;
 mod lobby_list;
 mod menu_arena;
 mod menu_main;

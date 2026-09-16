@@ -28,8 +28,9 @@
   - Keep campaign focus near displayed portals while dragging and snapping
   - Show neutral attack patterns on selection, above sleepers/stones and beyond board edges
   - Inspect enemy mages without movement controls; hide the cursor on touch devices
-  - Teach movement, spells/patterns and undo through automatic hints; show final blow only for a winning move
-  - Follow tutorial victory with diagonal, shield, and beam explanation slides
+  - Pair the tutorial X mage with a Plus opponent that can hit back; retain earlier stars
+  - Teach movement and spells/patterns automatically; offer undo separately at 1 mana after an attack, below a winning move in hint priority
+  - Introduce Diagon Rune, Shield Rune, and Beam Crystal on the first turn of their campaign teaching levels, directly beside the playable board
   - Replace Diagonals I with an X-mage duel requiring the rune to attack; retain old stars
   - Add temporary reviewer-only level unlocking without forging completion stars
   - Verify workspace rules, desktop/touch browser flows, mobile bridge events, and Android compilation/unit tests

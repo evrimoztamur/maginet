@@ -12,7 +12,7 @@ use shared::{
 use wasm_bindgen::{prelude::Closure, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement};
 
-use super::{ArenaMenu, Editor, SkirmishMenu, State};
+use super::{learning::BoardHint, ArenaMenu, Editor, SkirmishMenu, State};
 use crate::{
     app::{
         board_view::BoardView,
@@ -100,6 +100,7 @@ pub struct Game {
     ai_request: u32,
     difficulty: Difficulty,
     tutorial: bool,
+    opening_hint: Option<BoardHint>,
     button_rematch: ConfirmButtonElement,
     button_leave: ConfirmButtonElement,
     button_menu: ToggleButtonElement,
@@ -182,6 +183,7 @@ impl Game {
             crate::app::ContentElement::Text("Leave".to_string(), Alignment::Center),
         );
 
+        let opening_hint = BoardHint::for_campaign(&lobby_settings.loadout_method);
         let lobby = Lobby::new(lobby_settings, client_timestamp());
         Game {
             view_team: lobby.settings.player_team,
@@ -191,6 +193,7 @@ impl Game {
             ai_request: 0,
             difficulty: Difficulty::from_preference(&App::kv_get("difficulty")),
             tutorial: false,
+            opening_hint,
             button_rematch,
             button_leave,
             button_menu,
@@ -369,10 +372,6 @@ impl Game {
         &mut self.particle_system
     }
 
-    pub fn newly_won(&self) -> bool {
-        self.newly_won
-    }
-
     pub fn is_animating(&self) -> bool {
         self.presentation.busy()
     }
@@ -465,6 +464,35 @@ impl Game {
         self.difficulty = Difficulty::Easy;
         self.tutorial = true;
         self
+    }
+
+    pub(super) fn draw_undo_hint(
+        &self,
+        context: &CanvasRenderingContext2d,
+        atlas: &HtmlCanvasElement,
+        app: &AppContext,
+    ) -> Result<(), JsValue> {
+        if !self.tutorial
+            || self.presentation.busy()
+            || self.is_interface_active()
+            || app.frame / 30 % 2 != 0
+        {
+            return Ok(());
+        }
+        // Blink between the normal button and a brighter copy once per second.
+        // Its position, hit target and confirmation state stay unchanged.
+        context.save();
+        context.translate(
+            (app.canvas_settings.interface_width / 2) as f64,
+            (app.canvas_settings.interface_height / 2) as f64,
+        )?;
+        context.set_global_composite_operation("lighter")?;
+        let pointer = app
+            .pointer
+            .teleport(app.canvas_settings.inverse_interface_center());
+        let result = self.button_undo.draw(context, atlas, &pointer, app.frame);
+        context.restore();
+        result
     }
 
     fn request_ai(&mut self, difficulty: Difficulty) {
@@ -1261,6 +1289,21 @@ impl State for Game {
             Self::mobile_enabled(app_context),
         )?;
         self.draw_mobile(interface_context, atlas, app_context)?;
+        if self.presentation.game().turns() == 0
+            && !self.presentation.busy()
+            && !self.is_interface_active()
+        {
+            if let Some(hint) = self.opening_hint {
+                hint.draw(
+                    context,
+                    interface_context,
+                    atlas,
+                    app_context,
+                    self.board_offset(),
+                    self.presentation.game().board_size(),
+                )?;
+            }
+        }
 
         {
             let interface_pointer =

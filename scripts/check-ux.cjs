@@ -6,7 +6,7 @@ const url = process.env.DRAG_URL || 'http://127.0.0.1:8790/html/game.html';
 const path = require('node:path');
 const replayRoot = process.env.TUTORIAL_REPLAY || fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'maginet-ux-replay-'));
 if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('cargo', [
- 'run', '--quiet', '-p', 'generate', '--', 'analyse', '--code', 'hg18a09m4g0m81000c4068039g1g',
+ 'run', '--quiet', '-p', 'generate', '--', 'analyse', '--code', 'hg18a11m4g0m81000c4068039g1g',
  '--games', '1', '--red-profile', 'hard', '--blue-profile', 'easy', '--replays', '--output', replayRoot,
 ], {cwd:path.join(__dirname,'..'),stdio:'pipe'});
 (async () => {
@@ -25,7 +25,7 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
     window.sprites=[];window.labels=[];window.words='';
     window.requestAnimationFrame=f=>raf.call(window,t=>{sprites=[];labels=[];words='';f(t)});
     CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
-     const t=this.getTransform(); labels.push({x:t.e+x,y:t.f+y,w,h,color:this.fillStyle});return fill.call(this,x,y,w,h);
+     const t=this.getTransform(); labels.push({x:t.e+x,y:t.f+y,w,h,color:this.fillStyle,blend:this.globalCompositeOperation});return fill.call(this,x,y,w,h);
     };
     CanvasRenderingContext2D.prototype.drawImage=function(source,...a){
      if(a.length===8 && source.width===512) {
@@ -41,6 +41,14 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
    const click=async(x,y)=>{const p=point(x,y);if(touch)await page.touchscreen.tap(p.x,p.y);else await page.mouse.click(p.x,p.y,{delay:30});await page.waitForTimeout(350)};
    const text=()=>page.evaluate(()=>words);
    const shot=async(name)=>page.screenshot({path:`/tmp/maginet-ux-${name}-${touch?'touch':'mouse'}.png`});
+   const undoBlinkPhases=()=>page.evaluate(async()=>{
+    const phases=new Set();
+    for(let i=0;i<25;i++) {
+     phases.add(labels.some(b=>b.w===24&&b.h===24&&b.blend==='lighter'));
+     await new Promise(resolve=>setTimeout(resolve,50));
+    }
+    return [...phases].sort();
+   });
    const highlights=()=>page.evaluate(()=>sprites.filter(s=>s.sy===256 && s.w===32 && [32,64].includes(s.sx)));
    await fresh();
    await click(248,210);
@@ -95,7 +103,7 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
    await shot('idle-pattern');
    await click(128,112);if(touch)await click(128,112);
    await page.waitForFunction(()=>words.includes('Mages attack when they move.'), undefined, {polling:50});
-   assert.ok((await text()).includes('Back arrow: twice to undo.'));
+   assert.ok(!(await text()).includes('back arrow'),'undo is not part of the attack instructions');
    assert.ok(!(await text()).includes('Next'),'battle lessons never require Next');
    assert.ok(!(await text()).includes('Deal the final blow!'),'nonlethal opening stays in Attacking');
    const title=await page.evaluate(()=>labels.find(b=>b.color==='#557f55'&&b.w===96));
@@ -106,11 +114,39 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
    // Undo remains available while the opponent is thinking.
    await click(-24,144);await click(-24,144);await page.waitForTimeout(700);
    assert.ok((await text()).includes(touch?'Tap the Red Mage.':'Click the Red Mage.'));
+   // Optional undo help waits until Red is down to one mana without a finishing move.
+   const lowManaTurns=[[[1,1],[2,1]],[[4,1],[3,1]],[[2,1],[2,2]],[[3,1],[3,2]],[[2,2],[1,2]],[[3,2],[2,2]]];
+   const playTutorialTurn=async(turn,index)=>{
+    if(index%2===0) {
+     for(const [i,[x,y]] of turn.entries()) {await click(64+x*32,80+y*32);if(touch&&i===1)await click(64+x*32,80+y*32)}
+    } else {
+     await page.waitForFunction(()=>jobs.some(j=>j.request&&!j.terminated),undefined,{polling:50});
+     await page.evaluate(turn=>{const j=jobs.findLast(j=>j.request&&!j.terminated);j.onmessage({data:{id:j.request.id,revision:j.request.revision,selected:turn}})},turn);
+     await page.waitForTimeout(150);
+     assert.ok(!(await text()).includes('Only 1 mana left!'),'hint waits for the visible impact');
+     await page.waitForTimeout(650);
+    }
+   };
+   for(const [index,turn] of lowManaTurns.entries()) {
+    await playTutorialTurn(turn,index);
+    assert.equal((await text()).includes('Only 1 mana left!'),index===5,'three and two mana do not prompt undo');
+   }
+   assert.ok((await text()).includes('You can always undo your moves.'));
+   assert.ok(!(await text()).includes('Mages attack when they move.'),'undo has its own explanation');
+   assert.deepEqual(await undoBlinkPhases(),[false,true],'undo button blinks while its tutorial hint is present');
+   await shot('undo-one-mana');
+   await click(-24,144);await click(-24,144);await page.waitForTimeout(800);
+   assert.ok(!(await text()).includes('Only 1 mana left!'),'undo dismisses the hint');
+   assert.deepEqual(await undoBlinkPhases(),[false],'undo stops blinking after dismissing the hint');
+   await playTutorialTurn(lowManaTurns[4],4);await playTutorialTurn(lowManaTurns[5],5);
+   assert.ok(!(await text()).includes('Only 1 mana left!'),'returning to one mana does not repeat the hint');
+   await click(-24,108);await click(128,116);await click(128,116);
+   assert.ok((await text()).includes(touch?'Tap the Red Mage.':'Click the Red Mage.'));
    // Replay a deterministic native tutorial win with controlled opponent replies.
    const file=fs.readdirSync(replayRoot).find(f=>f.startsWith('matchup-')&&f.endsWith('.json'));
    const replay=JSON.parse(fs.readFileSync(`${replayRoot}/${file}`)).games[0].replay;
    for(const [index,step] of replay.entries()) {
-    if(index===6) {
+    if(index===2) {
      await click(128,112);
      if(touch)await click(128,144);
      else {const p=point(128,144);await page.mouse.move(p.x,p.y);await page.waitForTimeout(100)}
@@ -128,7 +164,10 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
      }
      await shot('attack-preview');
     }
-    if(index===replay.length-1)assert.ok((await text()).includes('Deal the final blow!'),'winning move receives the final-blow hint');
+    if(index===replay.length-1) {
+     assert.ok((await text()).includes('Deal the final blow!'),'winning move receives the final-blow hint');
+     assert.deepEqual(await undoBlinkPhases(),[false],'final blow never blinks undo');
+    }
     if(step.team==='Red') {
      for(const [i,[x,y]] of step.turn.entries()) {
       await click(64+x*32,80+y*32);
@@ -138,17 +177,15 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
      await page.waitForFunction(()=>jobs.some(j=>j.request&&!j.terminated), undefined, {polling:50});
      await page.evaluate(turn=>{const j=jobs.findLast(j=>j.request&&!j.terminated);j.onmessage({data:{id:j.request.id,revision:j.request.revision,selected:turn}})},step.turn);
      await page.waitForTimeout(800);
+     assert.ok(!(await text()).includes('Only 1 mana left!'),'final blow takes priority when the third hit leaves Red at one mana');
     }
    }
    await page.waitForTimeout(1000);
    await shot('replay-end');
    await page.waitForFunction(()=>words.includes('Continue'), undefined, {polling:50});
    await page.waitForTimeout(2400);await click(128,160);
-   await page.waitForFunction(()=>words.includes('Diagonal rune'), undefined, {polling:50});await shot('diagonal-slide');
-   await click(194,232);assert.ok((await text()).includes('even on their turn.'));await shot('shield-slide');
-   await click(194,232);assert.ok((await text()).includes('including allies.'));await shot('beam-slide');
-   await click(60,232);assert.ok((await text()).includes('Shield'));
-   await click(194,232);await click(194,232);assert.ok((await text()).includes('Campaign'));
+   await page.waitForFunction(()=>words.includes('Campaign'), undefined, {polling:50});
+   assert.ok(!(await text()).includes('Diagon Rune'),'tutorial returns directly to the menu');
    // Campaign panning never loses every displayed portal, including long drags.
    await click(248,80);
    const drag=async(from,to)=>{
@@ -167,6 +204,6 @@ if (!process.env.TUTORIAL_REPLAY) require('node:child_process').execFileSync('ca
    await shot('campaign-bounds');
    assert.deepEqual(errors,[]);await page.close();
   }
-  console.log('PASS: mouse/touch settings, editor, enemy inspection, neutral patterns, cursor, tutorial/undo/item slides, and campaign bounds');
+  console.log('PASS: mouse/touch settings, editor, enemy inspection, neutral patterns, cursor, tutorial/one-mana undo/direct exit, and campaign bounds');
  } finally {await browser.close();if(!process.env.TUTORIAL_REPLAY)fs.rmSync(replayRoot,{recursive:true,force:true})}
 })().catch(e=>{console.error(e);process.exit(1)});

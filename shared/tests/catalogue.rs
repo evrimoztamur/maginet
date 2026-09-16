@@ -223,7 +223,10 @@ fn tutorial_teaches_cardinal_movement_and_basics_keep_the_original_short_puzzles
     }
     assert_eq!(
         shared::campaign_progress_aliases(shared::TUTORIAL_CODE),
-        &["hg18a09m4g0m81g00c4068035g14r0v008"]
+        &[
+            "hg18a09m4g0m81000c4068039g1g",
+            "hg18a09m4g0m81g00c4068035g14r0v008"
+        ]
     );
     assert_eq!(
         shared::campaign_progress_aliases("e01jg1148m0j8k834g00"),
