@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Maginet update cover</title>
+<style>html,body{margin:0;width:800px;height:450px;overflow:hidden;background:#002a2a}canvas{display:block;image-rendering:pixelated}</style>
+<canvas width="800" height="450" aria-label="Maginet. More magic! New campaign and juice. iOS and Android, out now."></canvas>
+<script>
+// The same glyph cells, kerning, palette, and button trim as src/draw.rs.
+const load=src=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src});
+window.coverReady=(async()=>{
+ const [atlas,battle]=await Promise.all([load('../../../static/png/atlas.png'),load('assets/01-animations.png')]);
+ const ctx=document.querySelector('canvas').getContext('2d');ctx.imageSmoothingEnabled=false;
+ ctx.fillStyle='#002a2a';ctx.fillRect(0,0,800,450);
+ ctx.drawImage(battle,256,112,288,304,424,30,360,380);
+ // Center the visible left-hand artwork as one group. Allow about 35px
+ // between its ink bounds, accounting for transparent atlas padding.
+ const layout={logoY:61,headingY:168,subtitleY:246,buttonY:307};
+ // Previously 240px; now 336px (+40%). Logo comes from the game atlas.
+ ctx.drawImage(atlas,0,448,96,24,32,layout.logoY,336,84);
+ const kern=c=>({i:[-2,-2],l:[-2,-1],t:[-2,-1],f:[0,-1],a:[-1,0],c:[-1,-1],o:[-1,-1],p:[-1,0],' ':[-2,-2],I:[-1,-2]}[c]||[0,0]);
+ const width=s=>[...s].reduce((n,c)=>n+8+kern(c)[0]+kern(c)[1],0);
+ function text(s,x,y,scale=2,target=ctx){for(const c of s){const [a,b]=kern(c),code=c.charCodeAt(0);x+=a*scale;target.drawImage(atlas,(code%32)*8,216+Math.floor(code/32)*8,8,8,x,y+scale,8*scale,8*scale);x+=(8+b)*scale;}}
+ text('More magic!',32,layout.headingY,5);
+ ctx.globalAlpha=0.8;
+ text('New campaign and juice',32,layout.subtitleY);
+ ctx.globalAlpha=1;
+ // Native 172x38 action button, scaled 2x, with LabelTrim::Glorious.
+ const button=document.createElement('canvas');button.width=172;button.height=38;
+ const b=button.getContext('2d');b.imageSmoothingEnabled=false;b.fillStyle='#7f1f00';b.fillRect(0,0,172,38);
+ text('iOS + Android',Math.floor(32+(140-width('iOS + Android'))/2),7,1,b);
+ text('Out now!',Math.floor(32+(140-width('Out now!'))/2),22,1,b);
+ b.globalCompositeOperation='destination-out';
+ for(const [sx,sy,dx,dy] of [[88,0,0,0],[92,0,168,0],[88,4,0,34],[92,4,168,34]])b.drawImage(atlas,sx,sy,4,4,dx,dy,4,4);
+ b.fillRect(0,3,3,32);b.fillRect(169,3,3,32);
+ ctx.drawImage(button,32,layout.buttonY,344,76);
+ // Campaign star and the same golden Shield particles used by won portals.
+ ctx.drawImage(atlas,32,320,32,32,32,layout.buttonY-2,72,72);
+ for(const [sx,x,dy,size] of [[96,28,-10,16],[104,94,2,16],[112,102,52,16],[104,24,62,12]])ctx.drawImage(atlas,sx,56,8,8,x,layout.buttonY+dy,size,size);
+ document.documentElement.dataset.ready='true';
+})();
+</script></html>

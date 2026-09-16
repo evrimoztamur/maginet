@@ -28,3 +28,8 @@ target/
 # Local release credentials and Python test output
 /android/play/*.env
 /android/scripts/**/__pycache__/
+
+# Steam SDK, packaging tools and builder login cache (builds use target/steam)
+/platforms/steam/sdk/
+/platforms/steam/node_modules/
+/platforms/steam/.steamhome/

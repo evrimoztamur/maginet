@@ -1,0 +1,21 @@
+House Ruby still demands victory. The Azur Clan still objects. The battlefields, however, have changed.
+
+[h2]Zugzwang, redrawn.[/h2]
+[img]CAMPAIGN_IMAGE_URL_PENDING[/img]
+New routes, reworked battles, and clearer lessons in spells and powerups. You'll need to earn your campaign stars again. Azur insists.
+
+[h2]Have at thee![/h2]
+[img]ANIMATIONS_IMAGE_URL_PENDING[/img]
+Maginettes leap into their moves. Spells fly across the board and burst on impact. The ancient quarrel is considerably less stationary.
+
+[h2]No hiding behind a deadlock.[/h2]
+[img]DEADLOCK_IMAGE_URL_PENDING[/img]
+Certain deadlocks now grant both sides diagonal movement. The curs can no longer shelter behind the colour of a square.
+
+[h2]Now on iOS and Android.[/h2]
+[img]MOBILE_CONTROLS_IMAGE_URL_PENDING[/img]
+Take the feud with you: onscreen controls, move previews, and drag-and-drop. Maginet is out now on iOS and Android. Settle it on the train.
+
+[url=IOS_STORE_URL_PENDING]Get it on iOS[/url] · [url=ANDROID_STORE_URL_PENDING]Get it on Android[/url]
+
+Also: three AI difficulties, play as Azur, clearer attack previews, and more time before inactivity ends a duel.

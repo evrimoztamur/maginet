@@ -43,6 +43,30 @@ Use `xcrun devicectl list devices` to find a phone’s identifier. Both hardware
 
 The default configuration is `Release`; use `CONFIGURATION=Debug` for a debug build. Select your signing team in Xcode or pass `DEVELOPMENT_TEAM=YOUR_TEAM_ID ./deploy-ios.sh YOUR_DEVICE_ID`. Device identifiers and signing teams are supplied locally, never hard-coded in the script. See [the iOS README](ios/README.md) for prerequisites and StoreKit testing. App Store updates require a new archive and upload.
 
+### Update both Steam apps
+
+On macOS, install Xcode Command Line Tools (including `lipo`), Node.js 22.12 or newer, Rust with `wasm32-unknown-unknown`, and `wasm-pack`. Put the Steamworks SDK in `platforms/steam/sdk/`, or set `STEAMCMD` to an existing `steamcmd.sh`. Then run:
+
+```sh
+STEAM_USER=your_builder_account ./deploy-steam.sh
+./deploy-steam.sh --build-only     # Package both apps without Steam login/upload
+```
+
+One run builds this checkout twice (`deploy` for the full game, `deploy,demo` for the demo), packages each with Electron for Windows x64 and universal macOS (Intel and Apple Silicon), then uploads both apps in one SteamCMD session. The desktop shell comes from the previous `maginet-deploy` project; that checkout is no longer required. Both apps finish packaging before either upload begins. Uploads are separate Steam app builds, so a failure can leave only one uploaded; the script requires success messages for both before reporting completion.
+
+| App | AppID | Windows depot / launch executable | macOS depot / launch app |
+| --- | --- | --- | --- |
+| Maginet | `2441960` | `2441961` / `Maginet.exe` | `2441962` / `Maginet.app` |
+| Maginet Demo | `2529900` | `2529901` / `Maginet Demo.exe` | `2529902` / `Maginet Demo.app` |
+
+The script installs locked packaging tools, downloads the pinned Electron runtime, and stages fresh assets without copying existing generated Wasm packages. Packages, generated VDFs, and upload logs are in `target/steam/`; override that with `STEAM_BUILD_ROOT`. SteamCMD uses a separate login cache at `platforms/steam/.steamhome/` (override with `STEAM_HOME`) and prompts for password/Steam Guard when needed. The builder account needs upload permissions for both apps. The SDK, dependencies, login cache, and generated builds are ignored by Git.
+
+The pinned Electron runtime requires macOS 13 or newer. Keep the Steam store's system requirements aligned with the packaged runtime. Packages are not signed or notarized by this script.
+
+After uploading, activate the new builds on the default branch on the [Maginet builds page](https://partner.steamgames.com/apps/builds/2441960) and [demo builds page](https://partner.steamgames.com/apps/builds/2529900). [SteamPipe cannot automatically set the default branch live](https://partner.steamgames.com/doc/sdk/uploading#Building), so there are no beta/track flags or `SetLive` entries.
+
+Check upload orchestration without accessing Steam with `python3 scripts/check-steam-deploy.py`. After `--build-only`, run `NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-steam-app.cjs` (install `playwright-core` there first, as below) to check both packaged macOS apps, their AI workers, and matching Windows payloads. These checks use temporary saves and leave screenshots in `target/steam/checks/`. Windows still needs a runtime smoke test on Windows.
+
 ## Where things live
 
 | Path | Responsibility |
