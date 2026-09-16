@@ -159,11 +159,11 @@ time.sleep(.3)
 assert evaluate('location.origin') == 'http://127.0.0.1:18743'
 tap(248,212)  # Settings
 # Short Android tap must reach the native purchase gate.
-tap(232,176)
+tap(232,172)
 assert native_text('Purchases are not configured in this build.')
 device('shell','input','keyevent','KEYCODE_BACK')
 assert not native_text('Leave Maginet?')
-tap(152,248)  # Settings back
+tap(72,248)  # Settings back
 tap(248,144)  # Editor remains free
 tap(276,212)  # Native level-code keyboard
 assert native_text('Level code')

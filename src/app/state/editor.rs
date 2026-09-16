@@ -67,8 +67,8 @@ const BUTTON_LEAVE: usize = 100;
 impl Editor {
     pub fn new(level: Level) -> Editor {
         let button_menu = ToggleButtonElement::new(
-            (-60, 118),
-            (20, 20),
+            (-62, 116),
+            (24, 24),
             BUTTON_MENU,
             LabelTrim::Round,
             LabelTheme::Bright,
@@ -85,8 +85,8 @@ impl Editor {
         );
 
         let button_save = ButtonElement::new(
-            (244, 204),
-            (64, 16),
+            (240, 196),
+            (72, 22),
             BUTTON_SAVE,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -94,8 +94,8 @@ impl Editor {
         );
 
         let button_width_minus = ButtonElement::new(
-            (82, if cfg!(feature = "mobile") { 244 } else { 248 }),
-            (12, 12),
+            (72, 236),
+            (20, 20),
             BUTTON_WIDTH_MINUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -103,8 +103,8 @@ impl Editor {
         );
 
         let button_width_plus = ButtonElement::new(
-            (98, if cfg!(feature = "mobile") { 244 } else { 248 }),
-            (12, 12),
+            (100, 236),
+            (20, 20),
             BUTTON_WIDTH_PLUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -112,8 +112,8 @@ impl Editor {
         );
 
         let button_height_minus = ButtonElement::new(
-            (216, 114),
-            (12, 12),
+            (202, 104),
+            (20, 20),
             BUTTON_HEIGHT_MINUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -121,8 +121,8 @@ impl Editor {
         );
 
         let button_height_plus = ButtonElement::new(
-            (216, 130),
-            (12, 12),
+            (202, 132),
+            (20, 20),
             BUTTON_HEIGHT_PLUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -130,8 +130,8 @@ impl Editor {
         );
 
         let button_team_left = ButtonElement::new(
-            (240, 122 - 92),
-            (12, 20),
+            (232, 28),
+            (20, 24),
             BUTTON_TEAM_LEFT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -139,8 +139,8 @@ impl Editor {
         );
 
         let button_team_right = ButtonElement::new(
-            (300, 122 - 92),
-            (12, 20),
+            (300, 28),
+            (20, 24),
             BUTTON_TEAM_RIGHT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -148,8 +148,8 @@ impl Editor {
         );
 
         let button_spell_left = ButtonElement::new(
-            (240, 122 - 38),
-            (12, 32),
+            (232, 84),
+            (20, 32),
             BUTTON_SPELL_LEFT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -157,8 +157,8 @@ impl Editor {
         );
 
         let button_spell_right = ButtonElement::new(
-            (300, 122 - 38),
-            (12, 32),
+            (300, 84),
+            (20, 32),
             BUTTON_SPELL_RIGHT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -166,8 +166,8 @@ impl Editor {
         );
 
         let button_mana_left = ButtonElement::new(
-            (244, 122 + 8),
-            (12, 12),
+            (232, 126),
+            (20, 20),
             BUTTON_MANA_LEFT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -175,8 +175,8 @@ impl Editor {
         );
 
         let button_mana_right = ButtonElement::new(
-            (296, 122 + 8),
-            (12, 12),
+            (300, 126),
+            (20, 20),
             BUTTON_MANA_RIGHT,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -185,7 +185,7 @@ impl Editor {
 
         let button_delete = ButtonElement::new(
             (260, 160),
-            (32, 20),
+            (32, 24),
             BUTTON_DELETE,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -204,7 +204,7 @@ impl Editor {
 
         let button_delete = ButtonElement::new(
             (260, 80),
-            (32, 20),
+            (32, 24),
             BUTTON_DELETE,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -218,8 +218,8 @@ impl Editor {
         ]);
 
         let button_add_mage = ButtonElement::new(
-            (252, 118 - 14),
-            (48, 20),
+            (252, 104),
+            (48, 24),
             BUTTON_ADD_MAGE,
             LabelTrim::Glorious,
             LabelTheme::Default,
@@ -227,8 +227,8 @@ impl Editor {
         );
 
         let button_add_prop: ButtonElement = ButtonElement::new(
-            (252, 118 + 14),
-            (48, 20),
+            (252, 136),
+            (48, 24),
             BUTTON_ADD_PROP,
             LabelTrim::Glorious,
             LabelTheme::Default,
@@ -248,7 +248,7 @@ impl Editor {
         ]);
 
         let button_load = ButtonElement::new(
-            (96 - 44, 128 - 32),
+            (52, 76),
             (88, 24),
             BUTTON_LOAD,
             LabelTrim::Round,
@@ -257,8 +257,8 @@ impl Editor {
         );
 
         let button_simulate = ButtonElement::new(
-            (96 - 44, 128),
-            (88, 16),
+            (52, 108),
+            (88, 24),
             BUTTON_SIMULATE,
             LabelTrim::Round,
             LabelTheme::Disabled,
@@ -266,8 +266,8 @@ impl Editor {
         );
 
         let button_reset = ConfirmButtonElement::new(
-            (96 - 44, 128 + 20),
-            (88, 16),
+            (52, 140),
+            (88, 24),
             BUTTON_RESET,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -275,8 +275,8 @@ impl Editor {
         );
 
         let button_leave = ConfirmButtonElement::new(
-            (96 - 36, 128 + 48),
-            (72, 16),
+            (52, 180),
+            (88, 24),
             BUTTON_LEAVE,
             LabelTrim::Return,
             LabelTheme::Default,
@@ -308,6 +308,30 @@ impl Editor {
         (
             ((8 - self.level.board.width) as i32 * BOARD_SCALE.0) / 2,
             ((8 - self.level.board.height) as i32 * BOARD_SCALE.1) / 2,
+        )
+    }
+
+    // Keep the board centered between its dimension controls. Larger boards use
+    // 24-pixel cells so their last row/column never sits underneath a button.
+    fn board_zoom(&self) -> f64 {
+        if self.level.board.width > 6 || self.level.board.height > 6 {
+            0.75
+        } else {
+            1.0
+        }
+    }
+
+    fn zoom_board_context(&self, context: &CanvasRenderingContext2d) -> Result<(), JsValue> {
+        let zoom = self.board_zoom();
+        context.translate(96.0 * (1.0 - zoom), 128.0 * (1.0 - zoom))?;
+        context.scale(zoom, zoom)
+    }
+
+    fn board_pointer(&self, location: (i32, i32)) -> (i32, i32) {
+        let zoom = self.board_zoom();
+        (
+            ((location.0 as f64 - 96.0) / zoom + 96.0).floor() as i32,
+            ((location.1 as f64 - 128.0) / zoom + 128.0).floor() as i32,
         )
     }
 
@@ -346,18 +370,20 @@ impl State for Editor {
 
         let frame = app_context.frame;
         let pointer = &app_context.pointer;
+        let board_pointer = self.board_pointer(pointer.location);
 
         if self.board_dirty {
             self.board_dirty = false;
             draw_board(atlas, 256.0, 0.0, &self.level.board, 8, 8).unwrap();
         }
 
-        context.save();
+        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 64.0, 244.0, 8.0)?;
 
+        context.save();
+        self.zoom_board_context(context)?;
         context.translate(-32.0, 0.0)?;
 
         draw_sprite(context, atlas, 256.0, 0.0, 256.0, 256.0, 0.0, 0.0)?;
-        draw_sprite(context, atlas, 256.0, 256.0, 64.0, 64.0, 276.0, 8.0)?;
 
         context.translate(board_offset.0 as f64, board_offset.1 as f64)?;
 
@@ -407,7 +433,7 @@ impl State for Editor {
         }
 
         let selected_tile = self.level.board.location_as_position(
-            pointer.location,
+            board_pointer,
             (board_offset.0 - 32, board_offset.1),
             BOARD_SCALE,
         );
@@ -437,12 +463,13 @@ impl State for Editor {
                 }
 
                 interface_context.save();
+                self.zoom_board_context(interface_context)?;
                 interface_context.translate(
-                    (pointer.location.0 as f64).clamp(
+                    (board_pointer.0 as f64).clamp(
                         board_offset.0 - 16.0,
                         board_offset.0 - 48.0 + board_scale.0 * self.level.board.width as f64,
                     ),
-                    (pointer.location.1 as f64).clamp(
+                    (board_pointer.1 as f64).clamp(
                         board_offset.1 + 16.0,
                         board_offset.1 - 16.0 + board_scale.1 * self.level.board.height as f64,
                     ),
@@ -458,12 +485,13 @@ impl State for Editor {
             }
             EditorSelection::PowerUp(powerup) => {
                 interface_context.save();
+                self.zoom_board_context(interface_context)?;
                 interface_context.translate(
-                    (pointer.location.0 as f64).clamp(
+                    (board_pointer.0 as f64).clamp(
                         board_offset.0 - 16.0,
                         board_offset.0 - 48.0 + board_scale.0 * self.level.board.width as f64,
                     ),
-                    (pointer.location.1 as f64).clamp(
+                    (board_pointer.1 as f64).clamp(
                         board_offset.1 + 16.0,
                         board_offset.1 - 16.0 + board_scale.1 * self.level.board.height as f64,
                     ),
@@ -930,7 +958,7 @@ impl State for Editor {
         }
 
         if let Some(selected_tile) = self.level.board.location_as_position(
-            pointer.location,
+            self.board_pointer(pointer.location),
             (board_offset.0 - 32, board_offset.1),
             BOARD_SCALE,
         ) {

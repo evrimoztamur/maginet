@@ -20,6 +20,20 @@
 
 ## DONE
 
+- UX and learning pass
+  - Enlarge audio, editor, main/campaign, battle menu/undo/rematch/continue controls
+  - Rebalance button sizes and gutters; center editor rows and restore board-edge dimension controls with room for larger boards
+  - Match difficulty choices to the On/Off button group design
+  - Explain the campaign reset on its first press and count down remaining presses
+  - Keep campaign focus near displayed portals while dragging and snapping
+  - Show neutral attack patterns on selection, above sleepers/stones and beyond board edges
+  - Inspect enemy mages without movement controls; hide the cursor on touch devices
+  - Teach movement, spells/patterns, undo, then the final blow
+  - Follow tutorial victory with diagonal, shield, and beam explanation slides
+  - Replace Diagonals I with an X-mage duel requiring the rune to attack; retain old stars
+  - Add temporary reviewer-only level unlocking without forging completion stars
+  - Verify workspace rules, desktop/touch browser flows, mobile bridge events, and Android compilation/unit tests
+
 - Scenario analyser and exploratory campaign assessment
   - Shared full/demo catalogue, preserving codes, positions, styles, tutorial identity, and saved progress
   - Native analyse/campaign/generate CLI with deterministic node budgets and bounded parallelism

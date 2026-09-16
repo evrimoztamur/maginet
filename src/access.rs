@@ -5,6 +5,8 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen(module = "/static/js/mobile-access.js")]
 extern "C" {
     fn owned() -> bool;
+    #[wasm_bindgen(js_name = reviewing)]
+    fn native_reviewing() -> bool;
     fn request(action: &str);
     fn inactive() -> bool;
     #[wasm_bindgen(js_name = takeFailure)]
@@ -53,5 +55,35 @@ pub fn network_failed() -> bool {
     #[cfg(not(feature = "mobile"))]
     {
         false
+    }
+}
+
+// Reviewer shortcuts never write campaign stars or purchase state.
+thread_local! {
+    static REVIEW_LEVELS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+pub fn reviewing() -> bool {
+    #[cfg(feature = "mobile")]
+    {
+        native_reviewing()
+    }
+    #[cfg(not(feature = "mobile"))]
+    {
+        false
+    }
+}
+
+pub fn review_levels_unlocked() -> bool {
+    if !reviewing() {
+        REVIEW_LEVELS.with(|unlocked| unlocked.set(false));
+        return false;
+    }
+    REVIEW_LEVELS.with(|unlocked| unlocked.get())
+}
+
+pub fn unlock_review_levels() {
+    if reviewing() {
+        REVIEW_LEVELS.with(|unlocked| unlocked.set(true));
     }
 }

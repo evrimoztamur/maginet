@@ -187,6 +187,9 @@ impl App {
         context: &CanvasRenderingContext2d,
         atlas: &HtmlCanvasElement,
     ) -> Result<(), JsValue> {
+        if Game::touch_enabled(&self.app_context) {
+            return Ok(());
+        }
         context.save();
         let settings = &self.app_context.canvas_settings;
         if settings.orientation {

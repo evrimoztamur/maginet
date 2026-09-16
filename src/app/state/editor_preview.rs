@@ -27,8 +27,8 @@ const BUTTON_ONLINE: usize = 3;
 impl EditorPreview {
     pub fn new(level: Level) -> EditorPreview {
         let button_back = ButtonElement::new(
-            (-60, 118),
-            (20, 20),
+            (-62, 116),
+            (24, 24),
             BUTTON_BACK,
             LabelTrim::Round,
             LabelTheme::Bright,

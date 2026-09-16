@@ -8,6 +8,7 @@ pub const TUTORIAL_CODE: &str = "hg18a09m4g0m81000c4068039g1g";
 /// Earlier versions of these battles share their completion stars with the current puzzle.
 pub fn campaign_progress_aliases(code: &str) -> &'static [&'static str] {
     match code {
+        "dg1080a4d40j409408" => &["d010812ncm23809408"],
         TUTORIAL_CODE => &["hg18a09m4g0m81g00c4068035g14r0v008"],
         "e01jg1148m0j8k834g00" => &["e01jg1248m0j8k834g00"],
         _ => &[],
@@ -73,7 +74,7 @@ pub fn campaign_catalogue(demo: bool) -> Vec<CampaignEntry> {
         ("patterns-i", "Patterns I", "dg30r0j4500m8v048g0g4h250526212400", (3, -1), false, false),
         ("patterns-ii", "Patterns II", "pg2620a48m1m8c038ht02h04gg1jr0wg0d406", (4, -1), false, false),
         ("patterns-iii", "Patterns III", "pg3220j4g41m8h818gr06h4g052780j400", (5, -1), false, false),
-        ("diagonals-i", "Diagonals I", "d010812ncm23809408", (4, 0), false, false),
+        ("diagonals-i", "Diagonals I", "dg1080a4d40j409408", (4, 0), false, false),
         ("diagonals-ii", "Diagonals II", "f02220t4840m8e018hc06h04a014g0sg0cm04", (4, 1), false, false),
         ("diagonals-iii", "Diagonals III", "bg3200240g248h038gcg6h2s0h23t02408r04b02", (4, 2), false, false),
         ("diagonals-iv", "Diagonals IV", "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08", (4, 3), false, false),

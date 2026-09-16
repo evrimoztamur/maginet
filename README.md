@@ -117,9 +117,36 @@ The presentation tests run natively without a browser. Build the browser client 
 
 For animation changes, also play through a no-hit move, a multi-hit attack, a lethal hit, diagonal/beam pickups, shield retaliation, and undo during playback. Check that mana bars travel with their sprites, missiles accelerate, damage and victory appear at impact, and tutorial text does not get ahead of playback. In online play, check a batch of turns and a rematch/snapshot replacement. A browser pass is needed to judge visual feel and audio; passing Rust tests alone does not establish that.
 
+## Touch controls and learning
+
+Settings and editor adjustments use modest 20-pixel controls; selectors and action buttons use 22–28-pixel heights with space between groups. Editor inspection rows share one centerline. Width controls sit below the board and height controls beside its right edge; boards larger than 6×6 use 24-pixel cells to keep those controls clear. Touch devices and native mobile builds omit the mouse cursor.
+
+Select either team's mage to study its full attack pattern. Neutral highlights appear immediately, including over sleeping mages, stones, and visible space beyond the board. Selecting an enemy does not expose movement controls. A legal destination preview uses the authoritative rules to mark damage, including beam friendly fire and shield retaliation.
+
+The tutorial teaches adjacent movement, spells and patterns, undo, then the final blow. The Attacking and Undo explanations wait for Next; menu and undo remain accessible. After winning, Continue opens three item slides: diagonal movement, shield retaliation, and the single-use beam. Shields still allow incoming damage; beams use a turn and hit allies in their row/column. Replay wins preserve their stars and do not replay the campaign completion sparkle.
+
+Campaign panning keeps a displayed portal near the center throughout a drag and settles on a displayed portal. The reset star explains the remaining presses starting with “Press three more times” / “to reset campaign!” on two lines; four presses within five seconds of each other reset campaign records only.
+
+Native reviewer access reveals an **Unlock all levels** button on the campaign map. This temporarily opens all portals, including secrets, without writing completion stars. It survives menu navigation and ends when review access ends or the web view restarts. Paid ownership alone does not enable it.
+
+Diagonals I now uses two X mages and a green rune. Without the rune, Red's cardinal moves cannot hit the enemy; collecting it enables a forced win within five plies. Previous Diagonals I stars are retained. Earlier assessment reports describe the previous board and remain historical records; this change has rule-level tests, not a new human difficulty assessment.
+
+After building the web client, serve the repository on port 8790 and run:
+
+```sh
+python3 -m http.server 8790 --bind 127.0.0.1
+# In another terminal (install playwright-core once):
+npm install --prefix /tmp/maginet-browser-check playwright-core
+NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-ux.cjs
+wasm-pack build --target web --debug --out-name maginet --out-dir /tmp/maginet-ux-mobile-pkg -- --features mobile
+NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-reviewer-levels.cjs
+```
+
+The UX check creates a temporary native tutorial replay, then exercises mouse/touch UI and a complete win through the item slides. The mobile check supplies native bridge events in Chrome and verifies reviewer unlock/revocation and unchanged saves. Neither replaces testing the feel of these controls on a physical phone.
+
 ## Solver and opponent difficulty
 
-Settings includes a saved AI difficulty selector below the audio controls. Missing or invalid `difficulty` storage values use Normal. Campaign and local AI battles use this preference; the tutorial and main-menu demonstration always use Easy. Stars, wins, and campaign unlocks keep their existing storage keys and behavior.
+Settings includes saved Easy, Normal, and Hard buttons below the audio controls, styled like the On/Off control selector. Missing or invalid `difficulty` storage values use Normal. Campaign and local AI battles use this preference; the tutorial and main-menu demonstration always use Easy. Stars, wins, and campaign unlocks keep their existing storage keys and behavior.
 
 | Difficulty | Maximum plies | Search budget | Best / second / third move |
 | --- | ---: | ---: | --- |

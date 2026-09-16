@@ -27,6 +27,9 @@ const BUTTON_SOUND_MINUS: usize = 12;
 const BUTTON_SOUND_PLUS: usize = 13;
 const BUTTON_CONTROLS_ON: usize = 20;
 const BUTTON_CONTROLS_OFF: usize = 21;
+const BUTTON_DIFFICULTY_EASY: usize = 30;
+const BUTTON_DIFFICULTY_NORMAL: usize = 31;
+const BUTTON_DIFFICULTY_HARD: usize = 32;
 
 impl SettingsMenu {
     pub(crate) fn onscreen_controls_enabled() -> bool {
@@ -36,8 +39,8 @@ impl SettingsMenu {
     fn purchase_button() -> ButtonElement {
         let owned = !crate::access::demo();
         ButtonElement::new(
-            (160, 168),
-            (144, 16),
+            (176, 156),
+            (144, 22),
             98,
             LabelTrim::Round,
             if owned {
@@ -84,7 +87,7 @@ impl State for SettingsMenu {
         draw_label(
             context,
             atlas,
-            (0, 24),
+            (-4, 16),
             (136, 24),
             "#7f3faa",
             &ContentElement::Text("Settings".to_string(), Alignment::Center),
@@ -94,7 +97,7 @@ impl State for SettingsMenu {
             false,
         )?;
 
-        draw_text(context, atlas, 0.0, 60.0, "Music Volume")?;
+        draw_text(context, atlas, -16.0, 52.0, "Music Volume")?;
 
         for i in (0..10).rev() {
             if self.music_volume > i {
@@ -105,8 +108,8 @@ impl State for SettingsMenu {
                     0.0,
                     12.0,
                     12.0,
-                    32.0 + i as f64 * 10.0,
-                    76.0,
+                    12.0 + i as f64 * 10.0,
+                    72.0,
                 )?;
             } else {
                 draw_sprite(
@@ -116,13 +119,13 @@ impl State for SettingsMenu {
                     0.0,
                     12.0,
                     12.0,
-                    32.0 + i as f64 * 10.0,
-                    76.0,
+                    12.0 + i as f64 * 10.0,
+                    72.0,
                 )?;
             }
         }
 
-        draw_text(context, atlas, 0.0, 104.0, "Sound Volume")?;
+        draw_text(context, atlas, -16.0, 98.0, "Sound Volume")?;
 
         for i in (0..10).rev() {
             if self.clip_volume > i {
@@ -133,8 +136,8 @@ impl State for SettingsMenu {
                     0.0,
                     12.0,
                     12.0,
-                    32.0 + i as f64 * 10.0,
-                    120.0,
+                    12.0 + i as f64 * 10.0,
+                    118.0,
                 )?;
             } else {
                 draw_sprite(
@@ -144,26 +147,25 @@ impl State for SettingsMenu {
                     0.0,
                     12.0,
                     12.0,
-                    32.0 + i as f64 * 10.0,
-                    120.0,
+                    12.0 + i as f64 * 10.0,
+                    118.0,
                 )?;
             }
         }
 
-        draw_text(context, atlas, 0.0, 148.0, "AI Difficulty")?;
-        draw_text(context, atlas, 64.0, 168.0, self.difficulty.label())?;
+        draw_text(context, atlas, -16.0, 144.0, "AI Difficulty")?;
 
-        draw_text(context, atlas, 0.0, 192.0, "On-screen controls")?;
+        draw_text(context, atlas, -16.0, 190.0, "On-screen controls")?;
 
         context.save();
 
-        context.translate(160.0, 24.0)?;
+        context.translate(176.0, 16.0)?;
 
         draw_label(
             context,
             atlas,
             (0, 0),
-            (112, 24),
+            (96, 24),
             "#7f0055",
             &ContentElement::Text("Credits".to_string(), Alignment::Center),
             &app_context.pointer,
@@ -235,8 +237,12 @@ impl State for SettingsMenu {
                 98 => crate::access::purchase("purchase"),
                 99 => crate::access::purchase("restore"),
                 100 => crate::access::purchase("review"),
-                14 => {
-                    self.difficulty = self.difficulty.next();
+                BUTTON_DIFFICULTY_EASY | BUTTON_DIFFICULTY_NORMAL | BUTTON_DIFFICULTY_HARD => {
+                    self.difficulty = match value {
+                        BUTTON_DIFFICULTY_EASY => shared::Difficulty::Easy,
+                        BUTTON_DIFFICULTY_HARD => shared::Difficulty::Hard,
+                        _ => shared::Difficulty::Normal,
+                    };
                     App::kv_set("difficulty", self.difficulty.label());
                 }
                 BUTTON_BACK => {
@@ -269,8 +275,8 @@ impl State for SettingsMenu {
 impl Default for SettingsMenu {
     fn default() -> Self {
         let button_back = ButtonElement::new(
-            (108, 240),
-            (88, 16),
+            (16, 236),
+            (96, 20),
             BUTTON_BACK,
             LabelTrim::Return,
             LabelTheme::Default,
@@ -278,8 +284,8 @@ impl Default for SettingsMenu {
         );
 
         let button_music_minus = ButtonElement::new(
-            (0, 76),
-            (12, 12),
+            (-16, 68),
+            (20, 20),
             BUTTON_MUSIC_MINUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -287,8 +293,8 @@ impl Default for SettingsMenu {
         );
 
         let button_music_plus = ButtonElement::new(
-            (16, 76),
-            (12, 12),
+            (124, 68),
+            (20, 20),
             BUTTON_MUSIC_PLUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -296,8 +302,8 @@ impl Default for SettingsMenu {
         );
 
         let button_sound_minus = ButtonElement::new(
-            (0, 120),
-            (12, 12),
+            (-16, 114),
+            (20, 20),
             BUTTON_SOUND_MINUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -305,8 +311,8 @@ impl Default for SettingsMenu {
         );
 
         let button_sound_plus = ButtonElement::new(
-            (16, 120),
-            (12, 12),
+            (124, 114),
+            (20, 20),
             BUTTON_SOUND_PLUS,
             LabelTrim::Round,
             LabelTheme::Default,
@@ -319,19 +325,19 @@ impl Default for SettingsMenu {
             BUTTON_CONTROLS_OFF
         };
         let mut controls = ButtonGroupElement::new(
-            (0, 208),
+            (-16, 206),
             vec![
                 ButtonElement::new(
                     (0, 0),
-                    (64, 16),
+                    (76, 22),
                     BUTTON_CONTROLS_ON,
                     LabelTrim::Round,
                     LabelTheme::Default,
                     ContentElement::Text("On".into(), Alignment::Center),
                 ),
                 ButtonElement::new(
-                    (68, 0),
-                    (64, 16),
+                    (84, 0),
+                    (76, 22),
                     BUTTON_CONTROLS_OFF,
                     LabelTrim::Round,
                     LabelTheme::Default,
@@ -342,17 +348,37 @@ impl Default for SettingsMenu {
         );
         controls.select_group_value(controls_value);
 
+        let difficulty = shared::Difficulty::from_preference(&App::kv_get("difficulty"));
+        let difficulty_value = match difficulty {
+            shared::Difficulty::Easy => BUTTON_DIFFICULTY_EASY,
+            shared::Difficulty::Normal => BUTTON_DIFFICULTY_NORMAL,
+            shared::Difficulty::Hard => BUTTON_DIFFICULTY_HARD,
+        };
+        let mut difficulty_buttons = ButtonGroupElement::new(
+            (-16, 160),
+            [
+                (0, 44, "Easy", BUTTON_DIFFICULTY_EASY),
+                (52, 56, "Normal", BUTTON_DIFFICULTY_NORMAL),
+                (116, 44, "Hard", BUTTON_DIFFICULTY_HARD),
+            ]
+            .into_iter()
+            .map(|(x, width, label, value)| {
+                ButtonElement::new(
+                    (x, 0),
+                    (width, 22),
+                    value,
+                    LabelTrim::Round,
+                    LabelTheme::Default,
+                    ContentElement::Text(label.into(), Alignment::Center),
+                )
+            })
+            .collect(),
+            difficulty_value,
+        );
+        difficulty_buttons.select_group_value(difficulty_value);
         let mut interface = Interface::new(vec![
             controls.boxed(),
-            ButtonElement::new(
-                (0, 164),
-                (56, 16),
-                14,
-                LabelTrim::Round,
-                LabelTheme::Default,
-                ContentElement::Text("Change".to_string(), Alignment::Center),
-            )
-            .boxed(),
+            difficulty_buttons.boxed(),
             button_back.boxed(),
             button_music_minus.boxed(),
             button_music_plus.boxed(),
@@ -364,8 +390,8 @@ impl Default for SettingsMenu {
             interface = Interface::new(vec![
                 interface.boxed(),
                 ButtonElement::new(
-                    (160, 188),
-                    (144, 16),
+                    (176, 188),
+                    (144, 22),
                     99,
                     LabelTrim::Round,
                     LabelTheme::Default,
@@ -373,8 +399,8 @@ impl Default for SettingsMenu {
                 )
                 .boxed(),
                 ButtonElement::new(
-                    (160, 208),
-                    (144, 16),
+                    (176, 220),
+                    (144, 22),
                     100,
                     LabelTrim::Round,
                     LabelTheme::Default,

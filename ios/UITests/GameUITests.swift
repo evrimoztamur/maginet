@@ -10,11 +10,11 @@ final class GameUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 1.2) // Wait for the native rotation animation to finish.
             // Canvas is 272 logical units high, with the fixed interface centered.
             tap(app, x: 248, y: 212) // Settings
-            tap(app, x: 232, y: 176) // Unlock Full Game
+            tap(app, x: 232, y: 172) // Unlock Full Game
             XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 10))
             XCTAssertTrue(app.alerts.staticTexts["Unlock Full Game"].exists)
             app.alerts.buttons["Dismiss"].tap()
-            tap(app, x: 152, y: 248) // Settings back
+            tap(app, x: 72, y: 248) // Settings back
             tap(app, x: 248, y: 110) // Battle
             tap(app, x: 208, y: 80) // Online
             XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 10))
@@ -33,7 +33,7 @@ final class GameUITests: XCTestCase {
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 15))
         Thread.sleep(forTimeInterval: 1.2)
         tap(app, x: 248, y: 212)
-        tap(app, x: 232, y: 216)
+        tap(app, x: 232, y: 234)
         let input = app.alerts.textFields["reviewer-code-input"]
         XCTAssertTrue(input.waitForExistence(timeout: 5))
         input.tap()
@@ -41,7 +41,7 @@ final class GameUITests: XCTestCase {
         app.alerts.buttons["Unlock"].tap()
         XCTAssertTrue(app.alerts.staticTexts["Invalid reviewer code."].waitForExistence(timeout: 5))
         app.alerts.buttons["OK"].tap()
-        tap(app, x: 232, y: 176)
+        tap(app, x: 232, y: 172)
         XCTAssertTrue(app.alerts.staticTexts["Unlock Full Game"].waitForExistence(timeout: 10))
         app.alerts.buttons["Dismiss"].tap()
     }
@@ -87,7 +87,10 @@ final class GameUITests: XCTestCase {
             attachScreen("Invalid drop \(orientation.rawValue)")
             drag(app, from: (96, 112), to: (128, 112))
             attachScreen("Drag landing \(orientation.rawValue)")
-            // Tap confirmation still works after a drag and the AI's reply.
+            // Read the Attacking and Undo lessons, then wait for the AI reply.
+            tap(app, x: 276, y: 92)
+            Thread.sleep(forTimeInterval: 0.3)
+            tap(app, x: 276, y: 92)
             Thread.sleep(forTimeInterval: 1.5)
             tap(app, x: 128, y: 112)
             tap(app, x: 128, y: 80)

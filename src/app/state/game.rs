@@ -1,3 +1,4 @@
+mod highlights;
 mod mobile;
 mod selection;
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
@@ -98,6 +99,7 @@ pub struct Game {
     ai_revision: u32,
     ai_request: u32,
     difficulty: Difficulty,
+    tutorial: bool,
     button_rematch: ConfirmButtonElement,
     button_leave: ConfirmButtonElement,
     button_menu: ToggleButtonElement,
@@ -145,8 +147,8 @@ impl Game {
         };
 
         let button_menu = ToggleButtonElement::new(
-            (-128 - 18 - 8, -9 - 12),
-            (20, 20),
+            (-156, -28),
+            (24, 24),
             BUTTON_MENU,
             LabelTrim::Round,
             LabelTheme::Bright,
@@ -154,8 +156,8 @@ impl Game {
         );
 
         let button_undo = ConfirmButtonElement::new(
-            (-128 - 18 - 8, -9 + 12),
-            (20, 20),
+            (-156, 4),
+            (24, 24),
             BUTTON_UNDO,
             LabelTrim::Round,
             LabelTheme::Action,
@@ -163,8 +165,8 @@ impl Game {
         );
 
         let button_rematch = ConfirmButtonElement::new(
-            (-44, -24),
-            (88, 24),
+            (-52, -24),
+            (104, 28),
             BUTTON_REMATCH,
             LabelTrim::Glorious,
             LabelTheme::Action,
@@ -172,8 +174,8 @@ impl Game {
         );
 
         let button_leave = ConfirmButtonElement::new(
-            (-36, 8),
-            (72, 16),
+            (-48, 16),
+            (96, 24),
             BUTTON_LEAVE,
             LabelTrim::Return,
             LabelTheme::Default,
@@ -188,6 +190,7 @@ impl Game {
             ai_revision: 0,
             ai_request: 0,
             difficulty: Difficulty::from_preference(&App::kv_get("difficulty")),
+            tutorial: false,
             button_rematch,
             button_leave,
             button_menu,
@@ -366,6 +369,14 @@ impl Game {
         &mut self.particle_system
     }
 
+    pub fn newly_won(&self) -> bool {
+        self.newly_won
+    }
+
+    pub fn is_animating(&self) -> bool {
+        self.presentation.busy()
+    }
+
     pub fn visual_game(&self) -> &shared::Game {
         self.presentation.game()
     }
@@ -418,22 +429,22 @@ impl Game {
         None
     }
 
+    fn get_movable_mage(&self) -> Option<&Mage> {
+        self.get_active_mage()
+            .filter(|mage| mage.is_alive() && mage.team == self.lobby.game.turn_for())
+    }
+
     pub fn select_mage_at(&mut self, session_id: Option<&String>, selected_tile: &Position) {
         self.destination = None;
         if !self.presentation.busy()
             && !self.lobby.finished()
             && self.lobby.is_active_player(session_id)
         {
-            self.active_mage = if let Some(occupant) = self.lobby.game.live_occupant(selected_tile)
-            {
-                if occupant.team == self.lobby.game.turn_for() {
-                    Some(occupant.index)
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
+            self.active_mage = self
+                .lobby
+                .game
+                .live_occupant(selected_tile)
+                .map(|mage| mage.index);
         }
     }
 
@@ -450,8 +461,9 @@ impl Game {
         }
     }
 
-    pub fn with_easy_ai(mut self) -> Self {
+    pub fn with_tutorial(mut self) -> Self {
         self.difficulty = Difficulty::Easy;
+        self.tutorial = true;
         self
     }
 
@@ -727,7 +739,7 @@ impl Game {
                     }
                 }
 
-                if let Some(mage) = self.get_active_mage() {
+                if let Some(mage) = self.get_movable_mage() {
                     let available_moves = destinations(self.presentation.game(), mage);
                     for (position, dir, targets) in &available_moves {
                         let position = view.tile(*position);
@@ -745,75 +757,11 @@ impl Game {
                         movement_arrow(context, atlas, is_diagonal, damage)?;
                         context.restore();
                     }
-
-                    if let Some(selected_tile) =
-                        self.location_as_position(preview_location, board_offset, BOARD_SCALE)
-                    {
-                        if available_moves
-                            .iter()
-                            .any(|(position, _, _)| position == &selected_tile)
-                        {
-                            for (enemy_occupied, position) in &available_moves
-                                .iter()
-                                .find(|(p, _, _)| *p == selected_tile)
-                                .unwrap()
-                                .2
-                            {
-                                let position = &view.tile(*position);
-                                if *enemy_occupied {
-                                    draw_sprite(
-                                        context,
-                                        atlas,
-                                        32.0,
-                                        256.0,
-                                        32.0,
-                                        32.0,
-                                        position.0 as f64 * 32.0,
-                                        position.1 as f64 * 32.0,
-                                    )?;
-                                    draw_crosshair(context, atlas, position, (64.0, 32.0), frame)?;
-                                } else {
-                                    draw_sprite(
-                                        context,
-                                        atlas,
-                                        64.0,
-                                        256.0,
-                                        32.0,
-                                        32.0,
-                                        position.0 as f64 * 32.0,
-                                        position.1 as f64 * 32.0,
-                                    )?;
-                                    // draw_crosshair(context, atlas, position, (48.0, 32.0), 0)?;
-                                }
-                            }
-                        }
-                    }
                 }
 
                 if let Some(selected_tile) =
                     self.location_as_position(preview_location, board_offset, BOARD_SCALE)
                 {
-                    if let Some(occupant) = self.presentation.game().live_occupant(&selected_tile) {
-                        if let Some(selected_tile) =
-                            self.location_as_position(preview_location, board_offset, BOARD_SCALE)
-                        {
-                            for (_, position) in
-                                &self.presentation.game().targets(occupant, selected_tile)
-                            {
-                                let position = view.tile(*position);
-                                draw_sprite(
-                                    context,
-                                    atlas,
-                                    80.0,
-                                    32.0,
-                                    16.0,
-                                    16.0,
-                                    position.0 as f64 * board_scale.0 + 8.0,
-                                    position.1 as f64 * board_scale.1 + 8.0,
-                                )?;
-                            }
-                        }
-                    }
                     draw_crosshair(
                         context,
                         atlas,
@@ -917,6 +865,42 @@ impl Game {
                     draw_mana(context, atlas, mage)?;
 
                     context.restore();
+                }
+            }
+
+            if !self.presentation.busy() && !self.is_interface_active() {
+                let hovered =
+                    self.location_as_position(preview_location, self.board_offset(), BOARD_SCALE);
+                let selected = self.get_active_mage().or_else(|| {
+                    hovered.and_then(|tile| self.presentation.game().live_occupant(&tile))
+                });
+                if let Some(mage) = selected {
+                    let destination = self.get_movable_mage().and_then(|movable| {
+                        hovered.filter(|tile| {
+                            self.presentation
+                                .game()
+                                .legal_turns()
+                                .contains(&Turn(movable.position, *tile))
+                        })
+                    });
+                    for (damage, tile) in
+                        highlights::attack_highlights(self.presentation.game(), mage, destination)
+                    {
+                        let tile = view.tile(tile);
+                        draw_sprite(
+                            context,
+                            atlas,
+                            if damage { 32.0 } else { 64.0 },
+                            256.0,
+                            32.0,
+                            32.0,
+                            tile.0 as f64 * 32.0,
+                            tile.1 as f64 * 32.0,
+                        )?;
+                        if damage {
+                            draw_crosshair(context, atlas, &tile, (64.0, 32.0), frame)?;
+                        }
+                    }
                 }
             }
 
@@ -1217,10 +1201,11 @@ impl Game {
 
     fn configure_result_buttons(&mut self) {
         let campaign_win = self.lobby.settings.lobby_sort == LobbySort::LocalAI
-            && matches!(
-                self.lobby.settings.loadout_method,
-                LoadoutMethod::Arena(..) | LoadoutMethod::ArenaChaos(..)
-            )
+            && (self.tutorial
+                || matches!(
+                    self.lobby.settings.loadout_method,
+                    LoadoutMethod::Arena(..) | LoadoutMethod::ArenaChaos(..)
+                ))
             && !self.presentation.busy()
             && self.presentation.game().result() == Some(GameResult::Win(Team::Red));
         self.button_leave
@@ -1586,7 +1571,7 @@ impl State for Game {
                 if let Some(selected_tile) =
                     self.location_as_position(pointer.location, board_offset, BOARD_SCALE)
                 {
-                    if let Some(active_mage) = self.get_active_mage() {
+                    if let Some(active_mage) = self.get_movable_mage() {
                         let from = active_mage.position;
 
                         if self.lobby.game.try_move(from, selected_tile) {

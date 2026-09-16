@@ -64,7 +64,7 @@ final class GameController: UIViewController, WKScriptMessageHandler, WKNavigati
         web.evaluateJavaScript("window.maginetSafeTop=\(inset.top);window.maginetSafeLeft=\(inset.left);window.maginetSafeRight=\(inset.right);window.maginetSafeBottom=\(inset.bottom);window.dispatchEvent(new Event('resize'))")
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { publishInsets(); publish() }
-    private func publish() { web.evaluateJavaScript("window.dispatchEvent(new CustomEvent('maginet-access',{detail:\(store.owned)}))") }
+    private func publish() { web.evaluateJavaScript("window.dispatchEvent(new CustomEvent('maginet-review',{detail:\(store.reviewer.active)}));window.dispatchEvent(new CustomEvent('maginet-access',{detail:\(store.owned)}))") }
     @objc private func background() { web.evaluateJavaScript("window.dispatchEvent(new Event('maginet-background'))"); view.endEditing(true) }
     @objc private func foreground() {
         web.evaluateJavaScript("window.dispatchEvent(new Event('maginet-foreground'))")
