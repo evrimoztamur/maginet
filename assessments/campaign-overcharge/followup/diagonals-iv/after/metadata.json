@@ -1,0 +1,82 @@
+{
+  "config": {
+    "version": 2,
+    "seed_namespace": null,
+    "red_profile": 1,
+    "blue_profile": 1,
+    "replays": true,
+    "games": 300,
+    "seed": 1,
+    "max_plies": 200,
+    "profiles": [
+      {
+        "difficulty": "Easy",
+        "depth": 2,
+        "nodes": 1000,
+        "weights": [
+          65,
+          25,
+          10
+        ]
+      },
+      {
+        "difficulty": "Normal",
+        "depth": 4,
+        "nodes": 5000,
+        "weights": [
+          80,
+          15,
+          5
+        ]
+      },
+      {
+        "difficulty": "Hard",
+        "depth": 8,
+        "nodes": 20000,
+        "weights": [
+          90,
+          8,
+          2
+        ]
+      }
+    ],
+    "table_capacity": 32768
+  },
+  "catalogue": [
+    {
+      "id": "diagonals-iv",
+      "name": "Diagonals IV",
+      "code": "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08",
+      "position": [
+        4,
+        0
+      ],
+      "style": "Desert",
+      "hidden": false,
+      "chaos": false,
+      "demo": false,
+      "tutorial": false
+    }
+  ],
+  "graph": [],
+  "main_route": [
+    "tutorial",
+    "basics-i",
+    "basics-ii",
+    "basics-iii",
+    "basics-iv",
+    "patterns-i",
+    "patterns-ii",
+    "patterns-iii",
+    "diagonals-i",
+    "beams-i",
+    "shields-i",
+    "rite-i",
+    "rite-ii",
+    "rite-iii",
+    "rite-iv",
+    "ascension-i",
+    "ascension-ii"
+  ],
+  "engine": "fnv1a-23982e7547852d42"
+}

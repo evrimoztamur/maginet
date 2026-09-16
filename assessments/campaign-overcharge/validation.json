@@ -1,0 +1,34 @@
+{
+  "workspace_tests_passed": 90,
+  "commands": [
+    {
+      "command": "cargo test --workspace",
+      "result": "passed"
+    },
+    {
+      "command": "cargo check -p maginet --target wasm32-unknown-unknown --all-features",
+      "result": "passed"
+    },
+    {
+      "command": "wasm-pack build --target web --out-name maginet --out-dir static/js/pkg",
+      "result": "passed"
+    },
+    {
+      "command": "NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-deadlock.cjs",
+      "result": "passed"
+    }
+  ],
+  "exact_small_board_proof_cases_considered": 3600,
+  "banner_timing_ms": [
+    250,
+    1000,
+    250
+  ],
+  "replay_audits": "Each completed dataset contains replay-audit.json; before and after use their respective rules.",
+  "additional_checks": [
+    {
+      "command": "cargo test -p maginet app::presentation",
+      "result": "13 passed after synchronizing rune visibility with impact"
+    }
+  ]
+}

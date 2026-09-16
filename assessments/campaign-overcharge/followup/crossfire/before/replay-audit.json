@@ -1,0 +1,11 @@
+{
+  "activations": 0,
+  "dataset": "assessments/campaign-overcharge/followup/crossfire/before",
+  "games": 300,
+  "inactivity_contact_status": {
+    "Impossible": 9,
+    "Unsupported": 2
+  },
+  "matchups": 1,
+  "overcharge_enabled": false
+}

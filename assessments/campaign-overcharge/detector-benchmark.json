@@ -1,0 +1,290 @@
+[
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "basics-i",
+    "max_us": 0.0813545,
+    "median_us": 0.0805,
+    "min_us": 0.0804375,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "basics-ii",
+    "max_us": 0.075125,
+    "median_us": 0.073667,
+    "min_us": 0.0734795,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "basics-iii",
+    "max_us": 2.3538959999999998,
+    "median_us": 0.0959165,
+    "min_us": 0.09352049999999999,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "basics-iv",
+    "max_us": 0.2272705,
+    "median_us": 0.1143125,
+    "min_us": 0.1119165,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "patterns-i",
+    "max_us": 0.386896,
+    "median_us": 0.1945,
+    "min_us": 0.15260400000000002,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "patterns-ii",
+    "max_us": 0.40254199999999996,
+    "median_us": 0.1558335,
+    "min_us": 0.1541875,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "patterns-iii",
+    "max_us": 0.4035,
+    "median_us": 0.17570850000000002,
+    "min_us": 0.16772900000000002,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "diagonals-i",
+    "max_us": 0.06260399999999999,
+    "median_us": 0.0035,
+    "min_us": 0.0033954999999999996,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "diagonals-ii",
+    "max_us": 0.0742915,
+    "median_us": 0.003458,
+    "min_us": 0.0033954999999999996,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "diagonals-iii",
+    "max_us": 0.0034165,
+    "median_us": 0.003375,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "diagonals-iv",
+    "max_us": 0.0034165,
+    "median_us": 0.003375,
+    "min_us": 0.0033545,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "beams-i",
+    "max_us": 0.0034170000000000003,
+    "median_us": 0.003396,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "beams-ii",
+    "max_us": 0.007021,
+    "median_us": 0.007,
+    "min_us": 0.0069375,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "beams-iii",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "shields-i",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.003375,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "shields-ii",
+    "max_us": 0.0035415,
+    "median_us": 0.003375,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "shields-iii",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.0033545,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "challenge-i",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "challenge-ii",
+    "max_us": 0.003375,
+    "median_us": 0.003375,
+    "min_us": 0.003375,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "challenge-iii",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.003375,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "challenge-iv",
+    "max_us": 0.003375,
+    "median_us": 0.003375,
+    "min_us": 0.003375,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "rite-i",
+    "max_us": 0.0033954999999999996,
+    "median_us": 0.003375,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "rite-ii",
+    "max_us": 0.003375,
+    "median_us": 0.003375,
+    "min_us": 0.003375,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "rite-iii",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.003375,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "rite-iv",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.0033545,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "ascension-i",
+    "max_us": 0.0049585,
+    "median_us": 0.0049165,
+    "min_us": 0.004875,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "ascension-ii",
+    "max_us": 0.0031039999999999996,
+    "median_us": 0.0030625,
+    "min_us": 0.0030625,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "crossfire",
+    "max_us": 0.0033954999999999996,
+    "median_us": 0.003375,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "side-step",
+    "max_us": 0.003396,
+    "median_us": 0.003375,
+    "min_us": 0.003354,
+    "status": "Unsupported"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "tutorial",
+    "max_us": 0.811521,
+    "median_us": 0.125271,
+    "min_us": 0.12447900000000002,
+    "status": "Possible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "parity-3",
+    "max_us": 0.89075,
+    "median_us": 0.35525,
+    "min_us": 0.340375,
+    "status": "Impossible"
+  },
+  {
+    "batch_calls": 2000,
+    "batches": 9,
+    "fixture": "parity-8",
+    "max_us": 1.4555835,
+    "median_us": 0.7900415,
+    "min_us": 0.689354,
+    "status": "Impossible"
+  }
+]
