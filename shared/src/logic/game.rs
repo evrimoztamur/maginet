@@ -50,11 +50,24 @@ pub struct Game {
     available_turns: Vec<Turn>,
     shielded_positions: HashSet<(Position, Team)>,
     can_stalemate: bool,
+    #[serde(default)]
+    overcharge_enabled: bool,
+    #[serde(default)]
+    overcharge_at: Option<usize>,
 }
 
 impl Game {
     /// Instantiates the [`Game`] `struct` with a given board size (always 8-by-8) and number of mages (always 4)]
     pub fn new(level: &Level, can_stalemate: bool) -> Result<Game, &'static str> {
+        Self::new_with_overcharge(level, can_stalemate, true)
+    }
+
+    /// Creates a game with an explicit rule switch for reproducible comparisons.
+    pub fn new_with_overcharge(
+        level: &Level,
+        can_stalemate: bool,
+        overcharge_enabled: bool,
+    ) -> Result<Game, &'static str> {
         let turns = Vec::new();
         let last_nominal = 0;
 
@@ -66,12 +79,48 @@ impl Game {
             available_turns: Vec::new(),
             shielded_positions: HashSet::new(),
             can_stalemate,
+            overcharge_enabled,
+            overcharge_at: None,
         };
 
         game.available_turns = game.generate_available_turns();
         game.shielded_positions = game.generate_shielded_positions();
+        game.resolve_deadlock();
 
         Ok(game)
+    }
+
+    /// Whether this game's rules enable conservative deadlock resolution.
+    pub fn overcharge_enabled(&self) -> bool {
+        self.overcharge_enabled
+    }
+
+    /// Number of completed plies when all survivors gained diagonal movement.
+    pub fn overcharge_at(&self) -> Option<usize> {
+        self.overcharge_at
+    }
+
+    fn resolve_deadlock(&mut self) {
+        use crate::{contact_reachability, ContactReachability};
+        if !self.overcharge_enabled
+            || !self.can_stalemate
+            || self.overcharge_at.is_some()
+            || self.available_turns.is_empty()
+            || contact_reachability(&self.level, self.turn_for(), false)
+                != ContactReachability::Impossible
+            || contact_reachability(&self.level, self.turn_for(), true)
+                != ContactReachability::Possible
+        {
+            return;
+        }
+        // The proof excludes held abilities and all collectible pickups. Thus this
+        // grants permanent diagonals without replacing an ability or losing it later.
+        for mage in self.level.mages.iter_mut().filter(|m| m.is_alive()) {
+            mage.powerup = Some(PowerUp::Diagonal);
+        }
+        self.overcharge_at = Some(self.turns());
+        self.last_nominal = self.turns();
+        self.available_turns = self.generate_available_turns();
     }
 
     /// Can the game stalemate.
@@ -297,6 +346,8 @@ impl Game {
             self.turns.len(),
             self.last_nominal,
             self.can_stalemate,
+            self.overcharge_enabled,
+            self.overcharge_at,
         ))
         .unwrap()
     }
@@ -340,6 +391,7 @@ impl Game {
 
                         self.available_turns = self.generate_available_turns();
                         self.shielded_positions = self.generate_shielded_positions();
+                        self.resolve_deadlock();
 
                         return Some(attacks);
                     }
@@ -460,7 +512,12 @@ impl Game {
     /// Rewinds the [`Game`] by `delta` turns.
     /// Works via replicating the game from the initial [`Level`] with its [`Turn`] history.
     pub fn rewind(&self, delta: usize) -> Game {
-        let mut rewinded_game = Game::new(&self.level_prototype, self.can_stalemate).unwrap();
+        let mut rewinded_game = Game::new_with_overcharge(
+            &self.level_prototype,
+            self.can_stalemate,
+            self.overcharge_enabled,
+        )
+        .unwrap();
         let turn_toward = self.turns().saturating_sub(delta);
 
         for Turn(from, to) in self.turns.iter().take(turn_toward) {

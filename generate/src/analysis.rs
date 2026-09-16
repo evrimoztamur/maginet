@@ -78,6 +78,10 @@ impl Telemetry {
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GameResultRecord {
+    #[serde(default)]
+    pub overcharge_at: Option<usize>,
+    #[serde(default)]
+    pub overcharge_mages: Option<usize>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub replay: Vec<ReplayMove>,
     pub termination: String,
@@ -90,6 +94,8 @@ pub struct GameResultRecord {
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ReplayMove {
+    #[serde(default)]
+    pub overcharged: bool,
     pub turn: shared::Turn,
     pub team: Team,
     pub pickup: Option<shared::PowerUp>,
@@ -126,6 +132,10 @@ pub fn simulate(
     let seed = config.trial_seed(level, trial);
     let mut game = Game::new(level, stalemates).unwrap();
     let mut record = GameResultRecord {
+        overcharge_at: game.overcharge_at(),
+        overcharge_mages: game
+            .overcharge_at()
+            .map(|_| game.iter_mages().filter(|m| m.is_alive()).count()),
         replay: Vec::new(),
         termination: String::new(),
         trial,
@@ -165,12 +175,18 @@ pub fn simulate(
         let team = game.turn_for();
         let pickup = game.powerups().get(&turn.1).copied();
         let damage = game.take_move(turn.0, turn.1).expect("legal selected move");
+        let overcharged = record.overcharge_at.is_none() && game.overcharge_at().is_some();
+        if overcharged {
+            record.overcharge_at = game.overcharge_at();
+            record.overcharge_mages = Some(game.iter_mages().filter(|m| m.is_alive()).count());
+        }
         if config.replays {
             let mut mana = [0, 0];
             for mage in game.iter_mages() {
                 mana[usize::from(mage.team == Team::Blue)] += mage.mana.0 as u32;
             }
             record.replay.push(ReplayMove {
+                overcharged,
                 turn,
                 team,
                 pickup,
@@ -334,6 +350,8 @@ mod tests {
             Outcome::SafetyLimit,
         ] {
             games.push(GameResultRecord {
+                overcharge_at: None,
+                overcharge_mages: None,
                 replay: Vec::new(),
                 termination: String::new(),
                 trial: 0,

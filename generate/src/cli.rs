@@ -172,6 +172,7 @@ pub fn run() -> Result<()> {
     // Bind resumes to the actual rules/search/simulator sources, not an incidental git HEAD.
     let engine = [
         include_str!("../../shared/src/logic/game.rs"),
+        include_str!("../../shared/src/logic/deadlock.rs"),
         include_str!("../../shared/src/logic/search.rs"),
         include_str!("analysis.rs"),
         include_str!("../../shared/src/logic/mage.rs"),
@@ -540,6 +541,8 @@ mod tests {
         let games = |wins: usize, unresolved: usize| {
             (0..30)
                 .map(|trial| GameResultRecord {
+                    overcharge_at: None,
+                    overcharge_mages: None,
                     replay: Vec::new(),
                     termination: String::new(),
                     trial,

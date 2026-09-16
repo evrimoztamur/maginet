@@ -1,3 +1,4 @@
+mod deadlock_banner;
 mod highlights;
 mod mobile;
 mod selection;
@@ -106,6 +107,7 @@ pub struct Game {
     button_undo: ConfirmButtonElement,
     lobby: Lobby,
     presentation: Presentation,
+    deadlock_banner: deadlock_banner::DeadlockBanner,
     last_visual_frame: u64,
     last_impact_frame: u64,
     last_move_frame: u64,
@@ -196,6 +198,7 @@ impl Game {
             button_menu,
             button_undo,
             presentation: Presentation::new(&lobby.game),
+            deadlock_banner: deadlock_banner::DeadlockBanner::default(),
             last_visual_frame: 0,
             last_impact_frame: 0,
             lobby,
@@ -1121,6 +1124,7 @@ impl Game {
                         self.local_landing = None;
                         self.selection_memory = SelectionMemory::default();
                         self.presentation = Presentation::new(&lobby.game);
+                        self.deadlock_banner = deadlock_banner::DeadlockBanner::default();
                         self.particle_system = ParticleSystem::default();
                         self.active_mage = None;
                         self.destination = None;
@@ -1175,6 +1179,8 @@ impl Game {
             }
         }
         self.last_visual_frame = frame;
+        self.deadlock_banner
+            .observe(self.presentation.game().overcharge_at(), frame);
         for tile in &target_positions {
             for _ in 0..40 {
                 let d = js_sys::Math::random() * std::f64::consts::TAU;
@@ -1336,6 +1342,26 @@ impl State for Game {
             }
 
             interface_context.restore();
+        }
+
+        let width = app_context.canvas_settings.interface_width as f64;
+        let travel = app_context.canvas_settings.padding_x() as f64 + width / 2.0 + 96.0;
+        if let Some(offset) = self.deadlock_banner.offset(frame, travel) {
+            draw_label(
+                interface_context,
+                atlas,
+                (
+                    (width / 2.0 - 88.0 + offset).round() as i32,
+                    app_context.canvas_settings.interface_height as i32 / 2 - 12,
+                ),
+                (176, 24),
+                "#70783e",
+                &crate::app::ContentElement::Text("Deadlock!".into(), Alignment::Center),
+                pointer,
+                frame,
+                &LabelTrim::Glorious,
+                false,
+            )?;
         }
 
         // draw_text(

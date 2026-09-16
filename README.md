@@ -184,6 +184,37 @@ Set `CHROME_PATH` if Chrome is not at the default macOS location. These checks e
 
 ## Scenario analysis
 
+The experimental deadlock rule grants every surviving mage a permanent diagonal
+rune when a conservative four-phase bitboard analysis proves that cardinal play
+cannot cause damage. It ignores collisions between living mages, retains boulders
+and sleepers, and declines to decide when abilities or collectible pickups remain.
+It applies only when diagonal contact is possible in the abstraction, resets the
+inactivity clock once, and leaves tutorial and already-terminal positions alone.
+The green **Deadlock!** banner follows the visible board transition: 250 ms entering
+from the left, one second centered, and 250 ms leaving to the right.
+
+The [paired overcharge assessment](assessments/campaign-overcharge/report.md)
+compares the current campaign before and after this rule. Its baseline snapshot is
+`c092689`, including the workspace changes present when the experiment began.
+Build that revision's analyser in a separate checkout and pass its executable to:
+
+```sh
+cargo build --release -p generate
+python3 scripts/run-overcharge.py screen --before-bin /path/to/baseline/generate --root /tmp/overcharge-survey
+python3 scripts/report-overcharge.py --root /tmp/overcharge-survey
+python3 scripts/run-overcharge.py followup --before-bin /path/to/baseline/generate --root /tmp/overcharge-survey
+python3 scripts/report-overcharge.py --root /tmp/overcharge-survey
+cargo run --release -p shared --example deadlock_bench
+cargo run --release -p generate --example audit_overcharge -- /tmp/overcharge-survey/after after
+```
+
+The screen runs all nine difficulty pairings at 30 trials; affected scenarios get
+300-trial Normal/Normal followups. The first 30 overlap the screen, and the report
+separately evaluates the 270 new trials. Replays record activation ply and survivor
+count. After a web build served on port 8792, run
+`NODE_PATH=/tmp/maginet-browser-check/node_modules node scripts/check-deadlock.cjs`
+to check actual canvas banner timing and diagonal movement.
+
 The native `generate` executable has explicit `analyse`, `campaign`, and `generate` subcommands. No arguments prints help; `generate` preserves the original level-generation workflow.
 
 ```sh

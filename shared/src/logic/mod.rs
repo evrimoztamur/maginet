@@ -1,4 +1,5 @@
 mod board;
+mod deadlock;
 mod game;
 mod level;
 mod mage;
@@ -10,6 +11,7 @@ mod team;
 mod turn;
 
 pub use board::*;
+pub use deadlock::*;
 pub use game::*;
 pub use level::*;
 pub use mage::*;

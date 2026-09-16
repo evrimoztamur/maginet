@@ -355,6 +355,7 @@ fn lerp(from: Position, to: Position, t: f64) -> (f64, f64) {
 /// Comparing history also avoids depending on hash-set serialization order or draw order.
 pub fn same_history(a: &Game, b: &Game) -> bool {
     a.prototype_code() == b.prototype_code()
+        && a.overcharge_enabled() == b.overcharge_enabled()
         && a.can_stalemate() == b.can_stalemate()
         && a.turns() == b.turns()
         && a.turns_since(0)
@@ -738,6 +739,39 @@ mod tests {
         assert_eq!(visual.game().turns(), 0);
         assert_eq!(visual.game().get_mage(1).unwrap().mana.0, 4);
         assert!(!visual.busy());
+    }
+
+    #[test]
+    fn overcharge_becomes_visible_at_impact_and_rewinds_with_the_position() {
+        let red = Mage::new(0, Team::Red, MageSort::Diamond, Position(0, 0));
+        let blue = Mage::new(1, Team::Blue, MageSort::Knight, Position(2, 2));
+        let mut victim = Mage::new(2, Team::Blue, MageSort::Plus, Position(1, 2));
+        victim.mana.0 = 1;
+        let mut game = Game::new(
+            &shared::Level::new(
+                Board::new(3, 3).unwrap(),
+                vec![red, blue, victim],
+                BTreeMap::new(),
+                Team::Red,
+            ),
+            true,
+        )
+        .unwrap();
+        let mut visual = Presentation::new(&game);
+        queue(
+            &mut visual,
+            &mut game,
+            Turn(Position(0, 0), Position(1, 0)),
+            100,
+        );
+        assert_eq!(game.overcharge_at(), Some(1));
+        visual.advance(126);
+        assert_eq!(visual.game().overcharge_at(), None);
+        visual.advance(127);
+        assert_eq!(visual.game().overcharge_at(), Some(1));
+        visual.rewind(&game, 1, 130);
+        visual.advance(148);
+        assert_eq!(visual.game().overcharge_at(), None);
     }
 
     #[test]
