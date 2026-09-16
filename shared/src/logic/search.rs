@@ -112,7 +112,7 @@ pub struct ScoredMove {
 /// Only fully completed iterations are published; partial work counts toward nodes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SearchResult {
-    /// Root moves ranked best first for the active team, with seeded ties.
+    /// Root moves ranked best first, then fewer played repetitions, then seeded ties.
     pub moves: Vec<ScoredMove>,
     /// Seeded legal move when no iteration completes; absent at terminal roots.
     pub fallback: Option<Turn>,
@@ -310,6 +310,26 @@ impl Game {
             result.completed_depth = depth;
         }
         result.visited_nodes = search.nodes;
+        // Apply only after search: scores, exploration order, completed depth and
+        // deterministic node budgets are unchanged. Stable sorting preserves the
+        // seeded order for equally evaluated moves with the same visit count.
+        if result
+            .moves
+            .windows(2)
+            .any(|pair| pair[0].score == pair[1].score)
+        {
+            let repetitions = self.root_repetitions();
+            result.moves.sort_by_key(|m| {
+                (
+                    if self.turn_for() == Team::Red {
+                        -m.score
+                    } else {
+                        m.score
+                    },
+                    repetitions.get(&m.turn).copied().unwrap_or(0),
+                )
+            });
+        }
         result
     }
 }
