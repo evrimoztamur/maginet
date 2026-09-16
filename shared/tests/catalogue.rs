@@ -3,8 +3,8 @@ use shared::*;
 fn catalogue_preserves_codes_membership_and_reachability() {
     let full = campaign_catalogue(false);
     let demo = campaign_catalogue(true);
-    assert_eq!(full.len(), 31);
-    assert_eq!(demo.len(), 5);
+    assert_eq!(full.len(), 30);
+    assert_eq!(demo.len(), 4);
     assert_eq!(full.iter().filter(|e| e.tutorial).count(), 1);
     let mut reached = std::collections::HashSet::from(["tutorial".to_string()]);
     for _ in 0..full.len() {
@@ -48,10 +48,10 @@ fn teaching_prerequisites_are_cut_vertices() {
     use std::collections::HashSet;
     let entries = campaign_catalogue(false);
     let edges = campaign_connections(&entries);
-    assert_eq!(edges.len(), 32);
+    assert_eq!(edges.len(), 31);
     assert_eq!(
         entries.iter().map(|e| &e.id).collect::<HashSet<_>>().len(),
-        31
+        30
     );
     assert_eq!(
         entries
@@ -59,7 +59,7 @@ fn teaching_prerequisites_are_cut_vertices() {
             .map(|e| e.position)
             .collect::<HashSet<_>>()
             .len(),
-        31
+        30
     );
     assert_eq!(
         entries
@@ -67,7 +67,7 @@ fn teaching_prerequisites_are_cut_vertices() {
             .map(|e| e.level().as_code())
             .collect::<HashSet<_>>()
             .len(),
-        31
+        30
     );
     let reach = |removed: &[&str]| {
         let mut reached = HashSet::from(["tutorial".to_string()]);
@@ -116,7 +116,7 @@ fn teaching_prerequisites_are_cut_vertices() {
     }
     assert!(!campaign_connected(&edges, "patterns-iii", "diagonals-ii"));
     let demo = campaign_catalogue(true);
-    assert_eq!(campaign_connections(&demo).len(), 4);
+    assert_eq!(campaign_connections(&demo).len(), 3);
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn every_connection_is_a_cardinal_neighbour_without_filler_or_accidental_contact
 }
 
 #[test]
-fn tutorial_teaches_cardinal_movement_and_basics_keep_the_original_short_puzzles() {
+fn tutorial_teaches_cardinal_movement_and_three_basics_puzzles_follow_it() {
     let entries = shared::campaign_catalogue(false);
     let tutorial = entries.iter().find(|e| e.tutorial).unwrap().level();
     assert_eq!(tutorial.as_code(), shared::TUTORIAL_CODE);
@@ -213,14 +213,20 @@ fn tutorial_teaches_cardinal_movement_and_basics_keep_the_original_short_puzzles
         .all(|p| matches!(p, shared::PowerUp::Boulder(_))));
     assert!(tutorial.mages.iter().all(|m| !m.has_diagonals()));
     for (id, original) in [
-        ("basics-i", "hg12g014cm0j800"),
-        ("basics-ii", "e01jg1148m0j8k834g00"),
-        ("basics-iii", "j0228014cm0j8v804gp04900"),
+        ("basics-i", "e01jg1148m0j8k834g00"),
+        ("basics-ii", "j022800mcm0j8v804gp04900"),
+        ("basics-iii", "dg2gr0145g118g842hjg250100j00"),
     ] {
         let level = entries.iter().find(|e| e.id == id).unwrap().level();
         assert_eq!(level.as_code(), original);
         assert!(level.powerups.is_empty());
     }
+    assert!(!entries.iter().any(|entry| entry.id == "basics-iv"));
+    assert!(campaign_connected(
+        &campaign_connections(&entries),
+        "basics-iii",
+        "patterns-i"
+    ));
     assert_eq!(
         shared::campaign_progress_aliases(shared::TUTORIAL_CODE),
         &["hg18a09m4g0m81g00c4068035g14r0v008"]

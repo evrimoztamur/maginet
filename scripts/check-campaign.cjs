@@ -22,8 +22,8 @@ const assert = require('assert/strict');
     const before=await page.evaluate(()=>jobs.length);
     await click(128,204); // Battle enters Tutorial or Basics I.
     if(completed) {
-      // Basics I: Red begins at (1,2), rendered on a 5x4 board.
-      await click(96,144);await click(128,144);
+      // Basics I: Red begins at (1,2), rendered on a 4x5 board.
+      await click(112,128);await click(144,128);
     } else {await click(96,112);await click(128,112);await page.waitForTimeout(500);await click(276,188);await click(276,188);}
     await page.waitForFunction(n=>jobs.length>n,before);
     const request=await page.evaluate(()=>jobs.at(-1).request);

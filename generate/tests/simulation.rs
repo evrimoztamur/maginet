@@ -58,18 +58,27 @@ fn legal_fallback_collects_beam_and_finishes_a_forced_game() {
 
 #[test]
 fn paired_namespace_survives_scenario_changes_and_replays_authoritative_moves() {
-    use shared::{Game, PowerUp};
+    use shared::{Board, BoulderStyle, Game, Level, Mage, MageSort, Position, PowerUp};
     let config = RunConfig {
         seed_namespace: Some("original-scenario".into()),
         replays: true,
         ..Default::default()
     };
-    let entries = campaign_catalogue(false);
-    let level = entries
-        .iter()
-        .find(|e| e.id == "diagonals-i")
-        .unwrap()
-        .level();
+    // The first move must collect the rune. Replay coverage should not depend on
+    // a sampled AI choice in a campaign puzzle whose mana may be rebalanced.
+    let level = Level::new(
+        Board::new(3, 3).unwrap(),
+        vec![
+            Mage::new(0, Team::Red, MageSort::Cross, Position(0, 0)),
+            Mage::new(1, Team::Blue, MageSort::Cross, Position(2, 2)),
+        ],
+        [
+            (Position(1, 0), PowerUp::Diagonal),
+            (Position(0, 1), PowerUp::Boulder(BoulderStyle::Rock)),
+        ]
+        .into(),
+        Team::Red,
+    );
     let record = simulate(&level, true, &config, 1, 1, 0);
     let mut changed = level.clone();
     changed.mages[0].mana.0 -= 1;
