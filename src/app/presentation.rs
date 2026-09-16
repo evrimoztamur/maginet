@@ -229,7 +229,11 @@ impl Presentation {
                         };
                         if progress == 1.0 {
                             visual.position = t.turn.1;
-                            visual.powerup = t.after.get_mage(mage.index).unwrap().powerup;
+                            // Pickups appear on landing. A newly granted overcharge
+                            // belongs to the settled impact state, with its banner.
+                            if t.before.overcharge_at() == t.after.overcharge_at() {
+                                visual.powerup = t.after.get_mage(mage.index).unwrap().powerup;
+                            }
                         }
                     }
                 }
@@ -767,8 +771,17 @@ mod tests {
         assert_eq!(game.overcharge_at(), Some(1));
         visual.advance(126);
         assert_eq!(visual.game().overcharge_at(), None);
+        assert!(visual
+            .mages(126)
+            .iter()
+            .all(|(mage, _)| !mage.has_diagonals()));
         visual.advance(127);
         assert_eq!(visual.game().overcharge_at(), Some(1));
+        assert!(visual
+            .mages(127)
+            .iter()
+            .filter(|(mage, _)| mage.is_alive())
+            .all(|(mage, _)| mage.has_diagonals()));
         visual.rewind(&game, 1, 130);
         visual.advance(148);
         assert_eq!(visual.game().overcharge_at(), None);
