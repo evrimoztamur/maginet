@@ -62,6 +62,19 @@ import StoreKitTest
         }
         XCTAssertTrue(ready, "Bundled Wasm should start without a network connection")
         guard ready else { return }
+        let window = try XCTUnwrap(web.window)
+        XCTAssertEqual(window.bounds.size, window.screen.bounds.size, "The game must fill the screen without compatibility-mode borders")
+        XCTAssertEqual(web.convert(web.bounds, to: window), window.bounds, "The WebView must fill the app window")
+        let deviceFamilies = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: "UIDeviceFamily") as? [Int])
+        XCTAssertTrue(deviceFamilies.contains(2), "The game must support iPad without iPhone compatibility mode")
+        let bounds = try await web.evaluateJavaScript("JSON.stringify((() => { const r=document.querySelector('canvas').getBoundingClientRect(); return [r.x,r.y,r.width,r.height,innerWidth,innerHeight]; })())") as! String
+        let dimensions = try JSONDecoder().decode([Double].self, from: Data(bounds.utf8))
+        XCTAssertEqual(dimensions[0], 0, accuracy: 0.01)
+        XCTAssertEqual(dimensions[1], 0, accuracy: 0.01)
+        XCTAssertEqual(dimensions[2], Double(web.bounds.width), accuracy: 1)
+        XCTAssertEqual(dimensions[3], Double(web.bounds.height), accuracy: 1)
+        XCTAssertEqual(dimensions[2], dimensions[4], accuracy: 0.01)
+        XCTAssertEqual(dimensions[3], dimensions[5], accuracy: 0.01)
         let ratio = try await web.evaluateJavaScript("document.querySelector('canvas').height / innerHeight") as! Double
         let dpr = try await web.evaluateJavaScript("devicePixelRatio") as! Double
         XCTAssertEqual(ratio, dpr, accuracy: 0.01)

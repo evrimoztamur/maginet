@@ -8,6 +8,100 @@ pub const TUTORIAL_CODE: &str = "hg18a11m4g0m81000c4068039g1g";
 /// Earlier versions of these battles share their completion stars with the current puzzle.
 pub fn campaign_progress_aliases(code: &str) -> &'static [&'static str] {
     match code {
+        "zg4200t4000m90048kg00h3s0d2ba0a4am249y808g72g01c0cr06d02701mg0c40e405303j01s805c0f805x03" => &[
+            "zg4280t40g0k8s046kj00h4s0d2bj0a4b4249y808g72g01c0cr06d02701mg0c40e405303j01s805c0f805x03",
+            "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g72g01c0cr06d02701mg0c40e405303j01s805c0f805x03",
+            "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03",
+        ],
+        "hg2280a4d40490008g6g2h02500680g" => &[
+            "hg22809md40490006g6g2h02500680g",
+            "hg2280a4d40490008g6g2h02cg12g00",
+        ],
+        "pg3820a48m2482808jp00h4g0h2380a410000503501k00m40a607803pg00" => &[
+            "pg3820a48m2482808jp00d4g0gt3809m10000503501k00m40a607803pg00",
+            "pg3820a44m2482808jp00h4g0h2380a410000503501k00m40a607803pg00",
+            "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g",
+        ],
+        "t04420a4041m91818k0g6h2g052900a4t01m84038g2j80h80dj03a03ng10" => &[
+            "t04420a4041m91818k0g6h2g04j9009mt01k84036g2j80h80dj03a03ng10",
+            "t04420a4041m90818k0g6h2g052900a4t01m84038g2j80h80dm03a03ng10",
+            "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g",
+        ],
+        "zg322024w42492828hw04h6w0h25r02410j06d02dg0q00x80et01j02v01g" => &[
+            "zg322024w42492828hw0496w0gt5r01m10j06d02dg0q00x80et01j02v01g",
+            "zg322024w42499828hw04h6w0h25r02410j06d029g0q00x80et01j02v01g",
+            "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g",
+        ],
+        "dg30r09m5g1k8v048g0g2h210d2621240gj02a02900680g" => &[
+            "dg30r09m5g1k8v046g0g2h210d2621240gj02a028g14g00",
+            "dg30r09m5g1m8v048g0g2h210d2621240gj02a028g14g00",
+            "dg30r0a45g1m8v048g0g2h210d2621240gj02a028g14g00",
+            "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00",
+        ],
+        "qg3200t4000m90048hwg6h5n0525a1241cm00b03601k80hr0d403103h018r0wg0ea00" => &[
+            "qg3200t4000m90048hwg6h5x0523t1241cm00b03601k80hr0d403103h018r0wg0ea00",
+            "qg3200t4000m90048jeg6h5x0523t1241cm00b03601k80hr0d403103h018r0wg0ea00",
+            "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404",
+        ],
+        "xg2420a4r40k9b018gp02h060g0280v80a205j03x000" => &[
+            "xg2420a4r40m9b018gp02h060g0280v80a205j03x000",
+            "xg2420a4r40m9b018gp02h06x00080140f406t02gg10",
+        ],
+        "hg22r01mdg0k88816hgg0d02900pg08" => &[
+            "hg22r024dg0m81816j2g0d02500pg08",
+        ],
+        "d012g0s4841j808400" => &[
+            "d012g0s4841j808800",
+            "d012g0an840k80h401200",
+        ],
+        "qg3200t4000m90048hwg6h5x0523t1241cm00b03601k80hr0d403103h018r0wg0ea00" => &[
+            "qg3200t4000m90048jeg6h5x0523t1241cm00b03601k80hr0d403103h018r0wg0ea00",
+            "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404",
+        ],
+        "dg20r11mdg1k81838hgg8h03501480j804" => &[
+            "dg20r124dg1m80838hgg8h034g0jg0j408",
+            "dg20r124dg1m80838hgg8h03501480h404",
+        ],
+        "qg22j0t4h41m8d036ja06h044g0kg0km06204" => &[
+            "qg22j0t4h41m8d038ja06h044g0kg0m40ac02",
+            "qg22j0t4h41m8d038ja06h04gg13g0mr04j02",
+        ],
+        "hg22809md40490006g6g2h02500680g" => &[
+            "hg2280a4d40490008g6g2h02500680g",
+            "hg2280a4d40490008g6g2h02cg12g00",
+        ],
+        "t04420a4041m91818k0g6h2g04j9009mt01k84036g2j80h80dj03a03ng10" => &[
+            "t04420a4041m90818k0g6h2g052900a4t01m84038g2j80h80dm03a03ng10",
+            "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g",
+        ],
+        "pg3820a48m2482808jp00d4g0gt3809m10000503501k00m40a607803pg00" => &[
+            "pg3820a44m2482808jp00h4g0h2380a410000503501k00m40a607803pg00",
+            "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g",
+        ],
+        "dg30r09m5g1k8v046g0g2h210d2621240gj02a028g14g00" => &[
+            "dg30r09m5g1m8v048g0g2h210d2621240gj02a028g14g00",
+            "dg30r0a45g1m8v048g0g2h210d2621240gj02a028g14g00",
+            "dg30r0a45g1m8v048g0g2h210d2621240gm04h024g0mg00",
+        ],
+        "hg2680t44m048a026hmg2h04000gr0m00a602" => &[
+            "hg2680t44m048a028hmg2h04000gr0m00a602",
+            "hg2680t44m048a028hmg2h04000gr0mc06004",
+        ],
+        "zg322024w42492828hw0496w0gt5r01m10j06d02dg0q00x80et01j02v01g" => &[
+            "zg322024w42499828hw04h6w0h25r02410j06d029g0q00x80et01j02v01g",
+            "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g",
+        ],
+        "j02280j4100m8t818hpg4h025g06800" => &[
+            "j02280j4500m8t818hpg4h025g06800",
+        ],
+        "zg4280t40g0k8s046kj00h4s0d2bj0a4b4249y808g72g01c0cr06d02701mg0c40e405303j01s805c0f805x03" => &[
+            "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g72g01c0cr06d02701mg0c40e405303j01s805c0f805x03",
+            "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03",
+        ],
+        "eg3020t4c40489818gr02d0m0ct780240gm06b039g0pg08" => &[
+            "eg3020t4c40489818gr02h0m0d2780240gm06b03d00pr08",
+            "eg3020t4c40489818gr02h0m0d2780240gp06a03d00pr08",
+        ],
         "dg108094d40j409408" => &["dg1080a4d40j409408", "d010812ncm23809408"],
         TUTORIAL_CODE => &[
             "hg18a09m4g0m81000c4068039g1g",
@@ -92,22 +186,22 @@ pub fn campaign_catalogue(demo: bool) -> Vec<CampaignEntry> {
         ("diagonals-ii", "Diagonals II", "f02220t4840m8e018hc06h04a014g0sg0cm04", (4, 1), false, false),
         ("diagonals-iii", "Diagonals III", "bg3200240g248h038gcg6h2s0h23t02408r04b02", (4, 2), false, false),
         ("diagonals-iv", "Diagonals IV", "k036202444148h818ha02h1r0127g0j40m604k01dg1jr0wc08", (4, 3), false, false),
-        ("beams-i", "Beams I", "hg22r024dg0m81816j2g0d02500pg08", (5, -2), false, false),
-        ("beams-ii", "Beams II", "eg3020t4c40489818gr02h0m0d2780240gp06a03d00pr08", (5, -3), false, false),
-        ("beams-iii", "Beams III", "qg22j0t4h41m8d038ja06h04gg13g0mr04j02", (6, -3), false, false),
-        ("shields-i", "Shields I", "d012g0s4841j808800", (5, 2), false, false),
-        ("shields-ii", "Shields II", "xg2420a4r40m9b018gp02h06x00080140f406t02gg10", (6, 2), false, false),
-        ("shields-iii", "Shields III", "j02280j4500m8t818hpg4h025g06800", (7, 2), false, false),
-        ("challenge-i", "Challenge I", "hg2280a4d40490008g6g2h02cg12g00", (2, 1), false, false),
-        ("challenge-ii", "Challenge II", "hg2680t44m048a028hmg2h04000gr0mc06004", (6, -1), false, false),
+        ("beams-i", "Beams I", "hg22r01mdg0k88816hgg0d02900pg08", (5, -2), false, false),
+        ("beams-ii", "Beams II", "eg3020t4c40489818gr02d0m0ct780240gm06b039g0pg08", (5, -3), false, false),
+        ("beams-iii", "Beams III", "qg22j0t4h41m8d036ja06h044g0kg0km06204", (6, -3), false, false),
+        ("shields-i", "Shields I", "d012g0s4841j808400", (5, 2), false, false),
+        ("shields-ii", "Shields II", "xg2420a4r40k9b018gp02h060g0280v80a205j03x000", (6, 2), false, false),
+        ("shields-iii", "Shields III", "j02280j4100m8t818hpg4h025g06800", (7, 2), false, false),
+        ("challenge-i", "Challenge I", "hg2280a4d40490008g6g2h02500680g", (2, 1), false, false),
+        ("challenge-ii", "Challenge II", "hg2680t44m048a026hmg2h04000gr0m00a602", (6, -1), false, false),
         ("challenge-iii", "Challenge III", "q03220t4840m98828gw02h2r0d2bg0j40x804j03dg0k00s80a807200", (7, -3), false, false),
-        ("challenge-iv", "Challenge IV", "qg3200t4000m90048jeg6h5x0523t1241e606c03701s00wm02206j015g1k80h802404", (7, 1), false, false),
-        ("rite-i", "Rite I", "t04420a4041m90818k0g6h2g052900a4t01m84038g2tr0n80cm06902d00g", (7, -2), false, false),
-        ("rite-ii", "Rite II", "dg20r124dg1m80838hgg8h03501480h404", (7, -1), false, false),
-        ("rite-iii", "Rite III", "pg3820a44m2482808jp00h4g0h2380a410r04000m01r80nm00a06a03hg1g", (7, 0), false, false),
-        ("rite-iv", "Rite IV", "dg30r09m5g1m8v048g0g2h210d2621240gj02a028g14g00", (8, 0), false, false),
-        ("ascension-i", "Ascension I", "zg322024w42499828hw04h6w0h25r02410t05j02n01j80vg0et00k01v01g", (8, -1), false, false),
-        ("ascension-ii", "Ascension II", "zg4200t4000m90048kg00h4x0d2bt0a47m249z808g78r0sg0cw07403jg0f80w40d403m025g1k80h802405b03", (9, -1), false, false),
+        ("challenge-iv", "Challenge IV", "qg3200t4000m90048hwg6h5n0525a1241cm00b03601k80hr0d403103h018r0wg0ea00", (7, 1), false, false),
+        ("rite-i", "Rite I", "t04420a4041m91818k0g6h2g052900a4t01m84038g2j80h80dj03a03ng10", (7, -2), false, false),
+        ("rite-ii", "Rite II", "dg20r11mdg1k81838hgg8h03501480j804", (7, -1), false, false),
+        ("rite-iii", "Rite III", "pg3820a48m2482808jp00h4g0h2380a410000503501k00m40a607803pg00", (7, 0), false, false),
+        ("rite-iv", "Rite IV", "dg30r09m5g1k8v048g0g2h210d2621240gj02a02900680g", (8, 0), false, false),
+        ("ascension-i", "Ascension I", "zg322024w42492828hw04h6w0h25r02410j06d02dg0q00x80et01j02v01g", (8, -1), false, false),
+        ("ascension-ii", "Ascension II", "zg4200t4000m90048kg00h3s0d2ba0a4am249y808g72g01c0cr06d02701mg0c40e405303j01s805c0f805x03", (9, -1), false, false),
         ("crossfire", "Crossfire", "dg1g8092cm112b82240j808", (7, -4), false, false),
         ("side-step", "Side Step", "dg10008h4m11209008", (6, 0), false, false),
         ("ascension-iii", "Ascension III", "dg400024401m8g028hg02h3d0124t0t45m1483818g00", (12, -4), false, false),

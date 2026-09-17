@@ -61,6 +61,8 @@ pub enum ParticleSort {
     BlueWin,
     Shield,
     Beam,
+    /// The beam artwork with lifetime fading for pickup bursts.
+    BeamBurst,
 }
 impl ParticleSort {
     pub(crate) fn for_powerup(powerup: &shared::PowerUp) -> Option<ParticleSort> {

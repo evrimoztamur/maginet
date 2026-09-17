@@ -12,6 +12,43 @@ pub struct DragLanding {
 pub const LANDING_FRAMES: u64 = 8;
 pub const MOVE_FRAMES: u64 = 18;
 pub const MISSILE_FRAMES: u64 = 12;
+pub const BEAM_FRAMES: u64 = 30;
+
+/// Board-space pickup flash, independent of damage and network snapshots.
+pub struct BeamEffect {
+    pub position: Position,
+    pub start: u64,
+}
+impl BeamEffect {
+    /// Dense particle centers throughout the revealed cross, in board tile coordinates.
+    pub fn particles(&self, frame: u64, size: (usize, usize)) -> Vec<(f64, f64)> {
+        let reach = self.reach(frame);
+        let x = (self.position.0 as f64 + 0.5) * 32.0;
+        let y = (self.position.1 as f64 + 0.5) * 32.0;
+        let width = size.0 as f64 * 32.0;
+        let height = size.1 as f64 * 32.0;
+        let mut particles = Vec::new();
+        for py in (2..size.1 * 32).step_by(4) {
+            for px in (2..size.0 * 32).step_by(4) {
+                let (px, py) = (px as f64, py as f64);
+                let horizontal = (py - y).abs() < 12.0
+                    && px >= x * (1.0 - reach)
+                    && px <= x + (width - x) * reach;
+                let vertical = (px - x).abs() < 12.0
+                    && py >= y * (1.0 - reach)
+                    && py <= y + (height - y) * reach;
+                if horizontal || vertical || ((px - x).abs() < 12.0 && (py - y).abs() < 12.0) {
+                    particles.push((px / 32.0 - 0.5, py / 32.0 - 0.5));
+                }
+            }
+        }
+        particles
+    }
+
+    pub fn reach(&self, frame: u64) -> f64 {
+        (frame.saturating_sub(self.start) as f64 / 8.0).min(1.0)
+    }
+}
 const MISSILE_LEAD_FRAMES: u64 = 3; // Launch 50 ms before landing.
 const CAST_DELAY_FRAMES: u64 = 3; // Flip 50 ms after launch.
 const CAST_FRAMES: u64 = 6; // Hold the flip for 100 ms.
@@ -91,6 +128,7 @@ pub struct Presentation {
     settled: Game,
     queue: VecDeque<Transition>,
     sampled_at: Option<u64>,
+    pub beams: Vec<BeamEffect>,
 }
 
 impl Presentation {
@@ -99,6 +137,7 @@ impl Presentation {
             settled: game.clone(),
             queue: VecDeque::new(),
             sampled_at: None,
+            beams: Vec::new(),
         }
     }
 
@@ -184,6 +223,7 @@ impl Presentation {
     /// Consume crossed boundaries once, even when a frame was skipped.
     pub fn advance(&mut self, frame: u64) -> Vec<Signal> {
         let mut signals = Vec::new();
+        self.beams.retain(|beam| frame < beam.start + BEAM_FRAMES);
         while let Some(t) = self.queue.front() {
             let crossed = |at| frame >= at && self.sampled_at.is_none_or(|previous| previous < at);
             if crossed(t.start) {
@@ -192,6 +232,13 @@ impl Presentation {
             if !t.reverse && crossed(t.start + t.move_frames()) {
                 if let Some(powerup) = t.before.powerups().get(&t.turn.1) {
                     signals.push(Signal::Pickup(*powerup));
+                    if *powerup == PowerUp::Beam {
+                        // Start at the observed boundary so a skipped frame cannot hide a pickup.
+                        self.beams.push(BeamEffect {
+                            position: t.turn.1,
+                            start: frame,
+                        });
+                    }
                 }
             }
             if frame < t.end() {
@@ -402,6 +449,159 @@ mod tests {
         let before = game.clone();
         let hits = game.take_move(turn.0, turn.1).unwrap();
         presentation.enqueue(before, game, turn, hits, frame);
+    }
+
+    #[test]
+    fn queued_beam_pickups_each_emit_once_even_when_both_land_between_samples() {
+        let level = Level::new(
+            Board::new(4, 4).unwrap(),
+            vec![
+                Mage::new(0, Team::Red, MageSort::Plus, Position(0, 0)),
+                Mage::new(1, Team::Blue, MageSort::Plus, Position(3, 3)),
+            ],
+            [
+                (Position(1, 0), PowerUp::Beam),
+                (Position(2, 3), PowerUp::Beam),
+            ]
+            .into(),
+            Team::Red,
+        );
+        let mut game = Game::new(&level, false).unwrap();
+        let mut visual = Presentation::new(&game);
+        queue(
+            &mut visual,
+            &mut game,
+            Turn(Position(0, 0), Position(1, 0)),
+            0,
+        );
+        queue(
+            &mut visual,
+            &mut game,
+            Turn(Position(3, 3), Position(2, 3)),
+            0,
+        );
+        assert_eq!(
+            visual.advance(100),
+            vec![
+                Signal::Move,
+                Signal::Pickup(PowerUp::Beam),
+                Signal::Move,
+                Signal::Pickup(PowerUp::Beam)
+            ]
+        );
+        assert_eq!(
+            visual.beams.iter().map(|b| b.position).collect::<Vec<_>>(),
+            vec![Position(1, 0), Position(2, 3)]
+        );
+        assert!(visual.advance(100).is_empty());
+        visual.rewind(&game, 2, 101);
+        assert_eq!(visual.advance(1000), vec![Signal::Move, Signal::Move]);
+        assert!(visual.beams.is_empty());
+    }
+
+    #[test]
+    fn beam_particles_fill_the_body_at_edges_and_in_both_board_views() {
+        use crate::app::board_view::BoardView;
+        for size in [(4, 4), (8, 3), (3, 8)] {
+            for position in [
+                Position(0, 0),
+                Position(1, 1),
+                Position(size.0 as i8 - 1, size.1 as i8 - 1),
+            ] {
+                let beam = BeamEffect {
+                    position,
+                    start: 10,
+                };
+                let full = beam.particles(18, size);
+                assert!(beam.particles(12, size).len() < full.len());
+                // Six rows of particle centers span each 24px arm; count the crossing once.
+                assert_eq!(full.len(), (size.0 * 8 + size.1 * 8) * 6 - 36);
+                for team in [Team::Red, Team::Blue] {
+                    let view = BoardView {
+                        team,
+                        width: size.0 as i32,
+                        height: size.1 as i32,
+                    };
+                    let center = view.tile(position);
+                    for point in &full {
+                        let p = view.point(*point);
+                        assert!(
+                            (p.0 - center.0 as f64).abs() < 0.375
+                                || (p.1 - center.1 as f64).abs() < 0.375
+                        );
+                        assert!(p.0 > -0.5 && p.0 < size.0 as f64 - 0.5);
+                        assert!(p.1 > -0.5 && p.1 < size.1 as f64 - 0.5);
+                    }
+                }
+                assert_eq!(beam.reach(40), 1.0);
+            }
+        }
+    }
+
+    #[test]
+    fn beams_fire_without_hits_survive_skips_and_do_not_replay_on_undo() {
+        for (origin, destination) in [
+            (Position(0, 0), Position(1, 0)),
+            (Position(1, 0), Position(0, 0)),
+        ] {
+            let mut level = Level::new(
+                Board::new(4, 4).unwrap(),
+                vec![
+                    Mage::new(0, Team::Red, MageSort::Plus, origin),
+                    Mage::new(1, Team::Blue, MageSort::Plus, Position(3, 3)),
+                ],
+                [(destination, PowerUp::Beam)].into(),
+                Team::Red,
+            );
+            let mut game = Game::new(&level, false).unwrap();
+            let mut visual = Presentation::new(&game);
+            queue(&mut visual, &mut game, Turn(origin, destination), 10);
+            assert!(visual
+                .advance(27)
+                .iter()
+                .all(|s| *s != Signal::Pickup(PowerUp::Beam)));
+            assert!(visual.beams.is_empty());
+            assert_eq!(visual.advance(1000), vec![Signal::Pickup(PowerUp::Beam)]);
+            assert_eq!(visual.beams.len(), 1);
+            assert_eq!(visual.beams[0].position, destination);
+            assert_eq!(visual.beams[0].reach(1008), 1.0);
+            assert!(visual.advance(1000).is_empty());
+            visual.rewind(&game, 1, 1001);
+            assert_eq!(visual.advance(1030), vec![Signal::Move]);
+            assert!(visual.beams.is_empty());
+            assert!(!visual.busy());
+            // Multiple damage targets still produce exactly one cross.
+            level.mages[1].position = Position(3, 0);
+            level.mages.push(Mage::new(
+                2,
+                Team::Blue,
+                MageSort::Plus,
+                Position(destination.0, 3),
+            ));
+            let mut game = Game::new(&level, false).unwrap();
+            let mut visual = Presentation::new(&game);
+            queue(&mut visual, &mut game, Turn(origin, destination), 0);
+            queue(
+                &mut visual,
+                &mut game,
+                Turn(Position(3, 0), Position(3, 1)),
+                0,
+            );
+            let signals = visual.advance(100);
+            assert_eq!(
+                signals
+                    .iter()
+                    .filter(|s| **s == Signal::Pickup(PowerUp::Beam))
+                    .count(),
+                1
+            );
+            assert!(signals
+                .iter()
+                .any(|s| matches!(s, Signal::Impact(hits) if hits.len() == 2)));
+            assert_eq!(visual.beams.len(), 1);
+            assert!(!visual.busy());
+            assert!(visual.advance(101).is_empty());
+        }
     }
 
     #[test]

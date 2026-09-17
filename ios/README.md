@@ -1,4 +1,4 @@
-# Maginet for iPhone
+# Maginet for iPhone and iPad
 
 UIKit / WKWebView wrapper for the bundled Rust game. Minimum iOS 17; landscape left and right; bundle ID `zone.evrim.maginet`. The app starts locally without contacting the game server. Full Game (`zone.evrim.maginet.all`) is a permanent non-consumable unlocking the campaign beyond Tutorial / Basics I–IV and all online modes. Local battles, AI, and the editor remain free.
 
@@ -13,7 +13,7 @@ WASM_BINDGEN=/tmp/maginet-bindgen/bin/wasm-bindgen ios/scripts/build-assets.sh
 open ios/Maginet.xcodeproj
 ```
 
-Select your development team in Signing & Capabilities, select an iPhone or simulator, and Run. Signing is automatic. The checked-in project has In-App Purchase enabled. Assets are intentionally ignored and **must be rebuilt after Rust or JavaScript changes**. Audio is embedded in Wasm; the generated folder contains the atlas, module workers, JS, and Wasm. The build uses Cargo.lock, the full catalogue, and the `ios` feature; do not add `demo` to the iOS build.
+Select your development team in Signing & Capabilities, select an iPhone, iPad, or simulator, and Run. Signing is automatic. The checked-in project has In-App Purchase enabled. Assets are intentionally ignored and **must be rebuilt after Rust or JavaScript changes**. Audio is embedded in Wasm; the generated folder contains the atlas, module workers, JS, and Wasm. The build uses Cargo.lock, the full catalogue, and the `ios` feature; do not add `demo` to the iOS build.
 
 To regenerate project metadata after editing `project.yml`:
 

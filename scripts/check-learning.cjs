@@ -9,8 +9,8 @@ const graph=JSON.parse(require('node:child_process').execFileSync('cargo',['run'
 const out=path.join(root,'target/ux-learning');fs.mkdirSync(out,{recursive:true});
 const cases=[
  {id:'diagonals-i',title:'Diagon Rune',text:'This rune allows you to movediagonally, too.',size:[4,4],turn:[[0,1],[1,1]],item:'Diagonal'},
- {id:'beams-i',title:'Beam Crystal',text:'This crystal discharges astrong cardinal beam, hurtingall in its way.',size:[5,4],turn:[[1,3],[1,2]],item:'Beam'},
- {id:'shields-i',title:'Shield Rune',text:'This rune reflects attacksto the enemy.',size:[4,3],turn:[[1,2],[0,2]],item:'Shield'},
+ {id:'beams-i',title:'Beam Crystal',text:'This crystal discharges astrong cardinal beam, hurtingall in its way.',size:[5,4],turn:[[3,3],[3,2]],item:'Beam'},
+ {id:'shields-i',title:'Shield Rune',text:'This rune reflects attacksto the enemy.',size:[4,3],turn:[[1,2],[0,2]],item:'Shield',detour:true},
 ];
 function routeTo(target) {
  const queue=[[[0,0]]],seen=new Set(['0,0']);
@@ -83,11 +83,12 @@ function routeTo(target) {
    await page.waitForFunction(()=>jobs.some(j=>j.request&&!j.terminated),undefined,{polling:50});
    const snapshot=await page.evaluate(()=>JSON.parse(jobs.findLast(j=>j.request&&!j.terminated).request.snapshot));
    assert.deepEqual(snapshot.turns,[lesson.turn],'pickup can be played directly while the hint is visible');
-   assert.ok(!snapshot.level.powerups.some(([p])=>p.join()===lesson.turn[1].join()),'item was collected');
+   if(lesson.detour)assert.ok(snapshot.level.powerups.some(([p,item])=>p.join()==='0,1'&&item==='Shield'),'shield remains available after the safe opening detour');
+   else assert.ok(!snapshot.level.powerups.some(([p])=>p.join()===lesson.turn[1].join()),'item was collected');
    assert.ok(await page.evaluate(title=>!words.includes(title),lesson.title),'hint ends after the first move');
    await click(-24,108);await click(128,116);await click(128,116);await wait(lesson.title);
    assert.deepEqual(errors,[]);await page.close();
   }
-  console.log('PASS: campaign powerup headings/copy, board spacing, playable first-turn pickups, dismissal, and rematches');
+  console.log('PASS: campaign powerup headings/copy, board spacing, playable first-turn openings, dismissal, and rematches');
  } finally {await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

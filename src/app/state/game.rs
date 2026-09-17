@@ -777,34 +777,16 @@ impl Game {
                     if mage.is_alive() && mage.is_defensive() {
                         for (_, position) in self.presentation.game().targets(mage, mage.position) {
                             let position = view.tile(position);
-                            match mage.team {
-                                Team::Red => {
-                                    draw_sprite(
-                                        context,
-                                        atlas,
-                                        32.0,
-                                        16.0,
-                                        16.0,
-                                        16.0,
-                                        position.0 as f64 * 32.0 + 8.0,
-                                        position.1 as f64 * 32.0 + 8.0,
-                                    )?;
-                                    // draw_crosshair(context, atlas, &position, (32.0, 16.0), 1)?;
-                                }
-                                Team::Blue => {
-                                    draw_sprite(
-                                        context,
-                                        atlas,
-                                        48.0,
-                                        16.0,
-                                        16.0,
-                                        16.0,
-                                        position.0 as f64 * 32.0 + 8.0,
-                                        position.1 as f64 * 32.0 + 8.0,
-                                    )?;
-                                    // draw_crosshair(context, atlas, &position, (48.0, 16.0), 1)?;
-                                }
-                            }
+                            draw_sprite(
+                                context,
+                                atlas,
+                                if mage.team == Team::Red { 32.0 } else { 48.0 },
+                                16.0,
+                                16.0,
+                                16.0,
+                                position.0 as f64 * 32.0 + 8.0,
+                                position.1 as f64 * 32.0 + 8.0,
+                            )?;
                         }
                     }
                 }
@@ -1226,6 +1208,37 @@ impl Game {
                 Signal::Move => app_context.audio_system.play_clip(ClipId::MageMove),
                 Signal::Pickup(powerup) => app_context.audio_system.play_powerup(powerup),
                 Signal::Impact(hits) => target_positions.extend(hits),
+            }
+        }
+        if frame != self.last_visual_frame {
+            for beam in &self.presentation.beams {
+                let age = frame.saturating_sub(beam.start);
+                if age > 12 {
+                    continue;
+                }
+                for position in beam.particles(frame, self.presentation.game().board_size()) {
+                    // Seed the whole body, not just the advancing ends. Independent lifetimes
+                    // and gentle outward drift let the cross dissolve into its original sparks.
+                    if js_sys::Math::random() > 0.35 - age as f64 * 0.015 {
+                        continue;
+                    }
+                    let angle = js_sys::Math::random() * std::f64::consts::TAU;
+                    let speed = 0.008 + js_sys::Math::random() * 0.025;
+                    self.particle_system.add(Particle::new(
+                        (
+                            position.0 + (js_sys::Math::random() - 0.5) * 0.09,
+                            position.1 + (js_sys::Math::random() - 0.5) * 0.09,
+                        ),
+                        (
+                            angle.cos() * speed
+                                + (position.0 - beam.position.0 as f64).signum() * 0.008,
+                            angle.sin() * speed
+                                + (position.1 - beam.position.1 as f64).signum() * 0.008,
+                        ),
+                        8 + (js_sys::Math::random() * 14.0) as u64,
+                        ParticleSort::BeamBurst,
+                    ));
+                }
             }
         }
         self.last_visual_frame = frame;

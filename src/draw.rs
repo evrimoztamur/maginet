@@ -525,6 +525,9 @@ pub fn draw_particle(
         return Ok(());
     }
 
+    if matches!(particle.sort, ParticleSort::BeamBurst) {
+        context.set_global_alpha((particle.lifetime as f64 / 12.0).min(1.0));
+    }
     context.rotate((spin / 5) as f64 * std::f64::consts::PI / 2.0)?;
     // context.rotate(frame as f64 * 0.1)?;
     draw_sprite(
@@ -546,7 +549,7 @@ pub fn draw_particle(
                 ParticleSort::BlueWin => 48.0,
                 ParticleSort::RedWin => 72.0,
                 ParticleSort::Shield => 96.0,
-                ParticleSort::Beam => 120.0,
+                ParticleSort::Beam | ParticleSort::BeamBurst => 120.0,
             }
         },
         56.0,

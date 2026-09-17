@@ -7,7 +7,7 @@ settings:
   base:
     SWIFT_VERSION: '5.0'
     CODE_SIGN_STYLE: Automatic
-    TARGETED_DEVICE_FAMILY: '1'
+    TARGETED_DEVICE_FAMILY: '1,2'
 targets:
   Maginet:
     type: application
@@ -33,7 +33,7 @@ targets:
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        TARGETED_DEVICE_FAMILY: '1'
+        TARGETED_DEVICE_FAMILY: '1,2'
         PRODUCT_BUNDLE_IDENTIFIER: zone.evrim.maginet
         GENERATE_INFOPLIST_FILE: NO
     attributes:

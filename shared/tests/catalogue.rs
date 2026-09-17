@@ -130,11 +130,24 @@ fn introductions_are_focused_and_capstone_combines_mechanics() {
         let level = entries.iter().find(|e| e.name == name).unwrap().level();
         assert!(!level.powerups.is_empty());
         assert!(level.powerups.values().all(|p| *p == kind));
-        let game = Game::new(&level, true).unwrap();
-        assert!(game
-            .legal_turns()
-            .iter()
-            .any(|t| level.powerups.get(&t.1) == Some(&kind)));
+        let mut game = Game::new(&level, true).unwrap();
+        if kind == PowerUp::Shield {
+            // Shield introduction adds one safe approach move before the pickup.
+            game.take_move(Position(1, 2), Position(0, 2)).unwrap();
+            for reply in game.legal_turns() {
+                let mut next = game.clone();
+                next.take_move(reply.0, reply.1).unwrap();
+                assert!(next
+                    .legal_turns()
+                    .iter()
+                    .any(|t| next.powerups().get(&t.1) == Some(&kind)));
+            }
+        } else {
+            assert!(game
+                .legal_turns()
+                .iter()
+                .any(|t| level.powerups.get(&t.1) == Some(&kind)));
+        }
     }
     let level = entries
         .iter()

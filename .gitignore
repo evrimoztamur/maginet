@@ -33,3 +33,6 @@ target/
 /platforms/steam/sdk/
 /platforms/steam/node_modules/
 /platforms/steam/.steamhome/
+
+# Assessments
+assessments/
