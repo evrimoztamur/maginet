@@ -20,8 +20,8 @@ targets:
       path: Maginet/Info.plist
       properties:
         CFBundleDisplayName: Maginet
-        CFBundleShortVersionString: '1.0'
-        CFBundleVersion: '1'
+        CFBundleShortVersionString: '1.1'
+        CFBundleVersion: '2'
         UILaunchScreen: {}
         UIStatusBarHidden: true
         UIRequiresFullScreen: true

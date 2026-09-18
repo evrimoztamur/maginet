@@ -529,24 +529,35 @@ pub struct CanvasSettings {
 }
 
 impl CanvasSettings {
+    /// Keep the full 392-unit interface visible on tablet aspect ratios.
+    pub fn mobile_dimensions(width: f64, height: f64) -> (u32, u32) {
+        let logical_height = (392.0 * height / width).ceil().max(272.0) as u32;
+        (
+            (width * logical_height as f64 / height).ceil() as u32,
+            logical_height,
+        )
+    }
+
     pub fn update_mobile(&mut self) {
         #[cfg(feature = "mobile")]
         {
             let w = window().inner_width().unwrap().as_f64().unwrap();
             let h = window().inner_height().unwrap().as_f64().unwrap();
-            self.canvas_width = (w * 272.0 / h).ceil() as u32;
-            self.canvas_height = 272;
+            (self.canvas_width, self.canvas_height) = Self::mobile_dimensions(w, h);
             self.orientation = false;
             let inset = |name: &str| {
                 js_sys::Reflect::get(&window(), &name.into())
                     .ok()
                     .and_then(|v| v.as_f64())
                     .unwrap_or(0.0)
-                    * 272.0
+                    * self.canvas_height as f64
                     / h
             };
-            self.mobile_padding_y =
-                Some((16.0 - inset("maginetSafeBottom")).clamp(0.0, 8.0).floor() as u32);
+            self.mobile_padding_y = Some(
+                ((self.canvas_height as f64 - 272.0) / 2.0
+                    + (16.0 - inset("maginetSafeBottom")).clamp(0.0, 8.0))
+                .floor() as u32,
+            );
             let minimum = inset("maginetSafeLeft") + 72.0;
             let maximum = self.canvas_width as f64 - inset("maginetSafeRight") - 320.0;
             let centered = (self.canvas_width as f64 - 256.0) / 2.0;
@@ -587,7 +598,7 @@ impl CanvasSettings {
 
     pub fn pointer_at(&self, position: (f64, f64), displayed_size: (f64, f64)) -> (i32, i32) {
         if cfg!(feature = "mobile") {
-            let scale = displayed_size.1 / 272.0;
+            let scale = displayed_size.1 / self.canvas_height as f64;
             return (
                 (position.0 / scale).floor() as i32 - self.padding_x() as i32,
                 (position.1 / scale).floor() as i32 - self.padding_y() as i32,
@@ -639,6 +650,23 @@ mod canvas_tests {
 
     fn settings(portrait: bool) -> CanvasSettings {
         CanvasSettings::new(400, 272, 256, 256, portrait)
+    }
+
+    #[test]
+    fn mobile_canvas_fits_the_interface_on_phones_and_tablets() {
+        for (width, height) in [
+            (1366.0, 1024.0),
+            (1210.0, 834.0),
+            (1133.0, 744.0),
+            (852.0, 393.0),
+        ] {
+            let (logical_width, logical_height) = CanvasSettings::mobile_dimensions(width, height);
+            assert!(logical_width >= 392);
+            assert!(logical_height >= 272);
+            let scale = height / logical_height as f64;
+            assert!(392.0 * scale <= width);
+        }
+        assert_eq!(CanvasSettings::mobile_dimensions(852.0, 393.0).1, 272);
     }
 
     #[test]

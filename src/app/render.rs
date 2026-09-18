@@ -62,10 +62,10 @@ impl Renderer {
             let dpr = window().device_pixel_ratio();
             // Sprite transforms must stay on the logical pixel grid. Fractional
             // scaling belongs only to the final, already-composited image.
-            let logical_width = (w * 272.0 / h).ceil() as u32;
+            let (logical_width, logical_height) = CanvasSettings::mobile_dimensions(w, h);
             for layer in [&self.game, &self.interface, &self.outgoing, &self.composite] {
                 layer.canvas.set_width(logical_width);
-                layer.canvas.set_height(272);
+                layer.canvas.set_height(logical_height);
                 layer.context.set_image_smoothing_enabled(false);
             }
             self.display.canvas.set_width((w * dpr).round() as u32);

@@ -106,9 +106,10 @@ final class GameUITests: XCTestCase {
 
     private func drag(_ app: XCUIApplication, from: (Double, Double), to: (Double, Double)) {
         let frame = app.webViews.firstMatch.frame
-        let scale = frame.height / 272
-        let origin = (ceil(frame.width / scale) - 256) / 2
-        let top = floor(max(0, min(8, 16 - 21 / scale)))
+        let logicalHeight = max(272, ceil(392 * frame.height / frame.width))
+        let scale = frame.height / logicalHeight
+        let origin = max(72, min((ceil(frame.width / scale) - 256) / 2, ceil(frame.width / scale) - 320)).rounded()
+        let top = floor((logicalHeight - 272) / 2 + max(0, min(8, 16 - 21 / scale)))
         func point(_ p: (Double, Double)) -> XCUICoordinate {
             app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.minX + (origin + p.0) * scale, dy: frame.minY + (top + p.1) * scale))
         }
@@ -118,9 +119,10 @@ final class GameUITests: XCTestCase {
     private func tap(_ app: XCUIApplication, x: Double, y: Double) {
         // Wait for the canvas animation loop to consume the prior touch.
         let frame = app.webViews.firstMatch.frame
-        let scale = frame.height / 272
-        let origin = (ceil(frame.width / scale) - 256) / 2
-        let top = floor(max(0, min(8, 16 - 21 / scale)))
+        let logicalHeight = max(272, ceil(392 * frame.height / frame.width))
+        let scale = frame.height / logicalHeight
+        let origin = max(72, min((ceil(frame.width / scale) - 256) / 2, ceil(frame.width / scale) - 320)).rounded()
+        let top = floor((logicalHeight - 272) / 2 + max(0, min(8, 16 - 21 / scale)))
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.minX + (origin + x) * scale, dy: frame.minY + (top + y) * scale)).press(forDuration: 0.1)
     }
 }

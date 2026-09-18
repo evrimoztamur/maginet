@@ -91,7 +91,8 @@ import StoreKitTest
                   clearTimeout(timeout);
                   CanvasRenderingContext2D.prototype.drawImage = original;
                   resolve({height:source.height, width:source.width,
-                    expectedWidth:Math.ceil(innerWidth*272/innerHeight),
+                    expectedWidth:Math.ceil(innerWidth*Math.max(272,Math.ceil(392*innerHeight/innerWidth))/innerHeight),
+                    expectedHeight:Math.max(272,Math.ceil(392*innerHeight/innerWidth)),
                     smoothing:this.imageSmoothingEnabled,
                     transform:source.getContext('2d').getTransform().isIdentity,
                     selection:getComputedStyle(document.body).webkitUserSelect,
@@ -102,7 +103,7 @@ import StoreKitTest
               };
             });
             """, arguments: [:], in: nil, contentWorld: .page) as! [String: Any]
-        XCTAssertEqual(raster["height"] as? Int, 272, "Sprites must rasterize at logical resolution before display scaling")
+        XCTAssertEqual(raster["height"] as? Int, raster["expectedHeight"] as? Int, "The logical canvas must fit the full interface on tablets")
         XCTAssertEqual(raster["width"] as? Int, raster["expectedWidth"] as? Int)
         XCTAssertEqual(raster["smoothing"] as? Bool, false)
         XCTAssertEqual(raster["transform"] as? Bool, true)

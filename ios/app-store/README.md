@@ -56,3 +56,9 @@ Name: 7/30 characters. Subtitle: 25/30. Promotional text: 162/170. Description: 
 ## Latest upload (16 September 2026)
 
 Version **1.0, build 7** contains the latest shared mobile changes and uploaded successfully. Apple processing starts after upload. This was **upload only** at the user's request: the existing version 1.0 review submission was not changed or resubmitted. Select build 7 later when ready to update the submission. Archive and receipt: `../build-final-update/`. Prepared update text: `fields/whats_new.txt`.
+
+## Version 1.1 submission (17 September 2026)
+
+Version **1.1, build 2** uploaded and submitted successfully. App Store Connect confirmed **Waiting for Review**. The existing automatic-release setting is retained. Archive, upload logs, test logs, and receipt are in `../build-ipad-release/`; the submitted archive is `Maginet-1.1-final.xcarchive`. Build 1 was superseded before submission.
+
+This release enables native iPad support and fits the complete interface to tablet aspect ratios, alongside the latest campaign and visual updates. The iPad 13-inch listing includes `screenshots-ipad/01-main-menu.jpg` (2752 × 2064), captured from the native iPad Pro simulator after the layout correction. Release notes are in `fields/whats_new.txt`. Native rendering/worker tests and touch/purchase entry tests passed on iPad; canvas sizing tests passed with default and iOS features.

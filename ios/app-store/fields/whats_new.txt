@@ -1,1 +1,1 @@
-A tidier Settings screen, clearer end-of-game banners, and improved face-to-face local battles: blue mages and their indicators now face the opposing player when on-screen controls are enabled.
+Maginet now fills the iPad screen with a layout sized for tablets. This update also improves beam and shield effects, refines campaign difficulty, and polishes settings and local battles.
